@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Chao Desi – Find Local Businesses, Jobs, Services & Events Near You</title>
+        <!--== META TAGS ==-->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="theme-color" content="#76cef1">
+        <meta property="og:image" content="images/home/logo-white.png">
+        <meta name="description" content="Find local businesses, services, jobs, events, and deals near you with Chao Desi. Connect with trusted experts and grow your community.">
+        <meta name="keyword" content="local business directory, nearby services, jobs near me, local experts, classifieds, events near me, coupons, Chao Desi">
+        <!--== FAV ICON(BROWSER TAB ICON) ==-->
+        <link rel="shortcut icon" href="images/fav.ico" type="image/x-icon">
+        <!--== GOOGLE FONTS ==-->
+        <link href="https://fonts.googleapis.com/css?family=Oswald:700|Source+Sans+Pro:300,400,600,700&display=swap" rel="stylesheet">
+        <!--== WEB ICON FONTS ==-->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <!--== CSS FILES ==-->
+        <link rel="stylesheet" href="css/jquery-ui.css">
+        <link rel="stylesheet" href="css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="css/theme-color.css">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <link rel="stylesheet" href="css/fonts.css">
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+    <script src="js/respond.min.js"></script>
+    <![endif]-->
+    </head>
+    <body>
+        <!-- Preloader -->
+        <div id="preloader">
+            <div id="status">&nbsp;</div>
+        </div>
+        <!-- START -->
+        <section>
+            <div class="str ind2-home">
+                <div>
+                    <div class="hom-top">
+                        <div class="container">
+                            <div class="row">
+                                <div class="hom-nav  db-open ">
+                                    <!--MOBILE MENU-->
+                                    <a href="index.html" class="top-log">
+                                        <img src="images/home/logo-white.png" alt="" loading="eager" class="ic-logo">
+                                    </a>
+                                    <div class="menu">
+                                        <h4>Explore</h4>
+                                    </div>
+                                    <div class="pop-menu">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="top-exp-menu"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--END MOBILE MENU-->
+                                    <div class="top-ser">
+                                        <form name="filter_form" id="filter_form" class="filter_form">
+                                            <ul>
+                                                <li class="sr-sea">
+                                                    <input type="text" autocomplete="off" id="top-select-search" placeholder="What are you looking for?">
+                                                    <ul id="tser-res1" class="tser-res tser-res2"></ul>
+                                                </li>
+                                                <li class="sbtn">
+                                                    <button type="button" class="btn btn-success" id="top_filter_submit">
+                                                        <i class="material-icons">&nbsp;</i>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </form>
+                                    </div>
+                                    <!--TOP NOTIFICATIONS-->
+                                    <div class="top-noti">
+                                        <span class="material-icons db-menu-noti">
+                                            <i id="noti-count">00</i>notifications
+                                        </span>
+                                        <div class="db-noti top-noti-win">
+                                            <span class="material-icons db-menu-clo">close</span>
+                                            <h4>Notifications</h4>
+                                            <ul id="all-notif-ul"></ul>
+                                            <span id="no-noti-clr-noti" class="no-noti-clr-noti">No Notifications to Show</span>
+                                        </div>
+                                    </div>
+                                    <!--END TOP NOTIFICATIONS-->
+                                    <div class="al">
+                                        <div class="head-pro">
+                                            <img
+                                                src="images/user/1.jpg"
+                                                alt="User"
+                                                loading="lazy"
+                                                title="Go to dashboard"
+                                            >
+                                            <span class="fclick near-pro-cta"></span>
+                                        </div>
+                                        <div class="db-menu">
+                                            <span class="material-icons db-menu-clo">close</span>
+                                            <div class="ud-lhs-s1">
+                                                <img src="images/user/1.jpg" alt="" loading="lazy">
+                                                <div class="ud-lhs-pro-bio">
+                                                    <h4>Rn53</h4>
+                                                    <b>Join on17, Aug 2022</b>
+                                                    <a class="ud-lhs-view-pro" target="_blank" href="profile/rn53">My Profile</a>
+                                                </div>
+                                            </div>
+                                            <div class="ud-lhs-s2 row"></div>
+                                        </div>
+                                    </div>
+                                    <!--MOBILE MENU-->
+                                    <div class="mob-menu">
+                                        <div class="mob-me-ic">
+                                            <i class="material-icons">menu</i>
+                                        </div>
+                                        <div class="mob-me-all">
+                                            <div class="mob-me-clo">
+                                                <i class="material-icons">close</i>
+                                            </div>
+                                            <div class="mv-pro ud-lhs-s1">
+                                                <img src="images/user/1.jpg" alt="" loading="lazy">
+                                                <h4>Rn53</h4>
+                                                <b>Join on17, Aug 2022</b>
+                                            </div>
+                                            <div class="mv-pro-menu ud-lhs-s2 row"></div>
+                                            <div class="mv-cate">
+                                                <h4>All Categories</h4>
+                                                <ul>
+                                                    <li>
+                                                        <a href="all-listing.html">Spa and Facial</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Wedding halls</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Automobiles</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Restaurants</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Technology</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Pet shop</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Real Estate</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Sports</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Hospitals</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Education</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Transportation</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Electricals</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--END MOBILE MENU-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- END -->
+        <!-- START -->
+        <!--PRICING DETAILS-->
+        <section class=" login-reg edit-comp-pro">
+            <div class="container">
+                <div class="row">
+                    <div class="login-main add-list">
+                        <div class="log-bor">&nbsp;</div>
+                        <span class="steps">Company profile</span>
+                        <div class="log">
+                            <div class="login add-list-off comp-pro-edit">
+                                <h4>Edit company profile</h4>
+                                <form
+                                    action="company_profile_insert.html"
+                                    class="company_profile_form"
+                                    id="company_profile_form"
+                                    name="company_profile_form"
+                                    method="post"
+                                    enctype="multipart/form-data"
+                                >
+                                    <input
+                                        type="hidden"
+                                        id="company_profile_photo_old"
+                                        value="77239rockit_onlyblk+redsmall.jpg"
+                                        name="company_profile_photo_old"
+                                        class="validate"
+                                    >
+                                    <input
+                                        type="hidden"
+                                        id="company_banner_photo_old"
+                                        value="73102rockit_a+d_fb2.jpg"
+                                        name="company_banner_photo_old"
+                                        class="validate"
+                                    >
+                                    <input
+                                        type="hidden"
+                                        id="company_header_photo_old"
+                                        value="99098bean2.png"
+                                        name="company_header_photo_old"
+                                        class="validate"
+                                    >
+                                    <ul>
+                                        <li>
+                                            <!--FILED START-->
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <h6>Company info</h6>
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_name"
+                                                            id="company_name"
+                                                            value="Eventsmoney"
+                                                            required="required"
+                                                            class="form-control"
+                                                            placeholder="Company name"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_address"
+                                                            value="28800 Orchard Lake Road, Suite 180 Farmington Hills, U.S.A."
+                                                            id="company_address"
+                                                            required="required"
+                                                            class="form-control"
+                                                            placeholder="Address"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_mobile"
+                                                            id="company_mobile"
+                                                            value="+01 5426 24400"
+                                                            required="required"
+                                                            class="form-control"
+                                                            placeholder="Phone"
+                                                        >
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_email_id"
+                                                            id="company_email_id"
+                                                            value="info@chaodesi.com"
+                                                            required="required"
+                                                            class="form-control"
+                                                            placeholder="Email id"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_website"
+                                                            id="company_website"
+                                                            value="https://chaodesi.com/"
+                                                            class="form-control"
+                                                            placeholder="Website"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <h6>Tax Details:</h6>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_tax"
+                                                            id="company_tax"
+                                                            value="HUYRJ-47644"
+                                                            class="form-control"
+                                                            placeholder="Tax No./ GST No."
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <h6>Social media:</h6>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_facebook"
+                                                            id="company_facebook"
+                                                            value="https://www.facebook.com/rn53themes"
+                                                            class="form-control"
+                                                            placeholder="Facebook profile"
+                                                        >
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_twitter"
+                                                            id="company_twitter"
+                                                            value="https://twitter.com/Rn53_themes"
+                                                            class="form-control"
+                                                            placeholder="Twitter profile"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_linkedin"
+                                                            id="company_linkedin"
+                                                            value=""
+                                                            class="form-control"
+                                                            placeholder="Linkedin profile"
+                                                        >
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_instagram"
+                                                            id="company_instagram"
+                                                            value=""
+                                                            class="form-control"
+                                                            placeholder="Instagram profile"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_youtube"
+                                                            id="company_youtube"
+                                                            value="https://www.youtube.com/channel/UC3wN3O2GXTt7ZZniIoMZumg/videos?view=0&sort=dd&shelf_id=0&view_as=subscriber"
+                                                            class="form-control"
+                                                            placeholder="Youtube profile"
+                                                        >
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group">
+                                                        <input
+                                                            type="text"
+                                                            name="company_whatsapp"
+                                                            id="company_whatsapp"
+                                                            value="+01 5426 24400"
+                                                            class="form-control"
+                                                            placeholder="WhatsApp No"
+                                                        >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <h6>About company:</h6>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <textarea
+                                                            class="form-control"
+                                                            required="required"
+                                                            name="company_description"
+                                                            id="company_description"
+                                                            placeholder="Product Details"
+                                                        ><p>ChaoDesi is the leading web developers team with a different approach towards the known methodologies of web designing. The execution of attractive websites by our experts will help you stand out of the crowd. Classified Templates Kick start your online presence with Bizbook Classified Templates. Template includes Classified ads, listing, products, events, blogs &amp; community. Try it today! Template customization We offer professional website template customization for the templates we built and released here at styleshout. Choose a template and submit to us the customization requirements and we will work on the design until the desired result is achieve.</p></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <label>Header top logo(size 200X35):</label>
+                                                    <div class="form-group">
+                                                        <div class="img-uplo-flex">
+                                                            <input
+                                                                type="file"
+                                                                name=""
+                                                                accept="image/*,.jpg,.jpeg,.png"
+                                                                class="form-control file-input"
+                                                                required=""
+                                                            >
+                                                            <img class="img-preview" alt="">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label>Banner logo(size 200X35):</label>
+                                                    <div class="form-group">
+                                                        <div class="img-uplo-flex">
+                                                            <input
+                                                                type="file"
+                                                                name=""
+                                                                accept="image/*,.jpg,.jpeg,.png"
+                                                                class="form-control file-input"
+                                                                required=""
+                                                            >
+                                                            <img class="img-preview" alt="">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label>Banner background(size 250X250):</label>
+                                                    <div class="form-group">
+                                                        <div class="img-uplo-flex">
+                                                            <input
+                                                                type="file"
+                                                                name=""
+                                                                accept="image/*,.jpg,.jpeg,.png"
+                                                                class="form-control file-input"
+                                                                required=""
+                                                            >
+                                                            <img class="img-preview" alt="">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <h6>Choose Products:</h6>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <select
+                                                            data-placeholder="Select products"
+                                                            multiple="multiple"
+                                                            name="company_products[]"
+                                                            id="company_products"
+                                                            class="chosen-select form-control"
+                                                        >
+                                                            <option disabled value="">Select products</option>
+                                                            <option value="38">Cotton and Accessories</option>
+                                                            <option value="37">dfgh</option>
+                                                            <option selected value="34">sdcs</option>
+                                                            <option selected value="33">SAMSUNG 6 kg 5 Star Inverter with Hygiene Steam</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <h6>Choose events:</h6>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <select
+                                                            data-placeholder="Select events"
+                                                            multiple="multiple"
+                                                            name="company_events[]"
+                                                            id="company_events"
+                                                            class="chosen-select form-control"
+                                                        >
+                                                            <option disabled value="">Select events</option>
+                                                            <option value="55">test-event</option>
+                                                            <option value="54">indian even</option>
+                                                            <option value="53">sports event</option>
+                                                            <option value="52">sdsd</option>
+                                                            <option selected value="50">reeherh</option>
+                                                            <option value="49">sad</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <h6>Choose blog posts:</h6>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <select
+                                                            data-placeholder="Select blogs"
+                                                            multiple="multiple"
+                                                            name="company_blogs[]"
+                                                            id="company_blogs"
+                                                            class="chosen-select form-control"
+                                                        >
+                                                            <option disabled value="">Select blogs</option>
+                                                            <option value="56">Test 53</option>
+                                                            <option value="55">test blog</option>
+                                                            <option value="54">news and magazine</option>
+                                                            <option value="53">news and magazine</option>
+                                                            <option selected value="50">hi post ë and ç2022</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <h6>SEO Settings</h6>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <textarea
+                                                            class="form-control"
+                                                            name="company_seo_description"
+                                                            id="company_seo_description"
+                                                            placeholder="Meta descriptions(Write some short description about your company. It's more helps for google indexing and characters limit 155–160)"
+                                                        >Official website of ChaoDesi, Affiliated to Themeforest. We provide the best html and fully functional website templates. Our services are template customization, custom template design, directory php template, HTML to PHP conversions and more</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="form-group">
+                                                        <textarea
+                                                            class="form-control"
+                                                            name="company_seo_keywords"
+                                                            id="company_seo_keywords"
+                                                            placeholder="Meta keywords(Write some short keywords, related your company profile. (i.e) electronics,laptop,hp,canon)"
+                                                        >ChaoDesi, html templates bootstrap, html templates for personal website, php templates, html templates download, directory listing html template, business directory html template</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--FILED END-->
+                                        </li>
+                                    </ul>
+                                    <!--FILED START-->
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <button type="submit" name="company_profile_submit" class="btn btn-primary">Submit</button>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <a href="dashboard.html" class="skip">Go to user dashboard >></a>
+                                        </div>
+                                    </div>
+                                    <!--FILED END-->
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!--END PRICING DETAILS-->
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="js/jquery.min.js"></script>
+        <script src="js/popper.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/jquery-ui.js"></script>
+        <script src="js/select-opt.js"></script>
+        <script type="text/javascript">
+        var login_url = 'login?src=company-profile-edit';
+        </script>
+        <script src="js/custom.js"></script>
+        <script src="js/jquery.validate.min.js"></script>
+        <script src="js/custom_validation.js"></script>
+        <script src="admin/ckeditor/ckeditor.js"></script>
+        <script>
+        CKEDITOR.replace('company_description');
+        </script>
+    </body>
+</html>

@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Chao Desi – Find Local Businesses, Jobs, Services & Events Near You</title>
+        <!--== META TAGS ==-->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="theme-color" content="#76cef1">
+        <meta property="og:image" content="images/home/logo-white.png">
+        <meta name="description" content="Find local businesses, services, jobs, events, and deals near you with Chao Desi. Connect with trusted experts and grow your community.">
+        <meta name="keyword" content="local business directory, nearby services, jobs near me, local experts, classifieds, events near me, coupons, Chao Desi">
+        <!--== FAV ICON(BROWSER TAB ICON) ==-->
+        <link rel="shortcut icon" href="images/fav.ico" type="image/x-icon">
+        <!--== GOOGLE FONTS ==-->
+        <link href="https://fonts.googleapis.com/css?family=Oswald:700|Source+Sans+Pro:300,400,600,700&display=swap" rel="stylesheet">
+        <!--== WEB ICON FONTS ==-->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <!--== CSS FILES ==-->
+        <link rel="stylesheet" href="css/jquery-ui.css">
+        <link rel="stylesheet" href="css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="css/theme-color.css">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <link rel="stylesheet" href="css/fonts.css">
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+    <script src="js/respond.min.js"></script>
+    <![endif]-->
+    </head>
+    <body>
+        <!-- Preloader -->
+        <div id="preloader">
+            <div id="status">&nbsp;</div>
+        </div>
+        <!-- START -->
+        <section>
+            <div class="str ind2-home">
+                <div>
+                    <div class="hom-top">
+                        <div class="container">
+                            <div class="row">
+                                <div class="hom-nav  db-open ">
+                                    <!--MOBILE MENU-->
+                                    <a href="index.html" class="top-log">
+                                        <img src="images/home/logo-white.png" alt="" loading="eager" class="ic-logo">
+                                    </a>
+                                    <div class="menu">
+                                        <h4>Explore</h4>
+                                    </div>
+                                    <div class="pop-menu">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="top-exp-menu"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--END MOBILE MENU-->
+                                    <div class="top-ser">
+                                        <form name="filter_form" id="filter_form" class="filter_form">
+                                            <ul>
+                                                <li class="sr-sea">
+                                                    <input type="text" autocomplete="off" id="top-select-search" placeholder="What are you looking for?">
+                                                    <ul id="tser-res1" class="tser-res tser-res2"></ul>
+                                                </li>
+                                                <li class="sbtn">
+                                                    <button type="button" class="btn btn-success" id="top_filter_submit">
+                                                        <i class="material-icons">&nbsp;</i>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </form>
+                                    </div>
+                                    <!--TOP NOTIFICATIONS-->
+                                    <div class="top-noti">
+                                        <span class="material-icons db-menu-noti">
+                                            <i id="noti-count">00</i>notifications
+                                        </span>
+                                        <div class="db-noti top-noti-win">
+                                            <span class="material-icons db-menu-clo">close</span>
+                                            <h4>Notifications</h4>
+                                            <ul id="all-notif-ul"></ul>
+                                            <span id="no-noti-clr-noti" class="no-noti-clr-noti">No Notifications to Show</span>
+                                        </div>
+                                    </div>
+                                    <!--END TOP NOTIFICATIONS-->
+                                    <div class="al">
+                                        <div class="head-pro">
+                                            <img
+                                                src="images/user/1.jpg"
+                                                alt="User"
+                                                loading="lazy"
+                                                title="Go to dashboard"
+                                            >
+                                            <span class="fclick near-pro-cta"></span>
+                                        </div>
+                                        <div class="db-menu">
+                                            <span class="material-icons db-menu-clo">close</span>
+                                            <div class="ud-lhs-s1">
+                                                <img src="images/user/1.jpg" alt="" loading="lazy">
+                                                <div class="ud-lhs-pro-bio">
+                                                    <h4>Rn53</h4>
+                                                    <b>Join on17, Aug 2022</b>
+                                                    <a class="ud-lhs-view-pro" target="_blank" href="profile/rn53">My Profile</a>
+                                                </div>
+                                            </div>
+                                            <div class="ud-lhs-s2 row"></div>
+                                        </div>
+                                    </div>
+                                    <!--MOBILE MENU-->
+                                    <div class="mob-menu">
+                                        <div class="mob-me-ic">
+                                            <i class="material-icons">menu</i>
+                                        </div>
+                                        <div class="mob-me-all">
+                                            <div class="mob-me-clo">
+                                                <i class="material-icons">close</i>
+                                            </div>
+                                            <div class="mv-pro ud-lhs-s1">
+                                                <img src="images/user/1.jpg" alt="" loading="lazy">
+                                                <h4>Rn53</h4>
+                                                <b>Join on17, Aug 2022</b>
+                                            </div>
+                                            <div class="mv-pro-menu ud-lhs-s2 row"></div>
+                                            <div class="mv-cate">
+                                                <h4>All Categories</h4>
+                                                <ul>
+                                                    <li>
+                                                        <a href="all-listing.html">Spa and Facial</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Wedding halls</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Automobiles</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Restaurants</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Technology</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Pet shop</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Real Estate</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Sports</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Hospitals</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Education</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Transportation</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Electricals</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--END MOBILE MENU-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- END -->
+        <section class=" login-reg job-form">
+            <div class="container">
+                <div class="row">
+                    <div class="login-main add-list">
+                        <div class="log-bor">&nbsp;</div>
+                        <span class="steps">Post New Job</span>
+                        <div class="log">
+                            <form
+                                action="job_insert.html"
+                                class="job_form"
+                                id="job_form"
+                                name="job_form"
+                                method="post"
+                                enctype="multipart/form-data"
+                            >
+                                <div class="inn row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="tit">Job Title*</label>
+                                            <input
+                                                type="text"
+                                                name="job_title"
+                                                id="job_title"
+                                                class="form-control"
+                                                required
+                                            >
+                                        </div>
+                                        <div class="form-group prfix-inp">
+                                            <label class="tit">Salary*</label>
+                                            <i class="prfix">$</i>
+                                            <input
+                                                type="text"
+                                                required="required"
+                                                onkeypress="return isNumber(event)"
+                                                id="textInput"
+                                                class="form-control"
+                                                name="job_salary"
+                                                value=""
+                                            >
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">No of openings*</label>
+                                            <input
+                                                type="text"
+                                                onkeypress="return isNumber(event)"
+                                                name="no_of_openings"
+                                                class="form-control"
+                                                required
+                                            >
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Interview Date</label>
+                                            <input
+                                                type="text"
+                                                name="job_interview_date"
+                                                class="form-control"
+                                                id="newdate"
+                                            >
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Interview Time</label>
+                                            <input type="time" name="job_interview_time" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Role</label>
+                                            <input type="text" name="job_role" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Education & Qualification</label>
+                                            <input type="text" name="educational_qualification" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Location</label>
+                                            <select class="chosen-select" name="job_location">
+                                                <option value="">Select Job Location</option>
+                                                <option value="4">Bengaluru</option>
+                                                <option value="1">Chennai</option>
+                                                <option value="11">Chicago</option>
+                                                <option value="6">Cochin</option>
+                                                <option value="17">Dallas</option>
+                                                <option value="12">Houston</option>
+                                                <option value="9">Illunois</option>
+                                                <option value="8">London</option>
+                                                <option value="10">Los Angeles</option>
+                                                <option value="5">Mumbai</option>
+                                                <option value="7">New york</option>
+                                                <option value="14">Philadelphia</option>
+                                                <option value="13">Phoenix</option>
+                                                <option value="15">San Antonio</option>
+                                                <option value="16">San Diego</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Company logo</label>
+                                            <div class="img-uplo-flex">
+                                                <input
+                                                    type="file"
+                                                    name=""
+                                                    accept="image/*,.jpg,.jpeg,.png"
+                                                    class="form-control file-input"
+                                                    required=""
+                                                >
+                                                <img class="img-preview" alt="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="tit">Job category</label>
+                                            <select onChange="getJobSubCategory(this.value);" class="chosen-select" name="category_id">
+                                                <option value="">Select Category</option>
+                                                <option value="54">Software</option>
+                                                <option value="53">Technology</option>
+                                                <option value="52">Service Industry:</option>
+                                                <option value="51">Medical</option>
+                                                <option value="50">Media</option>
+                                                <option value="49">Law Enforcement</option>
+                                                <option value="48">Education</option>
+                                                <option value="47">Business</option>
+                                                <option value="46">Arts</option>
+                                                <option value="45">Aviation</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Job sub-category</label>
+                                            <select class="chosen-select" id="sub_category_id" name="sub_category_id">
+                                                <option value="">Select Sub Category</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Job Type</label>
+                                            <select class="chosen-select" name="job_type">
+                                                <option value="1">Permanent</option>
+                                                <option value="2">Contract</option>
+                                                <option value="3">Part time</option>
+                                                <option value="4">Freelance</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Year(s) of experience</label>
+                                            <input
+                                                type="text"
+                                                onkeypress="return isNumber(event)"
+                                                name="years_of_experience"
+                                                class="form-control"
+                                            >
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Contact no</label>
+                                            <input
+                                                type="text"
+                                                onkeypress="return isNumber(event)"
+                                                name="contact_number"
+                                                class="form-control"
+                                            >
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Email id</label>
+                                            <input type="email" name="contact_email_id" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Website</label>
+                                            <input type="text" name="contact_website" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Contact person</label>
+                                            <input type="text" name="contact_person" class="form-control">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="tit">Interview location</label>
+                                            <input type="text" name="interview_location" class="form-control">
+                                            <!-- INPUT TOOL TIP -->
+                                            <div class="inp-ttip">
+                                                <b>Map location</b>
+                                                Get your interview location link from google map and use here.
+                                            </div>
+                                            <!-- END INPUT TOOL TIP -->
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="tit">Company Name</label>
+                                            <input type="text" name="job_company_name" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="tit">Skill set</label>
+                                            <select class="chosen-select" multiple name="skill_set[]">
+                                                <option value="47">Quick in problem resolution</option>
+                                                <option value="46">Good teamwork capabilities</option>
+                                                <option value="45">Stress management capabilities</option>
+                                                <option value="44">Ability to coach junior medical staff</option>
+                                                <option value="43">Experience in infection control</option>
+                                                <option value="42">Assurance of patient confidentiality</option>
+                                                <option value="41">Preparing medical care strategies</option>
+                                                <option value="40">Diagnosis and treatment of diseases</option>
+                                                <option value="39">Google products</option>
+                                                <option value="38">Adobe products</option>
+                                                <option value="37">Photoshop</option>
+                                                <option value="36">JQuery</option>
+                                                <option value="35">CSS</option>
+                                                <option value="34">HTML</option>
+                                                <option value="33">Jenkins</option>
+                                                <option value="32">API</option>
+                                                <option value="31">Web Services</option>
+                                                <option value="30">Linux</option>
+                                                <option value="29">GIT</option>
+                                                <option value="28">Database</option>
+                                                <option value="27">Javascript</option>
+                                                <option value="26">Java</option>
+                                                <option value="25">C++</option>
+                                                <option value="24">Procedures</option>
+                                                <option value="23">Python</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="tit">Job Descriptions</label>
+                                            <textarea name="job_description" class="form-control" id="job_description"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="tit">About your company(small description)</label>
+                                            <textarea name="job_small_description" class="form-control"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <button name="job_submit" class="blu-upp">Submit Now</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- START -->
+        <span class="btn-ser-need-ani">
+            <img src="images/icon/help.png" alt="" loading="lazy">
+        </span>
+        <div class="ani-quo-form">
+            <i class="material-icons ani-req-clo">close</i>
+            <div class="tit">
+                <h3>What service do you need?
+                    <span>BizBook will help you</span>
+                </h3>
+            </div>
+            <div class="hom-col-req">
+                <div id="home_slide_enq_success" class="log" style="display: none;">
+                    <p>Your Enquiry Is Submitted Successfully!!!</p>
+                </div>
+                <div id="home_slide_enq_fail" class="log" style="display: none;">
+                    <p>Oops!! Something Went Wrong Try Later!!!</p>
+                </div>
+                <div id="home_slide_enq_same" class="log" style="display: none;">
+                    <p>You cannot make enquiry on your own listing!!</p>
+                </div>
+                <form name="home_slide_enquiry_form" id="home_slide_enquiry_form" method="post" enctype="multipart/form-data">
+    <input type="hidden" class="form-control" name="listing_id" value="0" placeholder="" required>
+    <input type="hidden" class="form-control" name="listing_user_id" value="0" placeholder="" required>
+    <input type="hidden" class="form-control" name="enquiry_sender_id" value="" placeholder="" required>
+    <input type="hidden" class="form-control" name="enquiry_source" value="Website" placeholder="" required>
+    <div class="form-group">
+        <input type="text" name="enquiry_name" value="" required="required" class="form-control" placeholder="Enter name*">
+    </div>
+    <div class="form-group">
+        <input type="email" class="form-control" placeholder="Enter email*" required="required" value="" name="enquiry_email" pattern="^[\w]{1,}[\w.+-]{0,}@[\w-]{2,}([.][a-zA-Z]{2,}|[.][\w-]{2,}[.][a-zA-Z]{2,})$" title="Invalid email address">
+    </div>
+    <div class="form-group">
+        <input type="text" class="form-control" value="" name="enquiry_mobile" placeholder="Enter mobile number *" pattern="[7-9]{1}[0-9]{9}" title="Phone number starting with 7-9 and remaining 9 digit with 0-9" required="">
+    </div>
+    <div class="form-group">
+        <select name="enquiry_category" id="enquiry_category" class="form-control chosen-select">
+            <option value="">Select Category</option>
+            <option value="20">Restaurants</option>
+            <option value="19">Wedding halls</option>
+            <option value="17">Pet shop</option>
+            <option value="16">Technology</option>
+            <option value="15">Spa and Facial</option>
+            <option value="10">Real Estate</option>
+            <option value="8">Sports</option>
+            <option value="7">Education</option>
+            <option value="6">Electricals</option>
+            <option value="5">Automobiles</option>
+            <option value="3">Transportation</option>
+            <option value="2">Hospitals</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <textarea class="form-control" rows="3" name="enquiry_message" placeholder="Enter your query or message"></textarea>
+    </div>
+    <input type="hidden" id="source">
+    <button type="submit" id="home_slide_enquiry_submit" name="home_slide_enquiry_submit" class="btn btn-primary">Submit Requirements</button>
+</form>
+            </div>
+        </div>
+        <!-- END -->
+        <!-- START -->
+        <section>
+            <div class="full-bot-book">
+                <div class="container">
+                    <div class="row">
+                        <div class="bot-book">
+                            <div class="col-md-12 bb-text">
+                                <h4>List your business for FREE</h4>
+                                <p>There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour.</p>
+                                <a href="pricing-details.html">Add my business
+                                    <i class="material-icons">arrow_forward</i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- END -->
+        <section class=" wed-hom-footer">
+            <div class="container">
+                <div class="row foot-supp">
+                    <h2>
+                        <span>Free support:</span> +01 5426 24400 &nbsp;&nbsp;|&nbsp;&nbsp;
+                        <span>Email:</span> info@chaodesi.com
+                    </h2>
+                </div>
+                <div class="row wed-foot-link">
+                    <div class="col-md-4 foot-tc-mar-t-o">
+                        <h4>Top Category</h4>
+                        <ul>
+                            <li>
+                                <a href="all-listing.html">Technology</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Spa and Facial</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Real Estate</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Sports</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Education</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Electricals</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Automobiles</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Transportation</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h4>Trending Category</h4>
+                        <ul>
+                            <li>
+                                <a href="all-listing.html">Hospitals</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html"></a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Automobiles</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html"></a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Real Estate</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Sports</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Education</a>
+                            </li>
+                            <li>
+                                <a href="all-listing.html">Electricals</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h4>HELP &amp; SUPPORT</h4>
+                        <ul>
+                            <li>
+                                <a href="about.html">About us</a>
+                            </li>
+                            <li>
+                                <a href="faq.html">FAQ</a>
+                            </li>
+                            <li>
+                                <a href="feedback.html">Feedback</a>
+                            </li>
+                            <li>
+                                <a href="contact-us.html">Contact us</a>
+                            </li>
+                            <li>
+                                <a href="privacy-policy.html">Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a href="terms-of-use.html">Terms of Use</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- POPULAR TAGS -->
+                <div class="row wed-foot-link-pop">
+                    <div class="col-md-12">
+                        <h4>Popular Tags</h4>
+                        <ul>
+                            <li>
+                                <a href="dashboard.html">Schools in NewYork</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Real estate in Illunois</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Real estate in Chennai1</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Enents in Tailand</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Flat for rent in Melborn</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Schools in NewYork</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Real estate in Illunois</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Real estate in Chennai1</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Enents in Tailand</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Flat for rent in Melborn</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Schools in NewYork</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Real estate in Illunois</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Real estate in Chennai1</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Enents in Tailand</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Flat for rent in Melborn</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Schools in NewYork</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Real estate in Illunois</a>
+                            </li>
+                            <li>
+                                <a href="dashboard.html">Real estate in Chennai1</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- POPULAR TAGS -->
+                <div class="row wed-foot-link-1">
+                    <div class="col-md-4">
+                        <h4>Get In Touch</h4>
+                        <p>Address: 28800 Orchard Lake Road, Suite 180 Farmington Hills, U.S.A.</p>
+                        <p>Phone:
+                            <a href="tel:+01 5426 24400">+01 5426 24400</a>
+                        </p>
+                        <p>Email:
+                            <a href="mailto:info@chaodesi.com">info@chaodesi.com</a>
+                        </p>
+                    </div>
+                    <div class="col-md-4 fot-app">
+                        <h4>DOWNLOAD OUR FREE MOBILE APPS</h4>
+                        <ul>
+                            <li>
+                                <a href="">
+                                    <img src="images/gstore.png" alt="" loading="lazy">
+                                </a>
+                            </li>
+                            <li>
+                                <a href="">
+                                    <img src="images/astore.png" alt="" loading="lazy">
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4 fot-soc">
+                        <h4>SOCIAL MEDIA</h4>
+                        <ul>
+                            <li>
+                                <a target="_blank" href="">
+                                    <img src="images/social/1.png" alt="" loading="lazy">
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://twitter.com/">
+                                    <img src="images/social/2.png" alt="" loading="lazy">
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="https://www.facebook.com/">
+                                    <img src="images/social/3.png" alt="" loading="lazy">
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="">
+                                    <img src="images/social/4.png" alt="" loading="lazy">
+                                </a>
+                            </li>
+                            <li>
+                                <a target="_blank" href="">
+                                    <img src="images/social/5.png" alt="" loading="lazy">
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row foot-count">
+                    <ul>
+                        <li>
+                            <a target="_blank" href="http://www.chaodesi.au">Australia</a>
+                        </li>
+                        <li>
+                            <a target="_blank" href="http://www.chaodesi.uk">UK</a>
+                        </li>
+                        <li>
+                            <a target="_blank" href="http://www.chaodesi.usa">USA</a>
+                        </li>
+                        <li>
+                            <a target="_blank" href="http://www.chaodesi.in">India</a>
+                        </li>
+                        <li>
+                            <a target="_blank" href="http://www.chaodesi.ge">Germany</a>
+                        </li>
+                        <li>
+                            <a target="_blank" href="http://www.chaodesi.ch">China</a>
+                        </li>
+                        <li>
+                            <a target="_blank" href="http://www.chaodesi.fr">france</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+        <!-- START -->
+        <section>
+            <div class="cr">
+                <div class="container">
+                    <div class="row">
+                        <p>Copyright © 2025
+                            <a href="https://chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by
+                            <a href="https://chaodesi.com/" target="_blank">Symplore</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- END -->
+        <!-- START -->
+        <div class="fqui-menu"></div>
+        <!-- END -->
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="js/jquery.min.js"></script>
+        <script src="js/popper.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/jquery-ui.js"></script>
+        <script type="text/javascript">
+        var login_url = 'login?src=jobs/create-job';
+        </script>
+        <script src="js/custom.js"></script>
+        <script src="js/select-opt.js"></script>
+        <script src="js/jquery.validate.min.js"></script>
+        <script src="js/custom_validation.js"></script>
+        <script src="admin/ckeditor/ckeditor.js"></script>
+        <script>
+        CKEDITOR.replace('job_description');
+        </script>
+        <script>
+        function getJobSubCategory(val) {
+            $.ajax({
+                type: "POST",
+                url: "job_sub_category_process.html",
+                data: 'category_id=' + val,
+                success: function(data) {
+                    $("#sub_category_id").html(data);
+                    $('#sub_category_id').trigger("chosen:updated");
+                }
+            });
+        }
+        </script>
+        <script>
+        var slider = document.getElementById("salsli");
+        var output = document.getElementById("salout");
+        output.innerHTML = slider.value;
+
+        slider.oninput = function() {
+            output.innerHTML = this.value + "K";
+        }
+        </script>
+        <script>
+        function updateTextInput(val) {
+            document.getElementById('textInput').value = val;
+        }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,133 @@
+.ads-hom-ban{background:url(../../images/places/banne.png) no-repeat #fff944;background-size:100%;background-position:center bottom;margin-bottom:35px}
+.ads-hom-ban h1{/* display:block; *//* width:100%; */}
+.ad-post-detai-pg{background:none}
+.asd-all-hom .ad-box-txt h3{text-align: center;font-size: 18px;padding: 0;margin: 0;}
+.as-details .list ul{padding:25px 20px 30px 0}
+.as-details .list ul li{font-size:16px;padding-bottom:5px}
+.as-details .list ul li:before{background:#FF5722}
+.ad-post-detai-ban ul li img{width:100%;max-height:400px;object-fit:cover;border-radius:10px}
+.ad-box{background:#fff}
+.ad-modu-com .us-ppg-com ul li{padding:0 15px 15px 0}
+.ads-gall{margin-bottom:30px}
+.ads-gall h4{font-size:16px;margin:20px 0 15px}
+.ads-form-hig{border:2px solid #000;margin-bottom:25px;padding:30px 25px 15px;border-radius:10px;background:#f5f7ff;float:left;width:100%;margin-top:25px;position:relative}
+.ads-form-hig h6{position:absolute;top:-14px;background:#000;padding:5px 25px;border-radius:5px;font-size:13px;text-transform:uppercase;color:#fff;font-weight:500;font-family:'Noto Sans'}
+.ads-form-hig ul li input{padding-left:20px;width:100%;border-radius:4px}
+.ads-hom-ban p{/* width:100%; */}
+.ad-box-txt{padding:20px 20px 18px;/* float:left; *//* width:100%; */}
+.ad-box-txt h3{text-overflow:ellipsis;white-space:pre;overflow:hidden;color:#000;font-size:16px;font-weight:600;padding-bottom:2px;font-family:'Noto Sans',sans-serif}
+.ad-modu-com .ad-box .plac-hom-box-im h4{font-size:22px;background:#cb7d09;background:linear-gradient(228deg,#cb7d09,#FF5722);border-radius:10px;padding:4px 5px}
+.ad-modu-com .ad-box span{position:relative;display:inline-block;/* float:left; *//* color:#35363c; */}
+.apost-detals-box{border:10px solid #fff;padding:35px;border-radius:15px;background:#fffbd3;background: linear-gradient(340deg,#673AB7,#6800ff);box-shadow:0 1px 15px 7px #3333331c;display: inline-block;color: #fff;    position: sticky;
+    top: 60px;}
+.ad-post-detai-pg .rhs .quote-pop{padding: 0;/* margin-top: 20px; */border-radius: 10px;}
+.apost-bio{position:relative}
+.apost-bio h2{display:inline-block;font-size:40px}
+.apost-bio .share{position:absolute;right:0;top:0}
+.apost-bio .share span{border:1px solid gray;padding: 2px;box-sizing:border-box;text-align:center;width:32px;height:32px;display:inline-block;border-radius: 27px;cursor:pointer}
+.apost-bio .share i{font-size: 17px;padding: 4px;}
+.apost-bio p{margin:0;font-size:22px;font-weight:700;line-height:28px}
+.ad-box-txt .loc{width: calc(100% - 100px);text-overflow:ellipsis;white-space:pre;overflow:hidden;font-size:11px}
+.ad-box-txt .dat{width: 100px;/* text-align:right; */text-transform:uppercase;font-size:9px}
+.plac-hom-box-im:before{opacity:.2}
+.ad-sec-pad .container{padding:35px 0}
+.plac-hom-tit-ic-sugg span:hover{background:#264b87}
+.plac-hom-tit-ic-sugg span:hover:after{padding-left:10px}
+.ad-modu-com .plac-hom-all-pla ul li{/* width:25%; */}
+.ad-post-detai-ban .slick-dots li button{  width: 25px;height: 8px;}
+.ad-post-detai-ban .slick-dots li.slick-active button{border:2px solid #f6af04}
+.adost-bio-2{
+    padding: 20px 0 20px 0;
+}
+.ad-post-detai-pg .eve-deta-body .eve-deta-body-main{margin-top: 0;}
+.eve-deta-pg-main{display: flex;}
+.adost-bio-2 p.addr{
+    padding-left: 25px;
+    font-size: 15px;
+}
+.ad-post-detai-pg .eve-deta-body .lhs{
+    width: 100%;
+    border: 0;
+}
+.ad-post-detai-pg .eve-deta-body .rhs{
+    padding: 0;
+}
+.adost-cta{
+    margin-top: 30px;
+}
+.ad-post-detai-pg .rhs{padding-left: 30px;}
+.cta-line-red{
+    color: #fff;
+    border: 2px solid #000000;
+    font-weight: 600;
+    display: block;
+    text-align: center;
+    border-radius: 5px;
+    padding: 15px 5px;
+    font-size: 15px;
+    cursor: pointer;
+    width: 100%;
+    text-transform: uppercase;
+    background: #000000;
+}
+.ad-post-detai-pg .rhs .quote-pop form{
+    background: #fff;
+    border-radius: 0 0 10px 10px;
+    padding-bottom: 40px;
+}
+.ad-post-detai-pg .rhs .quote-pop h3{
+    background: #000;
+    padding: 20px 0 20px 0;
+}
+.ad-post-detai-pg .list-rhs-form .quote-pop .btn{
+    background: #000;
+}
+.eve-deta-pg .rhs .pglist-p-com{    border-radius: 10px;}
+.ad-post-detai-pg{
+    margin-top: var(--topspac1);
+    padding-top: 30px;
+}
+.ad-post-detai-pg .lhs{
+    width: 60%;
+}
+.ad-post-detai-pg .rhs{
+    width: 40%;
+}
+.pro-rel-posts{padding-bottom: 50px;}
+.ad-post-detai-pg .all-pro-txt h4{
+    padding: 0;
+    font-size: 15px;
+}
+.tags{}
+.tags span{
+    border: 1px solid #000;
+    border-radius: 25px;
+    margin: 0 5px 5px 0;
+    color: #000;
+    padding: 5px 7px;
+    font-weight: 500;
+    font-size: 13px;
+    display: inline-block;
+}
+
+@media screen and (max-width:768px) {
+    .ad-post-detai-pg .eve-deta-body .rhs{
+        display: none;
+    }
+    .eve-deta-pg-main {
+        display: block;
+    }
+    .ad-post-detai-pg .lhs{
+        width: 100%;
+    }
+    .ad-post-detai-pg .rhs{
+        width: 100%;padding-left: 0;
+    }
+    .ads-hom-ban{margin-top: 0;    padding: 40px 0 30px;}
+    .ad-modu-com .plac-hom-all-pla ul li, .event-body .us-ppg-com ul li{width: 50%;}
+    .event-body .us-ppg-com ul li{        padding: 0px 5px;}
+    .ad-modu-com .blog-head-inn{padding-top: 100px;}
+    .eve-deta-body {
+    padding: 0;
+}
+}

@@ -1,0 +1,1744 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Bizbook Admin Panel</title>
+    <!--== META TAGS ==-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#76cef1" />
+    <!--== FAV ICON(BROWSER TAB ICON) ==-->
+    <link rel="shortcut icon" href="../images/fav.ico" type="image/x-icon">
+    <!--== GOOGLE FONTS ==-->
+    <link href="https://fonts.googleapis.com/css?family=Oswald:700|Source+Sans+Pro:300,400,600,700&display=swap" rel="stylesheet">
+
+    <!--== WEB ICON FONTS ==-->
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--== CSS FILES ==-->
+    <link rel="stylesheet" href="../css/jquery-ui.css">
+    <link rel="stylesheet" href="../css/bootstrap.css">
+    <link rel="stylesheet" href="css/admin-style.css">
+    <link rel="stylesheet" href="../css/fonts.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css">    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="../js/html5shiv.js"></script>
+    <script src="../js/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body><!-- START -->
+<section>
+    <div class="ad-head">
+        <div class="head-s1">
+            <div class="menu">
+                <i class="material-icons mopen">menu</i>
+                <i class="material-icons mclose">close</i>
+            </div>
+            <div class="logo">
+                <img src="images/logo-b.png">
+            </div>
+        </div>
+        <div class="head-s2">
+            <div class="head-sear">
+                <input type="text" id="top_search" placeholder="Search the listing and users..." class="search-field">
+                <ul id="tser-res" class="tser-res">
+                    <li><a href="activate.html">Activate template</a></li>
+                    <li><a href="updates.html">Bizbook template updates and release</a></li>
+                    <li><a href="addons.html">Premium Addons</a></li>
+                    <li><a href="admin-add-new-user.html">Add new user</a></li>
+                    <li><a href="admin-add-new-listings.html">Add new listing</a></li>
+                    <li><a href="admin-add-new-product.html">Add new product</a></li>
+                    <li><a href="admin-add-new-event.html">Add new events</a></li>
+                    <li><a href="admin-slider-create.html">Add new slider</a></li>
+                    <li><a href="profile.html">Dashboard</a></li>
+                    <li><a href="profile.html">Profile page</a></li>
+                    <li><a href="admin-all-users.html">All users</a></li>
+                    <li><a href="admin-new-user-requests.html">New user requests</a></li>
+                    <li><a href="admin-new-cod-requests.html">Cash on delivery(COD) requests</a></li>
+                    <li><a href="admin-all-users-general.html">General users</a></li>
+                    <li><a href="admin-all-users-service-provider.html">Services providers</a></li>
+                    <li><a href="admin-free-users.html">Free users</a></li>
+                    <li><a href="admin-standard-users.html">Standard users</a></li>
+                    <li><a href="admin-premium-users.html">Premium users</a></li>
+                    <li><a href="admin-premium-plus-users.html">Premium plus users</a></li>
+                    <li><a href="admin-non-paid-users.html">Non-paid users</a></li>
+                    <li><a href="admin-paid-users.html">Paid users</a></li>
+                    <li><a href="admin-sub-admin-all.html">Sub admin</a></li>
+                    <li><a href="admin-sub-admin-create.html">Add new sub admin</a></li>
+                    <li><a href="admin-text-changes.html">All text change</a></li>
+                    <li><a href="admin-text-changes.html">How to change all static texts</a></li>
+                    <li><a href="admin-text-changes.html">Edit webpage texts</a></li>
+                    <li><a href="admin-price.html">Pricing plan</a></li>
+
+                    <li><a href="admin-all-listings.html">All listings</a></li>
+
+                    <li><a href="admin-create-duplicate-listing.html">Create duplicate listing</a></li>
+                    <li><a href="admin-claim-listing.html">Claim request</a></li>
+                    <li><a href="admin-claim-listing.html">Listing & business claim request</a></li>
+                    <li><a href="admin-trash-listing.html">Trash listing</a></li>
+                    <li><a href="admin-event.html">All events</a></li>
+
+                    <li><a href="admin-all-blogs.html">All blogs posts</a></li>
+                    <li><a href="admin-add-new-blogs.html">Add new blog post</a></li>
+                    <li><a href="admin-all-products.html">All products</a></li>
+                    <li><a href="admin-all-payments.html">All Payments</a></li>
+
+                    <li><a href="admin-all-category.html.html">All listing category</a></li>
+                    <li><a href="admin-add-new-category.html">Add new listing category</a></li>
+                    <li><a href="admin-all-sub-category.html">Listing sub categorys</a></li>
+                    <li><a href="admin-add-new-sub-category.html">Add new listing sub category</a></li>
+                    <li><a href="admin-all-product-category.html">All product category</a></li>
+                    <li><a href="admin-add-new-product-category.html">Add new product category</a></li>
+                    <li><a href="admin-all-product-sub-category.html">Product sub categorys</a></li>
+                    <li><a href="admin-add-new-product-sub-category.html">Add new product sub category</a></li>
+                    <li><a href="admin-all-enquiry.html">All enquiry</a></li>
+                    <li><a href="admin-saved-enquiry.html">Save enquirys</a></li>
+                    <li><a href="admin-all-reviews.html">All reviews</a></li>
+                    <li><a href="admin-saved-reviews.html">Save reviews</a></li>
+                    <li><a href="admin-all-feedbacks.html">Feedbacks</a></li>
+                    <li><a href="admin-notification-all.html">All notifications</a></li>
+                    <li><a href="admin-create-notification.html">Send new notifications</a></li>
+                    <li><a href="admin-create-notification.html">Create new notifications</a></li>
+                    <li><a href="admin-current-ads.html">Current ads</a></li>
+                    <li><a href="admin-create-ads.html">Create new ads</a></li>
+                    <li><a href="admin-ads-request.html">Ads request and enquiry</a></li>
+                    <li><a href="admin-ads-price.html">Ads pricing</a></li>
+                    <li><a href="admin-home-category.html">Home page edit optins</a></li>
+                    <li><a href="admin-home-category.html">Home page category edit</a></li>
+                    <li><a href="admin-trending-category.html">Home page trending category edit</a></li>
+                    <li><a href="admin-home-popular-business.html">Home page popular business edit</a></li>
+                    <li><a href="admin-home-top-services.html">Home page top services edit</a></li>
+                    <li><a href="admin-home-feature-events.html">Home page feature events</a></li>
+                    <li><a href="admin-all-city.html">All city</a></li>
+                    <li><a href="admin-add-city.html">Add new city</a></li>
+                    <li><a href="admin-filter-features.html">Listing filetrs</a></li>
+                    <li><a href="admin-filter-category.html">Listing filter category edit</a></li>
+                    <li><a href="admin-filter-features.html">Listing feature filter edit</a></li>
+                    <li><a href="admin-invoice-create.html">Create new invoice</a></li>
+                    <li><a href="admin-send-invoice.html">Send invoice</a></li>
+                    <li><a href="admin-send-invoice.html">Send new invoice</a></li>
+                    <li><a href="admin-invoice-shared.html">Shared invoices</a></li>
+                    <li><a href="admin-import.html">Import data</a></li>
+                    <li><a href="admin-export.html">Export data</a></li>
+                    <li><a href="admin-price-edit.html?row=1">Edit free pricing plan</a></li>
+                    <li><a href="admin-price-edit.html?row=2">Edit standard pricing plan</a></li>
+                    <li><a href="admin-price-edit.html?row=3">Edit premium pricing plan</a></li>
+                    <li><a href="admin-price-edit.html?row=4">Edit premium plus pricing plan</a></li>
+                    <li><a href="admin-payment-credentials.html">Payment gateways</a></li>
+                    <li><a href="admin-payment-credentials-edit.html?row=cod">Cash On Delivery Credentials</a></li>
+                    <li><a href="admin-payment-credentials-edit.html?row=paypal">PayPal Credentials</a></li>
+                    <li><a href="admin-payment-credentials-edit.html?row=stripe">Stripe Credentials</a></li>
+                    <li><a href="admin-setting.html">Admin setting</a></li>
+                    <li><a href="admin-footer.html">Footer edit</a></li>
+                    <li><a href="admin-footer.html">Footer CMS</a></li>
+                    <li><a href="admin-dummy-images.html">Dummy image for users</a></li>
+                    <li><a href="admin-all-mail.html">Email templates</a></li>
+                    <li><a href="admin-all-mail.html">Edit email messages</a></li>
+                    <li><a href="admin-slider-all.html">All slider images</a></li>
+                    <li><a href="admin-slider-all.html">Edit slider images</a></li>
+                    <li><a href="admin-slider-create.html">Create new slider</a></li>
+                    <li><a href="admin-security-updates.html">Security and updates notifications</a></li>
+                    <li><a href="seo-listing-options.html">Listing category promotions</a></li>
+                    <li><a href="seo-listing-options.html">Listing category SEO setting</a></li>
+                    <li><a href="seo-target-promotion-all-pages.html">Target listings promotion</a></li>
+                    <li><a href="seo-target-promotion-all-pages.html">Target promotion</a></li>
+                    <li><a href="seo-target-promotion-all-pages.html">Target listings promotion page</a></li>
+                    <li><a href="seo-target-promotion-all-pages.html">Target listing SEO</a></li>
+                    <li><a href="seo-target-promotion-add-new-page.html">Add new target listing page</a></li>
+                    <li><a href="seo-general-all-pages.html">General promotion SEO setting pages</a></li>
+                    <li><a href="seo-general-add-new-page.html">Add new general promotion page</a></li>
+                    <li><a href="seo-ebook-all-pages.html">All Ebook pages</a></li>
+                    <li><a href="seo-ebook-all-pages.html">Digital promotion pages</a></li>
+                    <li><a href="seo-ebook-add-new-page.html">Add new Ebook page</a></li>
+                    <li><a href="seo-ebook-add-new-page.html">Add new Digital promotion page</a></li>
+                    <li><a href="seo-google-analytics-code.html">Google Analytics</a></li>
+                    <li><a href="seo-xml-sitemap.html">XML sitemap</a></li>
+                    <li><a href="search-lists.html">All search lists</a></li>
+                    <li><a href="search-lists-add.html">Add new search lists</a></li>
+                    <li><a href="search-positions.html">Search positions</a></li>
+                    <li><a href="seo-google-adsense.html">Google AdSense</a></li>
+                    <li><a href="seo-google-adsense.html">Add Google AdSense code</a></li>
+                    <li><a href="admin-footer.html">Footer text edit & update</a></li>
+                    <li><a href="admin-footer-popular-tags.html">Footer popular tags</a></li>
+                    <li><a href="footer-add-popular-tags.html">Add new popular tags</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="head-s3">
+            <div class="head-pro">
+                                <img src="../images/user/3.jpg" alt="">
+                <b>Profile by</b><br>
+                <h4>Bizbook Directory Template</h4>
+                                    <a href="admin-setting.html" class="fclick"></a>
+                                </div>
+        </div>
+    </div>
+</section>
+<!-- END -->
+
+<!-- START -->
+<section>
+    <div class="ad-menu-lhs mshow">
+        <div class="ad-menu">
+            <ul>
+                <li class="ic-db">
+                    <a href="profile.html">Dashboard</a>
+                </li>
+                
+                    <li class="ic-user">
+                        <a href="#"
+                           class="">Users</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-new-user-requests.html">New User Requests</a>
+                                </li>
+                                <li>
+                                    <a href="admin-new-cod-requests.html">New COD Payment Requests</a>
+                                </li><li>
+                                    <a href="admin-all-users.html">All Users</a>
+                                </li>
+                                <li>
+                                    <a href="admin-all-users-general.html">All Users - General</a>
+                                </li>
+                                <li>
+                                    <a href="admin-all-users-service-provider.html">All Users - Service Providers</a>
+                                </li>
+                                <li>
+                                    <a href="admin-free-users.html">Free Users</a>
+                                </li>
+                                <li>
+                                    <a href="admin-standard-users.html">Standard Users</a>
+                                </li>
+                                <li>
+                                    <a href="admin-premium-users.html">Premium Users</a>
+                                </li>
+                                <li>
+                                    <a href="admin-premium-plus-users.html">Premium Plus Users</a>
+                                </li>
+                                <li>
+                                    <a href="admin-non-paid-users.html">All Non-Paid Users</a>
+                                </li>
+                                <li>
+                                    <a href="admin-paid-users.html">All Paid Users</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-user.html">Add new User</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                    <li><h4>SEO Settings</h4></li>
+                    <li class="ic-seo">
+                        <a href="#"
+                           class="">SEO Settings</a>
+                        <div>
+                            <h4>
+                                Listing category
+                                <!-- TOOL TIP -->
+                                <div class="ttip-com">
+                                    <i class="material-icons">priority_high</i>
+                                    <div>This can help you to index your category pages with rich results. You can
+                                        change meta title, descriptions, keywords, Short description about your
+                                        category, FAQ and google schema(rating, faq and more) for every category.
+                                    </div>
+                                </div>
+                                <!-- END -->
+                            </h4>
+                            <ol>
+                                <li>
+                                    <a href="seo-listing-options.html">SEO options</a>
+                                </li>
+                            </ol>
+                            <h4>
+                                Target listings promotion
+                                <!-- TOOL TIP -->
+                                <div class="ttip-com">
+                                    <i class="material-icons">priority_high</i>
+                                    <div>You can create particular targeting pages with your favorite listing. This can
+                                        be helping for end-users can get accurate results, get more leads, target every
+                                        small area with google rich results, and more.
+                                    </div>
+                                </div>
+                                <!-- END -->
+                            </h4>
+                            <ol>
+                                <li>
+                                    <a href="seo-target-promotion-all-pages.html">All Pages</a>
+                                </li>
+                                <li>
+                                    <a href="seo-target-promotion-add-new-page.html">Add new page</a>
+                                </li>
+                            </ol>
+                            <h4>
+                                General promotion pages
+                                <!-- TOOL TIP -->
+                                <div class="ttip-com">
+                                    <i class="material-icons">priority_high</i>
+                                    <div>You can create general blog pages with your favorite listing, events, products,
+                                        blogs with enquiry form. This page can help you go get more leads and google
+                                        index.
+                                    </div>
+                                </div>
+                                <!-- END -->
+                            </h4>
+                            <ol>
+                                <li>
+                                    <a href="seo-general-all-pages.html">All Pages</a>
+                                </li>
+                                <li>
+                                    <a href="seo-general-add-new-page.html">Add new page</a>
+                                </li>
+                            </ol>
+                            <h4>
+                                E-book & Digital pages
+                                <!-- TOOL TIP -->
+                                <div class="ttip-com">
+                                    <i class="material-icons">priority_high</i>
+                                    <div>These pages can help you to promote a product, listing and digital assets with
+                                        enquiry form, you can get quality leads and more.
+                                    </div>
+                                </div>
+                                <!-- END -->
+                            </h4>
+                            <ol>
+                                <li>
+                                <li>
+                                    <a href="seo-ebook-all-pages.html">All Pages</a>
+                                </li>
+                                <li>
+                                    <a href="seo-ebook-add-new-page.html">Add new page</a>
+                                </li>
+                            </ol>
+                            <h4>
+                                Google Analytics
+                                <!-- TOOL TIP -->
+                                <div class="ttip-com">
+                                    <i class="material-icons">priority_high</i>
+                                    <div>Copy and paste your Google Analytics here... You can get code from Google. This
+                                        can helps "tracks and reports website traffic".
+                                    </div>
+                                </div>
+                                <!-- END -->
+                            </h4>
+                            <ol>
+                                <li>
+                                <li>
+                                    <a href="seo-google-analytics-code.html">Google Analytics Code</a>
+                                </li>
+                            </ol>
+                            <h4>
+                                Sitemap
+                                <!-- TOOL TIP -->
+                                <div class="ttip-com">
+                                    <i class="material-icons">priority_high</i>
+                                    <div>This allows search engines to crawl the site more efficiently and to find URLs
+                                        that may be isolated from the rest of the site's content.
+                                    </div>
+                                </div>
+                                <!-- END -->
+                            </h4>
+                            <ol>
+                                <li>
+                                <li>
+                                    <a href="seo-xml-sitemap.html">XML Sitemap</a>
+                                </li>
+                            </ol>
+                            <h4>
+                                Meta tags
+                                <!-- TOOL TIP -->
+                                <div class="ttip-com">
+                                    <i class="material-icons">priority_high</i>
+                                    <div>Meta tags are snippets of text that describe a page's content; the meta tags
+                                        don't appear on the page itself, but only in the page's source code. Meta tags
+                                        are essentially little content descriptors that help tell search engines what a
+                                        web page is about
+                                    </div>
+                                </div>
+                                <!-- END -->
+                            </h4>
+                            <ol>
+                                <li>
+                                <li>
+                                    <a href="seo-meta-tags.html">All Pages</a>
+                                </li>
+                                <li>
+                                    <a href="seo-all-listing-options.html">Listing SEO options</a>
+                                </li>
+                                <li>
+                                    <a href="seo-all-blog-options.html">Blog SEO options</a>
+                                </li>
+                                <li>
+                                    <a href="seo-all-event-options.html">Event SEO options</a>
+                                </li>
+                                <li>
+                                    <a href="seo-all-product-options.html">Product SEO options</a>
+                                </li>
+                                <li>
+                                    <a href="seo-all-job-options.html">Job SEO options</a>
+                                </li>
+                                <li>
+                                    <a href="seo-all-expert-options.html">Service Expert SEO options</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                <li class="ic-sear">
+                    <a href="#"
+                       class="">Search Settings</a>
+                    <div>
+                        <h4>
+                            Search list
+                            <!-- TOOL TIP -->
+                            <div class="ttip-com">
+                                <i class="material-icons">priority_high</i>
+                                <div>You can create general blog pages with your favorite listing, events, products,
+                                    blogs with enquiry form. This page can help you go get more leads and google index.
+                                </div>
+                            </div>
+                            <!-- END -->
+                        </h4>
+                        <ol>
+                            <li>
+                                <a href="search-lists.html">Search list</a>
+                            </li>
+                            <li>
+                                <a href="search-lists-add.html">Add new</a>
+                            </li>
+                        </ol>
+                        <h4>
+                            Search positions
+                            <!-- TOOL TIP -->
+                            <div class="ttip-com">
+                                <i class="material-icons">priority_high</i>
+                                <div>Drog and drop to arrange your search orders. You can change this order depends on
+                                    seasons.(Ex: School admission seasons means you can set education related listings
+                                    or targetting pages in first position.) It's hels you to getting more leads, user
+                                    friendly, end user get accurate results and more.
+                                </div>
+                            </div>
+                            <!-- END -->
+                        </h4>
+                        <ol>
+                            <li>
+                                <a href="search-positions.html">Change positions</a>
+                            </li>
+                        </ol>
+                    </div>
+                </li>
+                                        <li><h4>Listings</h4></li>
+                        <li class="ic-li">
+                            <a href="#"
+                               class="">listings</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-all-listings.html">All listings</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-add-new-listings.html">Add new listings</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-create-duplicate-listing.html">Create duplicate listings</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-claim-listing.html">All Claim Requests</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-trash-listing.html">Trash listings</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+
+                                            <li class="ic-cat">
+                            <a href="#"
+                               class="">Listing Category</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-all-category.html">All Category</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-add-new-category.html">Add new Category</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-all-sub-category.html">All Sub Category</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-add-new-sub-category.html">Add new Sub Category</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-change-position-listing-category.html">Change Category
+                                            Position</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+                                        <li class="ic-poi">
+                        <a href="#"
+                           class="">Listing Promotions</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-promotions.html">All Promotions</a>
+                                </li>
+                                <li>
+                                    <a href="admin-promote-now.html">Create New Promotions</a>
+                                </li>
+                                <li>
+                                    <a href="admin-all-points.html">All Points History</a>
+                                </li>
+                                <li>
+                                    <a href="admin-point-setting.html">Points Setting</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                            <li class="ic-enq">
+                            <a href="#"
+                               class="">Enquiry & Get Quote</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-all-enquiry.html">All Enquiry</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-saved-enquiry.html">Saved Enquiry</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+
+                                            <li class="ic-rev">
+                            <a href="#"
+                               class="">Reviews</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-all-reviews.html">All Reviews</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-saved-reviews.html">Saved Reviews</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+                                            <li class="ic-fil">
+                            <a href="#"
+                               class="">Listing Filter</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-all-filters.html">All Filters</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-filter-features.html">Features</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+
+                                            <li class="ic-cou">
+                            <a href="#"
+                               class="">Country</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-all-country.html">All Country</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-add-country.html">Add New Country</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+                                            <li class="ic-cit">
+                            <a href="#"
+                               class="">City</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-all-city.html">All City</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-add-city.html">Add New City</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+                                        <li><h4>ADS POSTS</h4></li>
+                          <li class="ic-eve">
+                            <a href="#" class="">Ads</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-ad-post-all.html">All Ads</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-ad-post-new-ads.html">Add new Ads</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+                        <li class="ic-act">
+                            <a href="admin-ad-post-all-category.html">All Category</a>
+                        </li><li><h4>Service Experts</h4></li>
+                    <li class="ic-eve">
+                        <a href="#"
+                           class="">Service Experts</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="expert-users.html">All Experts</a>
+                                </li>
+                                <li>
+                                    <a href="expert-new-create.html">Add new Expert</a>
+                                </li>
+                                <li>
+                                    <a href="expert-leads.html">All Expert Leads</a>
+                                </li>
+                                <li>
+                                    <a href="expert-general-leads.html">All General Leads</a>
+                                </li>
+                                <li>
+                                    <a href="expert-admin-info.html">Service Expert Admin Info</a>
+                                </li>
+
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-cat">
+                        <a href="#"
+                           class="">Experts Category</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="expert-all-category.html">All Category</a>
+                                </li>
+                                <li>
+                                    <a href="expert-add-new-category.html">Add new Category</a>
+                                </li>
+                                <li>
+                                    <a href="expert-home-category-change.html">Homepage Category Order</a>
+                                </li>
+                                <li>
+                                    <a href="expert-all-sub-category.html">All Sub Category</a>
+                                </li>
+                                <li>
+                                    <a href="expert-add-new-sub-category.html">Add new Sub Category</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-cit">
+                        <a href="#"
+                           class="">Expert Cities & Areas</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="expert-all-city.html">All Expert City</a>
+                                </li>
+                                <li>
+                                    <a href="expert-add-new-city.html">Add New Expert City</a>
+                                </li>
+                                <li>
+                                    <a href="expert-all-area.html">All Expert Areas</a>
+                                </li>
+                                <li>
+                                    <a href="expert-add-new-area.html">Add New Expert Area</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-pay-acc">
+                        <a href="#"
+                           class="">Accept Payment Modes</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="expert-payment-accept.html">Payments types</a>
+                                </li>
+                                <li>
+                                    <a href="expert-add-new-payment.html">Add New Payment type</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                    <li><h4>Jobs</h4></li>
+                    <li class="ic-eve">
+                        <a href="#"
+                           class="">Jobs</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="job-all.html">All Jobs</a>
+                                </li>
+                                <li>
+                                    <a href="job-create.html">Add new Job post</a>
+                                </li>
+                                <li>
+                                    <a href="job-seeker-details.html">Job seeker details</a>
+                                </li>
+                                <li>
+                                    <a href="job-all-applied.html">All Applied Jobs</a>
+                                </li>
+                                <li>
+                                    <a href="jobs-premium.html">Home Page Premium Jobs</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-cat">
+                        <a href="#"
+                           class="">Job Category</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-job-category.html">All Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-job-category.html">Add new Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-all-job-sub-category.html">All Sub Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-job-sub-category.html">Add new Sub Category</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-cat">
+                        <a href="#"
+                           class="">Job Skill Set</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-job-skill-set.html">All Skill Set</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-job-skill-set.html">Add new Skill Set</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-cit">
+                        <a href="#"
+                           class="">Job City</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-job-city.html">All Job City</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-job-city.html">Add New Job City</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+
+                                    <li><h4>Products</h4></li>
+                    <li class="ic-prod">
+                        <a href="#"
+                           class="">Products</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-products.html">All Products</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-product.html">Add new Product</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                    <li class="ic-cat">
+                        <a href="#"
+                           class="">Product Category</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-product-category.html">All Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-product-category.html">Add new Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-all-product-sub-category.html">All Sub Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-product-sub-category.html">Add new Sub Category</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                    <li><h4>Events</h4></li>
+                    <li class="ic-eve">
+                        <a href="#"
+                           class="">Events</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-event.html">All Events</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-event.html">Add new Events</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-cat">
+                        <a href="#"
+                           class="">Event Category</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-event-category.html">All Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-event-category.html">Add new Category</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                    <li><h4>Blogs</h4></li>
+                    <li class="ic-blo">
+                        <a href="#"
+                           class="">Blogs</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-blogs.html">All Blogs</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-blogs.html">Add new Blogs</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-cat">
+                        <a href="#"
+                           class="">Blog Category</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-blog-category.html">All Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-blog-category.html">Add new Category</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+
+                                    <li><h4>Coupon & Deals</h4></li>
+                    <li class="ic-coup">
+                        <a href="#"
+                           class="">Coupon and deals</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-coupons.html">All Coupons</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-new-coupons.html">Add new coupon</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+
+                                    <li><h4>News & Magazines</h4></li>
+                    <li class="ic-news">
+                        <a href="#"
+                           class="">All News Posts</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="news-all.html">All News</a>
+                                </li>
+                                <li>
+                                    <a href="news-add-new.html">Add new news</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-news">
+                        <a href="#"
+                           class="">Category</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="news-all-category.html">All Category</a>
+                                </li>
+                                <li>
+                                    <a href="news-add-new-category.html">Add new Category</a>
+                                </li>
+                                <li>
+                                    <a href="news-category-position.html">Category menu order</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-news">
+                        <a href="#"
+                           class="">News City</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-news-city.html">All News City</a>
+                                </li>
+                                <li>
+                                    <a href="admin-add-news-city.html">Add News City</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-news">
+                        <a href="#"
+                           class="">News Home Page</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="news-home-trending.html">Trending posts</a>
+                                </li>
+                                <li>
+                                    <a href="news-home-trending-position.html">Trending posts menu order</a>
+                                </li>
+                                <li>
+                                    <a href="news-home-sliders.html">Slider posts</a>
+                                </li>
+                                <li>
+                                    <a href="news-home-sliders-position.html">Slider posts menu order</a>
+                                </li>
+                                <li>
+                                    <a href="news-home-social-media.html">Social Media</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+
+                    <li class="ic-logo">
+                        <a class="" href="news-subscribers.html">News Subscribers</a>
+                    </li>
+
+                                    <li><h4>Places</h4></li>
+                    <li class="ic-place">
+                        <a class="" href="place-all.html">All Places</a>
+                    </li>
+                    <li class="ic-cat">
+                        <a href="#"
+                           class="">Category</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="place-all-category.html">All Category</a>
+                                </li>
+                                <li>
+                                    <a href="place-category-position.html">Category menu order</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+
+                    <li class="ic-place">
+                        <a class="" href="place-request.html">Place request</a>
+                    </li>
+
+                                    <li><h4>Payments</h4></li>
+                                    <li class="ic-pay">
+                        <a class="" href="admin-all-payments.html">All Payments</a>
+                    </li>
+                                            <li class="ic-inv">
+                            <a href="#"
+                               class="">Invoice</a>
+                            <div>
+                                <ol>
+                                    <li>
+                                        <a href="admin-invoice-create.html">Create new Invoice</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-send-invoice.html">Send Invoice</a>
+                                    </li>
+                                    <li>
+                                        <a href="admin-invoice-shared.html">Shared Invoices</a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </li>
+                                            <li class="ic-pri">
+                            <a class="" href="admin-price.html">Pricing Plans</a>
+                        </li>
+                                            <li class="ic-pay">
+                            <a class="" href="admin-payment-credentials.html">Payment gateway</a>
+                        </li>
+
+                                        <li><h4>ADS</h4></li>
+                    <li class="ic-ads">
+                        <a href="#"
+                           class="">Ads</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-current-ads.html">Current Ads</a>
+                                </li>
+                                <li>
+                                    <a href="admin-create-ads.html">Create new Ads</a>
+                                </li>
+                                <li>
+                                    <a href="admin-ads-request.html">Ad Request & Enquiry</a>
+                                </li>
+                                <li>
+                                    <a href="admin-ads-price.html">Ad Pricing</a>
+                                </li>
+                                <li>
+                                    <a href="seo-google-adsense.html">Google AdSense</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                
+                <li class="ic-slid">
+                    <a href="#"
+                       class="">Slider Images</a>
+                    <div>
+                        <ol>
+                            <li>
+                                <a href="admin-slider-all.html">All Slider Images</a>
+                            </li>
+                            <li>
+                                <a href="admin-slider-create.html">Add New Slider</a>
+                            </li>
+                        </ol>
+                    </div>
+                </li>
+                <li><h4>Settings</h4></li>
+                                    <li class="ic-set">
+                        <a class="" href="admin-setting.html">Site Setting</a>
+                    </li>
+                    <li class="ic-set">
+                        <a class="" href="admin-page-url-setting.html">Page URL Setting</a>
+                    </li>
+                                                    <li><h4>Appearance</h4></li>
+                    <li class="ic-logo">
+                        <a class="" href="admin-logo.html">Website Logo</a>
+                    </li>
+                    <li class="ic-colr">
+                        <a class="" href="color-setting.html">Color Setting</a>
+                    </li>
+                    <li class="ic-feat">
+                        <a class="" href="features-enable-disable.html">Features Enable & Disable</a>
+                    </li>
+                    <li class="ic-medi">
+                        <a class="" href="media-library.html">Media Library</a>
+                    </li>
+
+                                    <li><h4>CMS</h4></li>
+                    <li class="ic-hom">
+                        <a href="#"
+                           class="">Home Page</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-home-top-section.html">Top Section</a>
+                                </li>
+                                <li>
+                                    <a href="admin-home-category.html">Choose Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-trending-category.html">Choose Trending Category</a>
+                                </li>
+                                <li>
+                                    <a href="admin-home-popular-business.html">Popular Business</a>
+                                </li>
+                                <li>
+                                    <a href="admin-home-top-services.html">Top Services</a>
+                                </li>
+                                <li>
+                                    <a href="admin-home-feature-events.html">Feature Events</a>
+                                </li>
+                                <li>
+                                    <a href="home-page-template.html">Home page template</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                    <li class="ic-txt">
+                        <a class="" href="admin-text-changes.html">All Text Changes</a>
+                    </li>
+                                    <li class="ic-sub">
+                        <a href="#"
+                           class="">Footer</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-footer.html">Footer CMS</a>
+                                </li>
+                                <li>
+                                    <a href="admin-footer-popular-tags.html">Footer popular tags</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                
+                                    <li class="ic-dum">
+                        <a class="" href="admin-dummy-images.html">Dummy Images</a>
+                    </li>
+                                    <li class="ic-mail">
+                        <a href="admin-all-mail.html"
+                           class="">Mail Templates</a>
+                    </li>
+                                    <li class="ic-soci">
+                        <a href="admin-social-share.html" class="">Social media share</a>
+                    </li>
+
+                                    <li><h4>Others</h4></li>
+                    <li class="ic-febk">
+                        <a href="#" class="">Feedbacks</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-all-feedbacks.html">All Feedbacks</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                    <li class="ic-noti">
+                        <a href="#"
+                           class="">Send Notifications</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-notification-all.html">All Notifications</a>
+                                </li>
+                                <li>
+                                    <a href="admin-create-notification.html">Create New Notifications</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+
+                                    <li class="ic-imp">
+                        <a href="#"
+                           class="">Import & Export</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-import.html">Import Data</a>
+                                </li>
+                                <li>
+                                    <a href="admin-export.html">Export Data</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+                                    <li class="ic-sub">
+                        <a href="#"
+                           class="">Sub Admin</a>
+                        <div>
+                            <ol>
+                                <li>
+                                    <a href="admin-sub-admin-all.html">All Sub Admins</a>
+                                </li>
+                                <li>
+                                    <a href="admin-sub-admin-create.html">Create new Sub Admin</a>
+                                </li>
+                            </ol>
+                        </div>
+                    </li>
+
+                                    <li><h4>Bizbook template </h4></li>
+                    <li class="ic-act">
+                        <a href="activate.html" class="">Activation</a>
+                    </li>
+                                    <li class="ic-upd">
+                        <a href="updates.html" class="">Bizbook updates</a>
+                    </li>
+                                <li class="ic-set">
+                    <a href="admin-security-updates.html"
+                       class="">Security & Update News</a>
+                </li>
+                <li><h4>Sign out </h4></li>
+                <li class="ic-lgo">
+                    <a href="logout.html">Log out</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- END -->  
+<!-- START -->
+<section>
+    <div class="ad-com">
+        <div class="ad-dash leftpadd">
+            <div class="login-reg">
+                <div class="container">
+                    <form action="insert_listing.html" class="listing_form" id="listing_form"
+                          name="listing_form" method="post" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="login-main add-list posr">
+                                <div class="log-bor">&nbsp;</div>
+                                <span class="udb-inst">step 1</span>
+                                <div class="log log-1">
+                                    <div class="login">
+                                        <h4>Listing Details</h4>
+                                        
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <select name="user_code" id="user_code" class="form-control"
+                                                            required="required">
+                                                        <option value="" disabled selected>User Name</option>                                                    <optionvalue="USER339">werwer</option>                                                        <optionvalue="USER338">Reas</option>                                                        <optionvalue="USER337">Reas</option>                                                        <optionvalue="USER335">Vj</option>                                                        <optionvalue="USER334">Abhinav</option>                                                        <optionvalue="USER333">abhinav</option>                                                        <optionvalue="USER332">abhinav</option>                                                        <optionvalue="USER328">Joney deep</option>                                                        <optionvalue="USER325">Loki</option>                                                        <optionvalue="USER315">dvdfd</option>                                                        <optionvalue="USER314">s</option>                                                        <optionvalue="USER313">Simarjit Bajwa</option>                                                        <optionvalue="USER312">egsegs</option>                                                        <optionvalue="USER311">pankaj kumar</option>                                                        <optionvalue="USER310">besthaus</option>                                                        <optionvalue="USER309">Wasyan</option>                                                        <optionvalue="USER308">alessandro</option>                                                        <optionvalue="USER307">madhu</option>                                                        <optionvalue="USER306">123</option>                                                        <optionvalue="USER305">Risado Risado</option>                                                        <optionvalue="USER304">Gianluca Rossi</option>                                                        <optionvalue="USER303">PRASHANT GUNTHEY</option>                                                        <optionvalue="USER302">Srikanth</option>                                                        <optionvalue="USER301">Rao</option>                                                        <optionvalue="USER300">Amit Kumar</option>                                                        <optionvalue="USER299">pankaj</option>                                                        <optionvalue="USER298">ulcay</option>                                                        <optionvalue="USER297">admin</option>                                                        <optionvalue="USER296">lal</option>                                                        <optionvalue="USER295">Dhanush Ariah</option>                                                        <optionvalue="USER294">kvin</option>                                                        <optionvalue="USER293">Kaan</option>                                                        <optionvalue="USER292">fggfh</option>                                                        <optionvalue="USER291">swap</option>                                                        <optionvalue="USER288">UFUK GÜVENÇ</option>                                                        <optionvalue="USER287">Abu</option>                                                        <optionvalue="USER285">Bret E Littlefield</option>                                                        <optionvalue="USER282">mat</option>                                                        <optionvalue="USER270">yassine ben brahim</option>                                                        <optionvalue="USER269">Nawaf Alayli</option>                                                        <optionvalue="USER268">Nawaf Alayli</option>                                                        <optionvalue="USER267">A S</option>                                                        <optionvalue="USER264">Xavier</option>                                                        <optionvalue="USER263">Larry Darnell Hubbard</option>                                                        <optionvalue="USER262">Amit Bhatnagar</option>                                                        <optionvalue="USER261">John</option>                                                        <optionvalue="USER260">Peter Jay</option>                                                        <optionvalue="USER259">K K CHOUDHARY</option>                                                        <optionvalue="USER258">Banwari</option>                                                        <optionvalue="USER257">aklsdjf</option>                                                        <optionvalue="USER256">James</option>                                                        <optionvalue="USER255">test</option>                                                        <optionvalue="USER254">Test Hector</option>                                                        <optionvalue="USER253">Test Test</option>                                                        <optionvalue="USER252">ghanta</option>                                                        <optionvalue="USER251">Levi Gimenes Pereira</option>                                                        <optionvalue="USER250">Rocky</option>                                                        <optionvalue="USER245">Josy Demo</option>                                                        <optionvalue="USER244">sumanth</option>                                                        <optionvalue="USER243">asdf</option>                                                        <optionvalue="USER242">asdf</option>                                                        <optionvalue="USER241">Mike</option>                                                        <optionvalue="USER240">domnic lakra</option>                                                        <optionvalue="USER239">Domnic Lakra</option>                                                        <optionvalue="USER238">shalev</option>                                                        <optionvalue="USER237">shon</option>                                                        <optionvalue="USER236">carrie</option>                                                        <optionvalue="USER235">FIDELE</option>                                                        <optionvalue="USER234">ahmad</option>                                                        <optionvalue="USER233">Test</option>                                                        <optionvalue="USER232">Segun Adegunloye</option>                                                        <optionvalue="USER231">Adewale Festus</option>                                                        <optionvalue="USER230">Ravindu</option>                                                        <optionvalue="USER228">Si Thu</option>                                                        <optionvalue="USER227">dfghj</option>                                                        <optionvalue="USER226">Jorge</option>                                                        <optionvalue="USER225">1234567890</option>                                                        <optionvalue="USER224">asd</option>                                                        <optionvalue="USER223">jelotesan</option>                                                        <optionvalue="USER222">test</option>                                                        <optionvalue="USER221">Sachin</option>                                                        <optionvalue="USER220">Sam</option>                                                        <optionvalue="USER219">NIA</option>                                                        <optionvalue="USER218">@youngpeezle</option>                                                        <optionvalue="USER217">Ashish</option>                                                        <optionvalue="USER216">john</option>                                                        <optionvalue="USER215">Antonio Ussoli</option>                                                        <optionvalue="USER214">dkroy</option>                                                        <optionvalue="USER212">Sam</option>                                                        <optionvalue="USER211">johnny</option>                                                        <optionvalue="USER210">cdgfhnndgjh</option>                                                        <optionvalue="USER209">dkroy</option>                                                        <optionvalue="USER208">Chis</option>                                                        <optionvalue="USER207">clic</option>                                                        <optionvalue="USER206">SC</option>                                                        <optionvalue="USER205">Cggb</option>                                                        <optionvalue="USER203">Ramesh</option>                                                        <optionvalue="USER202">Ram</option>                                                        <optionvalue="USER201">digital</option>                                                        <optionvalue="USER200">Baburao</option>                                                        <optionvalue="USER199">Ajey Reddy</option>                                                        <optionvalue="USER198">Bharat </option>                                                        <optionvalue="USER197">Nagarjun</option>                                                        <optionvalue="USER196">Sarvar Djuraev</option>                                                        <optionvalue="USER195">Lakshmi</option>                                                        <optionvalue="USER194">Chidubem</option>                                                        <optionvalue="USER193">Zame</option>                                                        <optionvalue="USER191">sa</option>                                                        <optionvalue="USER190">prueba</option>                                                        <optionvalue="USER189">Nabin</option>                                                        <optionvalue="USER188">karan</option>                                                        <optionvalue="USER187">Bahroz</option>                                                        <optionvalue="USER186">Fuad</option>                                                        <optionvalue="USER185">ND</option>                                                        <optionvalue="USER184">Damilola Parkinson</option>                                                        <optionvalue="USER183">Sasabell </option>                                                        <optionvalue="USER182">Oabale</option>                                                        <optionvalue="USER181">Oabale</option>                                                        <optionvalue="USER180">Okpe</option>                                                        <optionvalue="USER179">koko</option>                                                        <optionvalue="USER177">test</option>                                                        <optionvalue="USER176">Lukholo</option>                                                        <optionvalue="USER175">Rodrigo Alberto LondoÃ±o Pardo</option>                                                        <optionvalue="USER174">beejay</option>                                                        <optionvalue="USER173">kaushal</option>                                                        <optionvalue="USER172">test</option>                                                        <optionvalue="USER171">Risly</option>                                                        <optionvalue="USER170">dhanush</option>                                                        <optionvalue="USER168">KAILASH CHANDNA</option>                                                        <optionvalue="USER164">maria clara</option>                                                        <optionvalue="USER163">josh</option>                                                        <optionvalue="USER162">paviter</option>                                                        <optionvalue="USER160">ahmet</option>                                                        <optionvalue="USER159">eslam</option>                                                        <optionvalue="USER158">asdad</option>                                                        <optionvalue="USER157">Mohammed</option>                                                        <optionvalue="USER155">sinan</option>                                                        <optionvalue="USER154">deneme</option>                                                        <optionvalue="USER153">Kristopher</option>                                                        <optionvalue="USER151">Joe</option>                                                        <optionvalue="USER150">moshe</option>                                                        <optionvalue="USER149">kubu99</option>                                                        <optionvalue="USER148">parham</option>                                                        <optionvalue="USER147">deneme</option>                                                        <optionvalue="USER146">Vivek</option>                                                        <optionvalue="USER145"></option>                                                        <optionvalue="USER144">Will smith</option>                                                        <optionvalue="USER142">audrey</option>                                                        <optionvalue="USER141">Jorge</option>                                                        <optionvalue="USER139">shahram</option>                                                        <optionvalue="USER138">takahiro</option>                                                        <optionvalue="USER137">Hafeez</option>                                                        <optionvalue="USER136">Vijay</option>                                                        <optionvalue="USER135">olomu</option>                                                        <optionvalue="USER134">david</option>                                                        <optionvalue="USER133">Ramesh</option>                                                        <optionvalue="USER132">GGJHG</option>                                                        <optionvalue="USER131">sasa</option>                                                        <optionvalue="USER130">vijay</option>                                                        <optionvalue="USER129">ninjacoder1</option>                                                        <optionvalue="USER128">havij</option>                                                        <optionvalue="USER127">tam</option>                                                        <optionvalue="USER126">will</option>                                                        <optionvalue="USER123">fgfdgdsfdf</option>                                                        <optionvalue="USER122">Dhruv</option>                                                        <optionvalue="USER121">sachin</option>                                                        <optionvalue="USER120">dharm</option>                                                        <optionvalue="USER119">devo</option>                                                        <optionvalue="USER118">ABCuser</option>                                                        <optionvalue="USER117">abc</option>                                                        <optionvalue="USER115">edy</option>                                                        <optionvalue="USER114">sd</option>                                                        <optionvalue="USER113">Mansoor</option>                                                        <optionvalue="USER112">Robert</option>                                                        <optionvalue="USER111">Avinash</option>                                                        <optionvalue="USER108">CONRAD</option>                                                        <optionvalue="USER107">tech</option>                                                        <optionvalue="USER106">Seemal</option>                                                        <optionvalue="USER105">Seemal</option>                                                        <optionvalue="USER104">Rhobos</option>                                                        <optionvalue="USER103">Tristan</option>                                                        <optionvalue="USER102">Kumar</option>                                                        <optionvalue="USER101">Alma</option>                                                        <optionvalue="USER100">Ashish</option>                                                        <optionvalue="USER099">Santosh</option>                                                        <optionvalue="USER097">gan.test2019@gmail.com</option>                                                        <optionvalue="USER096">sarath</option>                                                        <optionvalue="USER095">fgfdgfd</option>                                                        <optionvalue="USER094">Waqar</option>                                                        <optionvalue="USER093">ramu</option>                                                        <optionvalue="USER092">tuna</option>                                                        <optionvalue="USER091">Graduation</option>                                                        <optionvalue="USER090">jakir</option>                                                        <optionvalue="USER089">Zanya</option>                                                        <optionvalue="USER088">Zanya</option>                                                        <optionvalue="USER087">nirojan</option>                                                        <optionvalue="USER086">Ra</option>                                                        <optionvalue="USER085">eee</option>                                                        <optionvalue="USER084">Amit</option>                                                        <optionvalue="USER083">Ayesha</option>                                                        <optionvalue="USER082">mukisa</option>                                                        <optionvalue="USER081">Bbhh</option>                                                        <optionvalue="USER080">Paul</option>                                                        <optionvalue="USER079">aaa</option>                                                        <optionvalue="USER078">nana</option>                                                        <optionvalue="USER077">Brijesh</option>                                                        <optionvalue="USER076">Kumar</option>                                                        <optionvalue="USER075">dararafa</option>                                                        <optionvalue="USER074">testid@gmail.com</option>                                                        <optionvalue="USER073"></option>                                                        <optionvalue="USER072">ma inim</option>                                                        <optionvalue="USER071">AB</option>                                                        <optionvalue="USER070">raju</option>                                                        <optionvalue="USER069">Nandu</option>                                                        <optionvalue="USER068">Test</option>                                                        <optionvalue="USER067">test user</option>                                                        <optionvalue="USER066">laxman</option>                                                        <optionvalue="USER065">laxman</option>                                                        <optionvalue="USER064">random</option>                                                        <optionvalue="USER063">Winnie Munthali</option>                                                        <optionvalue="USER062">armel wanes</option>                                                        <optionvalue="USER061">Adem</option>                                                        <optionvalue="USER059">Kumar</option>                                                        <optionvalue="USER058">Sk</option>                                                        <optionvalue="USER057">SK</option>                                                        <optionvalue="USER056">rajss</option>                                                        <optionvalue="USER055">kapil</option>                                                        <optionvalue="USER054">1212</option>                                                        <optionvalue="USER053">aaa</option>                                                        <optionvalue="USER052">Andreas</option>                                                        <optionvalue="USER051">hi</option>                                                        <optionvalue="USER050">amine</option>                                                        <optionvalue="USER049">chahir</option>                                                        <optionvalue="USER047">maya</option>                                                        <optionvalue="USER045">Rebecca G Torres</option>                                                        <optionvalue="USER044">Claude D Dial</option>                                                        <optionvalue="USER043">Leland K Cotter</option>                                                        <optionvalue="USER042">Betty D Friedman</option>                                                        <optionvalue="USER041">Rachel</option>                                                        <optionvalue="USER037">Rn53 Themes</option>                                                        <optionvalue="USER035">Directory Finder</option>                                                </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <input id="listing_name" name="listing_name" type="text"
+                                                           required="required" class="form-control"
+                                                           placeholder="Listing name *">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="text" name="listing_mobile" class="form-control"
+                                                           placeholder="Phone number">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="text" name="listing_email" class="form-control"
+                                                           placeholder="Email id">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <input type="text" name="listing_whatsapp" class="form-control"
+                                                           placeholder="Whatsapp Number">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <input type="text" name="listing_website" class="form-control"
+                                                           placeholder="Webiste(www.rn53themes.net)">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <input type="text" name="listing_address" required="required" class="form-control"
+                                                           placeholder="Shop address">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="text" name="listing_lat" class="form-control"
+                                                           placeholder="Latitude i.e 40.730610">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="text" name="listing_lng" class="form-control"
+                                                           placeholder="Longitude i.e -73.935242">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <select onChange="getCities(this.value);" name="country_id" required="required"
+                                                            class="form-control">
+                                                        <option value="">Select your Country</option>                                                        <option                                                                     value="101">India</option>                                                                <option                                                                     value="230">United Kingdom</option>                                                                <option                                                                     value="231">United States</option>                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <!--                            <div class="row">-->
+                                        <!--                                <div class="col-md-12">-->
+                                        <!--                                    <div class="form-group">-->
+                                        <!--                                        <input id="select-city" name="city_id" required="required" type="text"-->
+                                        <!--                                               value="-->
+                                        <!--"-->
+                                        <!--                                               class="autocomplete form-control" placeholder="City name">-->
+                                        <!--                                    </div>-->
+                                        <!--                                </div>-->
+                                        <!--                            </div>-->
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <select data-placeholder="Select your Cities" name="city_id[]" id="city_id" multiple required="required"
+                                                            class="chosen-select form-control">
+                                                        <option value="">Select your Cities</option>
+
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <select onChange="getSubCategory(this.value);" name="category_id" id="category_id" class="form-control">
+                                                        <option value="">Select Category</option>                                                    <optionvalue="19">Wedding halls</option>                                                        <optionvalue="18">Hotel & Food</option>                                                        <optionvalue="17">Pet shop</option>                                                        <optionvalue="16">Digital Products</option>                                                        <optionvalue="15">Spa and Facial</option>                                                        <optionvalue="10">Real Estate</option>                                                        <optionvalue="8">Sports</option>                                                        <optionvalue="7">Education</option>                                                        <optionvalue="6">Electricals</option>                                                        <optionvalue="5">Automobiles</option>                                                        <optionvalue="3">Transportation</option>                                                        <optionvalue="2">Hospitals</option>                                                        <optionvalue="1">Hotels And Resorts</option>                                                </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <select  data-placeholder="Select Sub Category" name="sub_category_id[]" id="sub_category_id" multiple class="chosen-select form-control">
+                                                        <option value="">Select Sub Category</option>
+                                                        <!--                                            -->                                                        <!--                                                <option -->                                                        <!--                                                    value="--><!--">--><!--</option>-->                                            </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <textarea class="form-control" id="listing_description"
+                                                              name="listing_description"
+                                                              placeholder="Details about your listing"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Choose profile image</label>
+                                                    <input type="file" name="profile_image" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label>Choose cover image</label>
+                                                    <input type="file" name="cover_image" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                        <textarea class="form-control" id="service_locations"
+                                                  name="service_locations"
+                                                  placeholder="Enter your service locations... &#10;(i.e) London, Dallas, Wall Street, Opera House"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="login-main add-list add-list-ser">
+                                <div class="log-bor">&nbsp;</div>
+                                <span class="steps">Step 2</span>
+                                <div class="log">
+                                    <div class="login">
+
+                                        <h4>Services provide</h4>
+                                        <span class="add-list-add-btn lis-ser-add-btn" title="add new offer">+</span>
+                                        <span class="add-list-rem-btn lis-ser-rem-btn" title="remove offer">-</span>
+                                            <ul>
+                                                <li>
+                                                    <!--FILED START-->
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group"><label>Service name:</label><input type="text" name="service_id[]"       class="form-control"       placeholder="Ex: Plumbile">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group"><label>Choose profile image</label><input type="file" name="service_image[]"       class="form-control">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!--FILED END-->
+                                                </li>
+                                                <li>
+                                                    <!--FILED START-->
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <div class="form-group"><label>Service name:</label><input type="text" name="service_id[]"       class="form-control"       placeholder="Ex: bike service">
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div class="form-group"><label>Choose profile image</label><input type="file" name="service_image[]"       class="form-control">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!--FILED END-->
+                                                </li>
+                                            </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="row">
+                            <div class="login-main add-list">
+                                <div class="log-bor">&nbsp;</div>
+                                <span class="steps">Step 3</span>
+                                <div class="log">
+                                    <div class="login add-list-off">
+
+                                        <h4>Special offers</h4>
+                                        <span class="add-list-add-btn lis-add-off" title="add new offer">+</span>
+                                        <span class="add-list-rem-btn lis-add-rem" title="remove offer">-</span>
+
+                                        <ul>
+                                            <li>
+                                                <!--FILED START-->
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <input type="text" name="service_1_name[]"   class="form-control"   placeholder="Offer name *">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="form-group">
+                                                            <input type="text" name="service_1_price[]"   class="form-control" onkeypress="return isNumber(event)"   placeholder="Price">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--FILED END-->
+                                                <!--FILED START-->
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="form-group">
+                                                        <textarea class="form-control" name="service_1_detail[]"  placeholder="Details about this offer"></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--FILED END-->
+                                                <!--FILED START-->
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="form-group">
+                                                            <label>Choose offer image</label>
+                                                            <input type="file" name="service_1_image[]"   class="form-control">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--FILED END-->
+                                                <!--FILED START-->
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                        <div class="form-group">
+                                                            <input type="text" name="service_1_view_more[]"   class="form-control"  placeholder="View More Link">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--FILED END-->
+                                            </li>
+                                        </ul>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="login-main add-list">
+                                <div class="log-bor">&nbsp;</div>
+                                <span class="steps">Step 4</span>
+                                <div class="log add-list-map">
+                                    <div class="login add-list-map">
+                                        <h4>Video Gallery</h4>
+                                        <ul>
+                                            <span class="add-list-add-btn lis-add-oadvideo" title="add new video">+</span>
+                                            <span class="add-list-rem-btn lis-add-orevideo" title="remove video">-</span>
+                                                <li>
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <div class="form-group">
+                                                 <textarea id="listing_video" name="listing_video[]"
+                                                           class="form-control"
+                                                           placeholder="Paste Your Youtube Url here"></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                        </ul>
+                                        <h4>Map and 360 view</h4>
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                <textarea class="form-control" name="google_map"
+                                                          placeholder="Shop location"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                <textarea class="form-control" name="360_view"
+                                                          placeholder="360 view"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+
+                                        <h4 class="pt30">Photo gallery</h4>
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="file" name="gallery_image[]" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="file" name="gallery_image[]" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="file" name="gallery_image[]" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="file" name="gallery_image[]" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="file" name="gallery_image[]" class="form-control">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <input type="file" name="gallery_image[]" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="login-main add-list">
+                                <div class="log-bor">&nbsp;</div>
+                                <span class="steps">Step 5</span>
+                                <div class="log">
+                                    <div class="login add-lis-oth">
+
+                                        <h4>Other informations</h4>
+                                        <span class="add-list-add-btn lis-add-oad" title="add new offer">+</span>
+                                        <span class="add-list-rem-btn lis-add-ore" title="remove offer">-</span>
+
+                                        <ul>
+                                            <li>
+                                                <!--FILED START-->
+                                                <div class="row">
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <input type="text" name="listing_info_question[]"   class="form-control" placeholder="Experience">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <i class="material-icons">arrow_forward</i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <input type="text" name="listing_info_answer[]"   class="form-control" placeholder="20 years">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <!--FILED END-->
+                                            </li>
+                                            <!--FILED START-->
+                                            <li>
+                                                <div class="row">
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <input type="text" name="listing_info_question[]"   class="form-control" placeholder="Parking">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <i class="material-icons">arrow_forward</i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <input type="text" name="listing_info_answer[]"   class="form-control" placeholder="yes">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <li>
+                                                <div class="row">
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <input type="text" name="listing_info_question[]"   class="form-control" placeholder="Smoking">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <i class="material-icons">arrow_forward</i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <input type="text" name="listing_info_answer[]"   class="form-control" placeholder="yes">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <!--FILED END-->
+                                            <!--FILED START-->
+                                            <li>
+                                                <div class="row">
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <input type="text" name="listing_info_question[]"   class="form-control" placeholder="Take Out">
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <div class="form-group">
+                                                            <i class="material-icons">arrow_forward</i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <div class="form-group">
+                                                            <input type="text" name="listing_info_answer[]"   class="form-control" placeholder="yes">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <!--FILED END-->
+
+                                        </ul>
+                                        <!--FILED START-->
+                                        <div class="row">
+                                            <!--                                        <div class="col-md-6">-->
+                                            <!--                                            <button type="submit" class="btn btn-primary">Previous</button>-->
+                                            <!--                                        </div>-->
+                                            <div class="col-md-12">
+                                                <button type="submit" name="listing_submit" class="btn btn-primary">
+                                                    Submit
+                                                    Listing
+                                                </button>
+                                            </div>
+                                            <div class="col-md-12">
+                                                <a href="profile.html"class="skip">Go to Dashboard >></a>
+                                            </div>
+                                        </div>
+                                        <!--FILED END-->
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </form>                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- END -->
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="../js/jquery.min.js"></script>
+<script src="../js/popper.min.js"></script>
+<script src="../js/bootstrap.min.js"></script>
+<script src="../js/jquery-ui.js"></script>
+<script src="../js/select-opt.js"></script>
+<script src="js/admin-custom.js"></script>
+<script>
+    function getSubCategory(val) {
+        $.ajax({
+            type: "POST",
+            url: "../sub_category_process.html",
+            data: 'category_id=' + val,
+            success: function (data) {
+                $("#sub_category_id").html(data);
+                $('#sub_category_id').trigger("chosen:updated");
+            }
+        });
+    }
+</script>
+<script src="ckeditor/ckeditor.js"></script>
+<script>
+    CKEDITOR.replace('listing_description');
+</script>
+<script>
+    function getCities(val) {
+        $.ajax({
+            type: "POST",
+            url: "../city_process.html",
+            data: 'country_id=' + val,
+            success: function (data) {
+                $("#city_id").html(data);
+                $('#city_id').trigger("chosen:updated");
+            }
+        });
+    }
+</script>
+</body>
+
+</html>
