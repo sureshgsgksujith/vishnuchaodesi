@@ -8,24 +8,20 @@
 
 .chao-home-page section,
 .chao-home-page .str,
-.chao-home-page .ind2-home,
-.chao-home-page .hom-head {
+.chao-home-page .ind2-home {
   width: 100%;
   margin: 0;
   padding: 0;
 }
 
 .chao-home-page .hom-head {
+  width: 100%;
+  margin: 0 0 50px;
+  padding: 0 0 255px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   overflow-x: hidden;
-}
-
-.chao-home-page .container,
-.chao-home-page .container-fluid,
-.chao-home-page .row {
-  max-width: 100%;
 }
 
 .chao-home-page .search-field {
@@ -42,6 +38,26 @@
 
 .chao-home-page .ban-search {
   margin-top: 24px;
+}
+
+.chao-home-page .ban-search.ban-sear-all ul li select {
+  height: 58px;
+  line-height: 58px;
+  padding: 0 38px 0 48px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #252733;
+  background-color: #fff;
+  border: 0;
+  box-shadow: 0 7px 20px -5px rgba(150, 150, 150, 0.29);
+}
+
+.chao-home-page .ban-search.ban-sear-all li .chosen-container .chosen-single span {
+  padding-left: 48px;
+}
+
+.chao-home-page .ban-search.ban-sear-all ul li:before {
+  pointer-events: none;
 }
 
 .chao-home-page ul,
@@ -69,5 +85,9 @@ html {
   .chao-home-page .ban-tit h1 {
     font-size: 28px;
     line-height: 1.3;
+  }
+
+  .chao-home-page .ban-search.ban-sear-all ul li select {
+    padding-left: 48px;
   }
 }

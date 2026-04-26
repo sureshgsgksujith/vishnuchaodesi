@@ -20,6 +20,7 @@ import HomeFeaturedAreasSection from "./HomeFeaturedAreasSection";
 import HomeListBusinessSection from "./HomeListBusinessSection";
 import HomeFooterSection from "./HomeFooterSection";
 import HomeAdsSection from "./HomeAdsSection";
+import "../styles/home.css";
 
 import { reinitializeTemplate } from "../../../utils/reinitializeTemplate";
 import { ensureTemplateScriptsLoaded } from "../../../utils/loadTemplateScripts";
@@ -58,7 +59,7 @@ export default function HomePage() {
   }, [isLoggedIn]);
 
   return (
-    <>
+    <div className="chao-home-page">
       <section>
         <div className="str ind2-home">
           {isLoggedIn ? <UserHomeHeader /> : <HomeHeader />}
@@ -84,6 +85,6 @@ export default function HomePage() {
       <HomeAdsSection />
       <HomeListBusinessSection />
       <HomeFooterSection />
-    </>
+    </div>
   );
 }
