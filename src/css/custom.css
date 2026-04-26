@@ -295,6 +295,23 @@
     margin-bottom: 30px;
 }
 
+.home-room-listings .current-location-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 6px 12px;
+    border-radius: 18px;
+    background: #eef6ff;
+    color: #1d4ed8;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.home-room-listings .current-location-chip i {
+    font-size: 16px;
+}
+
 .home-room-listings .room-list-card {
     background: #fff;
     border-radius: 10px;

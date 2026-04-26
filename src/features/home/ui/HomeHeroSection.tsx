@@ -1,3 +1,5 @@
+import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
+
 const quickLinks = [
   { title: "All Services", image: "/template-17/images/icon/shop.png" },
   { title: "Classified Listings", image: "/template-17/images/icon/ads.png" },
@@ -23,6 +25,16 @@ const topCounts = [
 ];
 
 export default function HomeHeroSection() {
+  const currentLocation = useCurrentLocationLabel();
+  const heroLocationText =
+    currentLocation.status === "ready" && currentLocation.label
+      ? currentLocation.label
+      : "your current location";
+  const citySelectText =
+    currentLocation.status === "loading"
+      ? "Detecting location"
+      : currentLocation.label || "Use current location";
+
   return (
     <div className="hom-head">
       <video autoPlay muted loop playsInline className="bg-video">
@@ -41,7 +53,7 @@ export default function HomeHeroSection() {
                   <i></i>
                 </span>
               </b>
-              Restaurants, cafe&apos;s, and bars in New york
+              Restaurants, cafe&apos;s, and bars in {heroLocationText}
             </h1>
           </div>
 
@@ -64,11 +76,10 @@ export default function HomeHeroSection() {
 
                 <li className="sr-cit">
                   <select id="city_check" name="city_check" className="chosen-select">
-                    <option value="48025">Los Angeles</option>
+                    <option value="current-location">{citySelectText}</option>
                     <option value="48026">Chicago</option>
                     <option value="48027">Houston</option>
                     <option value="48028">Phoenix</option>
-                    <option value="48024">New York City</option>
                     <option value="48029">Philadelphia</option>
                     <option value="48030">San Antonio</option>
                     <option value="48031">San Diego</option>

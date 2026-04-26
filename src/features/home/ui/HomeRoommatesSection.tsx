@@ -1,10 +1,10 @@
+import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
+
 const roommateListings = [
   {
     image: "/template-17/images/chao-home-room-listings/1.png",
     title:
       "Midtown Manhattan Furnished Room, Utils Incl - No Lease - Male Only Midtown Manhattan Furnished Room, Utils Incl - No Lease - Male Only",
-    location:
-      "East 34th Street, New York, NY, USA, 10016 East 34th Street, New York, NY, USA, 10016",
     availableFrom: "01 Apr 2026",
     gender: "Male",
     roomType: "Single Room",
@@ -15,7 +15,6 @@ const roommateListings = [
   {
     image: "/template-17/images/chao-home-room-listings/2.jpeg",
     title: "Spacious Master Bedroom Available For Rent",
-    location: "320 Surrey Place, Macungie, PA, USA, 18062",
     availableFrom: "15 Apr 2026",
     gender: "Both",
     roomType: "Single Room",
@@ -26,7 +25,6 @@ const roommateListings = [
   {
     image: "/template-17/images/chao-home-room-listings/3.png",
     title: "Semi Furnished Private Room Available For Females Only",
-    location: "Temple Avenue & Hackensack Avenue, Hackensack, NJ, USA",
     availableFrom: "15 Apr 2026",
     gender: "Female",
     roomType: "Single Room",
@@ -70,6 +68,17 @@ const whyItems = [
 ];
 
 export default function HomeRoommatesSection() {
+  const currentLocation = useCurrentLocationLabel();
+  const hasCurrentLocation = currentLocation.status === "ready" && currentLocation.label;
+  const locationChipText =
+    currentLocation.status === "loading"
+      ? "Detecting current location"
+      : currentLocation.label || "Current location unavailable";
+  const listingTitle = hasCurrentLocation
+    ? `Explore Rooms for Rent & Roommate Listings in and near ${currentLocation.label}`
+    : "Explore Rooms for Rent & Roommate Listings near your current location";
+  const listingLocationText = currentLocation.label || "Near your current location";
+
   return (
     <section className="home-roommates">
       <div className="container">
@@ -147,7 +156,11 @@ export default function HomeRoommatesSection() {
         <div className="home-room-listings">
           <div>
             <div className="listing-title text-center">
-              <h3>Explore Rooms for Rent & Roommate Listings in and near New York, NY</h3>
+              <span className="current-location-chip">
+                <i className="material-icons">my_location</i>
+                {locationChipText}
+              </span>
+              <h3>{listingTitle}</h3>
             </div>
 
             <div className="row room-listing-row">
@@ -161,7 +174,7 @@ export default function HomeRoommatesSection() {
                     <h4 className="room-title">{item.title}</h4>
 
                     <ul className="room-details">
-                      <li><i className="material-icons">location_on</i> {item.location}</li>
+                      <li><i className="material-icons">location_on</i> {listingLocationText}</li>
                       <li><i className="material-icons">calendar_today</i> Available from: {item.availableFrom}</li>
                       <li><i className="material-icons">person</i> Gender: {item.gender}</li>
                       <li><i className="material-icons">meeting_room</i> Room Type: {item.roomType}</li>
