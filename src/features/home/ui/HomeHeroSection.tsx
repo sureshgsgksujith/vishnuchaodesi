@@ -24,10 +24,12 @@ const topCounts = [
 
 export default function HomeHeroSection() {
   return (
-    <div
-      className="hom-head"
-      style={{ backgroundImage: "url(/template-17/images/chao-bg/bg-1.jpg)" }}
-    >
+    <div className="hom-head">
+      <video autoPlay muted loop playsInline className="bg-video">
+        <source src="/template-17/videos/bg-video.mp4" type="video/mp4" />
+      </video>
+      <div className="video-overlay"></div>
+
       <div className="container">
         <div className="row">
           <div className="ban-tit">
