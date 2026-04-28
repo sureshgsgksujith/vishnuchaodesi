@@ -11,6 +11,7 @@ import {
   type UserProfileUploadFiles,
 } from "../api/profileApi";
 import { formatJoinDate } from "../utils/profileStorage";
+import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 
 type FileField = keyof UserProfileUploadFiles;
 type PreviewField =
@@ -27,6 +28,9 @@ const emptyFiles: UserProfileUploadFiles = {
 export default function MyProfileEditPage() {
   const [formValues, setFormValues] = useState<UserProfileFormValues | null>(null);
   const [uploadFiles, setUploadFiles] = useState<UserProfileUploadFiles>(emptyFiles);
+  const [postalLookupStatus, setPostalLookupStatus] = useState<
+    "idle" | "loading" | "found" | "not-found" | "error"
+  >("idle");
 
   const profileQuery = useQuery({
     queryKey: ["dashboard", "my-profile-edit"],
@@ -38,6 +42,52 @@ export default function MyProfileEditPage() {
       setFormValues(profileQuery.data.profile);
     }
   }, [profileQuery.data]);
+
+  useEffect(() => {
+    const zipCode = formValues?.zipCode.trim() || "";
+
+    if (zipCode.length < 3) {
+      setPostalLookupStatus("idle");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      setPostalLookupStatus("loading");
+
+      lookupPostalCodeLocation(zipCode, formValues?.country, controller.signal)
+        .then((location) => {
+          if (!location) {
+            setPostalLookupStatus("not-found");
+            return;
+          }
+
+          setFormValues((prev) =>
+            prev && prev.zipCode.trim() === zipCode
+              ? {
+                  ...prev,
+                  country: location.country || prev.country,
+                  state: location.state || prev.state,
+                  city: location.city || prev.city,
+                }
+              : prev
+          );
+          setPostalLookupStatus("found");
+        })
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === "AbortError") {
+            return;
+          }
+
+          setPostalLookupStatus("error");
+        });
+    }, 700);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [formValues?.zipCode, formValues?.country]);
 
   const profileMutation = useMutation({
     mutationFn: async () => {
@@ -283,6 +333,65 @@ export default function MyProfileEditPage() {
                   </td>
                 </tr>
                 <tr>
+                  <td>Zip Code</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="zipCode"
+                        value={formValues.zipCode}
+                        onChange={handleValueChange("zipCode")}
+                        autoComplete="postal-code"
+                      />
+                      {postalLookupStatus === "loading" ? (
+                        <small className="text-muted">Finding location...</small>
+                      ) : null}
+                      {postalLookupStatus === "not-found" ? (
+                        <small className="text-muted">
+                          Location not found, or this ZIP code is used in more
+                          than one country.
+                        </small>
+                      ) : null}
+                      {postalLookupStatus === "error" ? (
+                        <small className="text-muted">
+                          Location lookup is unavailable. You can enter it manually.
+                        </small>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Country</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="country"
+                        value={formValues.country}
+                        onChange={handleValueChange("country")}
+                        autoComplete="country-name"
+                      />
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>State</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="state"
+                        value={formValues.state}
+                        onChange={handleValueChange("state")}
+                        autoComplete="address-level1"
+                      />
+                    </div>
+                  </td>
+                </tr>
+                <tr>
                   <td>City</td>
                   <td>
                     <div className="form-group">
@@ -292,6 +401,7 @@ export default function MyProfileEditPage() {
                         name="city"
                         value={formValues.city}
                         onChange={handleValueChange("city")}
+                        autoComplete="address-level2"
                       />
                     </div>
                   </td>
