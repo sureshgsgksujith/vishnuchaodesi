@@ -6,7 +6,9 @@ export type StoredProfileSnapshot = {
   email?: string;
   mobileNumber?: string;
   country?: string;
+  countryCode?: string;
   state?: string;
+  district?: string;
   city?: string;
   addressLine1?: string;
   addressLine2?: string;

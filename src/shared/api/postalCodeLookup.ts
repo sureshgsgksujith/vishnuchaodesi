@@ -1,6 +1,9 @@
 const postalLookupBaseUrl =
   import.meta.env.VITE_POSTAL_LOOKUP_URL ||
   "https://nominatim.openstreetmap.org/search";
+const indiaPostalLookupBaseUrl =
+  import.meta.env.VITE_INDIA_POSTAL_LOOKUP_URL ||
+  "https://api.postalpincode.in/pincode";
 
 const postalLookupCachePrefix = "postal_lookup:";
 const currentCountryCacheKey = "postal_lookup:current_country";
@@ -9,16 +12,22 @@ let currentCountryRequest: Promise<string | null> | null = null;
 
 export type PostalCodeLocation = {
   country: string;
+  countryCode: string;
   state: string;
+  district: string;
   city: string;
 };
 
 type NominatimSearchResult = {
   address?: {
     country?: string;
+    country_code?: string;
     state?: string;
     province?: string;
     region?: string;
+    state_district?: string;
+    district?: string;
+    city_district?: string;
     city?: string;
     town?: string;
     village?: string;
@@ -34,6 +43,16 @@ type IpCountryResponse = {
   country_code?: string;
 };
 
+type IndiaPostalCodeResponse = {
+  Status?: string;
+  PostOffice?: Array<{
+    Name?: string;
+    District?: string;
+    State?: string;
+    Country?: string;
+  }> | null;
+};
+
 function normalizePostalCode(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
@@ -42,11 +61,23 @@ function getCacheKey(postalCode: string, country?: string) {
   return `${postalLookupCachePrefix}${normalizePostalCode(postalCode)}:${country?.trim().toLowerCase() || "any"}`;
 }
 
+function isIndiaCountryHint(country?: string | null) {
+  const countryHint = country?.trim().toLowerCase();
+
+  return (
+    !countryHint ||
+    countryHint === "in" ||
+    countryHint === "ind" ||
+    countryHint === "india"
+  );
+}
+
 function getBrowserCountryCode() {
   const locale =
     navigator.languages?.find((language) => language.includes("-")) ||
     navigator.language;
-  const countryCode = locale?.split("-").at(-1);
+  const localeParts = locale?.split("-");
+  const countryCode = localeParts?.[localeParts.length - 1];
 
   return countryCode && countryCode.length === 2
     ? countryCode.toLowerCase()
@@ -105,7 +136,7 @@ function writeCachedLocation(cacheKey: string, location: PostalCodeLocation) {
 
 function mapNominatimResult(
   result: NominatimSearchResult,
-  postalCode: string
+  postalCode: string,
 ): PostalCodeLocation | null {
   const address = result.address;
 
@@ -126,16 +157,30 @@ function mapNominatimResult(
     address.village ||
     address.municipality ||
     address.suburb ||
+    "";
+
+  const district =
+    address.state_district ||
+    address.district ||
+    address.city_district ||
     address.county ||
     "";
 
   const location = {
     country: address.country || "",
+    countryCode: address.country_code?.toUpperCase() || "",
     state: address.state || address.province || address.region || "",
+    district,
     city,
   };
 
-  if (!location.country && !location.state && !location.city) {
+  if (
+    !location.country &&
+    !location.countryCode &&
+    !location.state &&
+    !location.district &&
+    !location.city
+  ) {
     return null;
   }
 
@@ -145,7 +190,7 @@ function mapNominatimResult(
 async function requestPostalLocation(
   postalCode: string,
   country?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ) {
   const url = new URL(postalLookupBaseUrl);
   url.searchParams.set("format", "jsonv2");
@@ -184,7 +229,7 @@ async function requestPostalLocation(
   }
 
   const countryNames = new Set(
-    locations.map((location) => location.country).filter(Boolean)
+    locations.map((location) => location.country).filter(Boolean),
   );
 
   if (countryNames.size > 1) {
@@ -194,10 +239,51 @@ async function requestPostalLocation(
   return locations[0] || null;
 }
 
+async function requestIndiaPostalLocation(
+  postalCode: string,
+  country?: string,
+  signal?: AbortSignal,
+) {
+  if (!/^\d{6}$/.test(postalCode.trim()) || !isIndiaCountryHint(country)) {
+    return null;
+  }
+
+  const url = new URL(
+    `${indiaPostalLookupBaseUrl.replace(/\/$/, "")}/${postalCode}`,
+  );
+  const response = await fetch(url.toString(), {
+    headers: {
+      Accept: "application/json",
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const results = (await response.json()) as IndiaPostalCodeResponse[];
+  const postOffice = results.find(
+    (result) => result.Status?.toLowerCase() === "success",
+  )?.PostOffice?.[0];
+
+  if (!postOffice) {
+    return null;
+  }
+
+  return {
+    country: postOffice.Country || "India",
+    countryCode: "IN",
+    state: postOffice.State || "",
+    district: postOffice.District || "",
+    city: postOffice.Name || postOffice.District || "",
+  };
+}
+
 export async function lookupPostalCodeLocation(
   postalCode: string,
   country?: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<PostalCodeLocation | null> {
   const trimmedPostalCode = postalCode.trim();
 
@@ -213,14 +299,24 @@ export async function lookupPostalCodeLocation(
     return cachedLocation;
   }
 
-  let location = await requestPostalLocation(
-    trimmedPostalCode,
-    countryHint || undefined,
-    signal
-  );
+  let location =
+    (await requestIndiaPostalLocation(
+      trimmedPostalCode,
+      countryHint || undefined,
+      signal,
+    )) ||
+    (await requestPostalLocation(
+      trimmedPostalCode,
+      countryHint || undefined,
+      signal,
+    ));
 
   if (!location && countryHint) {
-    location = await requestPostalLocation(trimmedPostalCode, undefined, signal);
+    location = await requestPostalLocation(
+      trimmedPostalCode,
+      undefined,
+      signal,
+    );
   }
 
   if (location) {

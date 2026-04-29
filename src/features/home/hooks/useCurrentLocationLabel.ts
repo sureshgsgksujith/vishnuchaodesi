@@ -30,7 +30,11 @@ const formatFallbackLocationLabel = (city?: string, state?: string, country?: st
   return locationParts.length > 0 ? locationParts.join(", ") : null;
 };
 
-const formatSubdivisionCode = (subdivisionCode?: string) => subdivisionCode?.split("-").at(-1);
+const formatSubdivisionCode = (subdivisionCode?: string) => {
+  const parts = subdivisionCode?.split("-");
+
+  return parts?.[parts.length - 1];
+};
 
 const getBrowserPosition = () =>
   new Promise<GeolocationPosition>((resolve, reject) => {

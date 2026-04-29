@@ -7,10 +7,10 @@ import DashboardFooter from "./DashboardFooter";
 import DashboardSidebar from "./DashboardSidebar";
 import DashboardSupportWidget from "./DashboardSupportWidget";
 import {
-  clearStoredProfileSnapshot,
   getStoredDashboardIdentity,
   PROFILE_UPDATED_EVENT,
 } from "../utils/profileStorage";
+import { clearCustomerSession } from "../../auth/utils/customerSession";
 
 type DashboardLayoutProps = {
   children: ReactNode;
@@ -37,13 +37,7 @@ export default function DashboardLayout({
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("customer_token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("customerCode");
-    localStorage.removeItem("fullName");
-    localStorage.removeItem("userType");
-    clearStoredProfileSnapshot();
+    clearCustomerSession();
     navigate("/login");
     window.location.reload();
   };

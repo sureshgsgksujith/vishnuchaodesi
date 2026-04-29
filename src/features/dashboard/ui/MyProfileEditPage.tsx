@@ -14,10 +14,7 @@ import { formatJoinDate } from "../utils/profileStorage";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 
 type FileField = keyof UserProfileUploadFiles;
-type PreviewField =
-  | "profileImageUrl"
-  | "coverImageUrl"
-  | "photoIdProofUrl";
+type PreviewField = "profileImageUrl" | "coverImageUrl" | "photoIdProofUrl";
 
 const emptyFiles: UserProfileUploadFiles = {
   profileImageFile: null,
@@ -26,8 +23,11 @@ const emptyFiles: UserProfileUploadFiles = {
 };
 
 export default function MyProfileEditPage() {
-  const [formValues, setFormValues] = useState<UserProfileFormValues | null>(null);
-  const [uploadFiles, setUploadFiles] = useState<UserProfileUploadFiles>(emptyFiles);
+  const [formValues, setFormValues] = useState<UserProfileFormValues | null>(
+    null,
+  );
+  const [uploadFiles, setUploadFiles] =
+    useState<UserProfileUploadFiles>(emptyFiles);
   const [postalLookupStatus, setPostalLookupStatus] = useState<
     "idle" | "loading" | "found" | "not-found" | "error"
   >("idle");
@@ -67,10 +67,12 @@ export default function MyProfileEditPage() {
               ? {
                   ...prev,
                   country: location.country || prev.country,
+                  countryCode: location.countryCode || prev.countryCode,
                   state: location.state || prev.state,
+                  district: location.district || prev.district,
                   city: location.city || prev.city,
                 }
-              : prev
+              : prev,
           );
           setPostalLookupStatus("found");
         })
@@ -104,12 +106,14 @@ export default function MyProfileEditPage() {
       if (result.persistedRemotely) {
         toast.success("Profile updated successfully.");
       } else {
-        toast.success("Profile saved locally. Connect the backend endpoint to persist it.");
+        toast.success(
+          "Profile saved locally. Connect the backend endpoint to persist it.",
+        );
       }
     },
     onError: (error) => {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update profile."
+        error instanceof Error ? error.message : "Failed to update profile.",
       );
     },
   });
@@ -119,14 +123,14 @@ export default function MyProfileEditPage() {
       return "No";
     }
 
-    return formValues.isEmailVerified || formValues.isMobileVerified ? "Yes" : "No";
+    return formValues.isEmailVerified || formValues.isMobileVerified
+      ? "Yes"
+      : "No";
   }, [formValues]);
 
   const handleValueChange =
     (field: keyof UserProfileFormValues) =>
-    (
-      event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-    ) => {
+    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { value } = event.target;
 
       setFormValues((prev) => (prev ? { ...prev, [field]: value } : prev));
@@ -165,7 +169,7 @@ export default function MyProfileEditPage() {
                 [previewField]: previewUrl,
               };
             })()
-          : prev
+          : prev,
       );
     };
 
@@ -206,8 +210,9 @@ export default function MyProfileEditPage() {
 
           {!profileQuery.data?.loadedFromApi ? (
             <p className="text-muted" style={{ marginBottom: 20 }}>
-              API profile endpoint is not available yet. This screen is using local
-              fallback data and will switch to backend data when the endpoint is ready.
+              API profile endpoint is not available yet. This screen is using
+              local fallback data and will switch to backend data when the
+              endpoint is ready.
             </p>
           ) : null}
 
@@ -262,7 +267,7 @@ export default function MyProfileEditPage() {
                           className="form-control file-input"
                           onChange={handleFileChange(
                             "profileImageFile",
-                            "profileImageUrl"
+                            "profileImageUrl",
                           )}
                         />
                         {formValues.profileImageUrl ? (
@@ -289,7 +294,7 @@ export default function MyProfileEditPage() {
                           className="form-control file-input"
                           onChange={handleFileChange(
                             "coverImageFile",
-                            "coverImageUrl"
+                            "coverImageUrl",
                           )}
                         />
                         {formValues.coverImageUrl ? (
@@ -316,7 +321,7 @@ export default function MyProfileEditPage() {
                           className="form-control file-input"
                           onChange={handleFileChange(
                             "photoIdProofFile",
-                            "photoIdProofUrl"
+                            "photoIdProofUrl",
                           )}
                         />
                         {formValues.photoIdProofUrl ? (
@@ -345,7 +350,14 @@ export default function MyProfileEditPage() {
                         autoComplete="postal-code"
                       />
                       {postalLookupStatus === "loading" ? (
-                        <small className="text-muted">Finding location...</small>
+                        <small className="text-muted">
+                          Finding location...
+                        </small>
+                      ) : null}
+                      {postalLookupStatus === "found" ? (
+                        <small className="text-muted">
+                          Location matched from ZIP/PIN code.
+                        </small>
                       ) : null}
                       {postalLookupStatus === "not-found" ? (
                         <small className="text-muted">
@@ -355,7 +367,8 @@ export default function MyProfileEditPage() {
                       ) : null}
                       {postalLookupStatus === "error" ? (
                         <small className="text-muted">
-                          Location lookup is unavailable. You can enter it manually.
+                          Location lookup is unavailable. You can enter it
+                          manually.
                         </small>
                       ) : null}
                     </div>
@@ -377,6 +390,21 @@ export default function MyProfileEditPage() {
                   </td>
                 </tr>
                 <tr>
+                  <td>Country Code</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="countryCode"
+                        value={formValues.countryCode}
+                        onChange={handleValueChange("countryCode")}
+                        autoComplete="country"
+                      />
+                    </div>
+                  </td>
+                </tr>
+                <tr>
                   <td>State</td>
                   <td>
                     <div className="form-group">
@@ -387,6 +415,21 @@ export default function MyProfileEditPage() {
                         value={formValues.state}
                         onChange={handleValueChange("state")}
                         autoComplete="address-level1"
+                      />
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>District</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="district"
+                        value={formValues.district}
+                        onChange={handleValueChange("district")}
+                        autoComplete="address-level2"
                       />
                     </div>
                   </td>
@@ -408,7 +451,12 @@ export default function MyProfileEditPage() {
                 </tr>
                 <tr>
                   <td>Join date</td>
-                  <td>{formatJoinDate(formValues.createdAt).replace("Join on ", "")}</td>
+                  <td>
+                    {formatJoinDate(formValues.createdAt).replace(
+                      "Join on ",
+                      "",
+                    )}
+                  </td>
                 </tr>
                 <tr>
                   <td>Verified</td>

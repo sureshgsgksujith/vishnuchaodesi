@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import type { ReactNode } from "react";
 import HomePage from "../../features/home/ui/HomePage";
 import LoginPage from "../../features/auth/ui/LoginPage";
 import UserInfoPage from "../../features/auth/ui/UserInfoPage";
@@ -19,6 +20,16 @@ import JobsPage from "../../features/dashboard/ui/JobsPage";
 import BlogPostsPage from "../../features/dashboard/ui/BlogPostsPage";
 import CouponsPage from "../../features/dashboard/ui/CouponsPage";
 import MyProfileEditPage from "../../features/dashboard/ui/MyProfileEditPage";
+import { isCustomerAuthenticated, redirectToCustomerHomeAfterSessionPopup } from "../../features/auth/utils/customerSession";
+
+function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
+  if (isCustomerAuthenticated()) {
+    return children;
+  }
+
+  redirectToCustomerHomeAfterSessionPopup();
+  return null;
+}
 
 export function AppRouter() {
   const excludedStaticRoutes = [
@@ -54,22 +65,22 @@ export function AppRouter() {
       <Route path="/register" element={<Navigate to="/login?login=register" replace />} />
       <Route path="/forgot-password" element={<Navigate to="/login?login=forgot" replace />} />
 
-      <Route path="/user-info" element={<UserInfoPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="/dashboard/payment" element={<PaymentPage />} />
-      <Route path="/dashboard/plan-change" element={<PlanChangePage />} />
-      <Route path="/dashboard/point-history" element={<PointHistoryPage />} />
-      <Route path="/dashboard/notifications" element={<NotificationsPage />} />
-      <Route path="/dashboard/followings" element={<FollowingsPage />} />
-      <Route path="/dashboard/review" element={<ReviewPage />} />
-      <Route path="/dashboard/products" element={<ProductsPage />} />
-      <Route path="/dashboard/my-service-bookings" element={<MyServiceBookingsPage />} />
-      <Route path="/dashboard/user-applied-jobs" element={<UserAppliedJobsPage />} />
-      <Route path="/dashboard/events" element={<EventsPage />} />
-      <Route path="/dashboard/jobs" element={<JobsPage />} />
-      <Route path="/dashboard/blog-posts" element={<BlogPostsPage />} />
-      <Route path="/dashboard/coupons" element={<CouponsPage />} />
-      <Route path="/dashboard/my-profile-edit" element={<MyProfileEditPage />} />
+      <Route path="/user-info" element={<ProtectedCustomerRoute><UserInfoPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard" element={<ProtectedCustomerRoute><DashboardPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/payment" element={<ProtectedCustomerRoute><PaymentPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/plan-change" element={<ProtectedCustomerRoute><PlanChangePage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/point-history" element={<ProtectedCustomerRoute><PointHistoryPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/notifications" element={<ProtectedCustomerRoute><NotificationsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/followings" element={<ProtectedCustomerRoute><FollowingsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/review" element={<ProtectedCustomerRoute><ReviewPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/products" element={<ProtectedCustomerRoute><ProductsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/my-service-bookings" element={<ProtectedCustomerRoute><MyServiceBookingsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/user-applied-jobs" element={<ProtectedCustomerRoute><UserAppliedJobsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/events" element={<ProtectedCustomerRoute><EventsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/jobs" element={<ProtectedCustomerRoute><JobsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/blog-posts" element={<ProtectedCustomerRoute><BlogPostsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/coupons" element={<ProtectedCustomerRoute><CouponsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/my-profile-edit" element={<ProtectedCustomerRoute><MyProfileEditPage /></ProtectedCustomerRoute>} />
 
       {customerTemplateRoutes
         .filter((route) => !excludedStaticRoutes.includes(route.path))

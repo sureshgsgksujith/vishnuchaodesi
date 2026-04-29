@@ -16,7 +16,9 @@ export type UserProfileFormValues = {
   password: string;
   mobileNumber: string;
   country: string;
+  countryCode: string;
   state: string;
+  district: string;
   city: string;
   addressLine1: string;
   addressLine2: string;
@@ -64,7 +66,9 @@ function createDefaultProfile(): UserProfileFormValues {
     password: "",
     mobileNumber: snapshot?.mobileNumber || "",
     country: snapshot?.country || "",
+    countryCode: snapshot?.countryCode || "",
     state: snapshot?.state || "",
+    district: snapshot?.district || "",
     city: snapshot?.city || "",
     addressLine1: snapshot?.addressLine1 || "",
     addressLine2: snapshot?.addressLine2 || "",
@@ -87,13 +91,17 @@ function createDefaultProfile(): UserProfileFormValues {
   };
 }
 
-function snapshotFromProfile(profile: UserProfileFormValues): StoredProfileSnapshot {
+function snapshotFromProfile(
+  profile: UserProfileFormValues,
+): StoredProfileSnapshot {
   return {
     fullName: profile.fullName,
     email: profile.email,
     mobileNumber: profile.mobileNumber,
     country: profile.country,
+    countryCode: profile.countryCode,
     state: profile.state,
+    district: profile.district,
     city: profile.city,
     addressLine1: profile.addressLine1,
     addressLine2: profile.addressLine2,
@@ -127,10 +135,9 @@ function normalizeProfilePayload(raw: unknown): UserProfileFormValues {
     ((payload.user ?? payload.User) as Record<string, unknown> | undefined) ||
     payload;
   const profile =
-    ((payload.userProfile ??
-      payload.profile ??
-      payload.UserProfile) as Record<string, unknown> | undefined) ||
-    payload;
+    ((payload.userProfile ?? payload.profile ?? payload.UserProfile) as
+      | Record<string, unknown>
+      | undefined) || payload;
 
   const getString = (...values: unknown[]) =>
     values.find((value) => typeof value === "string" && value.trim() !== "") as
@@ -146,22 +153,51 @@ function normalizeProfilePayload(raw: unknown): UserProfileFormValues {
     email: getString(user.email, payload.email, fallback.email) || "",
     password: "",
     mobileNumber:
-      getString(user.mobileNumber, payload.mobileNumber, fallback.mobileNumber) ||
-      "",
-    country: getString(profile.country, payload.country, fallback.country) || "",
+      getString(
+        user.mobileNumber,
+        payload.mobileNumber,
+        fallback.mobileNumber,
+      ) || "",
+    country:
+      getString(profile.country, payload.country, fallback.country) || "",
+    countryCode:
+      getString(
+        profile.countryCode,
+        profile.country_code,
+        payload.countryCode,
+        payload.country_code,
+        fallback.countryCode,
+      ) || "",
     state: getString(profile.state, payload.state, fallback.state) || "",
+    district:
+      getString(
+        profile.district,
+        profile.county,
+        payload.district,
+        payload.county,
+        fallback.district,
+      ) || "",
     city: getString(profile.city, payload.city, fallback.city) || "",
     addressLine1:
-      getString(profile.addressLine1, payload.addressLine1, fallback.addressLine1) ||
-      "",
+      getString(
+        profile.addressLine1,
+        payload.addressLine1,
+        fallback.addressLine1,
+      ) || "",
     addressLine2:
-      getString(profile.addressLine2, payload.addressLine2, fallback.addressLine2) ||
-      "",
+      getString(
+        profile.addressLine2,
+        payload.addressLine2,
+        fallback.addressLine2,
+      ) || "",
     zipCode:
       getString(profile.zipCode, payload.zipCode, fallback.zipCode) || "",
     facebookUrl:
-      getString(profile.facebookUrl, payload.facebookUrl, fallback.facebookUrl) ||
-      "",
+      getString(
+        profile.facebookUrl,
+        payload.facebookUrl,
+        fallback.facebookUrl,
+      ) || "",
     twitterUrl:
       getString(profile.twitterUrl, payload.twitterUrl, fallback.twitterUrl) ||
       "",
@@ -176,20 +212,20 @@ function normalizeProfilePayload(raw: unknown): UserProfileFormValues {
         profile.profileImageUrl,
         payload.profileImageUrl,
         user.profileImageUrl,
-        fallback.profileImageUrl
+        fallback.profileImageUrl,
       ) || fallback.profileImageUrl,
     coverImageUrl:
       getString(
         profile.coverImageUrl,
         payload.coverImageUrl,
         payload.coverPhotoUrl,
-        fallback.coverImageUrl
+        fallback.coverImageUrl,
       ) || fallback.coverImageUrl,
     photoIdProofUrl:
       getString(
         profile.photoIdProofUrl,
         payload.photoIdProofUrl,
-        fallback.photoIdProofUrl
+        fallback.photoIdProofUrl,
       ) || fallback.photoIdProofUrl,
     createdAt:
       getString(user.createdAt, payload.createdAt, fallback.createdAt) || "",
@@ -197,25 +233,25 @@ function normalizeProfilePayload(raw: unknown): UserProfileFormValues {
       getBoolean(
         user.isEmailVerified,
         payload.isEmailVerified,
-        fallback.isEmailVerified
+        fallback.isEmailVerified,
       ) || false,
     isMobileVerified:
       getBoolean(
         user.isMobileVerified,
         payload.isMobileVerified,
-        fallback.isMobileVerified
+        fallback.isMobileVerified,
       ) || false,
     isPremiumServiceProvider:
       getBoolean(
         profile.isPremiumServiceProvider,
         payload.isPremiumServiceProvider,
-        fallback.isPremiumServiceProvider
+        fallback.isPremiumServiceProvider,
       ) || false,
     profileExpiryDate:
       getString(
         profile.profileExpiryDate,
         payload.profileExpiryDate,
-        fallback.profileExpiryDate
+        fallback.profileExpiryDate,
       ) || "",
   };
 }
@@ -262,7 +298,7 @@ export async function getMyProfile(): Promise<ProfileLoadResult> {
 
 export async function updateMyProfile(
   values: UserProfileFormValues,
-  files: UserProfileUploadFiles
+  files: UserProfileUploadFiles,
 ): Promise<ProfileSaveResult> {
   const formData = new FormData();
 
@@ -270,7 +306,9 @@ export async function updateMyProfile(
   formData.append("email", values.email);
   formData.append("mobileNumber", values.mobileNumber);
   formData.append("country", values.country);
+  formData.append("countryCode", values.countryCode);
   formData.append("state", values.state);
+  formData.append("district", values.district);
   formData.append("city", values.city);
   formData.append("addressLine1", values.addressLine1);
   formData.append("addressLine2", values.addressLine2);
@@ -281,7 +319,7 @@ export async function updateMyProfile(
   formData.append("websiteUrl", values.websiteUrl);
   formData.append(
     "isPremiumServiceProvider",
-    String(values.isPremiumServiceProvider)
+    String(values.isPremiumServiceProvider),
   );
 
   if (values.password.trim()) {
