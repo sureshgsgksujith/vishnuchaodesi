@@ -277,29 +277,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!--FILED END-->
-                                <!--FILED START-->
-                                <!--                            <div class="row">-->
-                                <!--                                <div class="col-md-6">-->
-                                <!--                                    <div class="form-group">-->
-                                <!--                                        <input type="text" name="listing_lat" class="form-control"-->
-                                <!--                                               value="-->
-                                <!--"-->
-                                <!--                                               placeholder="-->
-                                <!--">-->
-                                <!--                                    </div>-->
-                                <!--                                </div>-->
-                                <!--                                <div class="col-md-6">-->
-                                <!--                                    <div class="form-group">-->
-                                <!--                                        <input type="text" name="listing_lng" class="form-control"-->
-                                <!--                                               value="-->
-                                <!--" placeholder="-->
-                                <!--">-->
-                                <!--                                    </div>-->
-                                <!--                                </div>-->
-                                <!--                            </div>-->
-                                <!--FILED END-->
-                                <!--FILED START-->
+                               
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="form-group">
@@ -323,51 +301,337 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!--FILED END-->
-                                <!--FILED START-->
+								
+								<!--FILED START-->
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <div class="form-group">
-                                            <select onChange="getSubCategory(this.value);" name="category_id" id="category_id" class="chosen-select form-control">
-                                                <option value="">Select Category</option>
-                                                <option value="20">Restaurants</option>
-                                                <option value="19">Wedding halls</option>
-                                                <option value="17">Pet shop</option>
-                                                <option value="16">Technology</option>
-                                                <option value="15">Spa and Facial</option>
-                                                <option value="10">Real Estate</option>
-                                                <option value="8">Sports</option>
-                                                <option value="7">Education</option>
-                                                <option value="6">Electricals</option>
-                                                <option value="5">Automobiles</option>
-                                                <option value="3">Transportation</option>
-                                                <option value="2">Hospitals</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--FILED END-->
-                                <!--FILED START-->
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <select data-placeholder="Select Sub Category" name="sub_category_id[]" id="sub_category_id" multiple class="chosen-select form-control">
-                                                <option value="">Select Sub Category</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--FILED END-->
-                                <!--FILED START-->
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <textarea class="form-control" id="listing_description" name="listing_description" placeholder="Details about your listing"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--FILED END-->
-                                <!--FILED START-->
+										<div class="form-group">
+											<input type="text" name="ad_title" class="form-control" placeholder="Ad Title (e.g., 2BHK Flat for Rent in Hyderabad)" required>
+										</div>
+									</div>
+								</div>
+
+								<div class="row">
+									<div class="col-md-12">
+										<div class="form-group">
+											<select id="category_id" class="form-control" onchange="getSubCategory(this.value)">
+												<option value="">Select Category</option>
+												<option value="realestate">Real Estate</option>
+											</select>
+										</div>
+									</div>
+								</div>
+
+								<div class="row">
+									<div class="col-md-12">
+										<div class="form-group">
+											<select id="sub_category_id" class="form-control" onchange="handleCategoryChange(); setTimeout(getDetailCategory, 50);">
+												<option value="">Select Sub Category</option>
+											</select>
+										</div>
+									</div>
+								</div>
+
+								<div class="row">
+									<div class="col-md-12">
+										<div class="form-group">
+											<select id="detail_category_id" class="form-control" disabled>
+												<option value="">Select Detailed Category</option>
+											</select>
+										</div>
+									</div>
+								</div>
+
+								<div id="property_details_section">
+
+									<div id="residential_fields" style="display:none;">
+										<h5 class="mt-3 mb-3">Residential Details</h5>
+
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group">
+													<select name="property_type" class="form-control">
+														<option>Apartment</option>
+														<option>Villa</option>
+														<option>House</option>
+													</select>
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<select name="bhk" class="form-control">
+														<option>1 BHK</option>
+														<option>2 BHK</option>
+														<option>3 BHK</option>
+														<option>4+ BHK</option>
+													</select>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="number" name="bathrooms" class="form-control" placeholder="Bathrooms">
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="number" name="balconies" class="form-control" placeholder="Balconies">
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<!-- COMMERCIAL -->
+									<div id="commercial_fields" style="display:none;">
+										<h5>Commercial Details</h5>
+
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group">
+													<select name="commercial_type" class="form-control">
+														<option>Office</option>
+														<option>Shop</option>
+														<option>Warehouse</option>
+													</select>
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="text" name="area" class="form-control" placeholder="Area (sq ft)">
+												</div>
+											</div>
+										</div>
+										
+										 <div class="row">
+											<div class="col-md-6">
+												<div class="form-group">
+													<select name="furnishing" class="form-control">
+														<option>Furnished</option>
+														<option>Unfurnished</option>
+													</select>
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="number" name="washrooms" class="form-control" placeholder="Washrooms">
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="number" name="parking" class="form-control" placeholder="Parking">
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<select name="suitable_for" class="form-control">
+														<option>Office</option>
+														<option>Retail</option>
+														<option>Storage</option>
+													</select>
+												</div>
+											</div>
+										</div>
+									</div>
+
+									<!-- PLOT -->
+									<div id="plot_fields" style="display:none;">
+										<h5 class="mt-3 mb-3">Plot Details</h5>
+
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="text" name="plot_area" class="form-control" placeholder="Plot Area">
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="text" name="dimensions" class="form-control" placeholder="Length & Breadth">
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group">
+													<select name="boundary_wall" class="form-control">
+														<option value="">Boundary Wall</option>
+														<option>Yes</option>
+														<option>No</option>
+													</select>
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<select name="facing" class="form-control">
+														<option value="">Facing</option>
+														<option>East</option>
+														<option>West</option>
+														<option>North</option>
+														<option>South</option>
+													</select>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="text" name="approval" class="form-control" placeholder="Approval Type (DTCP / HMDA)">
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<input type="text" name="road_width" class="form-control" placeholder="Road Width">
+												</div>
+											</div>
+										</div>
+									</div>
+									
+									<div id="pg_fields" style="display:none;">
+										<h5 class="mt-3 mb-3">PG / Co-living</h5>
+
+										<div class="row">
+											<div class="col-md-4">
+												<div class="form-group">
+													<select name="room_type" class="form-control">
+														<option value="">Room Type</option>
+														<option>Single</option>
+														<option>Shared</option>
+													</select>
+												</div>
+											</div>
+
+											<div class="col-md-4">
+												<div class="form-group">
+													<select name="gender" class="form-control">
+														<option value="">Gender Preference</option>
+														<option>Male</option>
+														<option>Female</option>
+														<option>Any</option>
+													</select>
+												</div>
+											</div>
+
+											<div class="col-md-4">
+												<div class="form-group">
+													<select name="food" class="form-control">
+														<option value="">Food</option>
+														<option>Food Included</option>
+														<option>No Food</option>
+													</select>
+												</div>
+											</div>
+										</div>
+
+										<div class="row">
+											<div class="col-md-12">
+												<div class="form-group">
+													<input type="text" name="amenities_pg" class="form-control" placeholder="Amenities (WiFi, AC, Laundry)">
+												</div>
+											</div>
+										</div>
+									</div>
+
+								</div>
+
+								<!-- PRICE DETAILS -->
+								<h5>Price Details</h5>
+
+								<div class="row">
+									<div class="col-md-6">
+										<div class="form-group">
+											<input type="number" name="price" class="form-control" placeholder="Price / Rent">
+										</div>
+									</div>
+
+									<div class="col-md-6">
+										<div class="form-group">
+											<select name="negotiable" class="form-control">
+												<option>Negotiable</option>
+												<option>Fixed</option>
+											</select>
+										</div>
+									</div>
+								</div>
+
+								<div class="row">
+									<div class="col-md-6">
+										<div class="form-group">
+											<input type="number" name="maintenance" class="form-control" placeholder="Maintenance Charges">
+										</div>
+									</div>
+
+									<div class="col-md-6">
+										<div class="form-group">
+											<input type="number" name="deposit" class="form-control" placeholder="Security Deposit">
+										</div>
+									</div>
+								</div>
+								
+								<h5>Amenities</h5>
+
+								<div class="row">
+									<div class="col-md-6">
+										<div class="form-group">
+											 <div class="chbox">
+												<input type="checkbox" name="amenities[]" id="amenity_parking" value="parking">
+												<label for="amenity_parking">Parking</label>
+											</div>
+
+											<div class="chbox">
+												<input type="checkbox" name="amenities[]" id="amenity_lift" value="lift">
+												<label for="amenity_lift">Lift</label>
+											</div>
+
+											<div class="chbox">
+												<input type="checkbox" name="amenities[]" id="amenity_gym" value="gym">
+												<label for="amenity_gym">Gym</label>
+											</div>
+
+										</div>
+									</div>
+									<div class="col-md-6">
+										<div class="form-group">
+											<div class="chbox">
+												<input type="checkbox" name="amenities[]" id="amenity_cctv" value="cctv">
+												<label for="amenity_cctv">CCTV</label>
+											</div>
+
+											<div class="chbox">
+												<input type="checkbox" name="amenities[]" id="amenity_pool" value="pool">
+												<label for="amenity_pool">Swimming Pool</label>
+											</div>
+
+											<div class="chbox">
+												<input type="checkbox" name="amenities[]" id="amenity_garden" value="garden">
+												<label for="amenity_garden">Garden</label>
+											</div>
+
+										</div>
+									</div>
+								</div>
+
+								
+								<div class="row">
+									<div class="col-md-12">
+										<div class="form-group">
+											<textarea class="form-control" id="listing_description" name="listing_description" placeholder="Details about your listing"></textarea>
+										</div>
+									</div>
+								</div>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -420,7 +684,7 @@
         <i class="material-icons ani-req-clo">close</i>
         <div class="tit">
             <h3>What service do you need?
-                    <span>BizBook will help you</span>
+                    <span>Chaodesi will help you</span>
                 </h3>
         </div>
         <div class="hom-col-req">
@@ -761,6 +1025,110 @@
     <script>
         CKEDITOR.replace('listing_description');
     </script>
+	
+	 <script>
+	const categoryData = {
+    "realestate": {
+        name: "Real Estate",
+        subcategories: {
+            "sale": {
+                name: "Sale",
+                details: ["Apartment", "Villa", "Plot"]
+            },
+            "rent": {
+                name: "Rent",
+                details: ["Apartment", "House", "PG"]
+            },
+            "commercial": {
+                name: "Commercial",
+                details: ["Office", "Shop", "Warehouse"]
+            },
+            "plot": {
+                name: "Plot",
+                details: ["Residential Plot", "Commercial Plot"]
+            },
+            "pg": {
+                name: "PG",
+                details: ["Single Room", "Shared Room"]
+            }
+        }
+    }
+};
+</script>
+<script>
+function getSubCategory(categoryId) {
+    let subCat = document.getElementById("sub_category_id");
+    let detailCat = document.getElementById("detail_category_id");
+
+    // Reset
+    subCat.innerHTML = '<option value="">Select Sub Category</option>';
+    detailCat.innerHTML = '<option value="">Select Detailed Category</option>';
+
+    // Disable if no category
+    if (!categoryId || !categoryData[categoryId]) {
+        subCat.disabled = true;
+        return;
+    }
+
+    let subs = categoryData[categoryId].subcategories;
+
+    for (let key in subs) {
+        subCat.innerHTML += `<option value="${key}">${subs[key].name}</option>`;
+    }
+
+    // Enable after loading
+    subCat.disabled = false;
+}
+ </script>
+<script>
+function handleCategoryChange() {
+    let sub = document.getElementById("sub_category_id").value;
+
+    document.getElementById("residential_fields").style.display = "none";
+    document.getElementById("commercial_fields").style.display = "none";
+    document.getElementById("plot_fields").style.display = "none";
+    document.getElementById("pg_fields").style.display = "none";
+
+    if (sub === "sale" || sub === "rent") {
+        document.getElementById("residential_fields").style.display = "block";
+    }
+    else if (sub === "commercial") {
+        document.getElementById("commercial_fields").style.display = "block";
+    }
+    else if (sub === "plot") {
+        document.getElementById("plot_fields").style.display = "block";
+    }
+    else if (sub === "pg") {
+        document.getElementById("pg_fields").style.display = "block";
+    }
+}
+</script>
+
+<script>
+function getDetailCategory() {
+    let categoryId = document.getElementById("category_id").value;
+    let subId = document.getElementById("sub_category_id").value;
+    let detailCat = document.getElementById("detail_category_id");
+
+    // Reset
+    detailCat.innerHTML = '<option value="">Select Detailed Category</option>';
+
+    if (!categoryId || !subId || !categoryData[categoryId]) {
+        detailCat.disabled = true;
+        return;
+    }
+
+    let details = categoryData[categoryId].subcategories[subId]?.details || [];
+
+    details.forEach(d => {
+        detailCat.innerHTML += `<option value="${d}">${d}</option>`;
+    });
+
+    // Enable dropdown
+    detailCat.disabled = false;
+}
+</script>
+
 </body>
 
 </html>

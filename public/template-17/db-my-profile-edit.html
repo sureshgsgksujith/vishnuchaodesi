@@ -226,7 +226,7 @@
                                     >
                                     <input
                                         type="hidden"
-                                        value="28090bizbook.jpg"
+                                        value="28090Chaodesi.jpg"
                                         autocomplete="off"
                                         name="profile_id_proof_old"
                                         id="profile_id_proof_old"
@@ -330,19 +330,46 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td>City</td>
-                                                <td>
-                                                    <div class="form-group">
-                                                        <input
-                                                            type="text"
-                                                            id="select-city"
-                                                            class="autocomplete form-control"
-                                                            name="user_city"
-                                                            value="Illunois city"
-                                                        >
-                                                    </div>
-                                                </td>
-                                            </tr>
+												<td>Zip Code</td>
+												<td>
+													<div class="form-group">
+														<input
+															type="text"
+															id="zip-code"
+															class="form-control"
+															name="zip_code"
+															placeholder="Enter ZIP Code"
+														>
+													</div>
+												</td>
+											</tr>
+
+											<tr>
+												<td>City</td>
+												<td>
+													<div class="form-group">
+														<input type="text" id="city" class="form-control" name="user_city" >
+													</div>
+												</td>
+											</tr>
+
+											<tr>
+												<td>State</td>
+												<td>
+													<div class="form-group">
+														<input type="text" id="state" class="form-control" name="user_state">
+													</div>
+												</td>
+											</tr>
+
+											<tr>
+												<td>Country</td>
+												<td>
+													<div class="form-group">
+														<input type="text" id="country" class="form-control" name="user_country">
+													</div>
+												</td>
+											</tr>
                                             <tr>
                                                 <td>Join date</td>
                                                 <td>17, Aug 2022</td>
@@ -707,7 +734,7 @@
             <i class="material-icons ani-req-clo">close</i>
             <div class="tit">
                 <h3>What service do you need?
-                    <span>BizBook will help you</span>
+                    <span>Chaodesi will help you</span>
                 </h3>
             </div>
             <div class="hom-col-req">
@@ -1041,11 +1068,33 @@
         <script src="js/bootstrap.min.js"></script>
         <script src="js/jquery-ui.js"></script>
         <script src="js/select-opt.js"></script>
-        <script type="text/javascript">
-        var login_url = 'login?src=db-my-profile-edit';
-        </script>
+        
         <script src="js/custom.js"></script>
         <script src="js/jquery.validate.min.js"></script>
         <script src="js/custom_validation.js"></script>
+		<script>
+		document.getElementById("zip-code").addEventListener("blur", function () {
+			const zip = this.value;
+
+			if (zip.length >= 5) {
+				fetch(`https://api.zippopotam.us/in/${zip}`)
+					.then(response => {
+						if (!response.ok) {
+							throw new Error("Invalid ZIP");
+						}
+						return response.json();
+					})
+					.then(data => {
+						document.getElementById("city").value = data.places[0]["place name"];
+						document.getElementById("state").value = data.places[0]["state"];
+						document.getElementById("country").value = data.country;
+					})
+					.catch(error => {
+						console.log(error);
+						alert("Invalid ZIP Code or not found");
+					});
+			}
+		});
+		</script>
     </body>
 </html>
