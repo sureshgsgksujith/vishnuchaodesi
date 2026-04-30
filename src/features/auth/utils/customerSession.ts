@@ -6,6 +6,8 @@ const CUSTOMER_AUTH_KEYS = [
   "userId",
   "customerCode",
   "fullName",
+  "email",
+  "mobileNumber",
   "customer_name",
   "userType",
 ];

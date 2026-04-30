@@ -6,9 +6,11 @@ import {
   getStoredDashboardIdentity,
   PROFILE_UPDATED_EVENT,
 } from "../utils/profileStorage";
+import { getMyListings } from "../api/listingsApi";
 
 export default function DashboardPage() {
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
+  const [listingCount, setListingCount] = useState(0);
   const fullName = identity.fullName;
   const profileCardImageStyle = {
     width: 100,
@@ -35,12 +37,31 @@ export default function DashboardPage() {
       window.removeEventListener(PROFILE_UPDATED_EVENT, syncIdentity);
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+    getMyListings()
+      .then((result) => {
+        if (isActive) {
+          setListingCount(result.totalCount);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setListingCount(0);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   const summaryCards = useMemo(
     () => [
       {
         eyebrow: "New Users",
         title: "All Listings",
-        count: "04",
+        count: listingCount.toString().padStart(2, "0"),
         description: "Total no of listings",
         href: "/dashboard/all-listing",
         className: "ud-box-com-25 box-drk grn-box",
@@ -62,7 +83,7 @@ export default function DashboardPage() {
         className: "ud-box-com-25 box-drk db-box-gre-25",
       },
     ],
-    []
+    [listingCount]
   );
 
   return (

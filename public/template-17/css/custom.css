@@ -1992,3 +1992,44 @@
     background: #0d6efd;
     color: #fff;
 }
+
+.db-list-edit-button {
+    background: #fff;
+    line-height: normal;
+}
+
+.db-list-edit-button:hover {
+    background: #2196f3;
+}
+
+button.add-list-add-btn,
+button.add-list-rem-btn {
+    border: 0;
+    line-height: normal;
+}
+
+.listing-skip-btn {
+    border: 0;
+    background: transparent;
+}
+
+.listing-file-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-size: 10px;
+    overflow: hidden;
+}
+
+.listing-form-alert {
+    margin: 0 0 12px;
+}
+
+.listing-info-arrow {
+    text-align: center;
+}
+
+.listing-form-plain-file {
+    margin-bottom: 15px;
+}

@@ -20,6 +20,10 @@ import JobsPage from "../../features/dashboard/ui/JobsPage";
 import BlogPostsPage from "../../features/dashboard/ui/BlogPostsPage";
 import CouponsPage from "../../features/dashboard/ui/CouponsPage";
 import MyProfileEditPage from "../../features/dashboard/ui/MyProfileEditPage";
+import AllListingsPage from "../../features/dashboard/ui/AllListingsPage";
+import ListingFormPage from "../../features/dashboard/ui/ListingFormPage";
+import ListingPreviewPage from "../../features/dashboard/ui/ListingPreviewPage";
+import ListingStartPage from "../../features/dashboard/ui/ListingStartPage";
 import { isCustomerAuthenticated, redirectToCustomerHomeAfterSessionPopup } from "../../features/auth/utils/customerSession";
 
 function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
@@ -54,6 +58,11 @@ export function AppRouter() {
     "/dashboard/blog-posts",
     "/dashboard/coupons",
     "/dashboard/my-profile-edit",
+    "/dashboard/all-listing",
+    "/dashboard/listings/new",
+    "/dashboard/listings/start",
+    "/dashboard/listings/:listingId/edit",
+    "/dashboard/listings/:listingId/preview",
   ];
 
   return (
@@ -81,6 +90,11 @@ export function AppRouter() {
       <Route path="/dashboard/blog-posts" element={<ProtectedCustomerRoute><BlogPostsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/coupons" element={<ProtectedCustomerRoute><CouponsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/my-profile-edit" element={<ProtectedCustomerRoute><MyProfileEditPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/all-listing" element={<ProtectedCustomerRoute><AllListingsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/listings/start" element={<ProtectedCustomerRoute><ListingStartPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/listings/new" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/listings/:listingId/edit" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/listings/:listingId/preview" element={<ProtectedCustomerRoute><ListingPreviewPage /></ProtectedCustomerRoute>} />
 
       {customerTemplateRoutes
         .filter((route) => !excludedStaticRoutes.includes(route.path))

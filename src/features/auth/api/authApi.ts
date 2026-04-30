@@ -6,6 +6,8 @@ export type AuthApiResponse = {
   token: string | null;
   userId: number | null;
   customerCode: string | null;
+  email: string | null;
+  mobileNumber: string | null;
   fullName: string | null;
   userType: string | null;
   redirectUrl: string | null;

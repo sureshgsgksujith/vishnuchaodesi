@@ -228,6 +228,8 @@ export default function LoginPage() {
       if (result.userId) localStorage.setItem("userId", String(result.userId));
       if (result.customerCode) localStorage.setItem("customerCode", result.customerCode);
       if (result.fullName) localStorage.setItem("fullName", result.fullName);
+      if (result.email) localStorage.setItem("email", result.email);
+      if (result.mobileNumber) localStorage.setItem("mobileNumber", result.mobileNumber);
       if (result.userType) localStorage.setItem("userType", result.userType);
 
       navigate("/home");

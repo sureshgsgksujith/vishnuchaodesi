@@ -16,6 +16,7 @@ type DashboardLayoutProps = {
   children: ReactNode;
   rightRail?: ReactNode;
   mainContentClassName?: string;
+  showHeader?: boolean;
   showBottomCta?: boolean;
 };
 
@@ -23,6 +24,7 @@ export default function DashboardLayout({
   children,
   rightRail,
   mainContentClassName = "",
+  showHeader = true,
   showBottomCta = true,
 }: DashboardLayoutProps) {
   const navigate = useNavigate();
@@ -53,7 +55,7 @@ export default function DashboardLayout({
 
   return (
     <>
-      <UserHomeHeader />
+      {showHeader ? <UserHomeHeader /> : null}
 
       <section className="ud">
         <div className="ud-inn">
