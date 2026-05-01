@@ -23,6 +23,7 @@ export type ListingSummary = {
   propertyDetails?: Record<string, string | number | boolean | null>;
   priceDetails?: Record<string, string | number | boolean | null>;
   locationDetails?: Record<string, string | number | null>;
+  amenities?: Record<string, boolean>;
   sellerInformation?: Record<string, string | boolean | null>;
   settings?: Record<string, string | number | boolean | null>;
   imageUrls?: string[];
@@ -57,6 +58,12 @@ export type UpsertListingPayload = {
   settings: Record<string, string | number | boolean | null>;
 };
 
+export type ListingUploadFiles = {
+  profileImageFile?: File | null;
+  coverImageFile?: File | null;
+  galleryFiles?: Array<{ file: File; marker: string }>;
+};
+
 export async function getMyListings(search = "") {
   const response = await apiClient.get<ListingListResponse>("/Listings/mine", {
     params: { page: 1, pageSize: 100, search: search || undefined },
@@ -64,8 +71,9 @@ export async function getMyListings(search = "") {
   return response.data;
 }
 
-export async function createListing(payload: UpsertListingPayload) {
-  const response = await apiClient.post<ListingSummary>("/Listings", payload);
+export async function createListing(payload: UpsertListingPayload, files?: ListingUploadFiles) {
+  const body = buildListingRequestBody(payload, files);
+  const response = await apiClient.post<ListingSummary>("/Listings", body, getRequestConfig(body));
   return response.data;
 }
 
@@ -74,8 +82,9 @@ export async function getListing(listingId: number) {
   return response.data;
 }
 
-export async function updateListing(listingId: number, payload: UpsertListingPayload) {
-  const response = await apiClient.put<ListingSummary>(`/Listings/${listingId}`, payload);
+export async function updateListing(listingId: number, payload: UpsertListingPayload, files?: ListingUploadFiles) {
+  const body = buildListingRequestBody(payload, files);
+  const response = await apiClient.put<ListingSummary>(`/Listings/${listingId}`, body, getRequestConfig(body));
   return response.data;
 }
 
@@ -101,4 +110,34 @@ export function getListingApiErrorMessage(error: unknown) {
   }
 
   return "Request failed. Please try again.";
+}
+
+function buildListingRequestBody(payload: UpsertListingPayload, files?: ListingUploadFiles) {
+  if (!files?.profileImageFile && !files?.coverImageFile && !files?.galleryFiles?.length) {
+    return payload;
+  }
+
+  const formData = new FormData();
+  formData.append("payload", JSON.stringify(payload));
+
+  if (files.profileImageFile) {
+    formData.append("profileImageFile", files.profileImageFile);
+  }
+
+  if (files.coverImageFile) {
+    formData.append("coverImageFile", files.coverImageFile);
+  }
+
+  for (const item of files.galleryFiles || []) {
+    formData.append("galleryFiles", item.file);
+    formData.append("galleryFileMarkers", item.marker);
+  }
+
+  return formData;
+}
+
+function getRequestConfig(body: UpsertListingPayload | FormData) {
+  return body instanceof FormData
+    ? { headers: { "Content-Type": "multipart/form-data" } }
+    : undefined;
 }

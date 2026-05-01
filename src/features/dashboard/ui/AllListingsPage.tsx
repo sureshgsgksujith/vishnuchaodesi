@@ -66,6 +66,8 @@ export default function AllListingsPage() {
                 <tr>
                   <th>No</th>
                   <th>Listing Name</th>
+                  <th>City</th>
+                  <th>Address</th>
                   <th>Rating</th>
                   <th>Views</th>
                   <th>Status</th>
@@ -77,7 +79,7 @@ export default function AllListingsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8}>Loading listings...</td>
+                    <td colSpan={10}>Loading listings...</td>
                   </tr>
                 ) : items.length ? (
                   items.map((item, index) => (
@@ -92,6 +94,8 @@ export default function AllListingsPage() {
                         {item.title}
                         <span>{formatDate(item.createdAt)}</span>
                       </td>
+                      <td>{item.city || "-"}</td>
+                      <td>{item.locality || "-"}</td>
                       <td>
                         <span className="db-list-rat">{item.rating}</span>
                       </td>
@@ -120,7 +124,7 @@ export default function AllListingsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8}>No listings found.</td>
+                    <td colSpan={10}>No listings found.</td>
                   </tr>
                 )}
               </tbody>

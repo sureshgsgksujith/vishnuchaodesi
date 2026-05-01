@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createListing, getListing, getListingApiErrorMessage, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
 import { getMyProfile } from "../api/profileApi";
+import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 
@@ -14,47 +15,28 @@ const wizardSteps = [
   { title: "Step 6", label: "Done" },
 ];
 
-const categories = [
-  "Restaurants",
-  "Wedding halls",
-  "Pet shop",
-  "Technology",
-  "Spa and Facial",
-  "Real Estate",
-  "Sports",
-  "Education",
-  "Electricals",
-  "Automobiles",
-  "Transportation",
-  "Hospitals",
-];
+const categories = ["Real Estate"];
 
 const subCategoriesByCategory: Record<string, string[]> = {
-  Restaurants: ["Indian Restaurants", "Cafe", "Bakery", "Catering"],
-  "Wedding halls": ["Banquet Hall", "Marriage Garden", "Convention Center"],
-  "Pet shop": ["Pet Food", "Pet Grooming", "Veterinary"],
-  Technology: ["Software", "Computer Repair", "Digital Marketing", "IT Services"],
-  "Spa and Facial": ["Spa", "Facial", "Massage", "Beauty Parlour"],
-  "Real Estate": ["Rent", "Sale", "PG", "Commercial", "Land / Plots"],
-  Sports: ["Coaching", "Sports Shop", "Fitness Center"],
-  Education: ["Schools", "College", "Tuition", "Training Institute"],
-  Electricals: ["Electrician", "Appliances", "Lighting"],
-  Automobiles: ["Car Service", "Bike Service", "Car Dealers", "Used Cars"],
-  Transportation: ["Taxi", "Movers", "Logistics", "Bus Service"],
-  Hospitals: ["General Hospital", "Clinic", "Dental", "Pharmacy"],
+  "Real Estate": ["Sale", "Rent", "Commercial", "Plot", "PG"],
 };
 
 const detailCategoriesBySubCategory: Record<string, string[]> = {
-  Rent: ["Apartment", "House", "Villa", "Room"],
-  Sale: ["Apartment", "House", "Villa", "Plot"],
+  Sale: ["Apartment", "Villa", "Plot"],
+  Rent: ["Apartment", "House", "PG"],
   PG: ["Single Room", "Shared Room", "Co-living"],
   Commercial: ["Office", "Shop", "Warehouse"],
-  "Land / Plots": ["Residential Plot", "Agricultural Land", "Farmhouse"],
+  Plot: ["Residential Plot", "Commercial Plot"],
 };
+
+const profileImageUploadMarker = "__profileImageFile__";
+const coverImageUploadMarker = "__coverImageFile__";
+const galleryImageUploadMarkerPrefix = "__galleryFile_";
 
 type ServiceItem = { name: string; imageName: string };
 type OfferItem = { name: string; price: string; detail: string; imageName: string; link: string };
 type InfoItem = { question: string; answer: string };
+type GalleryUploadFile = { file: File; marker: string };
 
 type FormState = {
   title: string;
@@ -64,7 +46,9 @@ type FormState = {
   website: string;
   address: string;
   country: string;
+  state: string;
   city: string;
+  pincode: string;
   categoryName: string;
   subCategory: string;
   detailCategory: string;
@@ -79,14 +63,42 @@ type FormState = {
   propertyType: string;
   bhk: string;
   bathrooms: string;
+  balconies: string;
+  furnishingType: string;
   plotArea: string;
+  length: string;
+  breadth: string;
+  boundaryWall: string;
+  facing: string;
+  approvalType: string;
+  roadWidth: string;
   area: string;
   washrooms: string;
+  parking: string;
+  suitableFor: string;
   roomType: string;
   genderPreference: string;
+  foodIncluded: string;
+  pgAmenities: string;
+  price: string;
+  priceNegotiable: string;
+  maintenanceCharges: string;
+  securityDeposit: string;
+  loanEligible: boolean;
+  amenityParking: boolean;
+  amenityLift: boolean;
+  amenityGym: boolean;
+  amenityCctv: boolean;
+  amenitySwimmingPool: boolean;
+  amenityGarden: boolean;
 };
 
-type StringFormField = Exclude<keyof FormState, "galleryMedia">;
+type BooleanFormField = {
+  [Key in keyof FormState]: FormState[Key] extends boolean ? Key : never;
+}[keyof FormState];
+type StringFormField = {
+  [Key in keyof FormState]: FormState[Key] extends string ? Key : never;
+}[keyof FormState];
 
 const initialForm: FormState = {
   title: "",
@@ -96,7 +108,9 @@ const initialForm: FormState = {
   website: "",
   address: "",
   country: "",
+  state: "",
   city: "",
+  pincode: "",
   categoryName: "",
   subCategory: "",
   detailCategory: "",
@@ -111,15 +125,43 @@ const initialForm: FormState = {
   propertyType: "",
   bhk: "",
   bathrooms: "",
+  balconies: "",
+  furnishingType: "",
   plotArea: "",
+  length: "",
+  breadth: "",
+  boundaryWall: "",
+  facing: "",
+  approvalType: "",
+  roadWidth: "",
   area: "",
   washrooms: "",
+  parking: "",
+  suitableFor: "",
   roomType: "",
   genderPreference: "",
+  foodIncluded: "",
+  pgAmenities: "",
+  price: "",
+  priceNegotiable: "Negotiable",
+  maintenanceCharges: "",
+  securityDeposit: "",
+  loanEligible: false,
+  amenityParking: false,
+  amenityLift: false,
+  amenityGym: false,
+  amenityCctv: false,
+  amenitySwimmingPool: false,
+  amenityGarden: false,
 };
 
 export default function ListingFormPage() {
   const [form, setForm] = useState<FormState>(initialForm);
+  const [sellerName, setSellerName] = useState(
+    localStorage.getItem("fullName") ||
+      localStorage.getItem("customer_name") ||
+      "",
+  );
   const [services, setServices] = useState<ServiceItem[]>([
     { name: "", imageName: "" },
     { name: "", imageName: "" },
@@ -131,6 +173,12 @@ export default function ListingFormPage() {
     Array.from({ length: 6 }, () => ({ question: "", answer: "" })),
   );
   const [errorMessage, setErrorMessage] = useState("");
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<GalleryUploadFile[]>([]);
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [states, setStates] = useState<StateOption[]>([]);
+  const [cities, setCities] = useState<CityOption[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [savedListingId, setSavedListingId] = useState<number | null>(null);
@@ -141,6 +189,87 @@ export default function ListingFormPage() {
   const duplicateListingId = numberOrNull(searchParams.get("duplicate") || undefined);
   const sourceListingId = editListingId || duplicateListingId;
   const isEditMode = Boolean(editListingId);
+
+  const selectedCountry = useMemo(
+    () => countries.find((country) => country.name === form.country),
+    [countries, form.country],
+  );
+  const selectedState = useMemo(
+    () => states.find((state) => state.name === form.state),
+    [states, form.state],
+  );
+  useEffect(() => {
+    let isActive = true;
+    getLocationCountries()
+      .then((items) => {
+        if (isActive) {
+          setCountries(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setCountries([]);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!selectedCountry?.id) {
+      setStates([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    getLocationStates(selectedCountry.id)
+      .then((items) => {
+        if (isActive) {
+          setStates(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setStates([]);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedCountry?.id]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!selectedState?.id) {
+      setCities([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    getLocationCities(selectedState.id)
+      .then((items) => {
+        if (isActive) {
+          setCities(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setCities([]);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [selectedState?.id]);
 
   useEffect(() => {
     let isActive = true;
@@ -153,9 +282,14 @@ export default function ListingFormPage() {
           email: profile.email || currentForm.email,
           mobileNumber: profile.mobileNumber || currentForm.mobileNumber,
         }));
+        setSellerName(profile.fullName || sellerName);
       })
       .catch(() => {
         if (!isActive) return;
+        const storedSellerName =
+          localStorage.getItem("fullName") ||
+          localStorage.getItem("customer_name") ||
+          "";
         setForm((currentForm) => ({
           ...currentForm,
           email: localStorage.getItem("email") || currentForm.email,
@@ -164,6 +298,7 @@ export default function ListingFormPage() {
             localStorage.getItem("mobile_number") ||
             currentForm.mobileNumber,
         }));
+        setSellerName(storedSellerName);
       });
 
     return () => {
@@ -206,7 +341,7 @@ export default function ListingFormPage() {
     [form.subCategory],
   );
 
-  function updateField(name: keyof FormState, value: string) {
+  function updateField(name: StringFormField, value: string) {
     setForm((currentForm) => {
       const nextForm = { ...currentForm, [name]: value };
 
@@ -215,16 +350,46 @@ export default function ListingFormPage() {
         nextForm.detailCategory = "";
       }
 
+      if (name === "country") {
+        nextForm.state = "";
+        nextForm.city = "";
+        nextForm.pincode = "";
+      }
+
+      if (name === "state") {
+        nextForm.city = "";
+        nextForm.pincode = "";
+      }
+
+      if (name === "city") {
+        const city = cities.find((item) => item.name === value);
+        if (city?.zipCode) {
+          nextForm.pincode = city.zipCode;
+        }
+      }
+
       if (name === "subCategory") {
         nextForm.detailCategory = "";
         nextForm.propertyType = "";
         nextForm.bhk = "";
         nextForm.bathrooms = "";
+        nextForm.balconies = "";
+        nextForm.furnishingType = "";
         nextForm.plotArea = "";
+        nextForm.length = "";
+        nextForm.breadth = "";
+        nextForm.boundaryWall = "";
+        nextForm.facing = "";
+        nextForm.approvalType = "";
+        nextForm.roadWidth = "";
         nextForm.area = "";
         nextForm.washrooms = "";
+        nextForm.parking = "";
+        nextForm.suitableFor = "";
         nextForm.roomType = "";
         nextForm.genderPreference = "";
+        nextForm.foodIncluded = "";
+        nextForm.pgAmenities = "";
       }
 
       if (name === "detailCategory") {
@@ -254,15 +419,26 @@ export default function ListingFormPage() {
       return true;
     }
 
+    // const requiredFields: Array<[StringFormField, string]> = [
+    //   ["title", "Listing Name"],
+    //   ["country", "Country"],
+    //   ["city", "City"],
+    //   ["categoryName", "Category"],
+    //   ["subCategory", "Sub Category"],
+    //   ["description", "Details about your listing"],
+    //   ["profileImageName", "Profile image"],
+    //   ["coverImageName", "Cover image"],
+    // ];
+
     const requiredFields: Array<[StringFormField, string]> = [
-      ["title", "Listing Name"],
+      ["title", "Ad Title"],
       ["country", "Country"],
+      ["state", "State"],
       ["city", "City"],
+      ["address", "Address"],
       ["categoryName", "Category"],
       ["subCategory", "Sub Category"],
       ["description", "Details about your listing"],
-      ["profileImageName", "Profile image"],
-      ["coverImageName", "Cover image"],
     ];
 
     if (detailCategoryOptions.length) {
@@ -295,10 +471,16 @@ export default function ListingFormPage() {
     setErrorMessage("");
 
     try {
-      const payload = buildListingPayload(form, services, offers, infoItems);
+      const payload = buildListingPayload(form, services, offers, infoItems, sellerName);
+      const galleryMarkers = new Set(form.galleryMedia);
+      const uploadFiles = {
+        profileImageFile,
+        coverImageFile,
+        galleryFiles: galleryFiles.filter((item) => galleryMarkers.has(item.marker)),
+      };
       const savedListing = isEditMode && editListingId
-        ? await updateListing(editListingId, payload)
-        : await createListing(payload);
+        ? await updateListing(editListingId, payload, uploadFiles)
+        : await createListing(payload, uploadFiles);
       setSavedListingId(savedListing.id);
       setCurrentStep(5);
     } catch (error) {
@@ -327,16 +509,22 @@ export default function ListingFormPage() {
                   <div className="login">
                     <h4>{isEditMode ? "Edit Listing" : "Listing Details"}</h4>
                     <form className="listing_form_1" noValidate>
-                      <Input placeholder="Listing Name*" value={form.title} onChange={(value) => updateField("title", value)} />
+                      <Input placeholder="User Name" value={sellerName} onChange={setSellerName} readOnly />
                       <div className="row">
                         <InputColumn placeholder="Phone number" value={form.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
                         <InputColumn placeholder="Email Id" type="email" value={form.email} onChange={(value) => updateField("email", value)} />
                       </div>
                       <Input placeholder="Whatsapp Number (e.g. +919876543210)" value={form.whatsapp} onChange={(value) => updateField("whatsapp", value)} />
                       <Input placeholder="Website(www.Symplore)" value={form.website} onChange={(value) => updateField("website", value)} />
-                      <Input placeholder="Shop address" value={form.address} onChange={(value) => updateField("address", value)} />
-                      <Select placeholder="Select your Country" value={form.country} options={["India", "England", "United States"]} onChange={(value) => updateField("country", value)} />
-                      <Input placeholder="Select your Cities" value={form.city} onChange={(value) => updateField("city", value)} />
+                      <Select placeholder="Country*" value={form.country} options={countries.map((country) => country.name)} onChange={(value) => updateField("country", value)} />
+                      <div className="row">
+                        <SelectColumn placeholder="State*" value={form.state} options={states.map((state) => state.name)} onChange={(value) => updateField("state", value)} disabled={!form.country} />
+                        <SelectColumn placeholder="City*" value={form.city} options={cities.map((city) => city.name)} onChange={(value) => updateField("city", value)} disabled={!form.state} />
+                      </div>
+                      <div className="row">
+                        <InputColumn placeholder="Zip code" value={form.pincode} onChange={(value) => updateField("pincode", value)} />
+                        <InputColumn placeholder="Address*" value={form.address} onChange={(value) => updateField("address", value)} />
+                      </div>
                       <Select placeholder="Select Category" value={form.categoryName} options={categories} onChange={(value) => updateField("categoryName", value)} />
                       <Select
                         placeholder="Select Sub Category"
@@ -352,19 +540,33 @@ export default function ListingFormPage() {
                         onChange={(value) => updateField("detailCategory", value)}
                         disabled={!form.subCategory || !detailCategoryOptions.length}
                       />
+                      <Input placeholder="Ad Title (e.g., 2BHK Flat for Rent in Hyderabad)*" value={form.title} onChange={(value) => updateField("title", value)} />
                       <DetailCategoryFields form={form} updateField={updateField} />
+                      <PriceAndAmenitiesFields
+                        form={form}
+                        updateField={updateField}
+                        updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
+                      />
                       <Textarea placeholder="Details about your listing" value={form.description} onChange={(value) => updateField("description", value)} />
                       <div className="row">
                         <MediaColumn
                           label="Choose profile image"
                           value={form.profileImageName}
                           onChange={(value) => updateField("profileImageName", value)}
+                          onFileChange={(file) => {
+                            setProfileImageFile(file);
+                            updateField("profileImageName", file ? profileImageUploadMarker : "");
+                          }}
                           aspectRatio={1}
                         />
                         <MediaColumn
                           label="Choose cover image"
                           value={form.coverImageName}
                           onChange={(value) => updateField("coverImageName", value)}
+                          onFileChange={(file) => {
+                            setCoverImageFile(file);
+                            updateField("coverImageName", file ? coverImageUploadMarker : "");
+                          }}
                           aspectRatio={16 / 9}
                         />
                       </div>
@@ -441,7 +643,9 @@ export default function ListingFormPage() {
                     <h4>Photo gallery</h4>
                     <GalleryMediaEditor
                       items={form.galleryMedia}
+                      files={galleryFiles}
                       onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
+                      onFilesChange={setGalleryFiles}
                     />
                     <h4>Video Gallery</h4>
                     <ul>
@@ -555,19 +759,47 @@ function WizardSteps({ activeStep }: { activeStep: number }) {
   );
 }
 
-function Input({ placeholder, value, onChange, type = "text" }: FieldProps & { type?: string }) {
+function Input({ placeholder, value, onChange, type = "text", readOnly = false }: FieldProps & { type?: string; readOnly?: boolean }) {
   return (
     <div className="row">
-      <InputColumn placeholder={placeholder} value={value} onChange={onChange} type={type} width="col-md-12" />
+      <InputColumn placeholder={placeholder} value={value} onChange={onChange} type={type} width="col-md-12" readOnly={readOnly} />
     </div>
   );
 }
 
-function InputColumn({ placeholder, value, onChange, type = "text", width = "col-md-6" }: FieldProps & { type?: string; width?: string }) {
+function InputColumn({ placeholder, value, onChange, type = "text", width = "col-md-6", readOnly = false }: FieldProps & { type?: string; width?: string; readOnly?: boolean }) {
   return (
     <div className={width}>
       <div className="form-group">
-        <input className="form-control" type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+        <input className="form-control" type={type} value={value} placeholder={placeholder} readOnly={readOnly} onChange={(event) => onChange(event.target.value)} />
+      </div>
+    </div>
+  );
+}
+
+function SelectColumn({ placeholder, value, options, onChange, width = "col-md-6", disabled = false }: FieldProps & { options: string[]; width?: string; disabled?: boolean }) {
+  return (
+    <div className={width}>
+      <div className="form-group">
+        <select className="chosen-select form-control" value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
+          <option value="">{placeholder}</option>
+          {options.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function CheckboxField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
+  const inputId = `listing-checkbox-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
+  return (
+    <div className="form-group listing-checkbox-field">
+      <div className="chbox">
+        <input id={inputId} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+        <label htmlFor={inputId}>{label}</label>
       </div>
     </div>
   );
@@ -607,7 +839,7 @@ function DetailCategoryFields({
   updateField,
 }: {
   form: FormState;
-  updateField: (name: keyof FormState, value: string) => void;
+  updateField: (name: StringFormField, value: string) => void;
 }) {
   if (!form.detailCategory) {
     return null;
@@ -616,32 +848,67 @@ function DetailCategoryFields({
   if (["Apartment", "House", "Villa"].includes(form.detailCategory)) {
     return (
       <>
+        <h5 className="mt-3 mb-3">Residential Details</h5>
+        <Select placeholder="Property Type*" value={form.propertyType || form.detailCategory} options={["Apartment", "Villa", "House"]} onChange={(value) => updateField("propertyType", value)} />
         <div className="row">
-          <InputColumn placeholder="BHK*" value={form.bhk} onChange={(value) => updateField("bhk", value)} />
+          <SelectColumn placeholder="BHK*" value={form.bhk} options={["1 BHK", "2 BHK", "3 BHK", "4+ BHK"]} onChange={(value) => updateField("bhk", value)} />
           <InputColumn placeholder="Bathrooms*" type="number" value={form.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
+        </div>
+        <div className="row">
+          <InputColumn placeholder="Balconies" type="number" value={form.balconies} onChange={(value) => updateField("balconies", value)} />
+          <SelectColumn placeholder="Furnishing" value={form.furnishingType} options={["Furnished", "Semi Furnished", "Unfurnished"]} onChange={(value) => updateField("furnishingType", value)} />
         </div>
       </>
     );
   }
 
-  if (["Plot", "Residential Plot", "Agricultural Land", "Farmhouse"].includes(form.detailCategory)) {
-    return <Input placeholder="Plot Area*" type="number" value={form.plotArea} onChange={(value) => updateField("plotArea", value)} />;
+  if (["Plot", "Residential Plot", "Commercial Plot"].includes(form.detailCategory)) {
+    return (
+      <>
+        <h5 className="mt-3 mb-3">Plot Details</h5>
+        <div className="row">
+          <InputColumn placeholder="Plot Area*" type="number" value={form.plotArea} onChange={(value) => updateField("plotArea", value)} />
+          <InputColumn placeholder="Length" type="number" value={form.length} onChange={(value) => updateField("length", value)} />
+        </div>
+        <div className="row">
+          <InputColumn placeholder="Breadth" type="number" value={form.breadth} onChange={(value) => updateField("breadth", value)} />
+          <SelectColumn placeholder="Boundary Wall" value={form.boundaryWall} options={["Yes", "No"]} onChange={(value) => updateField("boundaryWall", value)} />
+        </div>
+        <div className="row">
+          <SelectColumn placeholder="Facing" value={form.facing} options={["East", "West", "North", "South"]} onChange={(value) => updateField("facing", value)} />
+          <InputColumn placeholder="Approval Type (DTCP / HMDA)" value={form.approvalType} onChange={(value) => updateField("approvalType", value)} />
+        </div>
+        <Input placeholder="Road Width" type="number" value={form.roadWidth} onChange={(value) => updateField("roadWidth", value)} />
+      </>
+    );
   }
 
   if (["Office", "Shop", "Warehouse"].includes(form.detailCategory)) {
     return (
-      <div className="row">
-        <InputColumn placeholder="Area*" type="number" value={form.area} onChange={(value) => updateField("area", value)} />
-        <InputColumn placeholder="Washrooms*" type="number" value={form.washrooms} onChange={(value) => updateField("washrooms", value)} />
-      </div>
+      <>
+        <h5 className="mt-3 mb-3">Commercial Details</h5>
+        <Select placeholder="Commercial Type*" value={form.propertyType || form.detailCategory} options={["Office", "Shop", "Warehouse"]} onChange={(value) => updateField("propertyType", value)} />
+        <div className="row">
+          <InputColumn placeholder="Area (sq ft)*" type="number" value={form.area} onChange={(value) => updateField("area", value)} />
+          <SelectColumn placeholder="Furnishing" value={form.furnishingType} options={["Furnished", "Unfurnished"]} onChange={(value) => updateField("furnishingType", value)} />
+        </div>
+        <div className="row">
+          <InputColumn placeholder="Washrooms*" type="number" value={form.washrooms} onChange={(value) => updateField("washrooms", value)} />
+          <SelectColumn placeholder="Parking" value={form.parking} options={["Yes", "No"]} onChange={(value) => updateField("parking", value)} />
+        </div>
+        <Select placeholder="Suitable For" value={form.suitableFor} options={["Office", "Retail", "Storage"]} onChange={(value) => updateField("suitableFor", value)} />
+      </>
     );
   }
 
-  if (["Single Room", "Shared Room", "Co-living"].includes(form.detailCategory)) {
+  if (["PG", "Single Room", "Shared Room", "Co-living"].includes(form.detailCategory)) {
     return (
       <>
+        <h5 className="mt-3 mb-3">PG / Co-living</h5>
         <Select placeholder="Room Type*" value={form.roomType} options={["Single", "Shared", "Co-living"]} onChange={(value) => updateField("roomType", value)} />
         <Select placeholder="Gender Preference*" value={form.genderPreference} options={["Male", "Female", "Any"]} onChange={(value) => updateField("genderPreference", value)} />
+        <Select placeholder="Food" value={form.foodIncluded} options={["Food Included", "No Food"]} onChange={(value) => updateField("foodIncluded", value)} />
+        <Input placeholder="Amenities (WiFi, AC, Laundry)" value={form.pgAmenities} onChange={(value) => updateField("pgAmenities", value)} />
       </>
     );
   }
@@ -649,21 +916,62 @@ function DetailCategoryFields({
   return null;
 }
 
+function PriceAndAmenitiesFields({
+  form,
+  updateField,
+  updateBooleanField,
+}: {
+  form: FormState;
+  updateField: (name: StringFormField, value: string) => void;
+  updateBooleanField: (name: BooleanFormField, value: boolean) => void;
+}) {
+  return (
+    <>
+      <h5 className="mt-3 mb-3">Price Details</h5>
+      <div className="row">
+        <InputColumn placeholder="Price / Rent" type="number" value={form.price} onChange={(value) => updateField("price", value)} />
+        <SelectColumn placeholder="Price Type" value={form.priceNegotiable} options={["Negotiable", "Fixed"]} onChange={(value) => updateField("priceNegotiable", value)} />
+      </div>
+      <div className="row">
+        <InputColumn placeholder="Maintenance Charges" type="number" value={form.maintenanceCharges} onChange={(value) => updateField("maintenanceCharges", value)} />
+        <InputColumn placeholder="Security Deposit" type="number" value={form.securityDeposit} onChange={(value) => updateField("securityDeposit", value)} />
+      </div>
+      <CheckboxField label="Loan Eligible" checked={form.loanEligible} onChange={(value) => updateBooleanField("loanEligible", value)} />
+
+      <h5 className="mt-3 mb-3">Amenities</h5>
+      <div className="row listing-amenity-row">
+        <div className="col-md-6">
+          <CheckboxField label="Parking" checked={form.amenityParking} onChange={(value) => updateBooleanField("amenityParking", value)} />
+          <CheckboxField label="Lift" checked={form.amenityLift} onChange={(value) => updateBooleanField("amenityLift", value)} />
+          <CheckboxField label="Gym" checked={form.amenityGym} onChange={(value) => updateBooleanField("amenityGym", value)} />
+        </div>
+        <div className="col-md-6">
+          <CheckboxField label="CCTV" checked={form.amenityCctv} onChange={(value) => updateBooleanField("amenityCctv", value)} />
+          <CheckboxField label="Swimming Pool" checked={form.amenitySwimmingPool} onChange={(value) => updateBooleanField("amenitySwimmingPool", value)} />
+          <CheckboxField label="Garden" checked={form.amenityGarden} onChange={(value) => updateBooleanField("amenityGarden", value)} />
+        </div>
+      </div>
+    </>
+  );
+}
+
 function MediaColumn({
   label,
   value,
   onChange,
+  onFileChange,
   aspectRatio,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onFileChange?: (file: File | null) => void;
   aspectRatio: number;
 }) {
   return (
     <div className="col-md-6">
       <div className="form-group">
-        <MediaPicker label={label} value={value} onChange={onChange} aspectRatio={aspectRatio} />
+        <MediaPicker label={label} value={value} onChange={onChange} onFileChange={onFileChange} aspectRatio={aspectRatio} />
       </div>
     </div>
   );
@@ -689,11 +997,44 @@ function MediaFull({
   );
 }
 
-function GalleryMediaEditor({ items, onChange }: { items: string[]; onChange: (items: string[]) => void }) {
+function GalleryMediaEditor({
+  files,
+  items,
+  onChange,
+  onFilesChange,
+}: {
+  files: GalleryUploadFile[];
+  items: string[];
+  onChange: (items: string[]) => void;
+  onFilesChange: (files: GalleryUploadFile[]) => void;
+}) {
   function updateItem(index: number, value: string) {
     const nextItems = items.length ? [...items] : [""];
     nextItems[index] = value;
     onChange(nextItems.filter(Boolean));
+  }
+
+  function updateFile(index: number, file: File | null) {
+    const nextItems = items.length ? [...items] : [""];
+    const marker = `${galleryImageUploadMarkerPrefix}${index}__`;
+
+    if (file) {
+      const nextFiles = files.filter((item) => item.marker !== marker);
+      nextFiles.push({ file, marker });
+      nextItems[index] = `${galleryImageUploadMarkerPrefix}${index}__`;
+      onFilesChange(nextFiles);
+    } else {
+      nextItems[index] = "";
+      onFilesChange(files.filter((item) => item.marker !== marker));
+    }
+
+    onChange(nextItems.filter(Boolean));
+  }
+
+  function removeItem(index: number) {
+    const marker = `${galleryImageUploadMarkerPrefix}${index}__`;
+    onChange(items.filter((_, itemIndex) => itemIndex !== index));
+    onFilesChange(files.filter((item) => item.marker !== marker));
   }
 
   return (
@@ -710,7 +1051,8 @@ function GalleryMediaEditor({ items, onChange }: { items: string[]; onChange: (i
           label={`Gallery media ${index + 1}`}
           value={item}
           onChange={(value) => updateItem(index, value)}
-          onRemove={() => onChange(items.filter((_, itemIndex) => itemIndex !== index))}
+          onFileChange={(file) => updateFile(index, file)}
+          onRemove={() => removeItem(index)}
           aspectRatio={4 / 3}
           allowVideo
         />
@@ -723,6 +1065,7 @@ function MediaPicker({
   label,
   value,
   onChange,
+  onFileChange,
   onRemove,
   aspectRatio,
   allowVideo = false,
@@ -730,6 +1073,7 @@ function MediaPicker({
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onFileChange?: (file: File | null) => void;
   onRemove?: () => void;
   aspectRatio: number;
   allowVideo?: boolean;
@@ -746,6 +1090,10 @@ function MediaPicker({
   const inputId = `listing-media-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   useEffect(() => {
+    if (isUploadMarker(value)) {
+      return;
+    }
+
     setDraftUrl(value);
     setDraftType("");
   }, [value]);
@@ -754,6 +1102,7 @@ function MediaPicker({
     const file = files?.[0];
     if (!file) return;
 
+    onFileChange?.(file);
     const reader = new FileReader();
     reader.onload = () => {
       const nextValue = String(reader.result || "");
@@ -763,7 +1112,7 @@ function MediaPicker({
       setZoom(1);
       setPositionX(50);
       setPositionY(50);
-      if (file.type.startsWith("video/")) {
+      if (!onFileChange) {
         onChange(nextValue);
       }
     };
@@ -789,6 +1138,9 @@ function MediaPicker({
     setPositionX(50);
     setPositionY(50);
   }
+
+  void onRemove;
+  void applyCrop;
 
   return (
     <div className="listing-media-picker">
@@ -850,7 +1202,7 @@ function MediaPicker({
               {isVideo ? "Use video preview" : "Crop image"}
               </button>
               <label className="listing-media-button" htmlFor={inputId}>Change</label>
-              <button type="button" className="listing-media-button" onClick={() => { setDraftUrl(""); setSelectedName(""); onChange(""); }}>
+              <button type="button" className="listing-media-button" onClick={() => { setDraftUrl(""); setSelectedName(""); onFileChange?.(null); onChange(""); }}>
                 Clear
               </button>
               {onRemove ? (
@@ -909,6 +1261,7 @@ function buildListingPayload(
   services: ServiceItem[],
   offers: OfferItem[],
   infoItems: InfoItem[],
+  sellerName: string,
 ): UpsertListingPayload {
   return {
     title: form.title.trim(),
@@ -921,30 +1274,52 @@ function buildListingPayload(
       propertyType: form.propertyType.trim() || form.detailCategory.trim(),
       bhk: form.bhk.trim(),
       bathrooms: numberOrNull(form.bathrooms),
+      balconies: numberOrNull(form.balconies),
+      furnishingType: form.furnishingType.trim(),
       plotArea: numberOrNull(form.plotArea),
+      length: numberOrNull(form.length),
+      breadth: numberOrNull(form.breadth),
+      boundaryWall: boolOrNull(form.boundaryWall),
+      facing: form.facing.trim(),
+      approvalType: form.approvalType.trim(),
+      roadWidth: numberOrNull(form.roadWidth),
       area: numberOrNull(form.area),
       washrooms: numberOrNull(form.washrooms),
+      parking: boolOrNull(form.parking),
+      suitableFor: form.suitableFor.trim(),
       roomType: form.roomType.trim(),
       genderPreference: form.genderPreference.trim(),
+      foodIncluded: form.foodIncluded ? form.foodIncluded === "Food Included" : null,
+      pgAmenities: form.pgAmenities.trim(),
       services: JSON.stringify(services.filter((item) => item.name.trim())),
       offers: JSON.stringify(offers.filter((item) => item.name.trim() || item.price.trim() || item.detail.trim())),
       otherInformation: JSON.stringify(infoItems.filter((item) => item.question.trim() || item.answer.trim())),
     },
     priceDetails: {
-      price: numberOrNull(offers[0]?.price) || 0,
-      priceNegotiable: true,
+      price: numberOrNull(form.price) ?? numberOrNull(offers[0]?.price) ?? 0,
+      priceNegotiable: form.priceNegotiable !== "Fixed",
+      maintenanceCharges: numberOrNull(form.maintenanceCharges),
+      securityDeposit: numberOrNull(form.securityDeposit),
+      loanEligible: form.loanEligible,
     },
     locationDetails: {
       country: form.country.trim(),
-      state: "",
+      state: form.state.trim(),
       city: form.city.trim(),
       locality: form.address.trim(),
       landmark: form.serviceLocations.trim(),
-      pincode: "",
+      pincode: form.pincode.trim(),
       latitude: null,
       longitude: null,
     },
-    amenities: {},
+    amenities: {
+      parking: form.amenityParking,
+      lift: form.amenityLift,
+      gym: form.amenityGym,
+      cctv: form.amenityCctv,
+      swimmingPool: form.amenitySwimmingPool,
+      garden: form.amenityGarden,
+    },
     media: {
       imageUrls: [
         form.profileImageName,
@@ -955,9 +1330,11 @@ function buildListingPayload(
       virtualTourUrl: form.view360.trim(),
     },
     sellerInformation: {
-      name: form.title.trim(),
+      name: sellerName.trim() || form.title.trim(),
       mobileNumber: form.mobileNumber.trim(),
       email: form.email.trim(),
+      whatsAppNumber: form.whatsapp.trim(),
+      websiteUrl: form.website.trim(),
       isMobileOtpVerified: false,
     },
     settings: {
@@ -971,7 +1348,9 @@ function buildListingPayload(
 
 function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDuplicate: boolean): FormState {
   const propertyDetails = listing.propertyDetails || {};
+  const priceDetails = listing.priceDetails || {};
   const locationDetails = listing.locationDetails || {};
+  const amenities = listing.amenities || {};
   const sellerInformation = listing.sellerInformation || {};
   const imageUrls = listing.imageUrls || [];
   const [profileImageName = "", coverImageName = "", ...galleryMedia] = imageUrls;
@@ -981,9 +1360,13 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     title: isDuplicate ? "" : listing.title || "",
     mobileNumber: stringValue(sellerInformation.mobileNumber) || currentForm.mobileNumber,
     email: stringValue(sellerInformation.email) || currentForm.email,
+    whatsapp: stringValue(sellerInformation.whatsAppNumber),
+    website: stringValue(sellerInformation.websiteUrl),
     address: stringValue(locationDetails.locality),
     country: stringValue(locationDetails.country),
+    state: stringValue(locationDetails.state),
     city: stringValue(locationDetails.city || listing.city),
+    pincode: stringValue(locationDetails.pincode),
     categoryName: listing.categoryName || "",
     subCategory: listing.subCategory || "",
     detailCategory: listing.detailCategory || "",
@@ -997,16 +1380,45 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     propertyType: stringValue(propertyDetails.propertyType) || listing.detailCategory || "",
     bhk: stringValue(propertyDetails.bhk),
     bathrooms: stringValue(propertyDetails.bathrooms),
+    balconies: stringValue(propertyDetails.balconies),
+    furnishingType: stringValue(propertyDetails.furnishingType),
     plotArea: stringValue(propertyDetails.plotArea),
+    length: stringValue(propertyDetails.length),
+    breadth: stringValue(propertyDetails.breadth),
+    boundaryWall: booleanSelectValue(propertyDetails.boundaryWall),
+    facing: stringValue(propertyDetails.facing),
+    approvalType: stringValue(propertyDetails.approvalType),
+    roadWidth: stringValue(propertyDetails.roadWidth),
     area: stringValue(propertyDetails.area),
     washrooms: stringValue(propertyDetails.washrooms),
+    parking: booleanSelectValue(propertyDetails.parking),
+    suitableFor: stringValue(propertyDetails.suitableFor),
     roomType: stringValue(propertyDetails.roomType),
     genderPreference: stringValue(propertyDetails.genderPreference),
+    foodIncluded: propertyDetails.foodIncluded === true ? "Food Included" : propertyDetails.foodIncluded === false ? "No Food" : "",
+    pgAmenities: stringValue(propertyDetails.pgAmenities),
+    price: stringValue(priceDetails.price || listing.price),
+    priceNegotiable: priceDetails.priceNegotiable === false ? "Fixed" : "Negotiable",
+    maintenanceCharges: stringValue(priceDetails.maintenanceCharges),
+    securityDeposit: stringValue(priceDetails.securityDeposit),
+    loanEligible: priceDetails.loanEligible === true,
+    amenityParking: amenities.parking === true,
+    amenityLift: amenities.lift === true,
+    amenityGym: amenities.gym === true,
+    amenityCctv: amenities.cctv === true,
+    amenitySwimmingPool: amenities.swimmingPool === true,
+    amenityGarden: amenities.garden === true,
   };
 }
 
 function stringValue(value: unknown) {
   return value === null || value === undefined ? "" : String(value);
+}
+
+function booleanSelectValue(value: unknown) {
+  if (value === true) return "Yes";
+  if (value === false) return "No";
+  return "";
 }
 
 function updateArrayItem<T>(items: T[], index: number, value: T) {
@@ -1055,7 +1467,7 @@ function clamp(value: number, min: number, max: number) {
 
 function isImageValue(value: string) {
   const normalized = value.trim().toLowerCase();
-  return Boolean(normalized) && !isVideoValue(normalized);
+  return Boolean(normalized) && !isUploadMarker(normalized) && !isVideoValue(normalized);
 }
 
 function isVideoValue(value: string) {
@@ -1063,15 +1475,25 @@ function isVideoValue(value: string) {
   return normalized.startsWith("data:video/") || /\.(mp4|webm|mov|m4v)(\?|#|$)/.test(normalized);
 }
 
+function isUploadMarker(value: string) {
+  return value.startsWith("__") && value.endsWith("__");
+}
+
 function numberOrNull(value?: string) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && String(value || "").trim() !== "" ? parsed : null;
 }
 
+function boolOrNull(value?: string) {
+  if (value === "Yes") return true;
+  if (value === "No") return false;
+  return null;
+}
+
 function getListingKind(subCategory: string, detailCategory: string) {
   if (["Office", "Shop", "Warehouse"].includes(detailCategory) || subCategory === "Commercial") return "Commercial";
-  if (["Single Room", "Shared Room", "Co-living"].includes(detailCategory) || subCategory === "PG") return "PG";
-  if (["Plot", "Residential Plot", "Agricultural Land", "Farmhouse"].includes(detailCategory) || subCategory === "Land / Plots") return "Plot";
+  if (["PG", "Single Room", "Shared Room", "Co-living"].includes(detailCategory) || subCategory === "PG") return "PG";
+  if (["Plot", "Residential Plot", "Commercial Plot"].includes(detailCategory) || subCategory === "Plot") return "Plot";
   return "Residential";
 }
 
@@ -1080,7 +1502,7 @@ function getRequiredDetailFields(detailCategory: string): Array<[StringFormField
     return [["bhk", "BHK"], ["bathrooms", "Bathrooms"]];
   }
 
-  if (["Plot", "Residential Plot", "Agricultural Land", "Farmhouse"].includes(detailCategory)) {
+  if (["Plot", "Residential Plot", "Commercial Plot"].includes(detailCategory)) {
     return [["plotArea", "Plot Area"]];
   }
 
@@ -1088,7 +1510,7 @@ function getRequiredDetailFields(detailCategory: string): Array<[StringFormField
     return [["area", "Area"], ["washrooms", "Washrooms"]];
   }
 
-  if (["Single Room", "Shared Room", "Co-living"].includes(detailCategory)) {
+  if (["PG", "Single Room", "Shared Room", "Co-living"].includes(detailCategory)) {
     return [["roomType", "Room Type"], ["genderPreference", "Gender Preference"]];
   }
 
