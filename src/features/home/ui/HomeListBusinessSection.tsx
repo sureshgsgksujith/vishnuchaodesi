@@ -1,4 +1,9 @@
+import { Link } from "react-router-dom";
+import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
+
 export default function HomeListBusinessSection() {
+  const addBusinessPath = isCustomerAuthenticated() ? "/dashboard/listings/new" : "/pricing-details";
+
   return (
     <section>
       <div className="full-bot-book">
@@ -11,10 +16,10 @@ export default function HomeListBusinessSection() {
                   There are many variations of passages of Lorem Ipsum available, but the majority have suffered
                   alteration in some form, by injected humour.
                 </p>
-                <a href="/pricing-details">
+                <Link to={addBusinessPath}>
                   Add my business
                   <i className="material-icons">arrow_forward</i>
-                </a>
+                </Link>
               </div>
             </div>
           </div>

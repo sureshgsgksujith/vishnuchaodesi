@@ -503,7 +503,7 @@ export default function UserHomeHeader() {
                       </li>
                       <li style={{ float: "left" }}>
                         <Link
-                          to="/pricing-details"
+                          to="/dashboard/listings/new"
                           style={{
                             fontSize: 14,
                             marginRight: 10,
@@ -591,67 +591,75 @@ export default function UserHomeHeader() {
               </form>
             </div>
 
-            <div className="top-noti" style={{ position: "relative" }}>
-              <span
-                className="material-icons db-menu-noti"
-                onClick={() => {
-                  setShowNotifications((prev) => !prev);
-                  setShowExplore(false);
-                  setShowProfileMenu(false);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <i id="noti-count">
-                  {String(notifications.length).padStart(2, "0")}
-                </i>
-                notifications
-              </span>
+            <div className="chaodesi-header-actions">
+              <ul className="bl">
+                <li>
+                  <Link to="/dashboard/listings/new">Add Business</Link>
+                </li>
+              </ul>
 
-              <div
-                className="db-noti top-noti-win"
-                style={{
-                  display: showNotifications ? "block" : "none",
-                  position: "absolute",
-                  right: 0,
-                  top: "100%",
-                  zIndex: 99999,
-                }}
-              >
+              <div className="top-noti">
                 <span
-                  className="material-icons db-menu-clo"
-                  onClick={() => setShowNotifications(false)}
+                  className="material-icons db-menu-noti"
+                  onClick={() => {
+                    setShowNotifications((prev) => !prev);
+                    setShowExplore(false);
+                    setShowProfileMenu(false);
+                  }}
                   style={{ cursor: "pointer" }}
                 >
-                  close
+                  <i id="noti-count">
+                    {String(notifications.length).padStart(2, "0")}
+                  </i>
+                  notifications
                 </span>
-                <h4>Notifications</h4>
-                <ul id="all-notif-ul">
-                  {notifications.map((item, index) => (
-                    <li key={index}>
-                      <div>{item}</div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
 
-            <div className="al">
-              <div
-                className="head-pro"
-                onClick={() => {
-                  setShowProfileMenu(true);
-                  setShowExplore(false);
-                  setShowNotifications(false);
-                }}
-                style={{ cursor: "pointer" }}
-              >
-                <img
-                  src={profileImageUrl}
-                  alt="User"
-                  loading="lazy"
-                  title="Go to dashboard"
-                />
-                <span className="fclick near-pro-cta"></span>
+                <div
+                  className="db-noti top-noti-win"
+                  style={{
+                    display: showNotifications ? "block" : "none",
+                    position: "absolute",
+                    right: 0,
+                    top: "100%",
+                    zIndex: 99999,
+                  }}
+                >
+                  <span
+                    className="material-icons db-menu-clo"
+                    onClick={() => setShowNotifications(false)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    close
+                  </span>
+                  <h4>Notifications</h4>
+                  <ul id="all-notif-ul">
+                    {notifications.map((item, index) => (
+                      <li key={index}>
+                        <div>{item}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="al">
+                <div
+                  className="head-pro"
+                  onClick={() => {
+                    setShowProfileMenu(true);
+                    setShowExplore(false);
+                    setShowNotifications(false);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <img
+                    src={profileImageUrl}
+                    alt="User"
+                    loading="lazy"
+                    title="Go to dashboard"
+                  />
+                  <span className="fclick near-pro-cta"></span>
+                </div>
               </div>
             </div>
 
@@ -794,6 +802,17 @@ export default function UserHomeHeader() {
                     <h4>{fullName}</h4>
                     <b>{joinDate}</b>
                   </div>
+                </div>
+
+                <div className="mv-cate">
+                  <h4>Business</h4>
+                  <ul>
+                    <li>
+                      <Link to="/dashboard/listings/new" onClick={closeAllPopups}>
+                        Add Business
+                      </Link>
+                    </li>
+                  </ul>
                 </div>
 
                 <div className="mv-cate">

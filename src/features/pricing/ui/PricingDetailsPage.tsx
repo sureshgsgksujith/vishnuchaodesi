@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../../dashboard/components/DashboardFooter";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
@@ -19,7 +19,16 @@ export default function PricingDetailsPage() {
   const [isSelecting, setIsSelecting] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const isAuthenticated = isCustomerAuthenticated();
+  const pricingState = location.state as
+    | {
+        pendingListingDraft?: unknown;
+        returnTo?: string;
+      }
+    | null;
+  const returnTo = pricingState?.returnTo;
+  const hasPendingListingDraft = Boolean(pricingState?.pendingListingDraft && returnTo);
 
   useEffect(() => {
     let isActive = true;
@@ -65,17 +74,47 @@ export default function PricingDetailsPage() {
       return;
     }
 
+    const continueToPendingListing = () => {
+      if (!returnTo) {
+        return false;
+      }
+
+      navigate(returnTo, {
+        state: {
+          pendingListingDraft: pricingState?.pendingListingDraft,
+          pricingConfirmed: true,
+        },
+      });
+      return true;
+    };
+
     if (activePlanCode !== plan.code) {
       setIsSelecting(plan.code);
       setMessage("");
       try {
         const nextUsage = await selectPricingPlan(plan.code);
         setUsage(nextUsage);
+        if (!nextUsage.canCreateListing) {
+          setMessage("This plan has reached the listing limit. Choose a higher plan to save this listing.");
+          return;
+        }
+        if (continueToPendingListing()) {
+          return;
+        }
       } catch {
         setMessage("Unable to update your plan.");
       } finally {
         setIsSelecting("");
       }
+      return;
+    }
+
+    if (hasPendingListingDraft && usage && !usage.canCreateListing) {
+      setMessage("Your current plan has reached the listing limit. Choose a higher plan to save this listing.");
+      return;
+    }
+
+    if (continueToPendingListing()) {
       return;
     }
 
@@ -96,6 +135,12 @@ export default function PricingDetailsPage() {
             Choose your <span>Pricing Plan</span>
           </h1>
           <p>Pick a plan to control listings, media, and account features dynamically.</p>
+          {hasPendingListingDraft ? (
+            <div className="pricing-usage">
+              <strong>Plan required before saving</strong>
+              <span>Select a plan to continue saving your listing.</span>
+            </div>
+          ) : null}
           {usage ? (
             <div className="pricing-usage">
               <strong>Current plan: {usage.plan.name}</strong>
@@ -126,7 +171,15 @@ export default function PricingDetailsPage() {
                     onClick={() => handlePlanAction(plan)}
                     disabled={isSelecting === plan.code}
                   >
-                    {isSelecting === plan.code ? "Updating..." : isActive ? "Add listing" : "Select plan"}
+                    {isSelecting === plan.code
+                      ? "Updating..."
+                      : hasPendingListingDraft
+                        ? isActive
+                          ? "Continue to save"
+                          : "Select and save"
+                        : isActive
+                          ? "Add listing"
+                          : "Select plan"}
                   </button>
                   {isActive ? <span className="pricing-active">Active plan</span> : null}
                   <ul>

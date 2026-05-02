@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createListing, getListing, getListingApiErrorMessage, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
 import { getMyProfile } from "../api/profileApi";
 import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
@@ -38,6 +38,22 @@ type ServiceItem = { name: string; imageName: string };
 type OfferItem = { name: string; price: string; detail: string; imageName: string; link: string };
 type InfoItem = { question: string; answer: string };
 type GalleryUploadFile = { file: File; marker: string };
+
+type ListingDraft = {
+  coverImageFile: File | null;
+  form: FormState;
+  galleryFiles: GalleryUploadFile[];
+  infoItems: InfoItem[];
+  offers: OfferItem[];
+  profileImageFile: File | null;
+  sellerName: string;
+  services: ServiceItem[];
+};
+
+type ListingPricingState = {
+  pendingListingDraft?: ListingDraft;
+  pricingConfirmed?: boolean;
+};
 
 type FormState = {
   title: string;
@@ -184,7 +200,9 @@ export default function ListingFormPage() {
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [savedListingId, setSavedListingId] = useState<number | null>(null);
+  const pricingSaveStartedRef = useRef(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { listingId } = useParams();
   const [searchParams] = useSearchParams();
   const editListingId = numberOrNull(listingId);
@@ -355,6 +373,34 @@ export default function ListingFormPage() {
     };
   }, [sourceListingId, isEditMode]);
 
+  useEffect(() => {
+    const pricingState = location.state as ListingPricingState | null;
+    const draft = pricingState?.pendingListingDraft;
+
+    if (!draft) {
+      return;
+    }
+
+    setForm(draft.form);
+    setSellerName(draft.sellerName);
+    setServices(draft.services);
+    setOffers(draft.offers);
+    setInfoItems(draft.infoItems);
+    setProfileImageFile(draft.profileImageFile);
+    setCoverImageFile(draft.coverImageFile);
+    setGalleryFiles(draft.galleryFiles);
+    setCurrentStep(4);
+
+    if (pricingState?.pricingConfirmed && !pricingSaveStartedRef.current) {
+      pricingSaveStartedRef.current = true;
+      void saveListing(draft).then((wasSaved) => {
+        if (wasSaved) {
+          navigate(location.pathname, { replace: true, state: null });
+        }
+      });
+    }
+  }, [location.pathname, location.state, navigate]);
+
   const subCategoryOptions = useMemo(
     () => (form.categoryName ? subCategoriesByCategory[form.categoryName] || [] : []),
     [form.categoryName],
@@ -479,37 +525,67 @@ export default function ListingFormPage() {
     return true;
   }
 
-  async function handleFinish() {
+  function getListingDraft(): ListingDraft {
+    return {
+      coverImageFile,
+      form,
+      galleryFiles,
+      infoItems,
+      offers,
+      profileImageFile,
+      sellerName,
+      services,
+    };
+  }
+
+  async function saveListing(draft = getListingDraft()) {
     if (!isEditMode && planUsage && !planUsage.canCreateListing) {
       setErrorMessage(`Your ${planUsage.plan.name} has reached the listing limit. Upgrade your plan to add more listings.`);
-      return;
-    }
-
-    if (!validateStep(currentStep)) {
-      return;
+      return false;
     }
 
     setIsSaving(true);
     setErrorMessage("");
 
     try {
-      const payload = buildListingPayload(form, services, offers, infoItems, sellerName);
-      const galleryMarkers = new Set(form.galleryMedia);
+      const payload = buildListingPayload(draft.form, draft.services, draft.offers, draft.infoItems, draft.sellerName);
+      const galleryMarkers = new Set(draft.form.galleryMedia);
       const uploadFiles = {
-        profileImageFile,
-        coverImageFile,
-        galleryFiles: galleryFiles.filter((item) => galleryMarkers.has(item.marker)),
+        profileImageFile: draft.profileImageFile,
+        coverImageFile: draft.coverImageFile,
+        galleryFiles: draft.galleryFiles.filter((item) => galleryMarkers.has(item.marker)),
       };
       const savedListing = isEditMode && editListingId
         ? await updateListing(editListingId, payload, uploadFiles)
         : await createListing(payload, uploadFiles);
       setSavedListingId(savedListing.id);
       setCurrentStep(5);
+      return true;
     } catch (error) {
       setErrorMessage(getListingApiErrorMessage(error));
+      return false;
     } finally {
       setIsSaving(false);
     }
+  }
+
+  async function handleFinish() {
+    if (!validateStep(0)) {
+      setCurrentStep(0);
+      return;
+    }
+
+    if (isEditMode) {
+      await saveListing();
+      return;
+    }
+
+    navigate("/pricing-details", {
+      state: {
+        pendingListingDraft: getListingDraft(),
+        returnTo: "/dashboard/listings/new",
+      },
+    });
   }
 
   return (
@@ -543,10 +619,8 @@ export default function ListingFormPage() {
                         <SelectColumn placeholder="State*" value={form.state} options={states.map((state) => state.name)} onChange={(value) => updateField("state", value)} disabled={!form.country} />
                         <SelectColumn placeholder="City*" value={form.city} options={cities.map((city) => city.name)} onChange={(value) => updateField("city", value)} disabled={!form.state} />
                       </div>
-                      <div className="row">
-                        <InputColumn placeholder="Zip code" value={form.pincode} onChange={(value) => updateField("pincode", value)} />
-                        <InputColumn placeholder="Address*" value={form.address} onChange={(value) => updateField("address", value)} />
-                      </div>
+                      <Input placeholder="Address*" value={form.address} onChange={(value) => updateField("address", value)} />
+                      <Input placeholder="Zip code" value={form.pincode} onChange={(value) => updateField("pincode", value)} />
                       <Select placeholder="Select Category" value={form.categoryName} options={categories} onChange={(value) => updateField("categoryName", value)} />
                       <Select
                         placeholder="Select Sub Category"
@@ -562,8 +636,8 @@ export default function ListingFormPage() {
                         onChange={(value) => updateField("detailCategory", value)}
                         disabled={!form.subCategory || !detailCategoryOptions.length}
                       />
-                      <Input placeholder="Ad Title (e.g., 2BHK Flat for Rent in Hyderabad)*" value={form.title} onChange={(value) => updateField("title", value)} />
                       <DetailCategoryFields form={form} updateField={updateField} />
+                      <Input placeholder="Ad Title (e.g., 2BHK Flat for Rent in Hyderabad)*" value={form.title} onChange={(value) => updateField("title", value)} />
                       <PriceAndAmenitiesFields
                         form={form}
                         updateField={updateField}
@@ -711,7 +785,7 @@ export default function ListingFormPage() {
                         <button type="button" className="btn btn-primary" onClick={handlePrevious}>Previous</button>
                       </div>
                       <div className="col-md-6">
-                        <button type="button" className="btn btn-primary" onClick={handleFinish} disabled={isSaving}>{isSaving ? "Saving..." : "Finish"}</button>
+                        <button type="button" className="btn btn-primary" onClick={handleFinish} disabled={isSaving}>{isSaving ? "Saving..." : isEditMode ? "Save" : "Choose Pricing Plan"}</button>
                       </div>
                     </div>
                     <Progress value={90} />
