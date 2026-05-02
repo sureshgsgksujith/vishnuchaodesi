@@ -50,7 +50,7 @@ export default function HomeHeader() {
                 <Link to="/login">Sign in</Link>
               </li>
               <li>
-                <Link to="/login?login=register">Create an account</Link>
+                <Link to="/pricing-details">Create an account</Link>
               </li>
             </ul>
 
@@ -69,7 +69,7 @@ export default function HomeHeader() {
                   <ul>
                     <li><a href="/pricing-details">Add business</a></li>
                     <li><Link to="/login">Sign in</Link></li>
-                    <li><Link to="/login?login=register">Create an account</Link></li>
+                    <li><Link to="/pricing-details">Create an account</Link></li>
                   </ul>
                 </div>
 

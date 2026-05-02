@@ -5,6 +5,7 @@ import { getMyProfile } from "../api/profileApi";
 import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
+import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
 
 const wizardSteps = [
   { title: "Step 1", label: "Basic Info" },
@@ -180,6 +181,7 @@ export default function ListingFormPage() {
   const [states, setStates] = useState<StateOption[]>([]);
   const [cities, setCities] = useState<CityOption[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [savedListingId, setSavedListingId] = useState<number | null>(null);
   const navigate = useNavigate();
@@ -189,6 +191,28 @@ export default function ListingFormPage() {
   const duplicateListingId = numberOrNull(searchParams.get("duplicate") || undefined);
   const sourceListingId = editListingId || duplicateListingId;
   const isEditMode = Boolean(editListingId);
+
+  useEffect(() => {
+    if (isEditMode) {
+      return;
+    }
+
+    let isActive = true;
+    getMyPlanUsage()
+      .then((usage) => {
+        if (isActive) {
+          setPlanUsage(usage);
+          if (!usage.canCreateListing) {
+            setErrorMessage(`Your ${usage.plan.name} has reached the listing limit. Upgrade your plan to add more listings.`);
+          }
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      isActive = false;
+    };
+  }, [isEditMode]);
 
   const selectedCountry = useMemo(
     () => countries.find((country) => country.name === form.country),
@@ -361,13 +385,6 @@ export default function ListingFormPage() {
         nextForm.pincode = "";
       }
 
-      if (name === "city") {
-        const city = cities.find((item) => item.name === value);
-        if (city?.zipCode) {
-          nextForm.pincode = city.zipCode;
-        }
-      }
-
       if (name === "subCategory") {
         nextForm.detailCategory = "";
         nextForm.propertyType = "";
@@ -463,6 +480,11 @@ export default function ListingFormPage() {
   }
 
   async function handleFinish() {
+    if (!isEditMode && planUsage && !planUsage.canCreateListing) {
+      setErrorMessage(`Your ${planUsage.plan.name} has reached the listing limit. Upgrade your plan to add more listings.`);
+      return;
+    }
+
     if (!validateStep(currentStep)) {
       return;
     }

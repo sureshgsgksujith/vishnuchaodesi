@@ -18,7 +18,6 @@ export type CityOption = {
   countryId: number;
   stateId: number;
   name: string;
-  zipCode?: string | null;
 };
 
 type ListResponse<T> = {

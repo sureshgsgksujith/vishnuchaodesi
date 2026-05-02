@@ -64,6 +64,7 @@ export async function registerApi(payload: {
   mobileNumber: string;
   password: string;
   otpCode: string;
+  selectedPlanCode?: string;
 }) {
   const response = await fetch(`${API_BASE_URL}/register`, {
     method: "POST",

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import HomePage from "../../features/home/ui/HomePage";
 import LoginPage from "../../features/auth/ui/LoginPage";
@@ -24,6 +24,7 @@ import AllListingsPage from "../../features/dashboard/ui/AllListingsPage";
 import ListingFormPage from "../../features/dashboard/ui/ListingFormPage";
 import ListingPreviewPage from "../../features/dashboard/ui/ListingPreviewPage";
 import ListingStartPage from "../../features/dashboard/ui/ListingStartPage";
+import PricingDetailsPage from "../../features/pricing/ui/PricingDetailsPage";
 import { isCustomerAuthenticated, redirectToCustomerHomeAfterSessionPopup } from "../../features/auth/utils/customerSession";
 
 function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
@@ -33,6 +34,14 @@ function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
 
   redirectToCustomerHomeAfterSessionPopup();
   return null;
+}
+
+function RegisterRedirect() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  searchParams.set("login", "register");
+
+  return <Navigate to={`/login?${searchParams.toString()}`} replace />;
 }
 
 export function AppRouter() {
@@ -63,6 +72,7 @@ export function AppRouter() {
     "/dashboard/listings/start",
     "/dashboard/listings/:listingId/edit",
     "/dashboard/listings/:listingId/preview",
+    "/pricing-details",
   ];
 
   return (
@@ -71,7 +81,7 @@ export function AppRouter() {
       <Route path="/home" element={<HomePage />} />
 
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<Navigate to="/login?login=register" replace />} />
+      <Route path="/register" element={<RegisterRedirect />} />
       <Route path="/forgot-password" element={<Navigate to="/login?login=forgot" replace />} />
 
       <Route path="/user-info" element={<ProtectedCustomerRoute><UserInfoPage /></ProtectedCustomerRoute>} />
@@ -95,6 +105,7 @@ export function AppRouter() {
       <Route path="/dashboard/listings/new" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/edit" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/preview" element={<ProtectedCustomerRoute><ListingPreviewPage /></ProtectedCustomerRoute>} />
+      <Route path="/pricing-details" element={<PricingDetailsPage />} />
 
       {customerTemplateRoutes
         .filter((route) => !excludedStaticRoutes.includes(route.path))

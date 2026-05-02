@@ -26,6 +26,10 @@ export default function LoginPage() {
     return "login";
   }, [searchParams]);
 
+  const selectedPlanCode = useMemo(() => {
+    return searchParams.get("plan")?.trim().toUpperCase() || "";
+  }, [searchParams]);
+
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [loading, setLoading] = useState(false);
 
@@ -79,7 +83,7 @@ export default function LoginPage() {
     if (nextMode === "login") {
       setSearchParams({});
     } else {
-      setSearchParams({ login: nextMode });
+      setSearchParams(selectedPlanCode ? { login: nextMode, plan: selectedPlanCode } : { login: nextMode });
     }
   };
 
@@ -185,6 +189,7 @@ export default function LoginPage() {
         mobileNumber: countryCode + mobileNumber,
         password: registerPassword,
         otpCode: registerOtp,
+        selectedPlanCode: selectedPlanCode || undefined,
       });
 
       setRegisterMessage(
@@ -424,7 +429,7 @@ export default function LoginPage() {
                             <span
                               className="ll-2"
                               style={{ cursor: "pointer" }}
-                              onClick={() => switchMode("register")}
+                              onClick={() => navigate("/pricing-details")}
                             >
                               Create an account?
                             </span>
@@ -451,6 +456,9 @@ export default function LoginPage() {
                   <div style={{ display: "block" }}>
                     <div className="login login-new">
                       <h4>Create an account</h4>
+                      {selectedPlanCode ? (
+                        <p className="text-muted">Selected plan: {selectedPlanCode}</p>
+                      ) : null}
 
                       <form id="register_form" onSubmit={handleRegisterSubmit}>
                         <div className="form-group mb-3">
@@ -737,7 +745,7 @@ export default function LoginPage() {
                             <span
                               className="ll-2"
                               style={{ cursor: "pointer" }}
-                              onClick={() => switchMode("register")}
+                              onClick={() => navigate("/pricing-details")}
                             >
                               Create an account?
                             </span>

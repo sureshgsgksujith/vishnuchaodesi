@@ -66,14 +66,30 @@ export type ListingUploadFiles = {
 
 export async function getMyListings(search = "") {
   const response = await apiClient.get<ListingListResponse>("/Listings/mine", {
-    params: { page: 1, pageSize: 100, search: search || undefined },
+    params: {
+      page: 1,
+      pageSize: 100,
+      search: search || undefined,
+    },
   });
+
   return response.data;
 }
 
-export async function createListing(payload: UpsertListingPayload, files?: ListingUploadFiles) {
+export async function createListing(
+  payload: UpsertListingPayload,
+  files?: ListingUploadFiles
+) {
   const body = buildListingRequestBody(payload, files);
-  const response = await apiClient.post<ListingSummary>("/Listings", body, getRequestConfig(body));
+
+  const url = body instanceof FormData ? "/Listings/form" : "/Listings";
+
+  const response = await apiClient.post<ListingSummary>(
+    url,
+    body,
+    getRequestConfig(body)
+  );
+
   return response.data;
 }
 
@@ -82,9 +98,24 @@ export async function getListing(listingId: number) {
   return response.data;
 }
 
-export async function updateListing(listingId: number, payload: UpsertListingPayload, files?: ListingUploadFiles) {
+export async function updateListing(
+  listingId: number,
+  payload: UpsertListingPayload,
+  files?: ListingUploadFiles
+) {
   const body = buildListingRequestBody(payload, files);
-  const response = await apiClient.put<ListingSummary>(`/Listings/${listingId}`, body, getRequestConfig(body));
+
+  const url =
+    body instanceof FormData
+      ? `/Listings/${listingId}/form`
+      : `/Listings/${listingId}`;
+
+  const response = await apiClient.put<ListingSummary>(
+    url,
+    body,
+    getRequestConfig(body)
+  );
+
   return response.data;
 }
 
@@ -112,23 +143,32 @@ export function getListingApiErrorMessage(error: unknown) {
   return "Request failed. Please try again.";
 }
 
-function buildListingRequestBody(payload: UpsertListingPayload, files?: ListingUploadFiles) {
-  if (!files?.profileImageFile && !files?.coverImageFile && !files?.galleryFiles?.length) {
+function buildListingRequestBody(
+  payload: UpsertListingPayload,
+  files?: ListingUploadFiles
+): UpsertListingPayload | FormData {
+  const hasFiles =
+    !!files?.profileImageFile ||
+    !!files?.coverImageFile ||
+    !!files?.galleryFiles?.length;
+
+  if (!hasFiles) {
     return payload;
   }
 
   const formData = new FormData();
+
   formData.append("payload", JSON.stringify(payload));
 
-  if (files.profileImageFile) {
+  if (files?.profileImageFile) {
     formData.append("profileImageFile", files.profileImageFile);
   }
 
-  if (files.coverImageFile) {
+  if (files?.coverImageFile) {
     formData.append("coverImageFile", files.coverImageFile);
   }
 
-  for (const item of files.galleryFiles || []) {
+  for (const item of files?.galleryFiles || []) {
     formData.append("galleryFiles", item.file);
     formData.append("galleryFileMarkers", item.marker);
   }
@@ -137,7 +177,13 @@ function buildListingRequestBody(payload: UpsertListingPayload, files?: ListingU
 }
 
 function getRequestConfig(body: UpsertListingPayload | FormData) {
-  return body instanceof FormData
-    ? { headers: { "Content-Type": "multipart/form-data" } }
-    : undefined;
+  if (body instanceof FormData) {
+    return undefined;
+  }
+
+  return {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
 }
