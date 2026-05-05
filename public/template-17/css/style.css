@@ -26836,3 +26836,58 @@ a[data-command='p'],a[data-command=h2],a[data-command=h4] {
 }
 
 
+/* FIX ROW ALIGNMENT */
+.product-item,
+.service-item {
+    display: flex;
+    align-items: center;
+}
+
+/* REMOVE DEFAULT BOOTSTRAP COLUMN PADDING ISSUE */
+.product-item .col-md-10,
+.product-item .col-md-2,
+.service-item .col-md-10,
+.service-item .col-md-2 {
+    display: flex;
+    align-items: center;
+}
+
+/* INPUT FULL HEIGHT */
+.product-item input,
+.service-item input {
+    height: 45px;
+}
+
+/* REMOVE BUTTON FIX */
+.remove-product,
+.remove-service {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* CENTER BUTTON INSIDE COLUMN */
+.product-item .col-md-2,
+.service-item .col-md-2 {
+    justify-content: center;
+}
+
+/* ADD BUTTON FULL WIDTH */
+#add_product,
+#add_service {
+    width: 100%;
+    border-radius: 30px;
+    padding: 12px;
+    font-weight: 600;
+}
+
+/* OPTIONAL SPACING */
+.product-item,
+.service-item {
+    margin-bottom: 10px;
+}

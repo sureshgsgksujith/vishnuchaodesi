@@ -226,138 +226,34 @@
                     <span class="steps">Step 5</span>
                     <div class="log">
                         <div class="login add-lis-oth">
-                            <h4>Other informations</h4>
-                            <span class="add-list-add-btn lis-add-oad" title="add new offer">+</span>
-                            <span class="add-list-rem-btn lis-add-ore" title="remove offer">-</span>
+                            
                             <form action="listing_insert.html" class="listing_form" id="listing_form_5" name="listing_form_5" method="post" enctype="multipart/form-data">
-                                <ul>
-                                    <li>
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_question[]" class="form-control" placeholder="Experience">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-group">
-                                                    <i class="material-icons">arrow_forward</i>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_answer[]" class="form-control" placeholder="20 years">
-                                                </div>
-                                            </div>
+                                 <!--FILED START-->
+                                <h4>Photo gallery</h4>
+                                <div>
+                                    <input type="file" name="gallery_image[]" accept="image/*,.jpg,.jpeg,.png" multiple>
+                                </div>
+                                <!--FILED END-->
+                                <p></p>
+                                <h4>Video Gallery</h4>
+                                
+                                <h4>Map and 360 view</h4>
+                                <!--FILED START-->
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <textarea id="google_map" name="google_map" class="form-control" placeholder="Shop location"></textarea>
                                         </div>
-                                        <!--FILED END-->
-                                    </li>
-                                    <li>
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_question[]" class="form-control" placeholder="Experience">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-group">
-                                                    <i class="material-icons">arrow_forward</i>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_answer[]" class="form-control" placeholder="20 years">
-                                                </div>
-                                            </div>
+                                    </div>
+                                </div>
+                              
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <textarea id="360_view" name="360_view" class="form-control" placeholder="360 view"></textarea>
                                         </div>
-                                        <!--FILED END-->
-                                    </li>
-                                    <li>
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_question[]" class="form-control" placeholder="Experience">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-group">
-                                                    <i class="material-icons">arrow_forward</i>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_answer[]" class="form-control" placeholder="20 years">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--FILED END-->
-                                    </li>
-                                    <li>
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_question[]" class="form-control" placeholder="Experience">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-group">
-                                                    <i class="material-icons">arrow_forward</i>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_answer[]" class="form-control" placeholder="20 years">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--FILED END-->
-                                    </li>
-                                    <li>
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_question[]" class="form-control" placeholder="Experience">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-group">
-                                                    <i class="material-icons">arrow_forward</i>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_answer[]" class="form-control" placeholder="20 years">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--FILED END-->
-                                    </li>
-                                    <li>
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_question[]" class="form-control" placeholder="Experience">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="form-group">
-                                                    <i class="material-icons">arrow_forward</i>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-5">
-                                                <div class="form-group">
-                                                    <input type="text" name="listing_info_answer[]" class="form-control" placeholder="20 years">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--FILED END-->
-                                    </li>
-                                </ul>
+                                    </div>
+                                </div>
                                 <!--FILED START-->
                                 <div class="row">
                                     <div class="col-md-6">
@@ -712,9 +608,7 @@
             </div>
         </div>
     </section>
-    <!-- END -->
-    <!-- START -->
-    <div class="fqui-menu"></div>
+     <div class="fqui-menu"></div>
     <!-- END -->
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -722,7 +616,14 @@
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/jquery-ui.js"></script>
+    
+    <script type="text/javascript" src="js/imageuploadify.min.js"></script>
     <script src="js/custom.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('input[type="file"]').imageuploadify();
+        })
+    </script>
 </body>
 
 </html>

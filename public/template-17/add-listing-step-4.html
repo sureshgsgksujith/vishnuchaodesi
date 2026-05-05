@@ -225,69 +225,111 @@
                     <div class="log-bor">&nbsp;</div>
                     <span class="steps">Step 4</span>
                     <div class="log add-list-map">
-                        <div class="login add-list-map">
+                        <div class="login add-list-off">
                             <form action="add-listing-step-5.html" class="listing_form_4" id="listing_form_4" name="listing_form_4" method="post" enctype="multipart/form-data">
-                                <!--FILED START-->
-                                <h4>Photo gallery</h4>
-                                <div>
-                                    <input type="file" name="gallery_image[]" accept="image/*,.jpg,.jpeg,.png" multiple>
-                                </div>
-                                <!--FILED END-->
-                                <p></p>
-                                <h4>Video Gallery</h4>
-                                <!-- TOOL TIP -->
-                                <!-- <div class="ttip-com">
-                                    <i class="material-icons">priority_high</i>
-                                    <div>Right click on YouTube video then get your iframe code</div>
-                                </div> -->
-                                <!-- END -->
-                                <ul>
-                                    <span class="add-list-add-btn lis-add-oadvideo" title="add new video">+</span>
-                                    <span class="add-list-rem-btn lis-add-orevideo" title="remove video">-</span>
+								<ul>
                                     <li>
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <textarea id="listing_video" name="listing_video[]" class="form-control" placeholder="Paste Your Youtube iframe Code here"></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </li>
+									    <h4 class="mt-2">Products</h4>
+										 <div id="product_wrapper">
+											<div class="row product-item">
+												<div class="col-md-10">
+													<input type="text" name="products[]" class="form-control" placeholder="Enter product">
+												</div>
+												<div class="col-md-2">
+													<button type="button" class="btn btn-danger remove-product">X</button>
+												</div>
+											</div>
+										</div>
+
+										<button type="button" class="btn btn-success mt-2" id="add_product">
+											+ Add Product
+										</button>
+									</li>
+									<li>									
+										 <h4 class="mt-4">Services</h4>
+
+											<div id="service_wrapper">
+												<div class="row service-item">
+													<div class="col-md-10">
+														<input type="text" name="services[]" class="form-control" placeholder="Enter service">
+													</div>
+													<div class="col-md-2">
+														<button type="button" class="btn btn-danger remove-service">X</button>
+													</div>
+												</div>
+											</div>
+
+											<button type="button" class="btn btn-success mt-2" id="add_service">
+												+ Add Service
+											</button>
+									</li>
+									<li>									
+										 <h4 class="mt-4">Brands</h4>
+
+											<div id="brand_wrapper">
+												<div class="row brand-item">
+													<div class="col-md-10">
+														<input type="text" name="brand[]" class="form-control" placeholder="Enter brand">
+													</div>
+													<div class="col-md-2">
+														<button type="button" class="btn btn-danger remove-brand">X</button>
+													</div>
+												</div>
+											</div>
+
+											<button type="button" class="btn btn-success mt-2" id="add_brand">
+												+ Add brands
+											</button>
+									</li>
+									
+									<li>									
+										 <h4 class="mt-4">Payment Methods</h4>
+											<div class="row">
+										<div class="col-md-6">
+											<div class="form-group">
+												 <div class="chbox">
+													<input type="checkbox" name="credit_card[]" id="credit_card" value="credit_card">
+													<label for="credit_card">Credit Card</label>
+												</div>
+
+												<div class="chbox">
+													<input type="checkbox" name="cash[]" id="cash" value="cash">
+													<label for="cash">Cash</label>
+												</div>
+
+												<div class="chbox">
+													<input type="checkbox" name="upi[]" id="amenity_gym" value="upi">
+													<label for="upi"> UPI</label>
+												</div>
+
+											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="form-group">
+												<div class="chbox">
+													<input type="checkbox" name="google_pay[]" id="google_pay" value="cctv">
+													<label for="google_pay">Google Pay</label>
+												</div>
+
+												<div class="chbox">
+													<input type="checkbox" name="apple_pay[]" id="apple_pay" value="pool">
+													<label for="apple_pay">Apple Pay</label>
+												</div>
+
+												<div class="chbox">
+													<input type="checkbox" name="insurance[]" id="insurance" value="garden">
+													<label for="insurance">Insurance</label>
+												</div>
+
+											</div>
+										</div>
+									</div>
+											
+									</li>
+									
+									
                                 </ul>
-                                <h4>Map and 360 view</h4>
-                                <!--FILED START-->
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <textarea id="google_map" name="google_map" class="form-control" placeholder="Shop location"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--FILED END-->
-                                <!--FILED START-->
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="form-group">
-                                            <textarea id="360_view" name="360_view" class="form-control" placeholder="360 view"></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--FILED END-->
-                                <!--                            <h4 class="pt30">-->
-                                <!--</h4>-->
-                                <!--                            -->
-                                <!--FILED START-->
-                                <!--                            <div class="row">-->
-                                <!--                                -->
-                                <!--                                    <div class="col-md-6">-->
-                                <!--                                        <div class="form-group">-->
-                                <!--                                            <input type="file" name="gallery_image[]" class="form-control">-->
-                                <!--                                        </div>-->
-                                <!--                                    </div>-->
-                                <!--                                    -->
-                                <!--                            </div>-->
-                                <!--FILED END-->
-                                <!--FILED START-->
+                              
                                 <div class="row">
                                     <div class="col-md-6">
                                         <a href="add-listing-step-3.html" class="btn btn-primary">Previous</a>
@@ -657,11 +699,59 @@
     
     <script type="text/javascript" src="js/imageuploadify.min.js"></script>
     <script src="js/custom.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function() {
-            $('input[type="file"]').imageuploadify();
-        })
-    </script>
+   <script>
+		document.getElementById("add_product").onclick = function () {
+			let html = `
+			<div class="row product-item mt-2">
+				<div class="col-md-10">
+					<input type="text" name="products[]" class="form-control" placeholder="Enter product">
+				</div>
+				<div class="col-md-2">
+					<button type="button" class="btn btn-danger remove-product">X</button>
+				</div>
+			</div>`;
+			document.getElementById("product_wrapper").insertAdjacentHTML("beforeend", html);
+		};
+
+		document.getElementById("add_service").onclick = function () {
+			let html = `
+			<div class="row service-item mt-2">
+				<div class="col-md-10">
+					<input type="text" name="services[]" class="form-control" placeholder="Enter service">
+				</div>
+				<div class="col-md-2">
+					<button type="button" class="btn btn-danger remove-service">X</button>
+				</div>
+			</div>`;
+			document.getElementById("service_wrapper").insertAdjacentHTML("beforeend", html);
+		};
+		
+		document.getElementById("add_brand").onclick = function () {
+			let html = `
+			<div class="row brand-item mt-2">
+				<div class="col-md-10">
+					<input type="text" name="brand[]" class="form-control" placeholder="Enter Brand">
+				</div>
+				<div class="col-md-2">
+					<button type="button" class="btn btn-danger remove-brand">X</button>
+				</div>
+			</div>`;
+			document.getElementById("brand_wrapper").insertAdjacentHTML("beforeend", html);
+		};
+
+		// REMOVE
+		document.addEventListener("click", function (e) {
+			if (e.target.classList.contains("remove-product")) {
+				e.target.closest(".product-item").remove();
+			}
+			if (e.target.classList.contains("remove-service")) {
+				e.target.closest(".service-item").remove();
+			}
+			if (e.target.classList.contains("remove-brand")) {
+				e.target.closest(".brand-item").remove();
+			}
+		});
+	</script>
 </body>
 
 </html>

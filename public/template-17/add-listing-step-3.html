@@ -226,56 +226,75 @@
                     <span class="steps">Step 3</span>
                     <div class="log">
                         <div class="login add-list-off">
-                            <h4>Special offers</h4>
+                           
                             <span class="add-list-add-btn lis-add-off" title="add new offer">+</span>
                             <span class="add-list-rem-btn lis-add-rem" title="remove offer">-</span>
                             <form action="add-listing-step-4.html" class="listing_form_3" id="listing_form_3" name="listing_form_3" method="post" enctype="multipart/form-data">
                                 <ul>
                                     <li>
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <input type="text" name="service_1_name[]" class="form-control" placeholder="Offer name*">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <input type="text" name="service_1_price[]" onkeypress="return isNumber(event)" class="form-control" placeholder="Price">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--FILED END-->
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <textarea name="service_1_detail[]" class="form-control" placeholder="Details about this offer"></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--FILED END-->
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <div class="img-uplo-flex">
-                                                        <input type="file" name="" accept="image/*,.jpg,.jpeg,.png" class="form-control file-input" required="">
-                                                        <img class="img-preview" alt="">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--FILED END-->
-                                        <!--FILED START-->
-                                        <div class="row">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <input type="text" name="service_1_view_more[]" class="form-control" placeholder="View More Link">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--FILED END-->
+									   
+										<div class="row">
+										<h4 class="mt-2">Websites</h4>
+											<div class="col-md-6">
+												<div class="form-group">
+													<label>Main Website</label>
+													<input type="url" name="website" class="form-control" placeholder="https://example.com">
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<label>Display Website</label>
+													<input type="url" name="display_website" class="form-control" placeholder="https://example.com">
+												</div>
+											</div>
+											 <div class="col-md-6">
+												<div class="form-group">
+													<label>iOS App URL</label>
+													<input type="url" name="ios_app" class="form-control" placeholder="App Store link">
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<label>Android App URL</label>
+													<input type="url" name="android_app" class="form-control" placeholder="Play Store link">
+												</div>
+											</div>
+										</div>
+									</li>
+									<li>									
+										<div class="row">
+										    <h4 class="mt-2">Social Media</h4>
+											<div class="col-md-6">
+												<div class="form-group">
+													<label>Facebook</label>
+													<input type="text" name="facebook" class="form-control" placeholder="Facebook link">
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<label>Instagram</label>
+													<input type="text" name="instagram" class="form-control" placeholder="Instagram link">
+												</div>
+											</div>
+											 <div class="col-md-6">
+												<div class="form-group">
+													<label>Twitter</label>
+													<input type="text" name="twitter" class="form-control" placeholder="Twitter link">
+												</div>
+											</div>
+
+											<div class="col-md-6">
+												<div class="form-group">
+													<label>LinkedIn</label>
+													<input type="text" name="linkedin" class="form-control" placeholder="LinkedIn link">
+												</div>
+											</div>
+										</div>
+                                       
+                                       
                                     </li>
                                 </ul>
                                 <!--FILED START-->

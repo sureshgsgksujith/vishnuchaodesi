@@ -281,12 +281,12 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <div class="form-group">
-                                            <select onChange="getCities(this.value);" name="country_id" required="required" id="country_id" class="chosen-select form-control">
-                                                <option value="">Select your Country</option>
-                                                <option value="232">India</option>
-                                                <option value="233">England</option>
-                                                <option value="234">United States</option>
-                                            </select>
+                                           <select onChange="getCities(this.value);" name="country_id" id="country_id" class="chosen-select form-control">
+												<option value="">Select your Country</option>
+												<option value="232">India</option>
+												<option value="233">England</option>
+												<option value="234">United States</option>
+											</select>
                                         </div>
                                     </div>
                                 </div>
@@ -314,9 +314,10 @@
 								<div class="row">
 									<div class="col-md-12">
 										<div class="form-group">
-											<select id="category_id" class="form-control" onchange="getSubCategory(this.value)">
+											<select id="category_id" class="chosen-select form-control">
 												<option value="">Select Category</option>
 												<option value="realestate">Real Estate</option>
+												<option value="restaurant">Restaurants & Food</option>
 											</select>
 										</div>
 									</div>
@@ -325,7 +326,7 @@
 								<div class="row">
 									<div class="col-md-12">
 										<div class="form-group">
-											<select id="sub_category_id" class="form-control" onchange="handleCategoryChange(); setTimeout(getDetailCategory, 50);">
+											<select id="sub_category_id" class="form-control">
 												<option value="">Select Sub Category</option>
 											</select>
 										</div>
@@ -546,85 +547,121 @@
 									</div>
 
 								</div>
+								<div id="restaurant_fields" style="display:none;">
+									<h5 class="mt-3 mb-3">Restaurant Info</h5>
 
-								<!-- PRICE DETAILS -->
-								<h5>Price Details</h5>
+									<div class="row">
+										<div class="col-md-6">
+											<input type="text" name="restaurant_name" class="form-control" placeholder="Restaurant Name">
+										</div>
 
-								<div class="row">
-									<div class="col-md-6">
-										<div class="form-group">
-											<input type="number" name="price" class="form-control" placeholder="Price / Rent">
+										<div class="col-md-6">
+											<input type="text" name="tagline" class="form-control" placeholder="Tagline">
 										</div>
 									</div>
 
-									<div class="col-md-6">
-										<div class="form-group">
-											<select name="negotiable" class="form-control">
-												<option>Negotiable</option>
-												<option>Fixed</option>
+									<div class="row mt-2 mb-4">
+										<div class="col-md-6">
+											<label>Cuisine</label>
+											<select name="cuisine[]"  multiple class="form-control chosen-select">
+											   <option value="01">Indian </option>
+											   <option value="02">Chinese </option>
+											   <option value="03">Italian </option>
+											   <option value="04">Mexican </option>
+												
+											</select>
+										</div>
+
+										<div class="col-md-6">
+											<label>Food Type</label>
+											<select name="food_type" class="form-control">
+												<option>Veg</option>
+												<option>Non-Veg</option>
+												<option>Vegan</option>
 											</select>
 										</div>
 									</div>
 								</div>
 
-								<div class="row">
-									<div class="col-md-6">
-										<div class="form-group">
-											<input type="number" name="maintenance" class="form-control" placeholder="Maintenance Charges">
+								<!-- PRICE DETAILS -->
+								<div id="common_fields" style="display:none;">
+									<h5>Price Details</h5>
+
+									<div class="row">
+										<div class="col-md-6">
+											<div class="form-group">
+												<input type="number" name="price" class="form-control" placeholder="Price / Rent">
+											</div>
+										</div>
+
+										<div class="col-md-6">
+											<div class="form-group">
+												<select name="negotiable" class="form-control">
+													<option>Negotiable</option>
+													<option>Fixed</option>
+												</select>
+											</div>
 										</div>
 									</div>
 
-									<div class="col-md-6">
-										<div class="form-group">
-											<input type="number" name="deposit" class="form-control" placeholder="Security Deposit">
+									<div class="row">
+										<div class="col-md-6">
+											<div class="form-group">
+												<input type="number" name="maintenance" class="form-control" placeholder="Maintenance Charges">
+											</div>
+										</div>
+
+										<div class="col-md-6">
+											<div class="form-group">
+												<input type="number" name="deposit" class="form-control" placeholder="Security Deposit">
+											</div>
 										</div>
 									</div>
-								</div>
-								
-								<h5>Amenities</h5>
+									
+									<h5>Amenities</h5>
 
-								<div class="row">
-									<div class="col-md-6">
-										<div class="form-group">
-											 <div class="chbox">
-												<input type="checkbox" name="amenities[]" id="amenity_parking" value="parking">
-												<label for="amenity_parking">Parking</label>
+									<div class="row">
+										<div class="col-md-6">
+											<div class="form-group">
+												 <div class="chbox">
+													<input type="checkbox" name="amenities[]" id="amenity_parking" value="parking">
+													<label for="amenity_parking">Parking</label>
+												</div>
+
+												<div class="chbox">
+													<input type="checkbox" name="amenities[]" id="amenity_lift" value="lift">
+													<label for="amenity_lift">Lift</label>
+												</div>
+
+												<div class="chbox">
+													<input type="checkbox" name="amenities[]" id="amenity_gym" value="gym">
+													<label for="amenity_gym">Gym</label>
+												</div>
+
 											</div>
+										</div>
+										<div class="col-md-6">
+											<div class="form-group">
+												<div class="chbox">
+													<input type="checkbox" name="amenities[]" id="amenity_cctv" value="cctv">
+													<label for="amenity_cctv">CCTV</label>
+												</div>
 
-											<div class="chbox">
-												<input type="checkbox" name="amenities[]" id="amenity_lift" value="lift">
-												<label for="amenity_lift">Lift</label>
+												<div class="chbox">
+													<input type="checkbox" name="amenities[]" id="amenity_pool" value="pool">
+													<label for="amenity_pool">Swimming Pool</label>
+												</div>
+
+												<div class="chbox">
+													<input type="checkbox" name="amenities[]" id="amenity_garden" value="garden">
+													<label for="amenity_garden">Garden</label>
+												</div>
+
 											</div>
-
-											<div class="chbox">
-												<input type="checkbox" name="amenities[]" id="amenity_gym" value="gym">
-												<label for="amenity_gym">Gym</label>
-											</div>
-
 										</div>
 									</div>
-									<div class="col-md-6">
-										<div class="form-group">
-											<div class="chbox">
-												<input type="checkbox" name="amenities[]" id="amenity_cctv" value="cctv">
-												<label for="amenity_cctv">CCTV</label>
-											</div>
 
-											<div class="chbox">
-												<input type="checkbox" name="amenities[]" id="amenity_pool" value="pool">
-												<label for="amenity_pool">Swimming Pool</label>
-											</div>
-
-											<div class="chbox">
-												<input type="checkbox" name="amenities[]" id="amenity_garden" value="garden">
-												<label for="amenity_garden">Garden</label>
-											</div>
-
-										</div>
-									</div>
-								</div>
-
-								
+							</div>	
 								<div class="row">
 									<div class="col-md-12">
 										<div class="form-group">
@@ -1026,109 +1063,85 @@
         CKEDITOR.replace('listing_description');
     </script>
 	
-	 <script>
-	const categoryData = {
+<script>
+const categoryData = {
     "realestate": {
         name: "Real Estate",
         subcategories: {
-            "sale": {
-                name: "Sale",
-                details: ["Apartment", "Villa", "Plot"]
-            },
-            "rent": {
-                name: "Rent",
-                details: ["Apartment", "House", "PG"]
-            },
-            "commercial": {
-                name: "Commercial",
-                details: ["Office", "Shop", "Warehouse"]
-            },
-            "plot": {
-                name: "Plot",
-                details: ["Residential Plot", "Commercial Plot"]
-            },
-            "pg": {
-                name: "PG",
-                details: ["Single Room", "Shared Room"]
-            }
+            "sale": { name: "Sale", details: ["Apartment", "Villa", "Plot"] },
+            "rent": { name: "Rent", details: ["Apartment", "House", "PG"] },
+            "commercial": { name: "Commercial", details: ["Office", "Shop", "Warehouse"] },
+            "plot": { name: "Plot", details: ["Residential Plot", "Commercial Plot"] },
+            "pg": { name: "PG", details: ["Single Room", "Shared Room"] }
+        }
+    },
+    "restaurant": {
+        name: "Restaurants & Food",
+        subcategories: {
+            "restaurants": { name: "Restaurants", details: ["Fine Dining", "Casual Dining", "Family Restaurant"] },
+            "fastfood": { name: "Fast Food", details: ["Burger", "Pizza", "Fried Chicken"] },
+            "cafe": { name: "Cafes", details: ["Coffee Shop", "Bakery", "Dessert"] }
         }
     }
 };
-</script>
-<script>
-function getSubCategory(categoryId) {
-    let subCat = document.getElementById("sub_category_id");
-    let detailCat = document.getElementById("detail_category_id");
 
-    // Reset
-    subCat.innerHTML = '<option value="">Select Sub Category</option>';
-    detailCat.innerHTML = '<option value="">Select Detailed Category</option>';
+$(document).ready(function () {
+    const $cat = $("#category_id");
+    const $sub = $("#sub_category_id");
+    const $detail = $("#detail_category_id");
+    $cat.on("change", function () {
+        const catId = $(this).val();
 
-    // Disable if no category
-    if (!categoryId || !categoryData[categoryId]) {
-        subCat.disabled = true;
-        return;
-    }
-
-    let subs = categoryData[categoryId].subcategories;
-
-    for (let key in subs) {
-        subCat.innerHTML += `<option value="${key}">${subs[key].name}</option>`;
-    }
-
-    // Enable after loading
-    subCat.disabled = false;
-}
- </script>
-<script>
-function handleCategoryChange() {
-    let sub = document.getElementById("sub_category_id").value;
-
-    document.getElementById("residential_fields").style.display = "none";
-    document.getElementById("commercial_fields").style.display = "none";
-    document.getElementById("plot_fields").style.display = "none";
-    document.getElementById("pg_fields").style.display = "none";
-
-    if (sub === "sale" || sub === "rent") {
-        document.getElementById("residential_fields").style.display = "block";
-    }
-    else if (sub === "commercial") {
-        document.getElementById("commercial_fields").style.display = "block";
-    }
-    else if (sub === "plot") {
-        document.getElementById("plot_fields").style.display = "block";
-    }
-    else if (sub === "pg") {
-        document.getElementById("pg_fields").style.display = "block";
-    }
-}
-</script>
-
-<script>
-function getDetailCategory() {
-    let categoryId = document.getElementById("category_id").value;
-    let subId = document.getElementById("sub_category_id").value;
-    let detailCat = document.getElementById("detail_category_id");
-
-    // Reset
-    detailCat.innerHTML = '<option value="">Select Detailed Category</option>';
-
-    if (!categoryId || !subId || !categoryData[categoryId]) {
-        detailCat.disabled = true;
-        return;
-    }
-
-    let details = categoryData[categoryId].subcategories[subId]?.details || [];
-
-    details.forEach(d => {
-        detailCat.innerHTML += `<option value="${d}">${d}</option>`;
+        let options = '<option value="">Select Sub Category</option>';
+        if (categoryData[catId]) {
+            const subs = categoryData[catId].subcategories;
+            for (let key in subs) {
+                options += `<option value="${key}">${subs[key].name}</option>`;
+            }
+        }
+        $sub.html(options).trigger("change"); 
+        $("#restaurant_fields").toggle(catId === "restaurant");
+        $("#property_details_section, #common_fields").toggle(catId === "realestate");
     });
+    $sub.on("change", function () {
+        const catId = $cat.val();
+        const subId = $(this).val();
 
-    // Enable dropdown
-    detailCat.disabled = false;
+        // Toggle Property Sub-sections
+        $("#residential_fields").toggle(subId === "sale" || subId === "rent");
+        $("#commercial_fields").toggle(subId === "commercial");
+        $("#plot_fields").toggle(subId === "plot");
+        $("#pg_fields").toggle(subId === "pg");
+        let detailOptions = '<option value="">Select Detailed Category</option>';
+        const details = categoryData[catId]?.subcategories[subId]?.details || [];
+        
+        details.forEach(d => {
+            detailOptions += `<option value="${d}">${d}</option>`;
+        });
+
+        $detail.html(detailOptions).prop("disabled", details.length === 0);
+    });
+});
+</script>
+<script> 
+const cityData = {
+    "232": ["Hyderabad", "Mumbai", "Bangalore", "Delhi", "Pune"], 
+    "234": ["New York", "Los Angeles", "Chicago", "Houston"],    
+    "233": ["London", "Manchester", "Birmingham"]              
+};
+
+function getCities(countryId) {
+    const $citySelect = $("#city_id");
+    $citySelect.html('<option value="">Select your Cities</option>');
+
+    if (cityData[countryId]) {
+        cityData[countryId].forEach(city => {
+            $citySelect.append(`<option value="${city}">${city}</option>`);
+        });
+    }
+    $citySelect.trigger("chosen:updated");
 }
 </script>
-
 </body>
 
 </html>
