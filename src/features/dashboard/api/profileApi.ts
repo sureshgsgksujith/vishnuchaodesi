@@ -339,11 +339,7 @@ export async function updateMyProfile(
   }
 
   try {
-    const response = await apiClient.put(profileUpdatePath, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    const response = await apiClient.put(profileUpdatePath, formData);
 
     const profile = normalizeProfilePayload(response.data);
     writeStoredProfileSnapshot(snapshotFromProfile(profile));

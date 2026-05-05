@@ -26,14 +26,14 @@ export function getCustomerPage(page: PageKey) {
 
   switch (page) {
     case "home":
-      return <StaticTemplatePage src="/template-16/index.html" title="Home" />;
+      return <StaticTemplatePage src="/template-17/index.html" title="Home" />;
     case "login":
-      return <StaticTemplatePage src="/template-16/login.html" title="Login" />;
+      return <StaticTemplatePage src="/template-17/login.html" title="Login" />;
     case "register":
-      return <StaticTemplatePage src="/template-16/login.html?login=register" title="Register" />;
+      return <StaticTemplatePage src="/template-17/login.html?login=register" title="Register" />;
     case "forgotPassword":
-      return <StaticTemplatePage src="/template-16/login.html" title="Forgot Password" />;
+      return <StaticTemplatePage src="/template-17/login.html" title="Forgot Password" />;
     default:
-      return <StaticTemplatePage src="/template-16/index.html" title="Home" />;
+      return <StaticTemplatePage src="/template-17/index.html" title="Home" />;
   }
 }

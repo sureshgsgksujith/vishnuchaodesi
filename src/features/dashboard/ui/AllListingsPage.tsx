@@ -67,7 +67,17 @@ export default function AllListingsPage() {
         <span className="udb-inst">All Listings</span>
 
         {errorMessage ? (
-          <div className="alert alert-danger">{errorMessage}</div>
+          <div className="alert alert-danger">
+            {errorMessage}
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={loadListings}
+              style={{ marginLeft: 12 }}
+            >
+              Retry
+            </button>
+          </div>
         ) : null}
 
         <div className="ud-cen-s2">

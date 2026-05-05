@@ -6,6 +6,7 @@ import { getLocationCities, getLocationCountries, getLocationStates, type CityOp
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
+import { resolveListingImageUrl } from "../utils/listingImages";
 
 const wizardSteps = [
   { title: "Step 1", label: "Basic Info" },
@@ -33,11 +34,14 @@ const detailCategoriesBySubCategory: Record<string, string[]> = {
 const profileImageUploadMarker = "__profileImageFile__";
 const coverImageUploadMarker = "__coverImageFile__";
 const galleryImageUploadMarkerPrefix = "__galleryFile_";
+const serviceImageUploadMarkerPrefix = "__serviceFile_";
+const offerImageUploadMarkerPrefix = "__offerFile_";
 
 type ServiceItem = { name: string; imageName: string };
 type OfferItem = { name: string; price: string; detail: string; imageName: string; link: string };
 type InfoItem = { question: string; answer: string };
 type GalleryUploadFile = { file: File; marker: string };
+type InlineUploadFile = { file: File; marker: string };
 
 type ListingDraft = {
   coverImageFile: File | null;
@@ -45,9 +49,11 @@ type ListingDraft = {
   galleryFiles: GalleryUploadFile[];
   infoItems: InfoItem[];
   offers: OfferItem[];
+  offerFiles: InlineUploadFile[];
   profileImageFile: File | null;
   sellerName: string;
   services: ServiceItem[];
+  serviceFiles: InlineUploadFile[];
 };
 
 type ListingPricingState = {
@@ -193,6 +199,8 @@ export default function ListingFormPage() {
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<GalleryUploadFile[]>([]);
+  const [serviceFiles, setServiceFiles] = useState<InlineUploadFile[]>([]);
+  const [offerFiles, setOfferFiles] = useState<InlineUploadFile[]>([]);
   const [countries, setCountries] = useState<CountryOption[]>([]);
   const [states, setStates] = useState<StateOption[]>([]);
   const [cities, setCities] = useState<CityOption[]>([]);
@@ -360,6 +368,14 @@ export default function ListingFormPage() {
       .then((listing) => {
         if (!isActive) return;
         setForm((currentForm) => mapListingToForm(listing, currentForm, !isEditMode));
+        setServices(parseJsonArray<ServiceItem>(listing.propertyDetails?.services, [{ name: "", imageName: "" }, { name: "", imageName: "" }]));
+        setOffers(parseJsonArray<OfferItem>(listing.propertyDetails?.offers, [{ name: "", price: "", detail: "", imageName: "", link: "" }]));
+        setInfoItems(parseJsonArray<InfoItem>(
+          listing.propertyDetails?.otherInformation,
+          Array.from({ length: 6 }, () => ({ question: "", answer: "" })),
+        ));
+        setServiceFiles([]);
+        setOfferFiles([]);
         setSavedListingId(isEditMode ? listing.id : null);
       })
       .catch((error) => {
@@ -389,6 +405,8 @@ export default function ListingFormPage() {
     setProfileImageFile(draft.profileImageFile);
     setCoverImageFile(draft.coverImageFile);
     setGalleryFiles(draft.galleryFiles);
+    setServiceFiles(draft.serviceFiles);
+    setOfferFiles(draft.offerFiles);
     setCurrentStep(4);
 
     if (pricingState?.pricingConfirmed && !pricingSaveStartedRef.current) {
@@ -532,9 +550,11 @@ export default function ListingFormPage() {
       galleryFiles,
       infoItems,
       offers,
+      offerFiles,
       profileImageFile,
       sellerName,
       services,
+      serviceFiles,
     };
   }
 
@@ -554,6 +574,8 @@ export default function ListingFormPage() {
         profileImageFile: draft.profileImageFile,
         coverImageFile: draft.coverImageFile,
         galleryFiles: draft.galleryFiles.filter((item) => galleryMarkers.has(item.marker)),
+        serviceFiles: draft.serviceFiles.filter((item) => draft.services.some((service) => service.imageName === item.marker)),
+        offerFiles: draft.offerFiles.filter((item) => draft.offers.some((offer) => offer.imageName === item.marker)),
       };
       const savedListing = isEditMode && editListingId
         ? await updateListing(editListingId, payload, uploadFiles)
@@ -695,6 +717,11 @@ export default function ListingFormPage() {
                           <MediaFull
                             value={service.imageName}
                             onChange={(value) => setServices((items) => updateArrayItem(items, index, { ...service, imageName: value }))}
+                            onFileChange={(file) => {
+                              const marker = `${serviceImageUploadMarkerPrefix}${index}__`;
+                              setServices((items) => updateArrayItem(items, index, { ...service, imageName: file ? marker : "" }));
+                              setServiceFiles((items) => updateInlineUploadFile(items, marker, file));
+                            }}
                             aspectRatio={4 / 3}
                           />
                         </li>
@@ -722,6 +749,11 @@ export default function ListingFormPage() {
                           <MediaFull
                             value={offer.imageName}
                             onChange={(value) => setOffers((items) => updateArrayItem(items, index, { ...offer, imageName: value }))}
+                            onFileChange={(file) => {
+                              const marker = `${offerImageUploadMarkerPrefix}${index}__`;
+                              setOffers((items) => updateArrayItem(items, index, { ...offer, imageName: file ? marker : "" }));
+                              setOfferFiles((items) => updateInlineUploadFile(items, marker, file));
+                            }}
                             aspectRatio={4 / 3}
                           />
                           <Input placeholder="View More Link" value={offer.link} onChange={(value) => setOffers((items) => updateArrayItem(items, index, { ...offer, link: value }))} />
@@ -1076,17 +1108,19 @@ function MediaColumn({
 function MediaFull({
   value,
   onChange,
+  onFileChange,
   aspectRatio,
 }: {
   value: string;
   onChange: (value: string) => void;
+  onFileChange?: (file: File | null) => void;
   aspectRatio: number;
 }) {
   return (
     <div className="row">
       <div className="col-md-12">
         <div className="form-group">
-          <MediaPicker label="Choose image or video" value={value} onChange={onChange} aspectRatio={aspectRatio} />
+          <MediaPicker label="Choose image or video" value={value} onChange={onChange} onFileChange={onFileChange} aspectRatio={aspectRatio} />
         </div>
       </div>
     </div>
@@ -1183,6 +1217,9 @@ function MediaPicker({
   const [selectedName, setSelectedName] = useState("");
   const isVideo = draftType === "video" || isVideoValue(draftUrl);
   const isImage = draftType === "image" || isImageValue(draftUrl);
+  const previewUrl = draftUrl && !draftUrl.startsWith("data:") && !draftUrl.startsWith("blob:")
+    ? resolveListingImageUrl(draftUrl)
+    : draftUrl;
   const inputId = `listing-media-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   useEffect(() => {
@@ -1264,14 +1301,14 @@ function MediaPicker({
             <div className="listing-media-frame" style={{ aspectRatio }}>
               {isVideo ? (
                 <video
-                  src={draftUrl}
+                  src={previewUrl}
                   controls
                   style={{ objectPosition: `${positionX}% ${positionY}%`, transform: `scale(${zoom})` }}
                 />
               ) : (
                 <img
                   ref={imageRef}
-                  src={draftUrl}
+                  src={previewUrl}
                   alt=""
                   style={{ objectPosition: `${positionX}% ${positionY}%`, transform: `scale(${zoom})` }}
                 />
@@ -1511,6 +1548,19 @@ function stringValue(value: unknown) {
   return value === null || value === undefined ? "" : String(value);
 }
 
+function parseJsonArray<T>(value: unknown, fallback: T[]) {
+  if (typeof value !== "string" || !value.trim()) {
+    return fallback;
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.length ? parsed as T[] : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function booleanSelectValue(value: unknown) {
   if (value === true) return "Yes";
   if (value === false) return "No";
@@ -1519,6 +1569,11 @@ function booleanSelectValue(value: unknown) {
 
 function updateArrayItem<T>(items: T[], index: number, value: T) {
   return items.map((item, itemIndex) => (itemIndex === index ? value : item));
+}
+
+function updateInlineUploadFile(items: InlineUploadFile[], marker: string, file: File | null) {
+  const nextItems = items.filter((item) => item.marker !== marker);
+  return file ? [...nextItems, { marker, file }] : nextItems;
 }
 
 type FieldProps = {

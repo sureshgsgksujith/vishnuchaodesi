@@ -10,6 +10,8 @@ import {
   getStoredDashboardIdentity,
   PROFILE_UPDATED_EVENT,
 } from "../../dashboard/utils/profileStorage";
+import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
+import "../styles/customerHeader.css";
 
 type ExploreItem = {
   label: string;
@@ -99,6 +101,7 @@ const notifications = [
 export default function UserHomeHeader() {
   const navigate = useNavigate();
   const location = useLocation();
+  const logoTarget = useLogoNavigationTarget();
 
   const [showExplore, setShowExplore] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -238,11 +241,11 @@ export default function UserHomeHeader() {
   };
 
   return (
-    <div className="hom-top">
+    <div className="hom-top chaodesi-customer-header">
       <div className="container">
         <div className="row">
           <div className="hom-nav db-open">
-            <Link to="/home" className="top-log">
+            <Link to={logoTarget} className="top-log">
               <img
                 src="/template-17/images/home/logo-white.png"
                 alt="Chao Desi"
@@ -265,80 +268,22 @@ export default function UserHomeHeader() {
 
             <div
               className={showExplore ? "chaodesi-pop-menu ani" : "chaodesi-pop-menu"}
-              style={{
-                width: "100%",
-                background: "#fff",
-                position: "absolute",
-                overflow: showExplore ? "initial" : "hidden",
-                zIndex: 99,
-                padding: 25,
-                boxShadow: "0 15px 36px -12px rgba(0,0,0,.5)",
-                marginTop: 47,
-                left: 0,
-                transition: "all .3s ease",
-                visibility: showExplore ? "visible" : "hidden",
-                opacity: showExplore ? 1 : 0,
-                transform: showExplore ? "translateY(0)" : "translateY(15px)",
-              }}
+              aria-hidden={!showExplore}
             >
-              <div
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  background: "url(/template-17/images/city-bg.png) #fff",
-                  backgroundPosition: "right bottom",
-                  backgroundSize: 460,
-                  width: "100%",
-                  height: 72,
-                  bottom: 0,
-                  zIndex: -1,
-                  left: 0,
-                }}
-              />
-              <div className="container">
-                <div className="row">
-                  <div
-                    className="pmenu-spri"
-                    style={{
-                      float: "left",
-                      width: "22%",
-                      padding: "0 0 10px",
-                    }}
-                  >
-                    <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              <div className="chaodesi-pop-inner">
+                <div className="chaodesi-pop-grid">
+                  <div className="chaodesi-explore-modules">
+                    <ul>
                       {categoryLinks.map((item) => (
-                        <li
-                          key={item.label}
-                          style={{ opacity: 1, transform: "translateX(0)" }}
-                        >
+                        <li key={item.label}>
                           <Link
                             to={item.href}
                             onClick={closeAllPopups}
-                            style={{
-                              color: "#000",
-                              fontWeight: 600,
-                              fontSize: 13,
-                              display: "flex",
-                              alignItems: "center",
-                              padding: "9px 20px",
-                              width: "100%",
-                              textTransform: "uppercase",
-                              position: "relative",
-                              textDecoration: "none",
-                            }}
                           >
                             <img
                               src={item.icon}
                               alt={item.label}
                               loading="lazy"
-                              style={{
-                                display: "inline-block",
-                                width: 22,
-                                height: 22,
-                                objectFit: "contain",
-                                marginRight: 15,
-                                flexShrink: 0,
-                              }}
                             />
                             <span>{item.label}</span>
                           </Link>
@@ -347,188 +292,47 @@ export default function UserHomeHeader() {
                     </ul>
                   </div>
 
-                  <div
-                    className="pmenu-cat"
-                    style={{
-                      float: "left",
-                      width: "78%",
-                      borderLeft: "1px solid #d6d6d6",
-                      padding: "0 0 20px 30px",
-                      minHeight: 460,
-                      overflow: "hidden",
-                      overflowY: "auto",
-                    }}
-                  >
+                  <div className="chaodesi-explore-categories">
                     <i
-                      className="material-icons clopme"
+                      className="material-icons chaodesi-explore-close"
                       onClick={() => setShowExplore(false)}
-                      style={{
-                        right: 0,
-                        position: "absolute",
-                        top: 0,
-                        fontSize: 30,
-                        cursor: "pointer",
-                        color: "#333",
-                      }}
                     >
                       close
                     </i>
 
-                    <h4
-                      style={{
-                        fontSize: 20,
-                        fontWeight: 600,
-                        paddingBottom: 15,
-                        borderBottom: "1px solid #e2e2e2",
-                        marginBottom: 20,
-                        marginTop: 0,
-                      }}
-                    >
-                      All Categories
-                    </h4>
+                    <h4>All Categories</h4>
 
-                    <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                    <ul>
                       {exploreCategories.map((item) => (
-                        <li
-                          key={item.label}
-                          style={{
-                            float: "left",
-                            width: "25%",
-                            padding: "0 10px 6px 20px",
-                            position: "relative",
-                          }}
-                        >
+                        <li key={item.label}>
                           <Link
                             to={item.href}
                             onClick={closeAllPopups}
-                            style={{
-                              color: "#58677b",
-                              fontSize: 14,
-                              fontWeight: 500,
-                              textDecoration: "none",
-                              display: "inline-block",
-                              width: "100%",
-                              whiteSpace: "pre",
-                            }}
                           >
-                            <span
-                              aria-hidden="true"
-                              style={{
-                                display: "inline-block",
-                                color: "#9d9faa",
-                                opacity: 0.6,
-                                marginRight: 10,
-                              }}
-                            >
-                              &gt;
-                            </span>
-                            {item.label} -{" "}
-                            <span
-                              style={{
-                                color: "#97a8bf",
-                                fontWeight: 400,
-                              }}
-                            >
-                              {item.count}
-                            </span>
+                            <span aria-hidden="true">&gt;</span>
+                            <strong>{item.label}</strong>
+                            <small>- {item.count}</small>
                           </Link>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <div
-                    className="dir-home-nav-bot"
-                    style={{
-                      position: "relative",
-                      overflow: "hidden",
-                      width: "100%",
-                      borderTop: "1px solid #d6d6d6",
-                      padding: "35px 15px 0",
-                      fontWeight: 600,
-                      clear: "both",
-                    }}
-                  >
-                    <ul style={{ marginBottom: 0, padding: 0, listStyle: "none" }}>
-                      <li
-                        style={{
-                          float: "left",
-                          width: "58%",
-                          fontWeight: 500,
-                        }}
-                      >
+                  <div className="chaodesi-explore-cta">
+                    <ul>
+                      <li>
                         A few reasons you'll love Online Business Directory
-                        <span
-                          style={{
-                            display: "block",
-                            fontSize: 32,
-                            color: "#6f6347",
-                            paddingTop: 0,
-                            fontWeight: 600,
-                          }}
-                        >
-                          Call us on: +01 6214 6548
-                        </span>
+                        <span>Call us on: +01 6214 6548</span>
                       </li>
-                      <li style={{ float: "left", marginRight: 8 }}>
-                        <Link
-                          to="/post-your-ads"
-                          style={{
-                            fontSize: 14,
-                            marginRight: 10,
-                            height: "inherit",
-                            padding: "15px 15px 15px 25px",
-                            color: "#fff",
-                            display: "inline-block",
-                            width: "100%",
-                            fontWeight: 500,
-                            borderRadius: 5,
-                            background: "linear-gradient(39deg,#d90c55,#8d18ba 80%)",
-                            textDecoration: "none",
-                          }}
-                        >
-                          <i
-                            className="material-icons"
-                            style={{
-                              verticalAlign: "sub",
-                              color: "#fff",
-                              fontSize: 20,
-                              paddingRight: 5,
-                            }}
-                          >
-                            font_download
-                          </i>
+                      <li>
+                        <Link to="/post-your-ads">
+                          <i className="material-icons">font_download</i>
                           {" "}Advertise with us
                         </Link>
                       </li>
-                      <li style={{ float: "left" }}>
-                        <Link
-                          to="/dashboard/listings/new"
-                          style={{
-                            fontSize: 14,
-                            marginRight: 10,
-                            height: "inherit",
-                            padding: "15px 15px 15px 25px",
-                            color: "#fff",
-                            display: "inline-block",
-                            width: "100%",
-                            fontWeight: 500,
-                            borderRadius: 5,
-                            background: "linear-gradient(39deg,#d90c55,#8d18ba 80%)",
-                            textDecoration: "none",
-                          }}
-                        >
-                          <i
-                            className="material-icons"
-                            style={{
-                              verticalAlign: "sub",
-                              color: "#fff",
-                              fontSize: 20,
-                              paddingRight: 5,
-                            }}
-                          >
-                            store
-                          </i>
+                      <li>
+                        <Link to="/dashboard/listings/new">
+                          <i className="material-icons">store</i>
                           {" "}Add your business
                         </Link>
                       </li>

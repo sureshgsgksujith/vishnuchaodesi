@@ -60,6 +60,26 @@
   pointer-events: none;
 }
 
+.chao-home-page .ban-short-links ul li div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 122px;
+  min-width: 144px;
+  text-align: center;
+}
+
+.chao-home-page .ban-short-links ul li div img {
+  display: block;
+  margin: 0 auto 14px;
+}
+
+.chao-home-page .ban-short-links ul li div h4 {
+  width: 100%;
+  text-align: center;
+}
+
 .chao-home-page ul,
 .chao-home-page li {
   margin: 0;

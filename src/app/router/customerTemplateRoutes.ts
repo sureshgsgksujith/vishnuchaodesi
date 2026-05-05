@@ -39,6 +39,7 @@ export const customerTemplateRoutes = [
   { path: "/buy-points", src: "/template-17/buy-points.html", title: "Buy Points" },
   { path: "/pricing-details", src: "/template-17/pricing-details.html", title: "Pricing Details" },
   { path: "/promote-business", src: "/template-17/promote-business.html", title: "Promote Business" },
+  { path: "/edit-seo", src: "/template-17/edit-seo.html", title: "Edit SEO" },
 
   { path: "/community", src: "/template-17/community.html", title: "Community" },
   { path: "/search-results", src: "/template-17/search-results.html", title: "Search Results" },
@@ -70,6 +71,24 @@ export const customerTemplateRoutes = [
   { path: "/delete-job", src: "/template-17/delete-job.html", title: "Delete Job" },
   { path: "/create-job-seeker-profile", src: "/template-17/create-job-seeker-profile.html", title: "Create Job Seeker Profile" },
   { path: "/create-service-expert-profile", src: "/template-17/create-service-expert-profile.html", title: "Create Service Expert Profile" },
+
+  { path: "/classifieds/index", src: "/template-17/classifieds/index.html", title: "Classifieds" },
+  { path: "/classifieds/ads-all", src: "/template-17/classifieds/ads-all.html", title: "Classified Ads" },
+  { path: "/classifieds/ads-create", src: "/template-17/classifieds/ads-create.html", title: "Create Classified Ad" },
+  { path: "/classifieds/ads-details", src: "/template-17/classifieds/ads-details.html", title: "Classified Ad Details" },
+  { path: "/classifieds/ads-edit", src: "/template-17/classifieds/ads-edit.html", title: "Edit Classified Ad" },
+
+  { path: "/jobs/index", src: "/template-17/jobs/index.html", title: "Jobs" },
+  { path: "/jobs/all-jobs", src: "/template-17/jobs/all-jobs.html", title: "All Jobs" },
+  { path: "/jobs/job-details", src: "/template-17/jobs/job-details.html", title: "Job Details" },
+
+  { path: "/places/index", src: "/template-17/places/index.html", title: "Places" },
+  { path: "/places/details", src: "/template-17/places/details.html", title: "Place Details" },
+
+  { path: "/service-experts/index", src: "/template-17/service-experts/index.html", title: "Service Experts" },
+  { path: "/service-experts/all-experts", src: "/template-17/service-experts/all-experts.html", title: "All Service Experts" },
+  { path: "/service-experts/service-confirmation", src: "/template-17/service-experts/service-confirmation.html", title: "Service Confirmation" },
+  { path: "/service-experts/service-experts-profile", src: "/template-17/service-experts/service-experts-profile.html", title: "Service Expert Profile" },
 
   { path: "/dashboard", src: "/template-17/dashboard.html", title: "Dashboard" },
   { path: "/dashboard/all-listing", src: "/template-17/db-all-listing.html", title: "Dashboard All Listing" },

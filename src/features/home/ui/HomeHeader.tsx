@@ -1,19 +1,22 @@
 import { Link } from "react-router-dom";
+import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 
 export default function HomeHeader() {
+  const logoTarget = useLogoNavigationTarget();
+
   return (
     <div className="hom-top">
       <div className="container">
         <div className="row">
           <div className="hom-nav">
-            <a href="/home" className="top-log">
+            <Link to={logoTarget} className="top-log">
               <img
                 src="/template-17/images/home/logo-white.png"
                 alt=""
                 loading="eager"
                 className="ic-logo"
               />
-            </a>
+            </Link>
 
             <div className="menu">
               <h4>Explore</h4>
@@ -50,7 +53,7 @@ export default function HomeHeader() {
                 <Link to="/login">Sign in</Link>
               </li>
               <li>
-                <Link to="/pricing-details">Create an account</Link>
+                <Link to="/register">Create an account</Link>
               </li>
             </ul>
 
@@ -69,7 +72,7 @@ export default function HomeHeader() {
                   <ul>
                     <li><a href="/pricing-details">Add business</a></li>
                     <li><Link to="/login">Sign in</Link></li>
-                    <li><Link to="/pricing-details">Create an account</Link></li>
+                    <li><Link to="/register">Create an account</Link></li>
                   </ul>
                 </div>
 

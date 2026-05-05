@@ -429,7 +429,7 @@ export default function LoginPage() {
                             <span
                               className="ll-2"
                               style={{ cursor: "pointer" }}
-                              onClick={() => navigate("/pricing-details")}
+                              onClick={() => navigate("/register")}
                             >
                               Create an account?
                             </span>
@@ -745,7 +745,7 @@ export default function LoginPage() {
                             <span
                               className="ll-2"
                               style={{ cursor: "pointer" }}
-                              onClick={() => navigate("/pricing-details")}
+                              onClick={() => navigate("/register")}
                             >
                               Create an account?
                             </span>

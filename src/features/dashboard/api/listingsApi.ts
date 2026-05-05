@@ -62,15 +62,18 @@ export type ListingUploadFiles = {
   profileImageFile?: File | null;
   coverImageFile?: File | null;
   galleryFiles?: Array<{ file: File; marker: string }>;
+  serviceFiles?: Array<{ file: File; marker: string }>;
+  offerFiles?: Array<{ file: File; marker: string }>;
 };
 
 export async function getMyListings(search = "") {
   const response = await apiClient.get<ListingListResponse>("/Listings/mine", {
     params: {
       page: 1,
-      pageSize: 100,
+      pageSize: 25,
       search: search || undefined,
     },
+    timeout: 8000,
   });
 
   return response.data;
@@ -125,6 +128,10 @@ export async function deleteListing(listingId: number) {
 
 export function getListingApiErrorMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
+    if (error.code === "ECONNABORTED") {
+      return "Listings are taking too long to load. Please try again.";
+    }
+
     const message = error.response?.data?.message;
 
     if (typeof message === "string" && message.trim()) {
@@ -150,7 +157,9 @@ function buildListingRequestBody(
   const hasFiles =
     !!files?.profileImageFile ||
     !!files?.coverImageFile ||
-    !!files?.galleryFiles?.length;
+    !!files?.galleryFiles?.length ||
+    !!files?.serviceFiles?.length ||
+    !!files?.offerFiles?.length;
 
   if (!hasFiles) {
     return payload;
@@ -171,6 +180,16 @@ function buildListingRequestBody(
   for (const item of files?.galleryFiles || []) {
     formData.append("galleryFiles", item.file);
     formData.append("galleryFileMarkers", item.marker);
+  }
+
+  for (const item of files?.serviceFiles || []) {
+    formData.append("serviceFiles", item.file);
+    formData.append("serviceFileMarkers", item.marker);
+  }
+
+  for (const item of files?.offerFiles || []) {
+    formData.append("offerFiles", item.file);
+    formData.append("offerFileMarkers", item.marker);
   }
 
   return formData;

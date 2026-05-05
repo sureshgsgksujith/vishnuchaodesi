@@ -1,9 +1,5 @@
+import StaticTemplatePage from "../../template/ui/StaticTemplatePage";
+
 export default function AboutPage() {
-  return (
-    <iframe
-      src="/template-16/about.html"
-      title="About"
-      style={{ width: "100%", height: "100vh", border: "none" }}
-    />
-  );
+  return <StaticTemplatePage src="/template-17/about.html" title="About" />;
 }
