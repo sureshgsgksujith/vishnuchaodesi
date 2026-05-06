@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createListing, getListing, getListingApiErrorMessage, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
 import { getMyProfile } from "../api/profileApi";
 import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
+import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
@@ -10,17 +12,18 @@ import { resolveListingImageUrl } from "../utils/listingImages";
 
 const wizardSteps = [
   { title: "Step 1", label: "Basic Info" },
-  { title: "Step 2", label: "Services" },
-  { title: "Step 3", label: "Offers" },
-  { title: "Step 4", label: "Map" },
-  { title: "Step 5", label: "Other" },
+  { title: "Step 2", label: "Business" },
+  { title: "Step 3", label: "Links" },
+  { title: "Step 4", label: "More Info" },
+  { title: "Step 5", label: "Media" },
   { title: "Step 6", label: "Done" },
 ];
 
-const categories = ["Real Estate"];
+const categories = ["Real Estate", "Restaurants & Food"];
 
 const subCategoriesByCategory: Record<string, string[]> = {
   "Real Estate": ["Sale", "Rent", "Commercial", "Plot", "PG"],
+  "Restaurants & Food": ["Restaurants", "Fast Food", "Cafes"],
 };
 
 const detailCategoriesBySubCategory: Record<string, string[]> = {
@@ -29,31 +32,46 @@ const detailCategoriesBySubCategory: Record<string, string[]> = {
   PG: ["Single Room", "Shared Room", "Co-living"],
   Commercial: ["Office", "Shop", "Warehouse"],
   Plot: ["Residential Plot", "Commercial Plot"],
+  Restaurants: ["Fine Dining", "Casual Dining", "Family Restaurant"],
+  "Fast Food": ["Burger", "Pizza", "Fried Chicken"],
+  Cafes: ["Coffee Shop", "Bakery", "Dessert"],
 };
 
 const profileImageUploadMarker = "__profileImageFile__";
 const coverImageUploadMarker = "__coverImageFile__";
 const galleryImageUploadMarkerPrefix = "__galleryFile_";
-const serviceImageUploadMarkerPrefix = "__serviceFile_";
-const offerImageUploadMarkerPrefix = "__offerFile_";
 
 type ServiceItem = { name: string; imageName: string };
 type OfferItem = { name: string; price: string; detail: string; imageName: string; link: string };
 type InfoItem = { question: string; answer: string };
+type BusinessHour = { day: string; status: string; open: string; close: string };
+type ContactInfo = { mainPhone: string; alternatePhone: string; tollFree: string; email: string; streetAddress: string; suite: string; zipcode: string; city: string; state: string };
+type WebLinks = { mainWebsite: string; displayWebsite: string; iosApp: string; androidApp: string };
+type SocialLinks = { facebook: string; instagram: string; twitter: string; linkedin: string };
+type PaymentMethods = { creditCard: boolean; cash: boolean; upi: boolean; googlePay: boolean; applePay: boolean; insurance: boolean };
+type RestaurantInfo = { restaurantName: string; tagline: string; cuisine: string; foodType: string };
 type GalleryUploadFile = { file: File; marker: string };
 type InlineUploadFile = { file: File; marker: string };
 
 type ListingDraft = {
+  businessHours: BusinessHour[];
+  brands: string[];
+  contactInfo: ContactInfo;
   coverImageFile: File | null;
   form: FormState;
   galleryFiles: GalleryUploadFile[];
   infoItems: InfoItem[];
   offers: OfferItem[];
   offerFiles: InlineUploadFile[];
+  paymentMethods: PaymentMethods;
+  products: string[];
   profileImageFile: File | null;
+  restaurantInfo: RestaurantInfo;
   sellerName: string;
   services: ServiceItem[];
   serviceFiles: InlineUploadFile[];
+  socialLinks: SocialLinks;
+  webLinks: WebLinks;
 };
 
 type ListingPricingState = {
@@ -76,6 +94,7 @@ type FormState = {
   subCategory: string;
   detailCategory: string;
   description: string;
+  businessDescription: string;
   profileImageName: string;
   coverImageName: string;
   serviceLocations: string;
@@ -138,6 +157,7 @@ const initialForm: FormState = {
   subCategory: "",
   detailCategory: "",
   description: "",
+  businessDescription: "",
   profileImageName: "",
   coverImageName: "",
   serviceLocations: "",
@@ -178,6 +198,58 @@ const initialForm: FormState = {
   amenityGarden: false,
 };
 
+const defaultBusinessHours: BusinessHour[] = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+].map((day) => ({ day, status: "Open", open: "", close: "" }));
+
+const initialContactInfo: ContactInfo = {
+  mainPhone: "",
+  alternatePhone: "",
+  tollFree: "",
+  email: "",
+  streetAddress: "",
+  suite: "",
+  zipcode: "",
+  city: "",
+  state: "",
+};
+
+const initialWebLinks: WebLinks = {
+  mainWebsite: "",
+  displayWebsite: "",
+  iosApp: "",
+  androidApp: "",
+};
+
+const initialSocialLinks: SocialLinks = {
+  facebook: "",
+  instagram: "",
+  twitter: "",
+  linkedin: "",
+};
+
+const initialPaymentMethods: PaymentMethods = {
+  creditCard: false,
+  cash: false,
+  upi: false,
+  googlePay: false,
+  applePay: false,
+  insurance: false,
+};
+
+const initialRestaurantInfo: RestaurantInfo = {
+  restaurantName: "",
+  tagline: "",
+  cuisine: "",
+  foodType: "",
+};
+
 export default function ListingFormPage() {
   const [form, setForm] = useState<FormState>(initialForm);
   const [sellerName, setSellerName] = useState(
@@ -195,6 +267,14 @@ export default function ListingFormPage() {
   const [infoItems, setInfoItems] = useState<InfoItem[]>(
     Array.from({ length: 6 }, () => ({ question: "", answer: "" })),
   );
+  const [businessHours, setBusinessHours] = useState<BusinessHour[]>(defaultBusinessHours);
+  const [contactInfo, setContactInfo] = useState<ContactInfo>(initialContactInfo);
+  const [webLinks, setWebLinks] = useState<WebLinks>(initialWebLinks);
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>(initialSocialLinks);
+  const [products, setProducts] = useState<string[]>([""]);
+  const [brands, setBrands] = useState<string[]>([""]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>(initialPaymentMethods);
+  const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>(initialRestaurantInfo);
   const [errorMessage, setErrorMessage] = useState("");
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
@@ -332,6 +412,11 @@ export default function ListingFormPage() {
           email: profile.email || currentForm.email,
           mobileNumber: profile.mobileNumber || currentForm.mobileNumber,
         }));
+        setContactInfo((currentContact) => ({
+          ...currentContact,
+          email: currentContact.email || profile.email || "",
+          mainPhone: currentContact.mainPhone || profile.mobileNumber || "",
+        }));
         setSellerName(profile.fullName || sellerName);
       })
       .catch(() => {
@@ -347,6 +432,15 @@ export default function ListingFormPage() {
             localStorage.getItem("mobileNumber") ||
             localStorage.getItem("mobile_number") ||
             currentForm.mobileNumber,
+        }));
+        setContactInfo((currentContact) => ({
+          ...currentContact,
+          email: currentContact.email || localStorage.getItem("email") || "",
+          mainPhone:
+            currentContact.mainPhone ||
+            localStorage.getItem("mobileNumber") ||
+            localStorage.getItem("mobile_number") ||
+            "",
         }));
         setSellerName(storedSellerName);
       });
@@ -367,13 +461,22 @@ export default function ListingFormPage() {
     getListing(sourceListingId)
       .then((listing) => {
         if (!isActive) return;
+        const propertyDetails = listing.propertyDetails || {};
         setForm((currentForm) => mapListingToForm(listing, currentForm, !isEditMode));
-        setServices(parseJsonArray<ServiceItem>(listing.propertyDetails?.services, [{ name: "", imageName: "" }, { name: "", imageName: "" }]));
-        setOffers(parseJsonArray<OfferItem>(listing.propertyDetails?.offers, [{ name: "", price: "", detail: "", imageName: "", link: "" }]));
+        setServices(parseServiceItems(propertyDetails.services));
+        setOffers(parseJsonArray<OfferItem>(propertyDetails.offers, [{ name: "", price: "", detail: "", imageName: "", link: "" }]));
         setInfoItems(parseJsonArray<InfoItem>(
-          listing.propertyDetails?.otherInformation,
+          propertyDetails.otherInformation,
           Array.from({ length: 6 }, () => ({ question: "", answer: "" })),
         ));
+        setBusinessHours(parseJsonArray<BusinessHour>(propertyDetails.businessHours, defaultBusinessHours));
+        setContactInfo(parseJsonObject<ContactInfo>(propertyDetails.additionalContactInfo, initialContactInfo));
+        setWebLinks(parseJsonObject<WebLinks>(propertyDetails.webLinks, initialWebLinks));
+        setSocialLinks(parseJsonObject<SocialLinks>(propertyDetails.socialLinks, initialSocialLinks));
+        setProducts(parseJsonArray<string>(propertyDetails.products, [""]));
+        setBrands(parseJsonArray<string>(propertyDetails.brands, [""]));
+        setPaymentMethods(parseJsonObject<PaymentMethods>(propertyDetails.paymentMethods, initialPaymentMethods));
+        setRestaurantInfo(parseJsonObject<RestaurantInfo>(propertyDetails.restaurantInfo, initialRestaurantInfo));
         setServiceFiles([]);
         setOfferFiles([]);
         setSavedListingId(isEditMode ? listing.id : null);
@@ -402,6 +505,14 @@ export default function ListingFormPage() {
     setServices(draft.services);
     setOffers(draft.offers);
     setInfoItems(draft.infoItems);
+    setBusinessHours(draft.businessHours);
+    setContactInfo(draft.contactInfo);
+    setWebLinks(draft.webLinks);
+    setSocialLinks(draft.socialLinks);
+    setProducts(draft.products);
+    setBrands(draft.brands);
+    setPaymentMethods(draft.paymentMethods);
+    setRestaurantInfo(draft.restaurantInfo);
     setProfileImageFile(draft.profileImageFile);
     setCoverImageFile(draft.coverImageFile);
     setGalleryFiles(draft.galleryFiles);
@@ -533,7 +644,7 @@ export default function ListingFormPage() {
       return false;
     }
 
-    const missingDetailField = getRequiredDetailFields(form.detailCategory).find(([name]) => !form[name].trim());
+    const missingDetailField = getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
 
     if (missingDetailField) {
       setErrorMessage(`${missingDetailField[1]} is required.`);
@@ -545,16 +656,24 @@ export default function ListingFormPage() {
 
   function getListingDraft(): ListingDraft {
     return {
+      businessHours,
+      brands,
+      contactInfo,
       coverImageFile,
       form,
       galleryFiles,
       infoItems,
       offers,
       offerFiles,
+      paymentMethods,
+      products,
       profileImageFile,
+      restaurantInfo,
       sellerName,
       services,
       serviceFiles,
+      socialLinks,
+      webLinks,
     };
   }
 
@@ -568,7 +687,21 @@ export default function ListingFormPage() {
     setErrorMessage("");
 
     try {
-      const payload = buildListingPayload(draft.form, draft.services, draft.offers, draft.infoItems, draft.sellerName);
+      const payload = buildListingPayload(
+        draft.form,
+        draft.services,
+        draft.offers,
+        draft.infoItems,
+        draft.sellerName,
+        draft.businessHours,
+        draft.contactInfo,
+        draft.webLinks,
+        draft.socialLinks,
+        draft.products,
+        draft.brands,
+        draft.paymentMethods,
+        draft.restaurantInfo,
+      );
       const galleryMarkers = new Set(draft.form.galleryMedia);
       const uploadFiles = {
         profileImageFile: draft.profileImageFile,
@@ -629,19 +762,17 @@ export default function ListingFormPage() {
                   <div className="login">
                     <h4>{isEditMode ? "Edit Listing" : "Listing Details"}</h4>
                     <form className="listing_form_1" noValidate>
-                      <Input placeholder="User Name" value={sellerName} onChange={setSellerName} readOnly />
+                      <Input placeholder="Listing Name*" value={sellerName} onChange={setSellerName} />
                       <div className="row">
                         <InputColumn placeholder="Phone number" value={form.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
                         <InputColumn placeholder="Email Id" type="email" value={form.email} onChange={(value) => updateField("email", value)} />
                       </div>
                       <Input placeholder="Whatsapp Number (e.g. +919876543210)" value={form.whatsapp} onChange={(value) => updateField("whatsapp", value)} />
                       <Input placeholder="Website(www.Symplore)" value={form.website} onChange={(value) => updateField("website", value)} />
-                      <Select placeholder="Country*" value={form.country} options={countries.map((country) => country.name)} onChange={(value) => updateField("country", value)} />
-                      <div className="row">
-                        <SelectColumn placeholder="State*" value={form.state} options={states.map((state) => state.name)} onChange={(value) => updateField("state", value)} disabled={!form.country} />
-                        <SelectColumn placeholder="City*" value={form.city} options={cities.map((city) => city.name)} onChange={(value) => updateField("city", value)} disabled={!form.state} />
-                      </div>
-                      <Input placeholder="Address*" value={form.address} onChange={(value) => updateField("address", value)} />
+                      <Select placeholder="Select Country*" value={form.country} options={countries.map((country) => country.name)} onChange={(value) => updateField("country", value)} />
+                      <Select placeholder="Select State*" value={form.state} options={states.map((state) => state.name)} onChange={(value) => updateField("state", value)} disabled={!form.country} />
+                      <Select placeholder="Select City*" value={form.city} options={cities.map((city) => city.name)} onChange={(value) => updateField("city", value)} disabled={!form.state} />
+                      <Input placeholder="Shop address*" value={form.address} onChange={(value) => updateField("address", value)} />
                       <Input placeholder="Zip code" value={form.pincode} onChange={(value) => updateField("pincode", value)} />
                       <Select placeholder="Select Category" value={form.categoryName} options={categories} onChange={(value) => updateField("categoryName", value)} />
                       <Select
@@ -658,34 +789,37 @@ export default function ListingFormPage() {
                         onChange={(value) => updateField("detailCategory", value)}
                         disabled={!form.subCategory || !detailCategoryOptions.length}
                       />
-                      <DetailCategoryFields form={form} updateField={updateField} />
                       <Input placeholder="Ad Title (e.g., 2BHK Flat for Rent in Hyderabad)*" value={form.title} onChange={(value) => updateField("title", value)} />
-                      <PriceAndAmenitiesFields
-                        form={form}
-                        updateField={updateField}
-                        updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
-                      />
+                      {form.categoryName === "Real Estate" ? (
+                        <>
+                          <DetailCategoryFields form={form} updateField={updateField} />
+                          <PriceAndAmenitiesFields
+                            form={form}
+                            updateField={updateField}
+                            updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
+                          />
+                        </>
+                      ) : null}
+                      {form.categoryName === "Restaurants & Food" ? (
+                        <RestaurantInfoFields restaurantInfo={restaurantInfo} onChange={setRestaurantInfo} />
+                      ) : null}
                       <Textarea placeholder="Details about your listing" value={form.description} onChange={(value) => updateField("description", value)} />
                       <div className="row">
-                        <MediaColumn
+                        <TemplateImageColumn
                           label="Choose profile image"
                           value={form.profileImageName}
-                          onChange={(value) => updateField("profileImageName", value)}
                           onFileChange={(file) => {
                             setProfileImageFile(file);
                             updateField("profileImageName", file ? profileImageUploadMarker : "");
                           }}
-                          aspectRatio={1}
                         />
-                        <MediaColumn
+                        <TemplateImageColumn
                           label="Choose cover image"
                           value={form.coverImageName}
-                          onChange={(value) => updateField("coverImageName", value)}
                           onFileChange={(file) => {
                             setCoverImageFile(file);
                             updateField("coverImageName", file ? coverImageUploadMarker : "");
                           }}
-                          aspectRatio={16 / 9}
                         />
                       </div>
                       <Textarea
@@ -706,28 +840,37 @@ export default function ListingFormPage() {
 
               {currentStep === 1 ? (
                 <div className="log">
-                  <div className="login add-list-ser">
-                    <h4>Services provide</h4>
-                    <button type="button" className="add-list-add-btn" title="add new service" onClick={() => setServices((items) => [...items, { name: "", imageName: "" }])}>+</button>
-                    <button type="button" className="add-list-rem-btn" title="remove service" onClick={() => setServices((items) => items.length > 1 ? items.slice(0, -1) : items)}>-</button>
-                    <ul>
-                      {services.map((service, index) => (
-                        <li key={index}>
-                          <Input placeholder="Ex: Plumbile" value={service.name} onChange={(value) => setServices((items) => updateArrayItem(items, index, { ...service, name: value }))} />
-                          <MediaFull
-                            value={service.imageName}
-                            onChange={(value) => setServices((items) => updateArrayItem(items, index, { ...service, imageName: value }))}
-                            onFileChange={(file) => {
-                              const marker = `${serviceImageUploadMarkerPrefix}${index}__`;
-                              setServices((items) => updateArrayItem(items, index, { ...service, imageName: file ? marker : "" }));
-                              setServiceFiles((items) => updateInlineUploadFile(items, marker, file));
-                            }}
-                            aspectRatio={4 / 3}
-                          />
+                  <div className="login">
+                    <h4>Business Details</h4>
+                    <form className="listing_form_2" noValidate>
+                      <ul className="listing-section-stack">
+                        <li>
+                          <ListingSectionCard title="Business Description">
+                            <div className="row">
+                              <div className="col-md-12">
+                                <div className="form-group">
+                                  <label>Business Description *</label>
+                                  <textarea
+                                    name="business_description"
+                                    className="form-control"
+                                    placeholder="Describe your business"
+                                    value={form.businessDescription}
+                                    onChange={(event) => updateField("businessDescription", event.target.value)}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </ListingSectionCard>
                         </li>
-                      ))}
-                    </ul>
-                    <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={40} />
+                        <li>
+                          <BusinessHoursEditor hours={businessHours} onChange={setBusinessHours} />
+                        </li>
+                        <li>
+                          <ContactLocationFields contactInfo={contactInfo} onChange={setContactInfo} />
+                        </li>
+                      </ul>
+                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={40} />
+                    </form>
                   </div>
                 </div>
               ) : null}
@@ -735,92 +878,71 @@ export default function ListingFormPage() {
               {currentStep === 2 ? (
                 <div className="log">
                   <div className="login add-list-off">
-                    <h4>Special offers</h4>
-                    <button type="button" className="add-list-add-btn" title="add new offer" onClick={() => setOffers((items) => [...items, { name: "", price: "", detail: "", imageName: "", link: "" }])}>+</button>
-                    <button type="button" className="add-list-rem-btn" title="remove offer" onClick={() => setOffers((items) => items.length > 1 ? items.slice(0, -1) : items)}>-</button>
-                    <ul>
-                      {offers.map((offer, index) => (
-                        <li key={index}>
-                          <div className="row">
-                            <InputColumn placeholder="Offer name*" value={offer.name} onChange={(value) => setOffers((items) => updateArrayItem(items, index, { ...offer, name: value }))} />
-                            <InputColumn placeholder="Price" value={offer.price} onChange={(value) => setOffers((items) => updateArrayItem(items, index, { ...offer, price: value }))} />
-                          </div>
-                          <Textarea placeholder="Details about this offer" value={offer.detail} onChange={(value) => setOffers((items) => updateArrayItem(items, index, { ...offer, detail: value }))} />
-                          <MediaFull
-                            value={offer.imageName}
-                            onChange={(value) => setOffers((items) => updateArrayItem(items, index, { ...offer, imageName: value }))}
-                            onFileChange={(file) => {
-                              const marker = `${offerImageUploadMarkerPrefix}${index}__`;
-                              setOffers((items) => updateArrayItem(items, index, { ...offer, imageName: file ? marker : "" }));
-                              setOfferFiles((items) => updateInlineUploadFile(items, marker, file));
-                            }}
-                            aspectRatio={4 / 3}
-                          />
-                          <Input placeholder="View More Link" value={offer.link} onChange={(value) => setOffers((items) => updateArrayItem(items, index, { ...offer, link: value }))} />
+                    <form className="listing_form_3" noValidate>
+                      <ul>
+                        <li>
+                          <WebLinksFields webLinks={webLinks} onChange={setWebLinks} />
                         </li>
-                      ))}
-                    </ul>
-                    <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={60} />
+                        <li>
+                          <SocialLinksFields socialLinks={socialLinks} onChange={setSocialLinks} />
+                        </li>
+                      </ul>
+                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={60} />
+                    </form>
                   </div>
                 </div>
               ) : null}
 
               {currentStep === 3 ? (
                 <div className="log add-list-map">
-                  <div className="login add-list-map">
-                    <h4>Photo gallery</h4>
-                    <GalleryMediaEditor
-                      items={form.galleryMedia}
-                      files={galleryFiles}
-                      onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
-                      onFilesChange={setGalleryFiles}
-                    />
-                    <h4>Video Gallery</h4>
-                    <ul>
-                      <button type="button" className="add-list-add-btn" title="add new video">+</button>
-                      <button type="button" className="add-list-rem-btn" title="remove video">-</button>
-                      <li>
-                        <Textarea placeholder="Paste Your Youtube iframe Code here" value={form.listingVideo} onChange={(value) => updateField("listingVideo", value)} />
-                      </li>
-                    </ul>
-                    <h4>Map and 360 view</h4>
-                    <Textarea placeholder="Shop location" value={form.googleMap} onChange={(value) => updateField("googleMap", value)} />
-                    <Textarea placeholder="360 view" value={form.view360} onChange={(value) => updateField("view360", value)} />
-                    <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={80} />
+                  <div className="login add-list-off">
+                    <form className="listing_form_4" noValidate>
+                      <ul>
+                        <ProductsServicesFields
+                          products={products}
+                          services={services}
+                          brands={brands}
+                          onProductsChange={setProducts}
+                          onServicesChange={setServices}
+                          onBrandsChange={setBrands}
+                        />
+                        <li>
+                          <PaymentMethodsFields paymentMethods={paymentMethods} onChange={setPaymentMethods} />
+                        </li>
+                      </ul>
+                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={80} />
+                    </form>
                   </div>
                 </div>
               ) : null}
 
               {currentStep === 4 ? (
                 <div className="log">
-                  <div className="login add-list-off">
-                    <h4>Other informations</h4>
-                    <button type="button" className="add-list-add-btn" title="add new offer" onClick={() => setInfoItems((items) => [...items, { question: "", answer: "" }])}>+</button>
-                    <button type="button" className="add-list-rem-btn" title="remove offer" onClick={() => setInfoItems((items) => items.length > 1 ? items.slice(0, -1) : items)}>-</button>
-                    <ul>
-                      {infoItems.map((item, index) => (
-                        <li key={index}>
-                          <div className="row">
-                            <InputColumn width="col-md-5" placeholder="Experience" value={item.question} onChange={(value) => setInfoItems((items) => updateArrayItem(items, index, { ...item, question: value }))} />
-                            <div className="col-md-2">
-                              <div className="form-group listing-info-arrow">
-                                <i className="material-icons">arrow_forward</i>
-                              </div>
-                            </div>
-                            <InputColumn width="col-md-5" placeholder="20 years" value={item.answer} onChange={(value) => setInfoItems((items) => updateArrayItem(items, index, { ...item, answer: value }))} />
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="row">
-                      <div className="col-md-6">
-                        <button type="button" className="btn btn-primary" onClick={handlePrevious}>Previous</button>
+                  <div className="login add-lis-oth">
+                    <form className="listing_form" noValidate>
+                      <h4>Photo gallery</h4>
+                      <GalleryMediaEditor
+                        items={form.galleryMedia}
+                        files={galleryFiles}
+                        onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
+                        onFilesChange={setGalleryFiles}
+                      />
+                      <p></p>
+                      <h4>Video Gallery</h4>
+                      <Textarea placeholder="Paste Your Youtube iframe Code here" value={form.listingVideo} onChange={(value) => updateField("listingVideo", value)} />
+                      <h4>Map and 360 view</h4>
+                      <Textarea placeholder="Shop location" value={form.googleMap} onChange={(value) => updateField("googleMap", value)} />
+                      <Textarea placeholder="360 view" value={form.view360} onChange={(value) => updateField("view360", value)} />
+                      <div className="row">
+                        <div className="col-md-6">
+                          <button type="button" className="btn btn-primary" onClick={handlePrevious}>Previous</button>
+                        </div>
+                        <div className="col-md-6">
+                          <button type="button" className="btn btn-primary" onClick={handleFinish} disabled={isSaving}>{isSaving ? "Saving..." : isEditMode ? "Save" : "Finish"}</button>
+                        </div>
                       </div>
-                      <div className="col-md-6">
-                        <button type="button" className="btn btn-primary" onClick={handleFinish} disabled={isSaving}>{isSaving ? "Saving..." : isEditMode ? "Save" : "Choose Pricing Plan"}</button>
-                      </div>
-                    </div>
-                    <Progress value={90} />
+                      <Progress value={90} />
+                    </form>
                   </div>
                 </div>
               ) : null}
@@ -905,6 +1027,24 @@ function InputColumn({ placeholder, value, onChange, type = "text", width = "col
   );
 }
 
+function LabeledInputColumn({
+  label,
+  placeholder,
+  value,
+  onChange,
+  type = "text",
+  width = "col-md-6",
+}: FieldProps & { label: string; type?: string; width?: string }) {
+  return (
+    <div className={width}>
+      <div className="form-group">
+        <label>{label}</label>
+        <input className="form-control" type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+      </div>
+    </div>
+  );
+}
+
 function SelectColumn({ placeholder, value, options, onChange, width = "col-md-6", disabled = false }: FieldProps & { options: string[]; width?: string; disabled?: boolean }) {
   return (
     <div className={width}>
@@ -945,6 +1085,15 @@ function Textarea({ placeholder, value, onChange }: FieldProps) {
   );
 }
 
+function ListingSectionCard({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
+  return (
+    <section className={`listing-section-card ${className}`.trim()}>
+      <h4>{title}</h4>
+      {children}
+    </section>
+  );
+}
+
 function Select({ placeholder, value, options, onChange, disabled = false }: FieldProps & { options: string[]; disabled?: boolean }) {
   return (
     <div className="row">
@@ -973,7 +1122,7 @@ function DetailCategoryFields({
     return null;
   }
 
-  if (["Apartment", "House", "Villa"].includes(form.detailCategory)) {
+  if (form.subCategory === "Sale" || form.subCategory === "Rent") {
     return (
       <>
         <h5 className="mt-3 mb-3">Residential Details</h5>
@@ -990,7 +1139,7 @@ function DetailCategoryFields({
     );
   }
 
-  if (["Plot", "Residential Plot", "Commercial Plot"].includes(form.detailCategory)) {
+  if (form.subCategory === "Plot") {
     return (
       <>
         <h5 className="mt-3 mb-3">Plot Details</h5>
@@ -1011,7 +1160,7 @@ function DetailCategoryFields({
     );
   }
 
-  if (["Office", "Shop", "Warehouse"].includes(form.detailCategory)) {
+  if (form.subCategory === "Commercial") {
     return (
       <>
         <h5 className="mt-3 mb-3">Commercial Details</h5>
@@ -1029,7 +1178,7 @@ function DetailCategoryFields({
     );
   }
 
-  if (["PG", "Single Room", "Shared Room", "Co-living"].includes(form.detailCategory)) {
+  if (form.subCategory === "PG") {
     return (
       <>
         <h5 className="mt-3 mb-3">PG / Co-living</h5>
@@ -1083,44 +1232,51 @@ function PriceAndAmenitiesFields({
   );
 }
 
-function MediaColumn({
+function TemplateImageColumn({
   label,
   value,
-  onChange,
   onFileChange,
-  aspectRatio,
 }: {
   label: string;
   value: string;
-  onChange: (value: string) => void;
-  onFileChange?: (file: File | null) => void;
-  aspectRatio: number;
+  onFileChange: (file: File | null) => void;
 }) {
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  useEffect(() => {
+    if (!value || value.startsWith("__")) {
+      return;
+    }
+
+    setPreviewUrl(resolveListingImageUrl(value));
+  }, [value]);
+
+  function handleFileChange(files: FileList | null) {
+    const file = files?.[0] || null;
+    onFileChange(file);
+
+    if (!file) {
+      setPreviewUrl("");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => setPreviewUrl(String(reader.result || ""));
+    reader.readAsDataURL(file);
+  }
+
   return (
     <div className="col-md-6">
       <div className="form-group">
-        <MediaPicker label={label} value={value} onChange={onChange} onFileChange={onFileChange} aspectRatio={aspectRatio} />
-      </div>
-    </div>
-  );
-}
-
-function MediaFull({
-  value,
-  onChange,
-  onFileChange,
-  aspectRatio,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  onFileChange?: (file: File | null) => void;
-  aspectRatio: number;
-}) {
-  return (
-    <div className="row">
-      <div className="col-md-12">
-        <div className="form-group">
-          <MediaPicker label="Choose image or video" value={value} onChange={onChange} onFileChange={onFileChange} aspectRatio={aspectRatio} />
+        <label>{label}</label>
+        <div className="img-uplo-flex">
+          <input
+            type="file"
+            accept="image/*,.jpg,.jpeg,.png"
+            className="form-control file-input"
+            onChange={(event) => handleFileChange(event.target.files)}
+          />
+          <img className="img-preview" src={previewUrl} alt="" />
         </div>
       </div>
     </div>
@@ -1138,216 +1294,398 @@ function GalleryMediaEditor({
   onChange: (items: string[]) => void;
   onFilesChange: (files: GalleryUploadFile[]) => void;
 }) {
-  function updateItem(index: number, value: string) {
-    const nextItems = items.length ? [...items] : [""];
-    nextItems[index] = value;
-    onChange(nextItems.filter(Boolean));
-  }
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-  function updateFile(index: number, file: File | null) {
-    const nextItems = items.length ? [...items] : [""];
-    const marker = `${galleryImageUploadMarkerPrefix}${index}__`;
+  function handleFilesChange(fileList: FileList | null) {
+    const nextFiles = Array.from(fileList || []).map((file, index) => ({
+      file,
+      marker: `${galleryImageUploadMarkerPrefix}${index}__`,
+    }));
 
-    if (file) {
-      const nextFiles = files.filter((item) => item.marker !== marker);
-      nextFiles.push({ file, marker });
-      nextItems[index] = `${galleryImageUploadMarkerPrefix}${index}__`;
-      onFilesChange(nextFiles);
-    } else {
-      nextItems[index] = "";
-      onFilesChange(files.filter((item) => item.marker !== marker));
-    }
-
-    onChange(nextItems.filter(Boolean));
-  }
-
-  function removeItem(index: number) {
-    const marker = `${galleryImageUploadMarkerPrefix}${index}__`;
-    onChange(items.filter((_, itemIndex) => itemIndex !== index));
-    onFilesChange(files.filter((item) => item.marker !== marker));
+    const existingUrls = items.filter((item) => item && !item.startsWith(galleryImageUploadMarkerPrefix));
+    onFilesChange(nextFiles);
+    onChange([...existingUrls, ...nextFiles.map((item) => item.marker)]);
   }
 
   return (
-    <div className="listing-gallery-editor">
-      <button type="button" className="add-list-add-btn" title="add new media" onClick={() => onChange([...items, ""])}>
-        +
-      </button>
-      <button type="button" className="add-list-rem-btn" title="remove media" onClick={() => onChange(items.slice(0, -1))}>
-        -
-      </button>
-      {(items.length ? items : [""]).map((item, index) => (
-        <MediaPicker
-          key={index}
-          label={`Gallery media ${index + 1}`}
-          value={item}
-          onChange={(value) => updateItem(index, value)}
-          onFileChange={(file) => updateFile(index, file)}
-          onRemove={() => removeItem(index)}
-          aspectRatio={4 / 3}
-          allowVideo
-        />
-      ))}
+    <div>
+      <input
+        ref={inputRef}
+        type="file"
+        name="gallery_image[]"
+        accept="image/*,.jpg,.jpeg,.png"
+        multiple
+        style={{ display: "none" }}
+        onChange={(event) => handleFilesChange(event.target.files)}
+      />
+      <div className="imageuploadify well">
+        <div className="imageuploadify-overlay">
+          <i className="fa fa-picture-o"></i>
+        </div>
+        <div className="imageuploadify-images-list text-center">
+          <img src="/template-17/images/icon/upload.png" alt="" />
+          <span className="imageuploadify-message">
+            Drag&amp;Drop your image here or <button type="button" className="btn-default" onClick={() => inputRef.current?.click()}>select file to upload</button>
+          </span>
+          <span className="img-notes">Supports: JPG,JPEG and PNG</span>
+          {files.map((item) => (
+            <div className="imageuploadify-container" key={item.marker}>
+              <button type="button" className="btn btn-danger" onClick={() => {
+                onFilesChange(files.filter((file) => file.marker !== item.marker));
+                onChange(items.filter((value) => value !== item.marker));
+              }}>
+                <i className="material-icons">close</i>
+              </button>
+              <div className="imageuploadify-details">
+                <span>{item.file.name}</span>
+                <span>{item.file.type}</span>
+                <span>{item.file.size}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
-function MediaPicker({
-  label,
-  value,
+function RestaurantInfoFields({
+  restaurantInfo,
   onChange,
-  onFileChange,
-  onRemove,
-  aspectRatio,
-  allowVideo = false,
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  onFileChange?: (file: File | null) => void;
-  onRemove?: () => void;
-  aspectRatio: number;
-  allowVideo?: boolean;
+  restaurantInfo: RestaurantInfo;
+  onChange: (value: RestaurantInfo) => void;
 }) {
-  const imageRef = useRef<HTMLImageElement | null>(null);
-  const [draftUrl, setDraftUrl] = useState(value);
-  const [draftType, setDraftType] = useState<"image" | "video" | "">("");
-  const [zoom, setZoom] = useState(1);
-  const [positionX, setPositionX] = useState(50);
-  const [positionY, setPositionY] = useState(50);
-  const [selectedName, setSelectedName] = useState("");
-  const isVideo = draftType === "video" || isVideoValue(draftUrl);
-  const isImage = draftType === "image" || isImageValue(draftUrl);
-  const previewUrl = draftUrl && !draftUrl.startsWith("data:") && !draftUrl.startsWith("blob:")
-    ? resolveListingImageUrl(draftUrl)
-    : draftUrl;
-  const inputId = `listing-media-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  return (
+    <>
+      <h5 className="mt-3 mb-3">Restaurant Info</h5>
+      <div className="row">
+        <InputColumn placeholder="Restaurant Name" value={restaurantInfo.restaurantName} onChange={(value) => onChange({ ...restaurantInfo, restaurantName: value })} />
+        <InputColumn placeholder="Tagline" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
+      </div>
+      <div className="row">
+        <SelectColumn placeholder="Cuisine" value={restaurantInfo.cuisine} options={["Indian", "Chinese", "Italian", "Mexican"]} onChange={(value) => onChange({ ...restaurantInfo, cuisine: value })} />
+        <SelectColumn placeholder="Food Type" value={restaurantInfo.foodType} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => onChange({ ...restaurantInfo, foodType: value })} />
+      </div>
+    </>
+  );
+}
 
-  useEffect(() => {
-    if (isUploadMarker(value)) {
-      return;
-    }
+function BusinessHoursEditor({
+  hours,
+  onChange,
+}: {
+  hours: BusinessHour[];
+  onChange: (value: BusinessHour[]) => void;
+}) {
+  const [bulkHour, setBulkHour] = useState({ status: "Open", open: "", close: "" });
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
-    setDraftUrl(value);
-    setDraftType("");
-  }, [value]);
-
-  function handleFileChange(files: FileList | null) {
-    const file = files?.[0];
-    if (!file) return;
-
-    onFileChange?.(file);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const nextValue = String(reader.result || "");
-      setDraftUrl(nextValue);
-      setDraftType(file.type.startsWith("video/") ? "video" : "image");
-      setSelectedName(file.name);
-      setZoom(1);
-      setPositionX(50);
-      setPositionY(50);
-      if (!onFileChange) {
-        onChange(nextValue);
-      }
-    };
-    reader.readAsDataURL(file);
+  function updateHour(index: number, value: BusinessHour) {
+    onChange(updateArrayItem(hours, index, value));
   }
 
-  function applyCrop() {
-    if (!isImage || !draftUrl) {
-      onChange(draftUrl);
+  function applyHours(targetDays: string[]) {
+    if (!targetDays.length) {
       return;
     }
 
-    const image = imageRef.current;
-    if (!image?.naturalWidth || !image.naturalHeight) {
-      onChange(draftUrl);
-      return;
-    }
-
-    const croppedUrl = cropImageToDataUrl(image, aspectRatio, zoom, positionX, positionY);
-    onChange(croppedUrl);
-    setDraftUrl(croppedUrl);
-    setZoom(1);
-    setPositionX(50);
-    setPositionY(50);
+    onChange(hours.map((hour) => (
+      targetDays.includes(hour.day)
+        ? { ...hour, status: bulkHour.status, open: bulkHour.open, close: bulkHour.close }
+        : hour
+    )));
   }
 
-  void onRemove;
-  void applyCrop;
+  function toggleSelectedDay(day: string) {
+    setSelectedDays((items) => (
+      items.includes(day)
+        ? items.filter((item) => item !== day)
+        : [...items, day]
+    ));
+  }
 
   return (
-    <div className="listing-media-picker">
-      <div className="listing-media-head">
-        <label htmlFor={inputId}>{label}</label>
-        {selectedName ? <span>{selectedName}</span> : null}
-      </div>
-      <input
-        id={inputId}
-        type="file"
-        accept={allowVideo ? "image/*,video/*,.jpg,.jpeg,.png,.mp4,.webm,.mov" : "image/*,.jpg,.jpeg,.png"}
-        className="listing-media-input"
-        onChange={(event) => handleFileChange(event.target.files)}
-      />
-      {!draftUrl ? (
-        <label className="listing-media-empty" htmlFor={inputId}>
-          <span className="material-icons">cloud_upload</span>
-          <strong>Choose media</strong>
-          <small>{allowVideo ? "JPG, PNG, MP4, WEBM" : "JPG or PNG image"}</small>
-        </label>
-      ) : null}
-      {draftUrl ? (
-        <div className="listing-media-tools">
-          <div className="listing-media-frame-wrap">
-            <div className="listing-media-frame" style={{ aspectRatio }}>
-              {isVideo ? (
-                <video
-                  src={previewUrl}
-                  controls
-                  style={{ objectPosition: `${positionX}% ${positionY}%`, transform: `scale(${zoom})` }}
-                />
-              ) : (
-                <img
-                  ref={imageRef}
-                  src={previewUrl}
-                  alt=""
-                  style={{ objectPosition: `${positionX}% ${positionY}%`, transform: `scale(${zoom})` }}
-                />
-              )}
+    <ListingSectionCard title="Business Hours">
+      <div className="listing-hours-tools">
+        <div className="listing-hours-bulk">
+          <div className="listing-hours-bulk-row">
+            <div className="listing-hours-bulk-fields">
+              <select className="form-control" value={bulkHour.status} onChange={(event) => setBulkHour((value) => ({ ...value, status: event.target.value }))}>
+                <option>Open</option>
+                <option>Closed</option>
+              </select>
+              <input type="time" className="form-control" value={bulkHour.open} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, open: event.target.value }))} />
+              <input type="time" className="form-control" value={bulkHour.close} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, close: event.target.value }))} />
             </div>
           </div>
-          {/* <div className="listing-media-side">
-            <div className="listing-media-controls">
-              <label>
-                <span>Zoom</span>
-                <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} />
-              </label>
-              <label>
-                <span>Horizontal</span>
-                <input type="range" min="0" max="100" value={positionX} onChange={(event) => setPositionX(Number(event.target.value))} />
-              </label>
-              <label>
-                <span>Vertical</span>
-                <input type="range" min="0" max="100" value={positionY} onChange={(event) => setPositionY(Number(event.target.value))} />
-              </label>
+          <div className="listing-hours-bulk-row">
+            <div className="listing-hours-day-select">
+              {hours.map((hour) => (
+                <div className="chbox" key={`selected-${hour.day}`}>
+                  <input
+                    id={`business-hour-${hour.day.toLowerCase()}`}
+                    type="checkbox"
+                    checked={selectedDays.includes(hour.day)}
+                    onChange={() => toggleSelectedDay(hour.day)}
+                  />
+                  <label htmlFor={`business-hour-${hour.day.toLowerCase()}`}>{hour.day.slice(0, 3).toUpperCase()}</label>
+                </div>
+              ))}
             </div>
-            <div className="listing-media-actions">
-              <button type="button" className="listing-media-button listing-media-button-primary" onClick={applyCrop}>
-              {isVideo ? "Use video preview" : "Crop image"}
-              </button>
-              <label className="listing-media-button" htmlFor={inputId}>Change</label>
-              <button type="button" className="listing-media-button" onClick={() => { setDraftUrl(""); setSelectedName(""); onFileChange?.(null); onChange(""); }}>
-                Clear
-              </button>
-              {onRemove ? (
-                <button type="button" className="listing-media-button" onClick={onRemove}>
-                  Remove
-                </button>
-              ) : null}
-            </div>
-          </div> */}
+          </div>
+          <div className="listing-hours-action-row">
+            <button type="button" className="btn btn-primary" onClick={() => applyHours(hours.map((hour) => hour.day))}>
+              Apply all
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => applyHours(selectedDays)}>
+              Apply selected
+            </button>
+          </div>
         </div>
-      ) : null}
+      </div>
+      <div className="listing-hours-grid">
+        <div className="listing-hours-grid-head">
+          <span>Day</span>
+          <span>Status</span>
+          <span>Opening</span>
+          <span>Closing</span>
+        </div>
+        {hours.map((hour, index) => (
+          <div className="listing-hours-row" key={hour.day}>
+            <div className="listing-hours-day">{hour.day}</div>
+            <div>
+              <select className="form-control" value={hour.status} onChange={(event) => updateHour(index, { ...hour, status: event.target.value })}>
+                <option>Open</option>
+                <option>Closed</option>
+              </select>
+            </div>
+            <div>
+              <input type="time" className="form-control" value={hour.open} disabled={hour.status === "Closed"} onChange={(event) => updateHour(index, { ...hour, open: event.target.value })} />
+            </div>
+            <div>
+              <input type="time" className="form-control" value={hour.close} disabled={hour.status === "Closed"} onChange={(event) => updateHour(index, { ...hour, close: event.target.value })} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </ListingSectionCard>
+  );
+}
+
+function ContactLocationFields({
+  contactInfo,
+  onChange,
+}: {
+  contactInfo: ContactInfo;
+  onChange: (value: ContactInfo) => void;
+}) {
+  useEffect(() => {
+    const zipcode = contactInfo.zipcode.trim();
+
+    if (!/^\d{5}$/.test(zipcode) && !/^\d{6}$/.test(zipcode)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      lookupPostalCodeLocation(
+        zipcode,
+        zipcode.length === 6 ? "India" : "US",
+        controller.signal,
+      )
+        .then((location) => {
+          if (!location || contactInfo.zipcode.trim() !== zipcode) {
+            return;
+          }
+
+          onChange({
+            ...contactInfo,
+            city: location.city || contactInfo.city,
+            state: location.state || contactInfo.state,
+          });
+        })
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === "AbortError") {
+            return;
+          }
+        });
+    }, 500);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [contactInfo.zipcode, onChange]);
+
+  return (
+    <>
+      <ListingSectionCard title="Contact & Location">
+        <div className="row">
+          <LabeledInputColumn label="Main Phone *" placeholder="" value={contactInfo.mainPhone} onChange={(value) => onChange({ ...contactInfo, mainPhone: value })} />
+          <LabeledInputColumn label="Alternate Phone" placeholder="" value={contactInfo.alternatePhone} onChange={(value) => onChange({ ...contactInfo, alternatePhone: value })} />
+        </div>
+        <div className="row">
+          <LabeledInputColumn label="Toll Free" placeholder="" value={contactInfo.tollFree} onChange={(value) => onChange({ ...contactInfo, tollFree: value })} />
+          <LabeledInputColumn label="Email *" placeholder="" type="email" value={contactInfo.email} onChange={(value) => onChange({ ...contactInfo, email: value })} />
+        </div>
+      </ListingSectionCard>
+      <ListingSectionCard title="Address" className="listing-address-card">
+        <Input placeholder="Street Address" value={contactInfo.streetAddress} onChange={(value) => onChange({ ...contactInfo, streetAddress: value })} />
+        <Input placeholder="Suite No Flat No" value={contactInfo.suite} onChange={(value) => onChange({ ...contactInfo, suite: value })} />
+        <Input placeholder="Zipcode" value={contactInfo.zipcode} onChange={(value) => onChange({ ...contactInfo, zipcode: value })} />
+        <div className="row">
+          <InputColumn placeholder="City" value={contactInfo.city} onChange={(value) => onChange({ ...contactInfo, city: value })} />
+          <InputColumn placeholder="State" value={contactInfo.state} onChange={(value) => onChange({ ...contactInfo, state: value })} />
+        </div>
+      </ListingSectionCard>
+    </>
+  );
+}
+
+function WebLinksFields({
+  webLinks,
+  onChange,
+}: {
+  webLinks: WebLinks;
+  onChange: (value: WebLinks) => void;
+}) {
+  return (
+    <>
+      <div className="row">
+        <h4 className="mt-2">Websites</h4>
+        <InputColumnWithLabel label="Main Website" placeholder="https://example.com" type="url" value={webLinks.mainWebsite} onChange={(value) => onChange({ ...webLinks, mainWebsite: value })} />
+        <InputColumnWithLabel label="Display Website" placeholder="https://example.com" type="url" value={webLinks.displayWebsite} onChange={(value) => onChange({ ...webLinks, displayWebsite: value })} />
+        <InputColumnWithLabel label="iOS App URL" placeholder="App Store link" type="url" value={webLinks.iosApp} onChange={(value) => onChange({ ...webLinks, iosApp: value })} />
+        <InputColumnWithLabel label="Android App URL" placeholder="Play Store link" type="url" value={webLinks.androidApp} onChange={(value) => onChange({ ...webLinks, androidApp: value })} />
+      </div>
+    </>
+  );
+}
+
+function SocialLinksFields({
+  socialLinks,
+  onChange,
+}: {
+  socialLinks: SocialLinks;
+  onChange: (value: SocialLinks) => void;
+}) {
+  return (
+    <div className="row">
+      <h4 className="mt-2">Social Media</h4>
+      <InputColumnWithLabel label="Facebook" placeholder="Facebook link" value={socialLinks.facebook} onChange={(value) => onChange({ ...socialLinks, facebook: value })} />
+      <InputColumnWithLabel label="Instagram" placeholder="Instagram link" value={socialLinks.instagram} onChange={(value) => onChange({ ...socialLinks, instagram: value })} />
+      <InputColumnWithLabel label="Twitter" placeholder="Twitter link" value={socialLinks.twitter} onChange={(value) => onChange({ ...socialLinks, twitter: value })} />
+      <InputColumnWithLabel label="LinkedIn" placeholder="LinkedIn link" value={socialLinks.linkedin} onChange={(value) => onChange({ ...socialLinks, linkedin: value })} />
     </div>
+  );
+}
+
+function InputColumnWithLabel({ label, placeholder, value, onChange, type = "text" }: FieldProps & { label: string; type?: string }) {
+  return (
+    <div className="col-md-6">
+      <div className="form-group">
+        <label>{label}</label>
+        <input className="form-control" type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+      </div>
+    </div>
+  );
+}
+
+function ProductsServicesFields({
+  products,
+  services,
+  brands,
+  onProductsChange,
+  onServicesChange,
+  onBrandsChange,
+}: {
+  products: string[];
+  services: ServiceItem[];
+  brands: string[];
+  onProductsChange: (value: string[]) => void;
+  onServicesChange: (value: ServiceItem[]) => void;
+  onBrandsChange: (value: string[]) => void;
+}) {
+  return (
+    <>
+      <DynamicTextList title="Products" addLabel="+ Add Product" placeholder="Enter product" items={products} onChange={onProductsChange} />
+      <DynamicTextList
+        title="Services"
+        addLabel="+ Add Service"
+        placeholder="Enter service"
+        items={services.map((service) => service.name)}
+        onChange={(items) => onServicesChange(items.map((name, index) => ({ name, imageName: services[index]?.imageName || "" })))}
+      />
+      <DynamicTextList title="Brands" addLabel="+ Add brands" placeholder="Enter brand" items={brands} onChange={onBrandsChange} />
+    </>
+  );
+}
+
+function DynamicTextList({
+  title,
+  addLabel,
+  placeholder,
+  items,
+  onChange,
+}: {
+  title: string;
+  addLabel: string;
+  placeholder: string;
+  items: string[];
+  onChange: (value: string[]) => void;
+}) {
+  const normalizedItems = items.length ? items : [""];
+
+  function updateItem(index: number, value: string) {
+    onChange(updateArrayItem(normalizedItems, index, value));
+  }
+
+  function removeItem(index: number) {
+    onChange(normalizedItems.length > 1 ? normalizedItems.filter((_, itemIndex) => itemIndex !== index) : [""]);
+  }
+
+  return (
+    <li>
+      <h4 className="mt-4">{title}</h4>
+      {normalizedItems.map((item, index) => (
+        <div className="row" key={`${title}-${index}`}>
+          <InputColumn width="col-md-10" placeholder={placeholder} value={item} onChange={(value) => updateItem(index, value)} />
+          <div className="col-md-2">
+            <button type="button" className="btn btn-danger" onClick={() => removeItem(index)}>X</button>
+          </div>
+        </div>
+      ))}
+      <button type="button" className="btn btn-success mt-2" onClick={() => onChange([...normalizedItems, ""])}>
+        {addLabel}
+      </button>
+    </li>
+  );
+}
+
+function PaymentMethodsFields({
+  paymentMethods,
+  onChange,
+}: {
+  paymentMethods: PaymentMethods;
+  onChange: (value: PaymentMethods) => void;
+}) {
+  return (
+    <>
+      <h4 className="mt-4">Payment Methods</h4>
+      <div className="row listing-amenity-row">
+        <div className="col-md-6">
+          <CheckboxField label="Credit Card" checked={paymentMethods.creditCard} onChange={(value) => onChange({ ...paymentMethods, creditCard: value })} />
+          <CheckboxField label="Cash" checked={paymentMethods.cash} onChange={(value) => onChange({ ...paymentMethods, cash: value })} />
+          <CheckboxField label="UPI" checked={paymentMethods.upi} onChange={(value) => onChange({ ...paymentMethods, upi: value })} />
+        </div>
+        <div className="col-md-6">
+          <CheckboxField label="Google Pay" checked={paymentMethods.googlePay} onChange={(value) => onChange({ ...paymentMethods, googlePay: value })} />
+          <CheckboxField label="Apple Pay" checked={paymentMethods.applePay} onChange={(value) => onChange({ ...paymentMethods, applePay: value })} />
+          <CheckboxField label="Insurance" checked={paymentMethods.insurance} onChange={(value) => onChange({ ...paymentMethods, insurance: value })} />
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -1356,12 +1694,14 @@ function StepNavigation({
   onCancel,
   onPrevious,
   onNext,
+  onSkip,
   progress,
 }: {
   isFirst?: boolean;
   onCancel?: () => void;
   onPrevious?: () => void;
   onNext: () => void;
+  onSkip?: () => void;
   progress: number;
 }) {
   return (
@@ -1375,6 +1715,11 @@ function StepNavigation({
         <div className="col-md-6">
           <button type="button" className="btn btn-primary" onClick={onNext}>Next</button>
         </div>
+        {onSkip ? (
+          <div className="col-md-12">
+            <a href="#skip" className="skip" onClick={(event) => { event.preventDefault(); onSkip(); }}>Skip this &gt;&gt;</a>
+          </div>
+        ) : null}
       </div>
       <Progress value={progress} />
     </>
@@ -1395,6 +1740,14 @@ function buildListingPayload(
   offers: OfferItem[],
   infoItems: InfoItem[],
   sellerName: string,
+  businessHours: BusinessHour[],
+  contactInfo: ContactInfo,
+  webLinks: WebLinks,
+  socialLinks: SocialLinks,
+  products: string[],
+  brands: string[],
+  paymentMethods: PaymentMethods,
+  restaurantInfo: RestaurantInfo,
 ): UpsertListingPayload {
   return {
     title: form.title.trim(),
@@ -1427,6 +1780,15 @@ function buildListingPayload(
       services: JSON.stringify(services.filter((item) => item.name.trim())),
       offers: JSON.stringify(offers.filter((item) => item.name.trim() || item.price.trim() || item.detail.trim())),
       otherInformation: JSON.stringify(infoItems.filter((item) => item.question.trim() || item.answer.trim())),
+      businessDescription: form.businessDescription.trim(),
+      businessHours: JSON.stringify(businessHours.filter((item) => item.status || item.open || item.close)),
+      additionalContactInfo: JSON.stringify(contactInfo),
+      webLinks: JSON.stringify(webLinks),
+      socialLinks: JSON.stringify(socialLinks),
+      products: JSON.stringify(products.map((item) => item.trim()).filter(Boolean)),
+      brands: JSON.stringify(brands.map((item) => item.trim()).filter(Boolean)),
+      paymentMethods: JSON.stringify(paymentMethods),
+      restaurantInfo: JSON.stringify(restaurantInfo),
     },
     priceDetails: {
       price: numberOrNull(form.price) ?? numberOrNull(offers[0]?.price) ?? 0,
@@ -1504,6 +1866,7 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     subCategory: listing.subCategory || "",
     detailCategory: listing.detailCategory || "",
     description: listing.description || "",
+    businessDescription: stringValue(propertyDetails.businessDescription),
     profileImageName,
     coverImageName,
     serviceLocations: stringValue(locationDetails.landmark),
@@ -1561,6 +1924,45 @@ function parseJsonArray<T>(value: unknown, fallback: T[]) {
   }
 }
 
+function parseJsonObject<T extends object>(value: unknown, fallback: T) {
+  if (typeof value !== "string" || !value.trim()) {
+    return fallback;
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? { ...fallback, ...parsed } as T
+      : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function parseServiceItems(value: unknown) {
+  const items = parseJsonArray<unknown>(value, []);
+
+  if (!items.length) {
+    return [{ name: "", imageName: "" }];
+  }
+
+  return items.map((item) => {
+    if (typeof item === "string") {
+      return { name: item, imageName: "" };
+    }
+
+    if (item && typeof item === "object") {
+      const record = item as Record<string, unknown>;
+      return {
+        name: stringValue(record.name),
+        imageName: stringValue(record.imageName),
+      };
+    }
+
+    return { name: "", imageName: "" };
+  });
+}
+
 function booleanSelectValue(value: unknown) {
   if (value === true) return "Yes";
   if (value === false) return "No";
@@ -1571,63 +1973,15 @@ function updateArrayItem<T>(items: T[], index: number, value: T) {
   return items.map((item, itemIndex) => (itemIndex === index ? value : item));
 }
 
-function updateInlineUploadFile(items: InlineUploadFile[], marker: string, file: File | null) {
-  const nextItems = items.filter((item) => item.marker !== marker);
-  return file ? [...nextItems, { marker, file }] : nextItems;
-}
-
 type FieldProps = {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
 };
 
-function cropImageToDataUrl(image: HTMLImageElement, aspectRatio: number, zoom: number, positionX: number, positionY: number) {
-  const sourceWidth = image.naturalWidth;
-  const sourceHeight = image.naturalHeight;
-  let cropWidth = sourceWidth / zoom;
-  let cropHeight = cropWidth / aspectRatio;
-
-  if (cropHeight > sourceHeight / zoom) {
-    cropHeight = sourceHeight / zoom;
-    cropWidth = cropHeight * aspectRatio;
-  }
-
-  const centerX = (positionX / 100) * sourceWidth;
-  const centerY = (positionY / 100) * sourceHeight;
-  const sourceX = clamp(centerX - cropWidth / 2, 0, sourceWidth - cropWidth);
-  const sourceY = clamp(centerY - cropHeight / 2, 0, sourceHeight - cropHeight);
-  const canvas = document.createElement("canvas");
-  const outputWidth = Math.min(1200, Math.round(cropWidth));
-  canvas.width = outputWidth;
-  canvas.height = Math.round(outputWidth / aspectRatio);
-  const context = canvas.getContext("2d");
-
-  if (!context) {
-    return image.src;
-  }
-
-  context.drawImage(image, sourceX, sourceY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.9);
-}
-
-function clamp(value: number, min: number, max: number) {
-  const upperBound = Math.max(min, max);
-  return Math.min(Math.max(value, min), upperBound);
-}
-
-function isImageValue(value: string) {
-  const normalized = value.trim().toLowerCase();
-  return Boolean(normalized) && !isUploadMarker(normalized) && !isVideoValue(normalized);
-}
-
 function isVideoValue(value: string) {
   const normalized = value.trim().toLowerCase();
   return normalized.startsWith("data:video/") || /\.(mp4|webm|mov|m4v)(\?|#|$)/.test(normalized);
-}
-
-function isUploadMarker(value: string) {
-  return value.startsWith("__") && value.endsWith("__");
 }
 
 function numberOrNull(value?: string) {
@@ -1642,26 +1996,31 @@ function boolOrNull(value?: string) {
 }
 
 function getListingKind(subCategory: string, detailCategory: string) {
-  if (["Office", "Shop", "Warehouse"].includes(detailCategory) || subCategory === "Commercial") return "Commercial";
-  if (["PG", "Single Room", "Shared Room", "Co-living"].includes(detailCategory) || subCategory === "PG") return "PG";
-  if (["Plot", "Residential Plot", "Commercial Plot"].includes(detailCategory) || subCategory === "Plot") return "Plot";
+  void detailCategory;
+
+  if (subCategory === "Commercial") return "Commercial";
+  if (subCategory === "PG") return "PG";
+  if (subCategory === "Plot") return "Plot";
+  if (["Restaurants", "Fast Food", "Cafes"].includes(subCategory)) return "Restaurant";
   return "Residential";
 }
 
-function getRequiredDetailFields(detailCategory: string): Array<[StringFormField, string]> {
-  if (["Apartment", "House", "Villa"].includes(detailCategory)) {
+function getRequiredDetailFields(subCategory: string, detailCategory: string): Array<[StringFormField, string]> {
+  void detailCategory;
+
+  if (subCategory === "Sale" || subCategory === "Rent") {
     return [["bhk", "BHK"], ["bathrooms", "Bathrooms"]];
   }
 
-  if (["Plot", "Residential Plot", "Commercial Plot"].includes(detailCategory)) {
+  if (subCategory === "Plot") {
     return [["plotArea", "Plot Area"]];
   }
 
-  if (["Office", "Shop", "Warehouse"].includes(detailCategory)) {
+  if (subCategory === "Commercial") {
     return [["area", "Area"], ["washrooms", "Washrooms"]];
   }
 
-  if (["PG", "Single Room", "Shared Room", "Co-living"].includes(detailCategory)) {
+  if (subCategory === "PG") {
     return [["roomType", "Room Type"], ["genderPreference", "Gender Preference"]];
   }
 

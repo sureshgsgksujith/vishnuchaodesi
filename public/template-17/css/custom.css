@@ -1992,3 +1992,264 @@
     background: #0d6efd;
     color: #fff;
 }
+
+.listing-section-stack {
+    padding: 0;
+    margin: 0;
+}
+
+.listing-section-stack > li {
+    list-style: none;
+    margin: 0 0 20px;
+}
+
+.listing-section-card {
+    padding: 28px 30px;
+    border: 1px solid #cdd8ee;
+    border-radius: 8px;
+    background: #f6f8ff;
+}
+
+.listing-section-card + .listing-section-card {
+    margin-top: 20px;
+}
+
+.listing-section-card h4 {
+    margin: 0 0 24px;
+    color: #0f172a;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.listing-section-card .row {
+    margin-bottom: 18px;
+}
+
+.listing-address-card {
+    padding-top: 34px;
+    padding-bottom: 28px;
+}
+
+.listing-address-card h4 {
+    margin-bottom: 32px;
+}
+
+.listing-address-card .row {
+    margin-bottom: 14px;
+}
+
+.listing-address-card .form-group {
+    margin-bottom: 14px;
+}
+
+.listing-address-card .form-control {
+    height: 54px;
+}
+
+.listing-address-card .row:last-child {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.listing-address-card .row:last-child .col-md-6:first-child {
+    padding-right: 16px;
+}
+
+.listing-address-card .row:last-child .col-md-6:last-child {
+    padding-left: 16px;
+}
+
+.listing-section-card label {
+    margin-bottom: 6px;
+    color: #2d374f;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.listing-section-card .form-group:last-child,
+.listing-section-card .row:last-child .form-group {
+    margin-bottom: 0;
+}
+
+.listing-hours-tools {
+    margin-bottom: 16px;
+    padding: 14px;
+    border: 1px solid #dde6f5;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.listing-hours-bulk-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.listing-hours-bulk-row + .listing-hours-bulk-row,
+.listing-hours-action-row {
+    margin-top: 10px;
+}
+
+.listing-hours-bulk-fields {
+    display: grid;
+    grid-template-columns: minmax(120px, .9fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+}
+
+.listing-hours-bulk-fields .form-control,
+.listing-hours-grid .form-control {
+    min-width: 0;
+    height: 38px;
+}
+
+.listing-hours-action-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.listing-hours-action-row .btn {
+    width: 100%;
+    margin-top: 0;
+    padding: 9px 10px;
+    white-space: nowrap;
+}
+
+.listing-hours-day-select {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    margin: 0;
+}
+
+.listing-hours-day-select .chbox {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+.listing-hours-day-select .chbox input {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    transform: translateY(-50%);
+    accent-color: #16a34a;
+    z-index: 1;
+}
+
+.listing-hours-day-select .chbox label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 30px;
+    padding: 7px 8px 7px 30px;
+    border: 1px solid #d6dfef;
+    border-radius: 6px;
+    margin: 0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    cursor: pointer;
+}
+
+.listing-hours-day-select .chbox input:checked + label {
+    border-color: #0d6efd;
+    background: #0d6efd;
+    color: #fff;
+}
+
+.listing-hours-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.listing-hours-grid-head,
+.listing-hours-row {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr 1fr 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.listing-hours-grid-head {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.listing-hours-row {
+    padding: 9px;
+    border: 1px solid #e0e7f2;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.listing-hours-day {
+    color: #1e293b;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.listing-hours-row .form-control:disabled,
+.listing-hours-bulk-fields .form-control:disabled {
+    background: #eef2f7;
+    color: #94a3b8;
+    cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+    .listing-section-card {
+        padding: 18px;
+    }
+
+    .listing-section-card h4 {
+        font-size: 20px;
+    }
+
+    .listing-address-card h4 {
+        margin-bottom: 22px;
+    }
+
+    .listing-address-card .row:last-child .col-md-6:first-child,
+    .listing-address-card .row:last-child .col-md-6:last-child {
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+
+    .listing-hours-bulk-row,
+    .listing-hours-bulk-fields,
+    .listing-hours-action-row,
+    .listing-hours-grid-head,
+    .listing-hours-row {
+        grid-template-columns: 1fr;
+    }
+
+    .listing-hours-day-select {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .listing-hours-grid-head {
+        display: none;
+    }
+
+    .listing-hours-day {
+        padding-bottom: 2px;
+    }
+}

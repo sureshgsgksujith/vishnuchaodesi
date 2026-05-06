@@ -4,6 +4,9 @@ const postalLookupBaseUrl =
 const indiaPostalLookupBaseUrl =
   import.meta.env.VITE_INDIA_POSTAL_LOOKUP_URL ||
   "https://api.postalpincode.in/pincode";
+const usPostalLookupBaseUrl =
+  import.meta.env.VITE_US_POSTAL_LOOKUP_URL ||
+  "https://api.zippopotam.us/us";
 
 const postalLookupCachePrefix = "postal_lookup:";
 const currentCountryCacheKey = "postal_lookup:current_country";
@@ -53,6 +56,16 @@ type IndiaPostalCodeResponse = {
   }> | null;
 };
 
+type UsPostalCodeResponse = {
+  country?: string;
+  "country abbreviation"?: string;
+  places?: Array<{
+    "place name"?: string;
+    state?: string;
+    "state abbreviation"?: string;
+  }>;
+};
+
 function normalizePostalCode(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
@@ -69,6 +82,18 @@ function isIndiaCountryHint(country?: string | null) {
     countryHint === "in" ||
     countryHint === "ind" ||
     countryHint === "india"
+  );
+}
+
+function isUnitedStatesCountryHint(country?: string | null) {
+  const countryHint = country?.trim().toLowerCase();
+
+  return (
+    !countryHint ||
+    countryHint === "us" ||
+    countryHint === "usa" ||
+    countryHint === "united states" ||
+    countryHint === "united states of america"
   );
 }
 
@@ -280,6 +305,43 @@ async function requestIndiaPostalLocation(
   };
 }
 
+async function requestUsPostalLocation(
+  postalCode: string,
+  country?: string,
+  signal?: AbortSignal,
+) {
+  if (!/^\d{5}$/.test(postalCode.trim()) || !isUnitedStatesCountryHint(country)) {
+    return null;
+  }
+
+  const url = new URL(`${usPostalLookupBaseUrl.replace(/\/$/, "")}/${postalCode}`);
+  const response = await fetch(url.toString(), {
+    headers: {
+      Accept: "application/json",
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const result = (await response.json()) as UsPostalCodeResponse;
+  const place = result.places?.[0];
+
+  if (!place) {
+    return null;
+  }
+
+  return {
+    country: result.country || "United States",
+    countryCode: result["country abbreviation"] || "US",
+    state: place.state || "",
+    district: "",
+    city: place["place name"] || "",
+  };
+}
+
 export async function lookupPostalCodeLocation(
   postalCode: string,
   country?: string,
@@ -301,6 +363,11 @@ export async function lookupPostalCodeLocation(
 
   let location =
     (await requestIndiaPostalLocation(
+      trimmedPostalCode,
+      countryHint || undefined,
+      signal,
+    )) ||
+    (await requestUsPostalLocation(
       trimmedPostalCode,
       countryHint || undefined,
       signal,
