@@ -13,6 +13,10 @@ export type ListingSummary = {
   status: string;
   views: number;
   rating: number;
+  rejectionCount: number;
+  rejectionReason?: string | null;
+  lastRejectedAt?: string | null;
+  canEdit: boolean;
   createdAt: string;
   updatedAt?: string | null;
   sellerName?: string | null;
@@ -66,11 +70,11 @@ export type ListingUploadFiles = {
   offerFiles?: Array<{ file: File; marker: string }>;
 };
 
-export async function getMyListings(search = "") {
+export async function getMyListings(search = "", page = 1, pageSize = 10) {
   const response = await apiClient.get<ListingListResponse>("/Listings/mine", {
     params: {
-      page: 1,
-      pageSize: 25,
+      page,
+      pageSize,
       search: search || undefined,
     },
     timeout: 8000,

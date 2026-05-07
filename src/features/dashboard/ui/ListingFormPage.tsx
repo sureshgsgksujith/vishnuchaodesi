@@ -9,6 +9,7 @@ import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
 import { resolveListingImageUrl } from "../utils/listingImages";
+import "../styles/listings.css";
 
 const wizardSteps = [
   { title: "Step 1", label: "Basic Info" },
@@ -276,6 +277,7 @@ export default function ListingFormPage() {
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>(initialPaymentMethods);
   const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>(initialRestaurantInfo);
   const [errorMessage, setErrorMessage] = useState("");
+  const [editLockedMessage, setEditLockedMessage] = useState("");
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [galleryFiles, setGalleryFiles] = useState<GalleryUploadFile[]>([]);
@@ -457,10 +459,14 @@ export default function ListingFormPage() {
 
     let isActive = true;
     setErrorMessage("");
+    setEditLockedMessage("");
 
     getListing(sourceListingId)
       .then((listing) => {
         if (!isActive) return;
+        if (isEditMode && listing.canEdit === false) {
+          setEditLockedMessage("This listing has been rejected 3 times and can no longer be edited.");
+        }
         const propertyDetails = listing.propertyDetails || {};
         setForm((currentForm) => mapListingToForm(listing, currentForm, !isEditMode));
         setServices(parseServiceItems(propertyDetails.services));
@@ -678,6 +684,11 @@ export default function ListingFormPage() {
   }
 
   async function saveListing(draft = getListingDraft()) {
+    if (editLockedMessage) {
+      setErrorMessage(editLockedMessage);
+      return false;
+    }
+
     if (!isEditMode && planUsage && !planUsage.canCreateListing) {
       setErrorMessage(`Your ${planUsage.plan.name} has reached the listing limit. Upgrade your plan to add more listings.`);
       return false;
@@ -756,6 +767,7 @@ export default function ListingFormPage() {
               <div className="log-bor">&nbsp;</div>
               <span className="steps">{wizardSteps[currentStep].title}</span>
               {errorMessage ? <div className="alert alert-danger listing-form-alert">{errorMessage}</div> : null}
+              {editLockedMessage ? <div className="listing-form-locked">{editLockedMessage}</div> : null}
 
               {currentStep === 0 ? (
                 <div className="log">
@@ -938,7 +950,7 @@ export default function ListingFormPage() {
                           <button type="button" className="btn btn-primary" onClick={handlePrevious}>Previous</button>
                         </div>
                         <div className="col-md-6">
-                          <button type="button" className="btn btn-primary" onClick={handleFinish} disabled={isSaving}>{isSaving ? "Saving..." : isEditMode ? "Save" : "Finish"}</button>
+                          <button type="button" className="btn btn-primary" onClick={handleFinish} disabled={isSaving || Boolean(editLockedMessage)}>{isSaving ? "Saving..." : isEditMode ? "Save" : "Finish"}</button>
                         </div>
                       </div>
                       <Progress value={90} />

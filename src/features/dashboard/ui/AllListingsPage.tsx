@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
@@ -11,29 +11,46 @@ import {
   resolveListingImageUrl,
   setFallbackListingImage,
 } from "../utils/listingImages";
+import "../styles/listings.css";
+
+const PAGE_SIZE = 10;
 
 export default function AllListingsPage() {
   const [items, setItems] = useState<ListingSummary[]>([]);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(totalCount / PAGE_SIZE)),
+    [totalCount],
+  );
+
   useEffect(() => {
     loadListings();
-  }, []);
+  }, [search, page]);
 
   async function loadListings() {
     try {
       setIsLoading(true);
       setErrorMessage("");
 
-      const result = await getMyListings();
+      const result = await getMyListings(search, page, PAGE_SIZE);
       setItems(result.items || []);
+      setTotalCount(result.totalCount || 0);
     } catch (error) {
       setErrorMessage(getListingApiErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
+  }
+
+  function handleSearch(value: string) {
+    setSearch(value);
+    setPage(1);
   }
 
   async function handleDelete(listingId: number) {
@@ -52,6 +69,7 @@ export default function AllListingsPage() {
       setItems((currentItems) =>
         currentItems.filter((item) => item.id !== listingId)
       );
+      setTotalCount((currentCount) => Math.max(0, currentCount - 1));
     } catch (error) {
       setErrorMessage(getListingApiErrorMessage(error));
     } finally {
@@ -80,21 +98,28 @@ export default function AllListingsPage() {
           </div>
         ) : null}
 
-        <div className="ud-cen-s2">
-          <h2>Listing Details</h2>
+        <div className="ud-cen-s2 dashboard-listings-panel">
+          <div className="dashboard-listings-toolbar">
+            <h2>Listing Details</h2>
 
-          <Link to="/dashboard/listings/start" className="db-tit-btn">
-            Add New Listing
-          </Link>
+            <input
+              type="text"
+              placeholder="Search listings..."
+              value={search}
+              onChange={(event) => handleSearch(event.target.value)}
+            />
+
+            <Link to="/dashboard/listings/start" className="db-tit-btn">
+              Add New Listing
+            </Link>
+          </div>
 
           <div className="table-responsive">
-            <table className="table bordered">
+            <table className="table bordered dashboard-listings-table">
               <thead>
                 <tr>
                   <th>No</th>
                   <th>Listing Name</th>
-                  <th>City</th>
-                  <th>Address</th>
                   <th>Rating</th>
                   <th>Views</th>
                   <th>Status</th>
@@ -107,28 +132,30 @@ export default function AllListingsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={10}>Loading listings...</td>
+                    <td colSpan={8}>Loading listings...</td>
                   </tr>
                 ) : items.length > 0 ? (
                   items.map((item, index) => (
                     <tr key={item.id}>
-                      <td>{index + 1}</td>
+                      <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
 
                       <td>
-                        <img
-                          src={resolveListingImageUrl(item.primaryImageUrl)}
-                          alt={item.title}
-                          onError={setFallbackListingImage}
-                        />
+                        <div className="dashboard-listing-title-cell">
+                          <img
+                            src={resolveListingImageUrl(item.primaryImageUrl)}
+                            alt={item.title}
+                            onError={setFallbackListingImage}
+                          />
 
-                        {item.title}
-
-                        <span>{formatDate(item.createdAt)}</span>
+                          <div>
+                            <strong>{item.title}</strong>
+                            <span>{formatDate(item.createdAt)}</span>
+                            {item.rejectionReason ? (
+                              <small>{item.rejectionReason}</small>
+                            ) : null}
+                          </div>
+                        </div>
                       </td>
-
-                      <td>{item.city || "-"}</td>
-
-                      <td>{item.locality || "-"}</td>
 
                       <td>
                         <span className="db-list-rat">
@@ -143,18 +170,29 @@ export default function AllListingsPage() {
                       </td>
 
                       <td>
-                        <span className="db-list-ststus">
+                        <span className={getStatusClass(item.status)}>
                           {item.status || "Pending"}
                         </span>
+                        {item.rejectionCount ? (
+                          <em className="dashboard-listing-reject-count">
+                            {item.rejectionCount}/3
+                          </em>
+                        ) : null}
                       </td>
 
                       <td>
-                        <Link
-                          to={`/dashboard/listings/${item.id}/edit`}
-                          className="db-list-edit"
-                        >
-                          Edit
-                        </Link>
+                        {item.canEdit === false ? (
+                          <span className="db-list-edit dashboard-listing-disabled">
+                            Locked
+                          </span>
+                        ) : (
+                          <Link
+                            to={`/dashboard/listings/${item.id}/edit`}
+                            className="db-list-edit"
+                          >
+                            Edit
+                          </Link>
+                        )}
                       </td>
 
                       <td>
@@ -182,11 +220,24 @@ export default function AllListingsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={10}>No listings found.</td>
+                    <td colSpan={8}>No listings found.</td>
                   </tr>
                 )}
               </tbody>
             </table>
+          </div>
+
+          <div className="dashboard-listings-pagination">
+            <span>{totalCount} listings</span>
+            <div>
+              <button type="button" onClick={() => setPage(page - 1)} disabled={page <= 1}>
+                Previous
+              </button>
+              <strong>{page} / {totalPages}</strong>
+              <button type="button" onClick={() => setPage(page + 1)} disabled={page >= totalPages}>
+                Next
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -210,4 +261,18 @@ function formatDate(value?: string | null) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function getStatusClass(status: string) {
+  const normalized = status.trim().toLowerCase();
+
+  if (normalized === "active") {
+    return "db-list-ststus dashboard-listing-approved";
+  }
+
+  if (normalized === "rejected") {
+    return "db-list-ststus dashboard-listing-rejected";
+  }
+
+  return "db-list-ststus dashboard-listing-waiting";
 }

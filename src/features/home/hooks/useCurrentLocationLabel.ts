@@ -10,6 +10,20 @@ type CoordinateReverseGeocodeResponse = {
   countryName?: string;
 };
 
+type OpenCageReverseGeocodeResponse = {
+  results?: Array<{
+    components?: {
+      _normalized_city?: string;
+      city?: string;
+      county?: string;
+      state?: string;
+      state_district?: string;
+      town?: string;
+      village?: string;
+    };
+  }>;
+};
+
 type IpLocationResponse = {
   city?: string;
   region?: string;
@@ -23,6 +37,10 @@ type CurrentLocationState = {
 };
 
 let currentLocationRequest: Promise<string | null> | null = null;
+
+const openCageApiKey =
+  import.meta.env.VITE_OPENCAGE_API_KEY ||
+  "586de5899207433193f8840870cc0379";
 
 const formatFallbackLocationLabel = (city?: string, state?: string, country?: string) => {
   const locationParts = [city, state || country].filter(Boolean);
@@ -50,7 +68,42 @@ const getBrowserPosition = () =>
     });
   });
 
-const reverseGeocodeCoordinates = async (latitude: number, longitude: number) => {
+const reverseGeocodeWithOpenCage = async (latitude: number, longitude: number) => {
+  if (!openCageApiKey) {
+    return null;
+  }
+
+  const params = new URLSearchParams({
+    q: `${latitude}+${longitude}`,
+    key: openCageApiKey,
+    language: "en",
+    no_annotations: "1",
+  });
+  const response = await fetch(`https://api.opencagedata.com/geocode/v1/json?${params.toString()}`);
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const data = (await response.json()) as OpenCageReverseGeocodeResponse;
+  const components = data.results?.[0]?.components;
+
+  if (!components) {
+    return null;
+  }
+
+  return formatFallbackLocationLabel(
+    components.state_district ||
+      components.city ||
+      components._normalized_city ||
+      components.town ||
+      components.village ||
+      components.county,
+    components.state,
+  );
+};
+
+const reverseGeocodeWithFallbackService = async (latitude: number, longitude: number) => {
   const params = new URLSearchParams({
     latitude: latitude.toString(),
     longitude: longitude.toString(),
@@ -70,6 +123,10 @@ const reverseGeocodeCoordinates = async (latitude: number, longitude: number) =>
     data.countryName,
   );
 };
+
+const reverseGeocodeCoordinates = async (latitude: number, longitude: number) =>
+  (await reverseGeocodeWithOpenCage(latitude, longitude)) ||
+  reverseGeocodeWithFallbackService(latitude, longitude);
 
 const getApproximateLocationFromIp = async () => {
   const response = await fetch("https://ipapi.co/json/");
