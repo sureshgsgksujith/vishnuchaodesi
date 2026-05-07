@@ -47,7 +47,7 @@ export default function HomeHeader() {
 
             <ul className="bl">
               <li>
-                <Link to="/register">Add business</Link>
+                <Link to="/login">Add business</Link>
               </li>
               <li>
                 <Link to="/login">Sign in</Link>
@@ -70,7 +70,7 @@ export default function HomeHeader() {
                 <div className="mv-bus">
                   <h4></h4>
                   <ul>
-                    <li><Link to="/register">Add business</Link></li>
+                    <li><Link to="/login">Add business</Link></li>
                     <li><Link to="/login">Sign in</Link></li>
                     <li><Link to="/register">Create an account</Link></li>
                   </ul>

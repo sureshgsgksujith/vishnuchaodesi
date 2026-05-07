@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 
 export default function HomeListBusinessSection() {
-  const addBusinessPath = isCustomerAuthenticated() ? "/dashboard/listings/new" : "/register";
+  const addBusinessPath = isCustomerAuthenticated() ? "/dashboard/listings/new" : "/login";
 
   return (
     <section>
