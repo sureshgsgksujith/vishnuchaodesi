@@ -30,6 +30,10 @@ export type ListingSummary = {
   amenities?: Record<string, boolean>;
   sellerInformation?: Record<string, string | boolean | null>;
   settings?: Record<string, string | number | boolean | null>;
+  restaurantFoodDetails?: Record<string, string | number | boolean | string[] | null>;
+  vehicleDetails?: Record<string, string | number | boolean | string[] | null>;
+  restaurantMenuItems?: Array<Record<string, string | number | boolean | null>>;
+  restaurantOperatingHours?: Array<Record<string, string | boolean | null>>;
   imageUrls?: string[];
   videoUrl?: string | null;
   virtualTourUrl?: string | null;
@@ -57,9 +61,15 @@ export type UpsertListingPayload = {
     imageUrls: string[];
     videoUrl?: string;
     virtualTourUrl?: string;
+    logoUrl?: string;
+    coverBannerUrl?: string;
   };
   sellerInformation: Record<string, string | boolean | null>;
   settings: Record<string, string | number | boolean | null>;
+  restaurantFoodDetails?: Record<string, string | number | boolean | string[] | null>;
+  vehicleDetails?: Record<string, string | number | boolean | string[] | null>;
+  restaurantMenuItems?: Array<Record<string, string | number | boolean | null>>;
+  restaurantOperatingHours?: Array<Record<string, string | boolean | null>>;
 };
 
 export type ListingUploadFiles = {

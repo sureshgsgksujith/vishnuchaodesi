@@ -79,6 +79,14 @@ export const fallbackListingCategoryTree: ListingCategoryOption[] = [
       { id: 1105, name: "Catering", slug: "catering", detailedCategories: [
         { id: 11005, name: "Event Catering", slug: "event-catering" },
       ] },
+      { id: 1106, name: "Bars & Beverages", slug: "bars-beverages", detailedCategories: [
+        { id: 11006, name: "Bar / Lounge", slug: "bar-lounge" },
+        { id: 11007, name: "Juice / Beverage Shop", slug: "juice-beverage-shop" },
+      ] },
+      { id: 1107, name: "Food Trucks & Pop-ups", slug: "food-trucks-pop-ups", detailedCategories: [
+        { id: 11008, name: "Food Truck", slug: "food-truck" },
+        { id: 11009, name: "Pop-up Kitchen", slug: "pop-up-kitchen" },
+      ] },
     ],
   },
   {

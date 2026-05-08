@@ -29,12 +29,54 @@ const galleryImageUploadMarkerPrefix = "__galleryFile_";
 type ServiceItem = { name: string; imageName: string };
 type OfferItem = { name: string; price: string; detail: string; imageName: string; link: string };
 type InfoItem = { question: string; answer: string };
-type BusinessHour = { day: string; status: string; open: string; close: string };
+type BusinessHour = { day: string; status: string; open: string; close: string; is24Hours: boolean; specialHoursNote: string };
 type ContactInfo = { mainPhone: string; alternatePhone: string; tollFree: string; email: string; streetAddress: string; suite: string; zipcode: string; city: string; state: string };
 type WebLinks = { mainWebsite: string; displayWebsite: string; iosApp: string; androidApp: string };
-type SocialLinks = { facebook: string; instagram: string; twitter: string; linkedin: string };
+type SocialLinks = { facebook: string; instagram: string; twitter: string; linkedin: string; tiktok: string; youtube: string };
 type PaymentMethods = { creditCard: boolean; cash: boolean; upi: boolean; googlePay: boolean; applePay: boolean; insurance: boolean };
-type RestaurantInfo = { restaurantName: string; tagline: string; cuisine: string; foodType: string };
+type RestaurantInfo = {
+  restaurantName: string;
+  tagline: string;
+  cuisine: string;
+  foodType: string;
+  businessType: string;
+  yearEstablished: string;
+  staffCount: string;
+  serviceTypes: string[];
+  serviceRadiusMiles: string;
+  averageCostForTwo: string;
+  discountsOffers: string;
+  couponCodes: string;
+  happyHours: string;
+  deliveryAvailable: boolean;
+  deliveryFee: string;
+  minimumOrderValue: string;
+  onlineOrdering: boolean;
+  thirdPartyIntegrations: string[];
+  amenities: string[];
+  foodLicenseNumber: string;
+  healthInspectionRating: string;
+  alcoholLicenseNumber: string;
+  tableBooking: boolean;
+  orderNow: boolean;
+  enableChat: boolean;
+  enableCall: boolean;
+  bulkOrderNotes: string;
+  customOrderOptions: string;
+  eventLocationNotes: string;
+  ageRestrictedNotice: string;
+};
+type RestaurantMenuItem = {
+  itemName: string;
+  menuCategory: string;
+  description: string;
+  price: string;
+  foodType: string;
+  calories: string;
+  imageUrl: string;
+  displayOrder: string;
+  isAvailable: boolean;
+};
 type CategoryAttributes = Record<string, string>;
 type CategoryAttributeField = {
   key: string;
@@ -68,6 +110,7 @@ type ListingDraft = {
   products: string[];
   profileImageFile: File | null;
   restaurantInfo: RestaurantInfo;
+  restaurantMenuItems: RestaurantMenuItem[];
   sellerName: string;
   services: ServiceItem[];
   serviceFiles: InlineUploadFile[];
@@ -108,6 +151,13 @@ type FormState = {
   bathrooms: string;
   balconies: string;
   furnishingType: string;
+  superBuiltUpArea: string;
+  carpetArea: string;
+  floorNumber: string;
+  totalFloors: string;
+  propertyAge: string;
+  availabilityType: string;
+  availabilityDate: string;
   plotArea: string;
   length: string;
   breadth: string;
@@ -127,13 +177,27 @@ type FormState = {
   priceNegotiable: string;
   maintenanceCharges: string;
   securityDeposit: string;
+  pricePerSqFt: string;
   loanEligible: boolean;
+  sellerType: string;
+  reraNumber: string;
+  ownershipType: string;
+  latitude: string;
+  longitude: string;
+  adType: string;
+  adDurationDays: string;
+  autoRenew: boolean;
+  metaTitle: string;
+  metaDescription: string;
   amenityParking: boolean;
   amenityLift: boolean;
+  amenityPowerBackup: boolean;
+  amenitySecurity: boolean;
   amenityGym: boolean;
   amenityCctv: boolean;
   amenitySwimmingPool: boolean;
   amenityGarden: boolean;
+  amenityChildrensPlayArea: boolean;
 };
 
 type BooleanFormField = {
@@ -171,6 +235,13 @@ const initialForm: FormState = {
   bathrooms: "",
   balconies: "",
   furnishingType: "",
+  superBuiltUpArea: "",
+  carpetArea: "",
+  floorNumber: "",
+  totalFloors: "",
+  propertyAge: "",
+  availabilityType: "",
+  availabilityDate: "",
   plotArea: "",
   length: "",
   breadth: "",
@@ -190,13 +261,27 @@ const initialForm: FormState = {
   priceNegotiable: "Negotiable",
   maintenanceCharges: "",
   securityDeposit: "",
+  pricePerSqFt: "",
   loanEligible: false,
+  sellerType: "Owner",
+  reraNumber: "",
+  ownershipType: "",
+  latitude: "",
+  longitude: "",
+  adType: "Free",
+  adDurationDays: "30",
+  autoRenew: false,
+  metaTitle: "",
+  metaDescription: "",
   amenityParking: false,
   amenityLift: false,
+  amenityPowerBackup: false,
+  amenitySecurity: false,
   amenityGym: false,
   amenityCctv: false,
   amenitySwimmingPool: false,
   amenityGarden: false,
+  amenityChildrensPlayArea: false,
 };
 
 const defaultBusinessHours: BusinessHour[] = [
@@ -207,7 +292,7 @@ const defaultBusinessHours: BusinessHour[] = [
   "Friday",
   "Saturday",
   "Sunday",
-].map((day) => ({ day, status: "Open", open: "", close: "" }));
+].map((day) => ({ day, status: "Open", open: "", close: "", is24Hours: false, specialHoursNote: "" }));
 
 const initialContactInfo: ContactInfo = {
   mainPhone: "",
@@ -233,6 +318,8 @@ const initialSocialLinks: SocialLinks = {
   instagram: "",
   twitter: "",
   linkedin: "",
+  tiktok: "",
+  youtube: "",
 };
 
 const initialPaymentMethods: PaymentMethods = {
@@ -249,17 +336,56 @@ const initialRestaurantInfo: RestaurantInfo = {
   tagline: "",
   cuisine: "",
   foodType: "",
+  businessType: "",
+  yearEstablished: "",
+  staffCount: "",
+  serviceTypes: [],
+  serviceRadiusMiles: "",
+  averageCostForTwo: "",
+  discountsOffers: "",
+  couponCodes: "",
+  happyHours: "",
+  deliveryAvailable: false,
+  deliveryFee: "",
+  minimumOrderValue: "",
+  onlineOrdering: false,
+  thirdPartyIntegrations: [],
+  amenities: [],
+  foodLicenseNumber: "",
+  healthInspectionRating: "",
+  alcoholLicenseNumber: "",
+  tableBooking: false,
+  orderNow: false,
+  enableChat: true,
+  enableCall: true,
+  bulkOrderNotes: "",
+  customOrderOptions: "",
+  eventLocationNotes: "",
+  ageRestrictedNotice: "",
+};
+
+const initialRestaurantMenuItem: RestaurantMenuItem = {
+  itemName: "",
+  menuCategory: "",
+  description: "",
+  price: "",
+  foodType: "",
+  calories: "",
+  imageUrl: "",
+  displayOrder: "1",
+  isAvailable: true,
 };
 
 const commonConditionOptions = ["New", "Like New", "Good", "Fair", "Needs Repair"];
 const yesNoOptions = ["Yes", "No"];
 const vehicleConditionOptions = ["New", "Used"];
-const vehicleFuelOptions = ["Petrol", "Diesel", "Electric", "CNG", "Hybrid", "Not Applicable"];
+const vehicleFuelOptions = ["Petrol", "Diesel", "Electric", "CNG", "Hybrid", "Other"];
+const vehicleBrandOptions = ["Maruti Suzuki", "Hyundai", "Honda", "Toyota", "Tata", "Mahindra", "Kia", "MG", "Skoda", "Volkswagen", "Ford", "Renault", "Nissan", "BMW", "Mercedes-Benz", "Audi", "Royal Enfield", "Hero", "Honda Two Wheelers", "Bajaj", "TVS", "Yamaha", "KTM", "Ather", "Ola Electric", "Other"];
 const transmissionOptions = ["Manual", "Automatic", "Not Applicable"];
 const listingTypeOptions = ["Free", "Featured", "Premium"];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
-  { key: "brand", label: "Brand" },
+  { key: "brand", label: "Brand", options: vehicleBrandOptions },
   { key: "model", label: "Model" },
   { key: "variant", label: "Variant" },
   { key: "yearOfManufacture", label: "Year of Manufacture", type: "number" },
@@ -268,7 +394,7 @@ const vehicleCoreFields: CategoryAttributeField[] = [
   { key: "fuelType", label: "Fuel Type", options: vehicleFuelOptions },
   { key: "transmission", label: "Transmission", options: transmissionOptions },
   { key: "kilometersDriven", label: "KM Driven", type: "number" },
-  { key: "ownerCount", label: "Number of Owners", options: ["1st Owner", "2nd Owner", "3rd Owner", "4th Owner or More"] },
+  { key: "ownerCount", label: "Number of Owners", type: "number" },
   { key: "insurance", label: "Insurance", options: ["Active", "Expired"] },
   { key: "insuranceValidTill", label: "Insurance Valid Till", type: "date" },
   { key: "registrationState", label: "Registration State (RTO)" },
@@ -461,8 +587,8 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
     subCategories: {
       Cars: [
         ...vehicleCoreFields,
-        { key: "bodyType", label: "Body Type", options: ["Hatchback", "Sedan", "SUV"] },
-        { key: "seatingCapacity", label: "Seating Capacity", type: "number" },
+        { key: "bodyType", label: "Body Type", isRequired: true, options: ["Hatchback", "Sedan", "SUV", "MUV", "Coupe", "Convertible", "Other"] },
+        { key: "seatingCapacity", label: "Seating Capacity", isRequired: true, type: "number" },
         { key: "bootSpace", label: "Boot Space" },
         { key: "mileage", label: "Mileage (km/l)" },
         { key: "airConditioning", label: "Air Conditioning", type: "checkbox" },
@@ -477,25 +603,26 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
       ],
       Bikes: [
         ...vehicleCoreFields,
-        { key: "engineCapacity", label: "Engine Capacity (cc)", type: "number" },
+        { key: "engineCapacity", label: "Engine Capacity (cc)", isRequired: true, type: "number" },
         { key: "mileage", label: "Mileage" },
-        { key: "bikeType", label: "Bike Type", options: ["Sports", "Cruiser", "Scooter"] },
+        { key: "bikeType", label: "Bike Type", isRequired: true, options: ["Sports", "Cruiser", "Scooter", "Commuter", "Electric Bike", "Other"] },
       ],
       "Commercial Vehicles": [
         ...vehicleCoreFields,
-        { key: "vehicleType", label: "Vehicle Type", options: ["Truck", "Bus", "Van", "Pickup", "Other"] },
-        { key: "loadCapacity", label: "Load Capacity" },
-        { key: "numberOfWheels", label: "Number of Wheels", type: "number" },
-        { key: "permitType", label: "Permit Type", options: ["National", "State"] },
+        { key: "vehicleType", label: "Vehicle Type", isRequired: true, options: ["Truck", "Bus", "Pickup", "Van", "Tempo", "Tractor", "Other"] },
+        { key: "loadCapacity", label: "Load Capacity", isRequired: true, type: "number" },
+        { key: "numberOfWheels", label: "Number of Wheels", isRequired: true, type: "number" },
+        { key: "permitType", label: "Permit Type", isRequired: true, options: ["National", "State", "Local", "None"] },
       ],
       Rentals: [
         ...vehicleCoreFields,
-        { key: "rentalType", label: "Rental Type", options: ["Self-drive", "With driver"] },
-        { key: "pricePerHourDay", label: "Price per hour/day", type: "number" },
+        { key: "rentalType", label: "Rental Type", isRequired: true, options: ["Self-drive", "With Driver"] },
+        { key: "pricePerHour", label: "Price Per Hour", type: "number" },
+        { key: "pricePerDay", label: "Price Per Day", type: "number" },
         { key: "securityDepositVehicle", label: "Security Deposit", type: "number" },
       ],
       "Spare Parts & Accessories": [
-        { key: "partType", label: "Part Type", options: ["Tyres", "Battery", "Music System", "Other"] },
+        { key: "partType", label: "Part Type", isRequired: true, options: ["Tyres", "Battery", "Music System", "Lights", "Engine Parts", "Interior Accessories", "Exterior Accessories", "Other"] },
         { key: "compatibleModels", label: "Compatible Models" },
         { key: "brand", label: "Brand" },
         { key: "condition", label: "Condition", options: vehicleConditionOptions },
@@ -509,7 +636,7 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
         { key: "rangePerCharge", label: "Range Per Charge" },
         { key: "chargingTime", label: "Charging Time" },
         { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
-        { key: "ownerCount", label: "Owner Count", options: ["1st Owner", "2nd Owner", "3rd Owner", "4th Owner or More"] },
+        { key: "ownerCount", label: "Owner Count", type: "number" },
       ],
       "Tyres / Batteries": [
         { key: "itemType", label: "Item Type", options: ["Tyre", "Battery"] },
@@ -858,6 +985,7 @@ export default function ListingFormPage() {
   const [brands, setBrands] = useState<string[]>([""]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>(initialPaymentMethods);
   const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>(initialRestaurantInfo);
+  const [restaurantMenuItems, setRestaurantMenuItems] = useState<RestaurantMenuItem[]>([{ ...initialRestaurantMenuItem }]);
   const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttributes>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [editLockedMessage, setEditLockedMessage] = useState("");
@@ -1085,8 +1213,13 @@ export default function ListingFormPage() {
         setProducts(parseJsonArray<string>(propertyDetails.products, [""]));
         setBrands(parseJsonArray<string>(propertyDetails.brands, [""]));
         setPaymentMethods(parseJsonObject<PaymentMethods>(propertyDetails.paymentMethods, initialPaymentMethods));
-        setRestaurantInfo(parseJsonObject<RestaurantInfo>(propertyDetails.restaurantInfo, initialRestaurantInfo));
-        setCategoryAttributes(otherInformation.categoryAttributes);
+        setRestaurantInfo(mapRestaurantInfoFromListing(listing, propertyDetails));
+        setRestaurantMenuItems(mapRestaurantMenuItemsFromListing(listing));
+        setBusinessHours(mapRestaurantHoursFromListing(listing, propertyDetails));
+        setCategoryAttributes({
+          ...otherInformation.categoryAttributes,
+          ...mapVehicleAttributesFromListing(listing),
+        });
         setServiceFiles([]);
         setOfferFiles([]);
         setSavedListingId(isEditMode ? listing.id : null);
@@ -1123,6 +1256,7 @@ export default function ListingFormPage() {
     setBrands(draft.brands);
     setPaymentMethods(draft.paymentMethods);
     setRestaurantInfo(draft.restaurantInfo);
+    setRestaurantMenuItems(draft.restaurantMenuItems);
     setCategoryAttributes(draft.categoryAttributes);
     setProfileImageFile(draft.profileImageFile);
     setCoverImageFile(draft.coverImageFile);
@@ -1212,6 +1346,9 @@ export default function ListingFormPage() {
         if (value === "Restaurants & Food" && !nextForm.country) {
           nextForm.country = "United States";
         }
+        if (value === "Restaurants & Food" && !["30", "60", "90"].includes(nextForm.adDurationDays)) {
+          nextForm.adDurationDays = "30";
+        }
         setCategoryAttributes({});
       }
 
@@ -1234,6 +1371,13 @@ export default function ListingFormPage() {
         nextForm.bathrooms = "";
         nextForm.balconies = "";
         nextForm.furnishingType = "";
+        nextForm.superBuiltUpArea = "";
+        nextForm.carpetArea = "";
+        nextForm.floorNumber = "";
+        nextForm.totalFloors = "";
+        nextForm.propertyAge = "";
+        nextForm.availabilityType = "";
+        nextForm.availabilityDate = "";
         nextForm.plotArea = "";
         nextForm.length = "";
         nextForm.breadth = "";
@@ -1296,6 +1440,9 @@ export default function ListingFormPage() {
       ["state", "State"],
       ["city", "City"],
       ["address", "Address"],
+      ["pincode", "Pincode"],
+      ["mobileNumber", "Mobile Number"],
+      ["sellerType", "Seller Type"],
       ["categoryName", "Category"],
       ["subCategory", "Sub Category"],
       ["description", "Details about your listing"],
@@ -1312,6 +1459,24 @@ export default function ListingFormPage() {
       return false;
     }
 
+    if (!sellerName.trim()) {
+      setErrorMessage("Name is required.");
+      return false;
+    }
+
+    if (form.description.trim().length < 50) {
+      setErrorMessage("Description must be at least 50 characters.");
+      return false;
+    }
+
+    if (form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
+      return false;
+    }
+
+    if (form.categoryName === "Vehicles" && !validateVehicleFields()) {
+      return false;
+    }
+
     const missingDetailField = getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
 
     if (missingDetailField) {
@@ -1319,10 +1484,209 @@ export default function ListingFormPage() {
       return false;
     }
 
-    const missingDynamicField = dynamicCategoryFields.find((field) => field.isRequired && !categoryAttributes[field.key]?.trim());
+    if (form.availabilityType === "Date" && !form.availabilityDate.trim()) {
+      setErrorMessage("Availability Date is required.");
+      return false;
+    }
+
+    if (isRealEstateCategory(form.categoryName) && !form.price.trim()) {
+      setErrorMessage(isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
+      return false;
+    }
+
+    if (isRentRealEstateSubCategory(form.subCategory) && (!form.securityDeposit.trim() || !form.maintenanceCharges.trim())) {
+      setErrorMessage("Security Deposit and Maintenance Charges are required.");
+      return false;
+    }
+
+    const missingDynamicField = isRealEstateCategory(form.categoryName)
+      ? undefined
+      : dynamicCategoryFields.find((field) => field.isRequired && !categoryAttributes[field.key]?.trim());
 
     if (missingDynamicField) {
       setErrorMessage(`${missingDynamicField.label} is required.`);
+      return false;
+    }
+
+    return true;
+  }
+
+  function validateRestaurantFields() {
+    const year = numberOrNull(restaurantInfo.yearEstablished);
+
+    if (!restaurantInfo.restaurantName.trim()) {
+      setErrorMessage("Restaurant / Business Name is required.");
+      return false;
+    }
+
+    if (!restaurantInfo.cuisine.trim()) {
+      setErrorMessage("Cuisine Type is required.");
+      return false;
+    }
+
+    if (!restaurantInfo.businessType.trim()) {
+      setErrorMessage("Business Type is required.");
+      return false;
+    }
+
+    if (!year || year < 1800 || year > new Date().getFullYear()) {
+      setErrorMessage("Year Established should be a valid year.");
+      return false;
+    }
+
+    if (!restaurantInfo.serviceTypes.length) {
+      setErrorMessage("At least one Service Type is required.");
+      return false;
+    }
+
+    if (!/^\d{5}(-\d{4})?$/.test(form.pincode.trim())) {
+      setErrorMessage("ZIP Code should be a valid US ZIP format.");
+      return false;
+    }
+
+    if ((restaurantInfo.serviceTypes.includes("Delivery") || restaurantInfo.serviceTypes.includes("Catering") || form.subCategory === "Cloud Kitchen") && !restaurantInfo.serviceRadiusMiles.trim()) {
+      setErrorMessage("Service Radius is required for delivery, catering, and cloud kitchen listings.");
+      return false;
+    }
+
+    if (restaurantInfo.deliveryAvailable && (!restaurantInfo.deliveryFee.trim() || !restaurantInfo.minimumOrderValue.trim())) {
+      setErrorMessage("Delivery Fee and Minimum Order Value are required when delivery is available.");
+      return false;
+    }
+
+    if (form.subCategory === "Bars & Beverages" && !restaurantInfo.alcoholLicenseNumber.trim()) {
+      setErrorMessage("Alcohol License Number is required for Bars & Beverages.");
+      return false;
+    }
+
+    const filledMenuItems = restaurantMenuItems.filter((item) => item.itemName.trim() || item.menuCategory.trim() || item.price.trim());
+    const invalidMenuItem = filledMenuItems.find((item) => !item.itemName.trim() || !item.menuCategory.trim() || !item.foodType.trim() || numberOrNull(item.price) === null);
+    if (invalidMenuItem) {
+      setErrorMessage("Each menu item needs Item Name, Menu Category, Price, and Food Type.");
+      return false;
+    }
+
+    const invalidHours = businessHours.find((hour) => hour.status !== "Closed" && !hour.is24Hours && (!hour.open || !hour.close));
+    if (invalidHours) {
+      setErrorMessage(`${invalidHours.day} opening and closing time are required unless open 24/7.`);
+      return false;
+    }
+
+    return true;
+  }
+
+  function validateVehicleFields() {
+    const isAccessories = form.subCategory === "Spare Parts & Accessories";
+    const isRental = form.subCategory === "Rentals";
+    const condition = getAttributeValue(categoryAttributes, "vehicleCondition", "vehicle_condition", "condition");
+    const fuelType = getAttributeValue(categoryAttributes, "fuelType", "fuel_type");
+
+    const requiredFields = isAccessories
+      ? [
+          ["partType", "part_type", "Part Type"],
+          ["compatibleModels", "compatible_models", "Compatible Models"],
+          ["condition", "partCondition", "part_condition", "Condition"],
+        ]
+      : [
+          ["brand", "Brand"],
+          ["model", "Model"],
+          ["yearOfManufacture", "year_of_manufacture", "Year of Manufacture"],
+          ["vehicleCondition", "vehicle_condition", "Vehicle Condition"],
+          ["fuelType", "fuel_type", "Fuel Type"],
+          ["color", "Color"],
+        ];
+
+    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    if (missing) {
+      setErrorMessage(`${missing[missing.length - 1]} is required.`);
+      return false;
+    }
+
+    if (condition === "Used") {
+      const usedMissing = [
+        ["registrationYear", "registration_year", "Registration Year"],
+        ["kilometersDriven", "kilometers_driven", "kmDriven", "km_driven", "KM Driven"],
+        ["ownerCount", "owner_count", "numberOfOwners", "number_of_owners", "Number of Owners"],
+        ["rcAvailable", "rc_available", "RC Available"],
+        ["loanStatus", "loan_status", "Loan Status"],
+      ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+
+      if (usedMissing) {
+        setErrorMessage(`${usedMissing[usedMissing.length - 1]} is required for used vehicles.`);
+        return false;
+      }
+
+      if (fuelType && !["Electric", "Other"].includes(fuelType) && !getAttributeValue(categoryAttributes, "pucAvailable", "puc_available").trim()) {
+        setErrorMessage("PUC is required for used fuel-based vehicles.");
+        return false;
+      }
+    }
+
+    if (getAttributeValue(categoryAttributes, "insurance", "insuranceStatus", "insurance_status") === "Active" &&
+      !getAttributeValue(categoryAttributes, "insuranceValidTill", "insurance_valid_till").trim()) {
+      setErrorMessage("Insurance Valid Till is required when Insurance is Active.");
+      return false;
+    }
+
+    if (form.subCategory === "Cars") {
+      if (!getAttributeValue(categoryAttributes, "bodyType", "body_type").trim() || !getAttributeValue(categoryAttributes, "seatingCapacity", "seating_capacity").trim()) {
+        setErrorMessage("Body Type and Seating Capacity are required for Cars.");
+        return false;
+      }
+    }
+
+    if (form.subCategory === "Bikes") {
+      if (!getAttributeValue(categoryAttributes, "engineCapacity", "engine_capacity").trim() || !getAttributeValue(categoryAttributes, "bikeType", "bike_type").trim()) {
+        setErrorMessage("Engine Capacity and Bike Type are required for Bikes.");
+        return false;
+      }
+    }
+
+    if (form.subCategory === "Commercial Vehicles") {
+      const commercialMissing = [
+        ["vehicleType", "vehicle_type", "Vehicle Type"],
+        ["loadCapacity", "load_capacity", "Load Capacity"],
+        ["numberOfWheels", "number_of_wheels", "Number of Wheels"],
+        ["permitType", "permit_type", "Permit Type"],
+      ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+
+      if (commercialMissing) {
+        setErrorMessage(`${commercialMissing[commercialMissing.length - 1]} is required for Commercial Vehicles.`);
+        return false;
+      }
+    }
+
+    if (isRental) {
+      if (!getAttributeValue(categoryAttributes, "rentalType", "rental_type").trim()) {
+        setErrorMessage("Rental Type is required for Rentals.");
+        return false;
+      }
+
+      if (!getAttributeValue(categoryAttributes, "pricePerHour", "price_per_hour").trim() && !getAttributeValue(categoryAttributes, "pricePerDay", "price_per_day").trim()) {
+        setErrorMessage("At least one of Price Per Hour or Price Per Day is required.");
+        return false;
+      }
+    } else if (!form.price.trim()) {
+      setErrorMessage("Price is required for vehicle sale listings.");
+      return false;
+    }
+
+    return true;
+  }
+
+  function validateMedia() {
+    if (!isRealEstateCategory(form.categoryName) && form.categoryName !== "Vehicles") {
+      return true;
+    }
+
+    const imageCount = [
+      form.profileImageName,
+      form.coverImageName,
+      ...form.galleryMedia,
+    ].filter((value) => value.trim() && !isVideoValue(value)).length;
+
+    if (imageCount < 3 || imageCount > 15) {
+      setErrorMessage(`${form.categoryName} listings require minimum 3 and maximum 15 images.`);
       return false;
     }
 
@@ -1345,6 +1709,7 @@ export default function ListingFormPage() {
       products,
       profileImageFile,
       restaurantInfo,
+      restaurantMenuItems,
       sellerName,
       services,
       serviceFiles,
@@ -1382,6 +1747,7 @@ export default function ListingFormPage() {
         draft.brands,
         draft.paymentMethods,
         draft.restaurantInfo,
+        draft.restaurantMenuItems,
         draft.categoryAttributes,
       );
       const galleryMarkers = new Set(draft.form.galleryMedia);
@@ -1409,6 +1775,11 @@ export default function ListingFormPage() {
   async function handleFinish() {
     if (!validateStep(0)) {
       setCurrentStep(0);
+      return;
+    }
+
+    if (!validateMedia()) {
+      setCurrentStep(4);
       return;
     }
 
@@ -1445,18 +1816,34 @@ export default function ListingFormPage() {
                   <div className="login">
                     <h4>{isEditMode ? "Edit Listing" : "Listing Details"}</h4>
                     <form className="listing_form_1" noValidate>
-                      <Input placeholder="Listing Name*" value={sellerName} onChange={setSellerName} />
+                      <Input placeholder={form.categoryName === "Restaurants & Food" ? "Contact Person*" : "Listing Name*"} value={sellerName} onChange={setSellerName} />
                       <div className="row">
                         <InputColumn placeholder="Phone number" value={form.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
                         <InputColumn placeholder="Email Id" type="email" value={form.email} onChange={(value) => updateField("email", value)} />
                       </div>
                       <Input placeholder="Whatsapp Number (e.g. +919876543210)" value={form.whatsapp} onChange={(value) => updateField("whatsapp", value)} />
                       <Input placeholder="Website(www.Symplore)" value={form.website} onChange={(value) => updateField("website", value)} />
+                      {isRealEstateCategory(form.categoryName) ? (
+                        <>
+                          <Select placeholder="Seller Type*" value={form.sellerType} options={["Owner", "Agent", "Builder"]} onChange={(value) => updateField("sellerType", value)} />
+                          <div className="row">
+                            <InputColumn placeholder="RERA Number" value={form.reraNumber} onChange={(value) => updateField("reraNumber", value)} />
+                            <SelectColumn placeholder="Ownership Type" value={form.ownershipType} options={["Freehold", "Leasehold"]} onChange={(value) => updateField("ownershipType", value)} />
+                          </div>
+                        </>
+                      ) : null}
+                      {form.categoryName === "Vehicles" ? (
+                        <Select placeholder="Seller Type*" value={form.sellerType} options={["Owner", "Dealer"]} onChange={(value) => updateField("sellerType", value)} />
+                      ) : null}
                       <Select placeholder="Select Country*" value={form.country} options={countries.map((country) => country.name)} onChange={(value) => updateField("country", value)} />
                       <Select placeholder="Select State*" value={form.state} options={states.map((state) => state.name)} onChange={(value) => updateField("state", value)} disabled={!form.country} />
                       <Select placeholder="Select City*" value={form.city} options={cities.map((city) => city.name)} onChange={(value) => updateField("city", value)} disabled={!form.state} />
                       <Input placeholder="Shop address*" value={form.address} onChange={(value) => updateField("address", value)} />
                       <Input placeholder="Zip code" value={form.pincode} onChange={(value) => updateField("pincode", value)} />
+                      <div className="row">
+                        <InputColumn placeholder="Google Map Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
+                        <InputColumn placeholder="Google Map Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
+                      </div>
                       <Select placeholder="Select Category" value={form.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} />
                       <Select
                         placeholder="Select Sub Category"
@@ -1481,23 +1868,39 @@ export default function ListingFormPage() {
                             updateField={updateField}
                             updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
                           />
+                          <ListingSettingsFields
+                            form={form}
+                            updateField={updateField}
+                            updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
+                          />
                         </>
                       ) : null}
                       {form.categoryName === "Restaurants & Food" ? (
-                        <RestaurantInfoFields restaurantInfo={restaurantInfo} onChange={setRestaurantInfo} />
+                        <>
+                          <RestaurantInfoFields
+                            form={form}
+                            restaurantInfo={restaurantInfo}
+                            menuItems={restaurantMenuItems}
+                            onChange={setRestaurantInfo}
+                            onMenuItemsChange={setRestaurantMenuItems}
+                          />
+                          <RestaurantListingSettingsFields form={form} updateField={updateField} />
+                        </>
                       ) : null}
-                      {form.categoryName && !isRealEstateCategory(form.categoryName) ? (
+                      {form.categoryName && !isRealEstateCategory(form.categoryName) && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && form.subCategory === "Rentals") ? (
                         <ListingPriceFields form={form} updateField={updateField} />
                       ) : null}
-                      <CategoryAttributesFields
-                        categoryName={form.categoryName}
-                        subCategory={form.subCategory}
-                        detailCategory={form.detailCategory}
-                        form={form}
-                        dynamicFields={dynamicCategoryFields}
-                        values={categoryAttributes}
-                        onChange={setCategoryAttributes}
-                      />
+                      {!isRealEstateCategory(form.categoryName) && form.categoryName !== "Restaurants & Food" ? (
+                        <CategoryAttributesFields
+                          categoryName={form.categoryName}
+                          subCategory={form.subCategory}
+                          detailCategory={form.detailCategory}
+                          form={form}
+                          dynamicFields={dynamicCategoryFields}
+                          values={categoryAttributes}
+                          onChange={setCategoryAttributes}
+                        />
+                      ) : null}
                       <Textarea placeholder="Details about your listing" value={form.description} onChange={(value) => updateField("description", value)} />
                       <div className="row">
                         <TemplateImageColumn
@@ -1908,14 +2311,32 @@ function DetailCategoryFields({
     return (
       <>
         <h5 className="mt-3 mb-3">Residential Details</h5>
-        <Select placeholder="Property Type*" value={form.propertyType || form.detailCategory} options={includeCurrentValue(["Apartments / Flats", "Villas / Houses", "Builder Floors", "Apartment", "Villa", "House"], form.detailCategory)} onChange={(value) => updateField("propertyType", value)} />
+        <Select placeholder="Property Type*" value={form.propertyType || form.detailCategory} options={includeCurrentValue(["Apartment", "Villa", "House"], form.detailCategory)} onChange={(value) => updateField("propertyType", value)} />
         <div className="row">
-          <SelectColumn placeholder="BHK*" value={form.bhk} options={["1 BHK", "2 BHK", "3 BHK", "4+ BHK"]} onChange={(value) => updateField("bhk", value)} />
+          <SelectColumn placeholder="BHK*" value={form.bhk} options={["1", "2", "3", "4+"]} onChange={(value) => updateField("bhk", value)} />
           <InputColumn placeholder="Bathrooms*" type="number" value={form.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
         </div>
         <div className="row">
           <InputColumn placeholder="Balconies" type="number" value={form.balconies} onChange={(value) => updateField("balconies", value)} />
-          <SelectColumn placeholder="Furnishing" value={form.furnishingType} options={["Furnished", "Semi Furnished", "Unfurnished"]} onChange={(value) => updateField("furnishingType", value)} />
+          <SelectColumn placeholder="Furnishing*" value={form.furnishingType} options={["Unfurnished", "Semi Furnished", "Fully Furnished"]} onChange={(value) => updateField("furnishingType", value)} />
+        </div>
+        <div className="row">
+          <InputColumn placeholder="Super Built-up Area (sq ft)*" type="number" value={form.superBuiltUpArea} onChange={(value) => updateField("superBuiltUpArea", value)} />
+          <InputColumn placeholder="Carpet Area (sq ft)" type="number" value={form.carpetArea} onChange={(value) => updateField("carpetArea", value)} />
+        </div>
+        <div className="row">
+          <InputColumn placeholder="Floor Number*" type="number" value={form.floorNumber} onChange={(value) => updateField("floorNumber", value)} />
+          <InputColumn placeholder="Total Floors*" type="number" value={form.totalFloors} onChange={(value) => updateField("totalFloors", value)} />
+        </div>
+        <div className="row">
+          <SelectColumn placeholder="Property Age*" value={form.propertyAge} options={["New", "Less than 1 year", "1-5 years", "5+ years"]} onChange={(value) => updateField("propertyAge", value)} />
+          <SelectColumn placeholder="Facing*" value={form.facing} options={["East", "West", "North", "South"]} onChange={(value) => updateField("facing", value)} />
+        </div>
+        <div className="row">
+          <SelectColumn placeholder="Availability*" value={form.availabilityType} options={["Immediate", "Date"]} onChange={(value) => updateField("availabilityType", value)} />
+          {form.availabilityType === "Date" ? (
+            <InputColumn placeholder="Availability Date*" type="date" value={form.availabilityDate} onChange={(value) => updateField("availabilityDate", value)} />
+          ) : null}
         </div>
       </>
     );
@@ -1935,7 +2356,7 @@ function DetailCategoryFields({
         </div>
         <div className="row">
           <SelectColumn placeholder="Facing" value={form.facing} options={["East", "West", "North", "South"]} onChange={(value) => updateField("facing", value)} />
-          <InputColumn placeholder="Approval Type (DTCP / HMDA)" value={form.approvalType} onChange={(value) => updateField("approvalType", value)} />
+          <SelectColumn placeholder="Approval Type" value={form.approvalType} options={["DTCP", "HMDA", "Other"]} onChange={(value) => updateField("approvalType", value)} />
         </div>
         <Input placeholder="Road Width" type="number" value={form.roadWidth} onChange={(value) => updateField("roadWidth", value)} />
       </>
@@ -1966,8 +2387,8 @@ function DetailCategoryFields({
         <h5 className="mt-3 mb-3">PG / Co-living</h5>
         <Select placeholder="Room Type*" value={form.roomType} options={["Single", "Shared", "Co-living"]} onChange={(value) => updateField("roomType", value)} />
         <Select placeholder="Gender Preference*" value={form.genderPreference} options={["Male", "Female", "Any"]} onChange={(value) => updateField("genderPreference", value)} />
-        <Select placeholder="Food" value={form.foodIncluded} options={["Food Included", "No Food"]} onChange={(value) => updateField("foodIncluded", value)} />
-        <Input placeholder="Amenities (WiFi, AC, Laundry)" value={form.pgAmenities} onChange={(value) => updateField("pgAmenities", value)} />
+        <Select placeholder="Food Included" value={form.foodIncluded} options={["Yes", "No"]} onChange={(value) => updateField("foodIncluded", value)} />
+        <PgAmenitiesCheckboxes value={form.pgAmenities} onChange={(value) => updateField("pgAmenities", value)} />
       </>
     );
   }
@@ -2002,31 +2423,101 @@ function PriceAndAmenitiesFields({
   updateField: (name: StringFormField, value: string) => void;
   updateBooleanField: (name: BooleanFormField, value: boolean) => void;
 }) {
+  const isRent = isRentRealEstateSubCategory(form.subCategory);
+  const isSale = isSaleRealEstateSubCategory(form.subCategory);
+  const isPlot = isPlotRealEstateSubCategory(form.subCategory);
+  const pricePlaceholder = isRent ? "Monthly Rent*" : "Total Price*";
+
   return (
     <>
       <h5 className="mt-3 mb-3">Price Details</h5>
       <div className="row">
-        <InputColumn placeholder="Price / Rent" type="number" value={form.price} onChange={(value) => updateField("price", value)} />
+        <InputColumn placeholder={pricePlaceholder} type="number" value={form.price} onChange={(value) => updateField("price", value)} />
         <SelectColumn placeholder="Price Type" value={form.priceNegotiable} options={["Negotiable", "Fixed"]} onChange={(value) => updateField("priceNegotiable", value)} />
       </div>
-      <div className="row">
-        <InputColumn placeholder="Maintenance Charges" type="number" value={form.maintenanceCharges} onChange={(value) => updateField("maintenanceCharges", value)} />
-        <InputColumn placeholder="Security Deposit" type="number" value={form.securityDeposit} onChange={(value) => updateField("securityDeposit", value)} />
-      </div>
-      <CheckboxField label="Loan Eligible" checked={form.loanEligible} onChange={(value) => updateBooleanField("loanEligible", value)} />
+      {isRent ? (
+        <div className="row">
+          <InputColumn placeholder="Security Deposit*" type="number" value={form.securityDeposit} onChange={(value) => updateField("securityDeposit", value)} />
+          <InputColumn placeholder="Maintenance Charges*" type="number" value={form.maintenanceCharges} onChange={(value) => updateField("maintenanceCharges", value)} />
+        </div>
+      ) : null}
+      {isSale ? (
+        <>
+          <CheckboxField label="Loan Eligible" checked={form.loanEligible} onChange={(value) => updateBooleanField("loanEligible", value)} />
+          <Input placeholder="Maintenance Charges" type="number" value={form.maintenanceCharges} onChange={(value) => updateField("maintenanceCharges", value)} />
+        </>
+      ) : null}
+      {isPlot ? (
+        <Input placeholder="Price per sq ft" type="number" value={form.pricePerSqFt} onChange={(value) => updateField("pricePerSqFt", value)} />
+      ) : null}
 
       <h5 className="mt-3 mb-3">Amenities</h5>
       <div className="row listing-amenity-row">
         <div className="col-md-6">
           <CheckboxField label="Parking" checked={form.amenityParking} onChange={(value) => updateBooleanField("amenityParking", value)} />
           <CheckboxField label="Lift" checked={form.amenityLift} onChange={(value) => updateBooleanField("amenityLift", value)} />
+          <CheckboxField label="Power Backup" checked={form.amenityPowerBackup} onChange={(value) => updateBooleanField("amenityPowerBackup", value)} />
+          <CheckboxField label="Security" checked={form.amenitySecurity} onChange={(value) => updateBooleanField("amenitySecurity", value)} />
           <CheckboxField label="Gym" checked={form.amenityGym} onChange={(value) => updateBooleanField("amenityGym", value)} />
         </div>
         <div className="col-md-6">
           <CheckboxField label="CCTV" checked={form.amenityCctv} onChange={(value) => updateBooleanField("amenityCctv", value)} />
           <CheckboxField label="Swimming Pool" checked={form.amenitySwimmingPool} onChange={(value) => updateBooleanField("amenitySwimmingPool", value)} />
           <CheckboxField label="Garden" checked={form.amenityGarden} onChange={(value) => updateBooleanField("amenityGarden", value)} />
+          <CheckboxField label="Children's Play Area" checked={form.amenityChildrensPlayArea} onChange={(value) => updateBooleanField("amenityChildrensPlayArea", value)} />
         </div>
+      </div>
+    </>
+  );
+}
+
+function ListingSettingsFields({
+  form,
+  updateField,
+  updateBooleanField,
+}: {
+  form: FormState;
+  updateField: (name: StringFormField, value: string) => void;
+  updateBooleanField: (name: BooleanFormField, value: boolean) => void;
+}) {
+  return (
+    <>
+      <h5 className="mt-3 mb-3">Listing Settings</h5>
+      <div className="row">
+        <SelectColumn placeholder="Ad Type" value={form.adType} options={["Free", "Featured", "Premium"]} onChange={(value) => updateField("adType", value)} />
+        <SelectColumn placeholder="Ad Duration" value={form.adDurationDays} options={["7", "15", "30"]} onChange={(value) => updateField("adDurationDays", value)} />
+      </div>
+      <CheckboxField label="Auto-renew" checked={form.autoRenew} onChange={(value) => updateBooleanField("autoRenew", value)} />
+      <h5 className="mt-3 mb-3">SEO</h5>
+      <Input placeholder="Meta Title" value={form.metaTitle} onChange={(value) => updateField("metaTitle", value)} />
+      <Textarea placeholder="Meta Description" value={form.metaDescription} onChange={(value) => updateField("metaDescription", value)} />
+    </>
+  );
+}
+
+function PgAmenitiesCheckboxes({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const selected = new Set(value.split(",").map((item) => item.trim()).filter(Boolean));
+
+  function toggle(amenity: string, checked: boolean) {
+    const next = new Set(selected);
+    if (checked) {
+      next.add(amenity);
+    } else {
+      next.delete(amenity);
+    }
+
+    onChange(Array.from(next).join(", "));
+  }
+
+  return (
+    <>
+      <h5 className="mt-3 mb-3">PG Amenities</h5>
+      <div className="row listing-amenity-row">
+        {["WiFi", "Laundry", "AC"].map((amenity) => (
+          <div className="col-md-4" key={amenity}>
+            <CheckboxField label={amenity} checked={selected.has(amenity)} onChange={(checked) => toggle(amenity, checked)} />
+          </div>
+        ))}
       </div>
     </>
   );
@@ -2150,22 +2641,167 @@ function GalleryMediaEditor({
 }
 
 function RestaurantInfoFields({
+  form,
   restaurantInfo,
+  menuItems,
   onChange,
+  onMenuItemsChange,
 }: {
+  form: FormState;
   restaurantInfo: RestaurantInfo;
+  menuItems: RestaurantMenuItem[];
   onChange: (value: RestaurantInfo) => void;
+  onMenuItemsChange: (value: RestaurantMenuItem[]) => void;
 }) {
+  const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || form.subCategory === "Cloud Kitchen";
+  const showAlcohol = form.subCategory === "Bars & Beverages";
+  const showDineIn = restaurantInfo.serviceTypes.includes("Dine-in") && form.subCategory !== "Cloud Kitchen";
+  const showCatering = restaurantInfo.serviceTypes.includes("Catering") || form.subCategory === "Catering";
+
+  function toggleRestaurantList(key: "serviceTypes" | "thirdPartyIntegrations" | "amenities", value: string, checked: boolean) {
+    const currentValues = restaurantInfo[key];
+    onChange({ ...restaurantInfo, [key]: checked ? [...currentValues, value] : currentValues.filter((item) => item !== value) });
+  }
+
+  function updateMenuItem(index: number, value: RestaurantMenuItem) {
+    onMenuItemsChange(updateArrayItem(menuItems, index, value));
+  }
+
   return (
     <>
       <h5 className="mt-3 mb-3">Restaurant Info</h5>
       <div className="row">
-        <InputColumn placeholder="Restaurant Name" value={restaurantInfo.restaurantName} onChange={(value) => onChange({ ...restaurantInfo, restaurantName: value })} />
+        <InputColumn placeholder="Restaurant / Business Name*" value={restaurantInfo.restaurantName} onChange={(value) => onChange({ ...restaurantInfo, restaurantName: value })} />
         <InputColumn placeholder="Tagline" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
       </div>
       <div className="row">
-        <SelectColumn placeholder="Cuisine" value={restaurantInfo.cuisine} options={["Indian", "Chinese", "Italian", "Mexican", "Multi-cuisine"]} onChange={(value) => onChange({ ...restaurantInfo, cuisine: value })} />
-        <SelectColumn placeholder="Food Type" value={restaurantInfo.foodType} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => onChange({ ...restaurantInfo, foodType: value })} />
+        <SelectColumn placeholder="Cuisine Type*" value={restaurantInfo.cuisine} options={["Indian", "Chinese", "Italian", "Mexican", "American", "Thai", "Mediterranean", "Bakery", "Desserts", "Beverages", "Multi-cuisine", "Other"]} onChange={(value) => onChange({ ...restaurantInfo, cuisine: value })} />
+        <SelectColumn placeholder="Business Type*" value={restaurantInfo.businessType} options={["Individual", "Company", "Franchise"]} onChange={(value) => onChange({ ...restaurantInfo, businessType: value })} />
+      </div>
+      <div className="row">
+        <InputColumn placeholder="Year Established*" type="number" value={restaurantInfo.yearEstablished} onChange={(value) => onChange({ ...restaurantInfo, yearEstablished: value })} />
+        <InputColumn placeholder="Number of Staff" type="number" value={restaurantInfo.staffCount} onChange={(value) => onChange({ ...restaurantInfo, staffCount: value })} />
+      </div>
+      <MultiSelectCheckboxes title="Service Types" options={["Dine-in", "Takeaway", "Delivery", "Catering"]} selected={restaurantInfo.serviceTypes} onChange={(value, checked) => toggleRestaurantList("serviceTypes", value, checked)} />
+      {(showDeliveryFields || showCatering) ? (
+        <Input placeholder="Service Radius in miles*" type="number" value={restaurantInfo.serviceRadiusMiles} onChange={(value) => onChange({ ...restaurantInfo, serviceRadiusMiles: value })} />
+      ) : null}
+
+      <h5 className="mt-3 mb-3">Menu Management</h5>
+      {menuItems.map((item, index) => (
+        <ListingSectionCard title={`Menu Item ${index + 1}`} key={index}>
+          <div className="row">
+            <InputColumn placeholder="Item Name*" value={item.itemName} onChange={(value) => updateMenuItem(index, { ...item, itemName: value })} />
+            <SelectColumn placeholder="Menu Category*" value={item.menuCategory} options={["Starters", "Main Course", "Desserts", "Beverages", "Specials", "Combo", "Other"]} onChange={(value) => updateMenuItem(index, { ...item, menuCategory: value })} />
+          </div>
+          <Textarea placeholder="Description" value={item.description} onChange={(value) => updateMenuItem(index, { ...item, description: value })} />
+          <div className="row">
+            <InputColumn placeholder="Price in USD*" type="number" value={item.price} onChange={(value) => updateMenuItem(index, { ...item, price: value })} />
+            <SelectColumn placeholder="Food Type*" value={item.foodType} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => updateMenuItem(index, { ...item, foodType: value })} />
+          </div>
+          <div className="row">
+            <InputColumn placeholder="Calories" type="number" value={item.calories} onChange={(value) => updateMenuItem(index, { ...item, calories: value })} />
+            <InputColumn placeholder="Image URL" value={item.imageUrl} onChange={(value) => updateMenuItem(index, { ...item, imageUrl: value })} />
+          </div>
+          <CheckboxField label="Available" checked={item.isAvailable} onChange={(value) => updateMenuItem(index, { ...item, isAvailable: value })} />
+          {menuItems.length > 1 ? (
+            <button type="button" className="btn btn-primary" onClick={() => onMenuItemsChange(menuItems.filter((_, itemIndex) => itemIndex !== index))}>Remove Item</button>
+          ) : null}
+        </ListingSectionCard>
+      ))}
+      <button type="button" className="btn btn-primary" onClick={() => onMenuItemsChange([...menuItems, { ...initialRestaurantMenuItem, displayOrder: String(menuItems.length + 1) }])}>Add Menu Item</button>
+
+      <h5 className="mt-3 mb-3">Pricing & Offers</h5>
+      <div className="row">
+        <InputColumn placeholder="Average Cost for Two in USD" type="number" value={restaurantInfo.averageCostForTwo} onChange={(value) => onChange({ ...restaurantInfo, averageCostForTwo: value })} />
+        <InputColumn placeholder="Coupon Codes" value={restaurantInfo.couponCodes} onChange={(value) => onChange({ ...restaurantInfo, couponCodes: value })} />
+      </div>
+      <Textarea placeholder="Discounts / Offers" value={restaurantInfo.discountsOffers} onChange={(value) => onChange({ ...restaurantInfo, discountsOffers: value })} />
+      {showAlcohol ? (
+        <>
+          <Input placeholder="Happy Hours" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} />
+          <Input placeholder="Age-restricted notice" value={restaurantInfo.ageRestrictedNotice} onChange={(value) => onChange({ ...restaurantInfo, ageRestrictedNotice: value })} />
+        </>
+      ) : null}
+
+      <h5 className="mt-3 mb-3">Delivery & Ordering</h5>
+      <CheckboxField label="Delivery Available" checked={restaurantInfo.deliveryAvailable} onChange={(value) => onChange({ ...restaurantInfo, deliveryAvailable: value })} />
+      {showDeliveryFields ? (
+        <div className="row">
+          <InputColumn placeholder="Delivery Fee" type="number" value={restaurantInfo.deliveryFee} onChange={(value) => onChange({ ...restaurantInfo, deliveryFee: value })} />
+          <InputColumn placeholder="Minimum Order Value" type="number" value={restaurantInfo.minimumOrderValue} onChange={(value) => onChange({ ...restaurantInfo, minimumOrderValue: value })} />
+        </div>
+      ) : null}
+      <CheckboxField label="Online Ordering" checked={restaurantInfo.onlineOrdering} onChange={(value) => onChange({ ...restaurantInfo, onlineOrdering: value })} />
+      {restaurantInfo.onlineOrdering ? (
+        <MultiSelectCheckboxes title="Third-party Integrations" options={["Uber Eats", "DoorDash", "Grubhub", "Postmates", "Other"]} selected={restaurantInfo.thirdPartyIntegrations} onChange={(value, checked) => toggleRestaurantList("thirdPartyIntegrations", value, checked)} />
+      ) : null}
+
+      <MultiSelectCheckboxes title="Amenities & Features" options={["WiFi", "Parking", ...(form.subCategory === "Cloud Kitchen" ? [] : ["Outdoor Seating"]), "Live Music", "Family Friendly", "Pet Friendly", "Wheelchair Accessible / ADA Compliance"]} selected={restaurantInfo.amenities} onChange={(value, checked) => toggleRestaurantList("amenities", value, checked)} />
+
+      <h5 className="mt-3 mb-3">Compliance</h5>
+      <Input placeholder="Food License Number" value={restaurantInfo.foodLicenseNumber} onChange={(value) => onChange({ ...restaurantInfo, foodLicenseNumber: value })} />
+      <div className="row">
+        <InputColumn placeholder="Health Inspection Rating" value={restaurantInfo.healthInspectionRating} onChange={(value) => onChange({ ...restaurantInfo, healthInspectionRating: value })} />
+        {showAlcohol ? <InputColumn placeholder="Alcohol License Number*" value={restaurantInfo.alcoholLicenseNumber} onChange={(value) => onChange({ ...restaurantInfo, alcoholLicenseNumber: value })} /> : null}
+      </div>
+
+      <h5 className="mt-3 mb-3">Lead & Interaction</h5>
+      <div className="row listing-amenity-row">
+        <div className="col-md-6">
+          <CheckboxField label="Enable Chat" checked={restaurantInfo.enableChat} onChange={(value) => onChange({ ...restaurantInfo, enableChat: value })} />
+          <CheckboxField label="Enable Call" checked={restaurantInfo.enableCall} onChange={(value) => onChange({ ...restaurantInfo, enableCall: value })} />
+        </div>
+        <div className="col-md-6">
+          {showDineIn ? <CheckboxField label="Table Booking" checked={restaurantInfo.tableBooking} onChange={(value) => onChange({ ...restaurantInfo, tableBooking: value })} /> : null}
+          <CheckboxField label="Order Now Button" checked={restaurantInfo.orderNow} onChange={(value) => onChange({ ...restaurantInfo, orderNow: value })} />
+        </div>
+      </div>
+      {showCatering ? <Textarea placeholder="Bulk order notes" value={restaurantInfo.bulkOrderNotes} onChange={(value) => onChange({ ...restaurantInfo, bulkOrderNotes: value })} /> : null}
+      {form.subCategory === "Bakery" ? <Textarea placeholder="Custom cake / order options" value={restaurantInfo.customOrderOptions} onChange={(value) => onChange({ ...restaurantInfo, customOrderOptions: value })} /> : null}
+      {form.subCategory === "Food Trucks & Pop-ups" ? <Textarea placeholder="Event / pop-up location notes" value={restaurantInfo.eventLocationNotes} onChange={(value) => onChange({ ...restaurantInfo, eventLocationNotes: value })} /> : null}
+    </>
+  );
+}
+
+function MultiSelectCheckboxes({
+  title,
+  options,
+  selected,
+  onChange,
+}: {
+  title: string;
+  options: string[];
+  selected: string[];
+  onChange: (value: string, checked: boolean) => void;
+}) {
+  return (
+    <>
+      <h5 className="mt-3 mb-3">{title}</h5>
+      <div className="row listing-amenity-row">
+        {options.map((option) => (
+          <div className="col-md-6" key={option}>
+            <CheckboxField label={option} checked={selected.includes(option)} onChange={(checked) => onChange(option, checked)} />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function RestaurantListingSettingsFields({
+  form,
+  updateField,
+}: {
+  form: FormState;
+  updateField: (name: StringFormField, value: string) => void;
+}) {
+  return (
+    <>
+      <h5 className="mt-3 mb-3">Listing Settings</h5>
+      <div className="row">
+        <SelectColumn placeholder="Listing Type*" value={form.adType} options={["Free", "Featured", "Premium"]} onChange={(value) => updateField("adType", value)} />
+        <SelectColumn placeholder="Ad Duration*" value={form.adDurationDays === "7" || form.adDurationDays === "15" ? "30" : form.adDurationDays} options={["30", "60", "90"]} onChange={(value) => updateField("adDurationDays", value)} />
       </div>
     </>
   );
@@ -2178,7 +2814,7 @@ function BusinessHoursEditor({
   hours: BusinessHour[];
   onChange: (value: BusinessHour[]) => void;
 }) {
-  const [bulkHour, setBulkHour] = useState({ status: "Open", open: "", close: "" });
+  const [bulkHour, setBulkHour] = useState({ status: "Open", open: "", close: "", is24Hours: false });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
 
   function updateHour(index: number, value: BusinessHour) {
@@ -2192,7 +2828,7 @@ function BusinessHoursEditor({
 
     onChange(hours.map((hour) => (
       targetDays.includes(hour.day)
-        ? { ...hour, status: bulkHour.status, open: bulkHour.open, close: bulkHour.close }
+        ? { ...hour, status: bulkHour.status, open: bulkHour.open, close: bulkHour.close, is24Hours: bulkHour.is24Hours }
         : hour
     )));
   }
@@ -2217,6 +2853,7 @@ function BusinessHoursEditor({
               </select>
               <input type="time" className="form-control" value={bulkHour.open} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, open: event.target.value }))} />
               <input type="time" className="form-control" value={bulkHour.close} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, close: event.target.value }))} />
+              <label className="listing-inline-check"><input type="checkbox" checked={bulkHour.is24Hours} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, is24Hours: event.target.checked }))} /> 24/7</label>
             </div>
           </div>
           <div className="listing-hours-bulk-row">
@@ -2248,8 +2885,10 @@ function BusinessHoursEditor({
         <div className="listing-hours-grid-head">
           <span>Day</span>
           <span>Status</span>
+          <span>24/7</span>
           <span>Opening</span>
           <span>Closing</span>
+          <span>Special Hours</span>
         </div>
         {hours.map((hour, index) => (
           <div className="listing-hours-row" key={hour.day}>
@@ -2261,10 +2900,16 @@ function BusinessHoursEditor({
               </select>
             </div>
             <div>
-              <input type="time" className="form-control" value={hour.open} disabled={hour.status === "Closed"} onChange={(event) => updateHour(index, { ...hour, open: event.target.value })} />
+              <input type="checkbox" checked={hour.is24Hours} disabled={hour.status === "Closed"} onChange={(event) => updateHour(index, { ...hour, is24Hours: event.target.checked })} />
             </div>
             <div>
-              <input type="time" className="form-control" value={hour.close} disabled={hour.status === "Closed"} onChange={(event) => updateHour(index, { ...hour, close: event.target.value })} />
+              <input type="time" className="form-control" value={hour.open} disabled={hour.status === "Closed" || hour.is24Hours} onChange={(event) => updateHour(index, { ...hour, open: event.target.value })} />
+            </div>
+            <div>
+              <input type="time" className="form-control" value={hour.close} disabled={hour.status === "Closed" || hour.is24Hours} onChange={(event) => updateHour(index, { ...hour, close: event.target.value })} />
+            </div>
+            <div>
+              <input type="text" className="form-control" value={hour.specialHoursNote} onChange={(event) => updateHour(index, { ...hour, specialHoursNote: event.target.value })} />
             </div>
           </div>
         ))}
@@ -2375,7 +3020,9 @@ function SocialLinksFields({
       <h4 className="mt-2">Social Media</h4>
       <InputColumnWithLabel label="Facebook" placeholder="Facebook link" value={socialLinks.facebook} onChange={(value) => onChange({ ...socialLinks, facebook: value })} />
       <InputColumnWithLabel label="Instagram" placeholder="Instagram link" value={socialLinks.instagram} onChange={(value) => onChange({ ...socialLinks, instagram: value })} />
+      <InputColumnWithLabel label="TikTok" placeholder="TikTok link" value={socialLinks.tiktok} onChange={(value) => onChange({ ...socialLinks, tiktok: value })} />
       <InputColumnWithLabel label="Twitter" placeholder="Twitter link" value={socialLinks.twitter} onChange={(value) => onChange({ ...socialLinks, twitter: value })} />
+      <InputColumnWithLabel label="YouTube" placeholder="YouTube link" value={socialLinks.youtube} onChange={(value) => onChange({ ...socialLinks, youtube: value })} />
       <InputColumnWithLabel label="LinkedIn" placeholder="LinkedIn link" value={socialLinks.linkedin} onChange={(value) => onChange({ ...socialLinks, linkedin: value })} />
     </div>
   );
@@ -2548,6 +3195,7 @@ function buildListingPayload(
   brands: string[],
   paymentMethods: PaymentMethods,
   restaurantInfo: RestaurantInfo,
+  restaurantMenuItems: RestaurantMenuItem[],
   categoryAttributes: CategoryAttributes,
 ): UpsertListingPayload {
   return {
@@ -2563,11 +3211,18 @@ function buildListingPayload(
       bathrooms: numberOrNull(form.bathrooms),
       balconies: numberOrNull(form.balconies),
       furnishingType: form.furnishingType.trim(),
+      superBuiltUpArea: numberOrNull(form.superBuiltUpArea),
+      carpetArea: numberOrNull(form.carpetArea),
+      floorNumber: numberOrNull(form.floorNumber),
+      totalFloors: numberOrNull(form.totalFloors),
+      propertyAge: form.propertyAge.trim(),
+      facing: form.facing.trim(),
+      availability: form.availabilityType.trim(),
+      availabilityDate: form.availabilityDate.trim() || null,
       plotArea: numberOrNull(form.plotArea),
       length: numberOrNull(form.length),
       breadth: numberOrNull(form.breadth),
       boundaryWall: boolOrNull(form.boundaryWall),
-      facing: form.facing.trim(),
       approvalType: form.approvalType.trim(),
       roadWidth: numberOrNull(form.roadWidth),
       area: numberOrNull(form.area),
@@ -2576,7 +3231,7 @@ function buildListingPayload(
       suitableFor: form.suitableFor.trim(),
       roomType: form.roomType.trim(),
       genderPreference: form.genderPreference.trim(),
-      foodIncluded: form.foodIncluded ? form.foodIncluded === "Food Included" : null,
+      foodIncluded: form.foodIncluded ? form.foodIncluded === "Yes" : null,
       pgAmenities: form.pgAmenities.trim(),
       services: JSON.stringify(services.filter((item) => item.name.trim())),
       offers: JSON.stringify(offers.filter((item) => item.name.trim() || item.price.trim() || item.detail.trim())),
@@ -2600,6 +3255,7 @@ function buildListingPayload(
       maintenanceCharges: numberOrNull(form.maintenanceCharges),
       securityDeposit: numberOrNull(form.securityDeposit),
       loanEligible: form.loanEligible,
+      pricePerSqFt: numberOrNull(form.pricePerSqFt),
     },
     locationDetails: {
       country: form.country.trim(),
@@ -2608,18 +3264,21 @@ function buildListingPayload(
       locality: form.address.trim(),
       landmark: form.serviceLocations.trim(),
       pincode: form.pincode.trim(),
-      latitude: null,
-      longitude: null,
+      latitude: numberOrNull(form.latitude),
+      longitude: numberOrNull(form.longitude),
     },
     amenities: {
       parking: form.amenityParking,
       lift: form.amenityLift,
+      powerBackup: form.amenityPowerBackup,
+      security: form.amenitySecurity,
       gym: form.amenityGym,
       cctv: form.amenityCctv,
       swimmingPool: form.amenitySwimmingPool,
       garden: form.amenityGarden,
+      childrensPlayArea: form.amenityChildrensPlayArea,
     },
-    media: {
+      media: {
       imageUrls: [
         form.profileImageName,
         form.coverImageName,
@@ -2627,6 +3286,8 @@ function buildListingPayload(
       ].map((value) => value.trim()).filter((value) => value && !isVideoValue(value)),
       videoUrl: form.listingVideo.trim() || form.galleryMedia.find(isVideoValue) || "",
       virtualTourUrl: form.view360.trim(),
+      logoUrl: form.profileImageName.trim(),
+      coverBannerUrl: form.coverImageName.trim(),
     },
     sellerInformation: {
       name: sellerName.trim() || form.title.trim(),
@@ -2634,14 +3295,115 @@ function buildListingPayload(
       email: form.email.trim(),
       whatsAppNumber: form.whatsapp.trim(),
       websiteUrl: form.website.trim(),
+      sellerType: form.sellerType.trim(),
       isMobileOtpVerified: false,
+      reraNumber: form.reraNumber.trim(),
+      ownershipType: form.ownershipType.trim(),
     },
     settings: {
-      adType: "Free",
-      adDurationDays: 30,
-      autoRenew: false,
+      adType: form.adType.trim() || "Free",
+      adDurationDays: numberOrNull(form.adDurationDays) ?? 30,
+      autoRenew: form.autoRenew,
+      metaTitle: form.metaTitle.trim(),
+      metaDescription: form.metaDescription.trim(),
       verifiedByAdmin: false,
     },
+    restaurantFoodDetails: {
+      businessName: restaurantInfo.restaurantName.trim() || form.title.trim(),
+      tagline: restaurantInfo.tagline.trim(),
+      cuisineType: restaurantInfo.cuisine.trim(),
+      businessType: restaurantInfo.businessType.trim(),
+      yearEstablished: numberOrNull(restaurantInfo.yearEstablished),
+      numberOfStaff: numberOrNull(restaurantInfo.staffCount),
+      serviceTypes: restaurantInfo.serviceTypes,
+      serviceRadiusMiles: numberOrNull(restaurantInfo.serviceRadiusMiles),
+      instagramUrl: socialLinks.instagram.trim(),
+      facebookUrl: socialLinks.facebook.trim(),
+      tikTokUrl: socialLinks.tiktok.trim(),
+      twitterUrl: socialLinks.twitter.trim(),
+      youTubeUrl: socialLinks.youtube.trim(),
+      averageCostForTwo: numberOrNull(restaurantInfo.averageCostForTwo),
+      discountsOffers: restaurantInfo.discountsOffers.trim(),
+      couponCodes: restaurantInfo.couponCodes.trim(),
+      happyHours: restaurantInfo.happyHours.trim(),
+      deliveryAvailable: restaurantInfo.deliveryAvailable,
+      deliveryFee: numberOrNull(restaurantInfo.deliveryFee),
+      minimumOrderValue: numberOrNull(restaurantInfo.minimumOrderValue),
+      onlineOrderingAvailable: restaurantInfo.onlineOrdering,
+      thirdPartyIntegrations: restaurantInfo.thirdPartyIntegrations,
+      amenities: restaurantInfo.amenities,
+      foodLicenseNumber: restaurantInfo.foodLicenseNumber.trim(),
+      healthInspectionRating: restaurantInfo.healthInspectionRating.trim(),
+      alcoholLicenseNumber: restaurantInfo.alcoholLicenseNumber.trim(),
+      tableBookingEnabled: restaurantInfo.tableBooking,
+      orderNowEnabled: restaurantInfo.orderNow,
+      enableChat: restaurantInfo.enableChat,
+      enableCall: restaurantInfo.enableCall,
+      bulkOrderNotes: restaurantInfo.bulkOrderNotes.trim(),
+      customOrderOptions: restaurantInfo.customOrderOptions.trim(),
+      eventLocationNotes: restaurantInfo.eventLocationNotes.trim(),
+      ageRestrictedNotice: restaurantInfo.ageRestrictedNotice.trim(),
+    },
+    vehicleDetails: {
+      brand: getAttributeValue(categoryAttributes, "brand").trim(),
+      model: getAttributeValue(categoryAttributes, "model").trim(),
+      variant: getAttributeValue(categoryAttributes, "variant").trim(),
+      yearOfManufacture: numberAttribute(categoryAttributes, "yearOfManufacture", "year_of_manufacture"),
+      registrationYear: numberAttribute(categoryAttributes, "registrationYear", "registration_year"),
+      vehicleCondition: getAttributeValue(categoryAttributes, "vehicleCondition", "vehicle_condition", "condition").trim(),
+      fuelType: getAttributeValue(categoryAttributes, "fuelType", "fuel_type").trim(),
+      transmission: getAttributeValue(categoryAttributes, "transmission").trim(),
+      kmDriven: numberAttribute(categoryAttributes, "kilometersDriven", "kilometers_driven", "kmDriven", "km_driven"),
+      numberOfOwners: numberAttribute(categoryAttributes, "ownerCount", "owner_count", "numberOfOwners", "number_of_owners"),
+      insuranceStatus: getAttributeValue(categoryAttributes, "insurance", "insuranceStatus", "insurance_status").trim(),
+      insuranceValidTill: getAttributeValue(categoryAttributes, "insuranceValidTill", "insurance_valid_till").trim() || null,
+      registrationState: getAttributeValue(categoryAttributes, "registrationState", "registration_state").trim(),
+      rto: getAttributeValue(categoryAttributes, "rto").trim(),
+      color: getAttributeValue(categoryAttributes, "color").trim(),
+      bodyType: getAttributeValue(categoryAttributes, "bodyType", "body_type").trim(),
+      seatingCapacity: numberAttribute(categoryAttributes, "seatingCapacity", "seating_capacity"),
+      bootSpace: getAttributeValue(categoryAttributes, "bootSpace", "boot_space").trim(),
+      mileage: numberAttribute(categoryAttributes, "mileage"),
+      engineCapacityCc: numberAttribute(categoryAttributes, "engineCapacity", "engine_capacity", "engineCapacityCc", "engine_capacity_cc"),
+      bikeType: getAttributeValue(categoryAttributes, "bikeType", "bike_type").trim(),
+      commercialVehicleType: getAttributeValue(categoryAttributes, "vehicleType", "vehicle_type", "commercialVehicleType", "commercial_vehicle_type").trim(),
+      loadCapacity: numberAttribute(categoryAttributes, "loadCapacity", "load_capacity"),
+      numberOfWheels: numberAttribute(categoryAttributes, "numberOfWheels", "number_of_wheels"),
+      permitType: getAttributeValue(categoryAttributes, "permitType", "permit_type").trim(),
+      rentalType: getAttributeValue(categoryAttributes, "rentalType", "rental_type").trim(),
+      pricePerHour: numberAttribute(categoryAttributes, "pricePerHour", "price_per_hour"),
+      pricePerDay: numberAttribute(categoryAttributes, "pricePerDay", "price_per_day"),
+      securityDeposit: numberAttribute(categoryAttributes, "securityDepositVehicle", "security_deposit_vehicle"),
+      partType: getAttributeValue(categoryAttributes, "partType", "part_type", "itemType", "item_type").trim(),
+      compatibleModels: getAttributeValue(categoryAttributes, "compatibleModels", "compatible_models").trim(),
+      partCondition: getAttributeValue(categoryAttributes, "partCondition", "part_condition", "condition").trim(),
+      rcAvailable: boolAttribute(categoryAttributes, "rcAvailable", "rc_available"),
+      pucAvailable: boolAttribute(categoryAttributes, "pucAvailable", "puc_available"),
+      serviceHistoryStatus: getAttributeValue(categoryAttributes, "serviceHistory", "service_history", "serviceHistoryStatus", "service_history_status").trim(),
+      loanStatus: getAttributeValue(categoryAttributes, "loanStatus", "loan_status").trim(),
+      features: vehicleFeatureValues(categoryAttributes),
+    },
+    restaurantMenuItems: restaurantMenuItems
+      .filter((item) => item.itemName.trim() || item.menuCategory.trim() || item.price.trim())
+      .map((item, index) => ({
+        itemName: item.itemName.trim(),
+        menuCategory: item.menuCategory.trim(),
+        description: item.description.trim(),
+        price: numberOrNull(item.price) ?? 0,
+        foodType: item.foodType.trim(),
+        calories: numberOrNull(item.calories),
+        imageUrl: item.imageUrl.trim(),
+        displayOrder: numberOrNull(item.displayOrder) ?? index + 1,
+        isAvailable: item.isAvailable,
+      })),
+    restaurantOperatingHours: businessHours.map((hour) => ({
+      dayOfWeek: hour.day,
+      isOpen: hour.status !== "Closed",
+      openTime: hour.open ? `${hour.open}:00` : null,
+      closeTime: hour.close ? `${hour.close}:00` : null,
+      is24Hours: hour.is24Hours,
+      specialHoursNote: hour.specialHoursNote || null,
+    })),
   };
 }
 
@@ -2651,6 +3413,7 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
   const locationDetails = listing.locationDetails || {};
   const amenities = listing.amenities || {};
   const sellerInformation = listing.sellerInformation || {};
+  const settings = listing.settings || {};
   const imageUrls = listing.imageUrls || [];
   const [profileImageName = "", coverImageName = "", ...galleryMedia] = imageUrls;
 
@@ -2682,6 +3445,13 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     bathrooms: stringValue(propertyDetails.bathrooms),
     balconies: stringValue(propertyDetails.balconies),
     furnishingType: stringValue(propertyDetails.furnishingType),
+    superBuiltUpArea: stringValue(propertyDetails.superBuiltUpArea),
+    carpetArea: stringValue(propertyDetails.carpetArea),
+    floorNumber: stringValue(propertyDetails.floorNumber),
+    totalFloors: stringValue(propertyDetails.totalFloors),
+    propertyAge: stringValue(propertyDetails.propertyAge),
+    availabilityType: stringValue(propertyDetails.availability),
+    availabilityDate: stringValue(propertyDetails.availabilityDate).slice(0, 10),
     plotArea: stringValue(propertyDetails.plotArea),
     length: stringValue(propertyDetails.length),
     breadth: stringValue(propertyDetails.breadth),
@@ -2695,20 +3465,175 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     suitableFor: stringValue(propertyDetails.suitableFor),
     roomType: stringValue(propertyDetails.roomType),
     genderPreference: stringValue(propertyDetails.genderPreference),
-    foodIncluded: propertyDetails.foodIncluded === true ? "Food Included" : propertyDetails.foodIncluded === false ? "No Food" : "",
+    foodIncluded: propertyDetails.foodIncluded === true ? "Yes" : propertyDetails.foodIncluded === false ? "No" : "",
     pgAmenities: stringValue(propertyDetails.pgAmenities),
     price: stringValue(priceDetails.price || listing.price),
     priceNegotiable: priceDetails.priceNegotiable === false ? "Fixed" : "Negotiable",
     maintenanceCharges: stringValue(priceDetails.maintenanceCharges),
     securityDeposit: stringValue(priceDetails.securityDeposit),
+    pricePerSqFt: stringValue(priceDetails.pricePerSqFt),
     loanEligible: priceDetails.loanEligible === true,
+    sellerType: stringValue(sellerInformation.sellerType) || "Owner",
+    reraNumber: stringValue(sellerInformation.reraNumber),
+    ownershipType: stringValue(sellerInformation.ownershipType),
+    latitude: stringValue(locationDetails.latitude),
+    longitude: stringValue(locationDetails.longitude),
+    adType: stringValue(settings.adType) || "Free",
+    adDurationDays: stringValue(settings.adDurationDays) || "30",
+    autoRenew: settings.autoRenew === true,
+    metaTitle: stringValue(settings.metaTitle),
+    metaDescription: stringValue(settings.metaDescription),
     amenityParking: amenities.parking === true,
     amenityLift: amenities.lift === true,
+    amenityPowerBackup: amenities.powerBackup === true,
+    amenitySecurity: amenities.security === true,
     amenityGym: amenities.gym === true,
     amenityCctv: amenities.cctv === true,
     amenitySwimmingPool: amenities.swimmingPool === true,
     amenityGarden: amenities.garden === true,
+    amenityChildrensPlayArea: amenities.childrensPlayArea === true,
   };
+}
+
+function mapRestaurantInfoFromListing(listing: ListingSummary, propertyDetails: Record<string, unknown>): RestaurantInfo {
+  const restaurantDetails = listing.restaurantFoodDetails || {};
+  const legacyInfo = parseJsonObject<RestaurantInfo>(propertyDetails.restaurantInfo, initialRestaurantInfo);
+
+  return {
+    ...legacyInfo,
+    restaurantName: stringValue(restaurantDetails.businessName) || legacyInfo.restaurantName,
+    tagline: stringValue(restaurantDetails.tagline) || legacyInfo.tagline,
+    cuisine: stringValue(restaurantDetails.cuisineType) || legacyInfo.cuisine,
+    businessType: stringValue(restaurantDetails.businessType),
+    yearEstablished: stringValue(restaurantDetails.yearEstablished),
+    staffCount: stringValue(restaurantDetails.numberOfStaff),
+    serviceTypes: Array.isArray(restaurantDetails.serviceTypes) ? restaurantDetails.serviceTypes.map(String) : [],
+    serviceRadiusMiles: stringValue(restaurantDetails.serviceRadiusMiles),
+    averageCostForTwo: stringValue(restaurantDetails.averageCostForTwo),
+    discountsOffers: stringValue(restaurantDetails.discountsOffers),
+    couponCodes: stringValue(restaurantDetails.couponCodes),
+    happyHours: stringValue(restaurantDetails.happyHours),
+    deliveryAvailable: restaurantDetails.deliveryAvailable === true,
+    deliveryFee: stringValue(restaurantDetails.deliveryFee),
+    minimumOrderValue: stringValue(restaurantDetails.minimumOrderValue),
+    onlineOrdering: restaurantDetails.onlineOrderingAvailable === true,
+    thirdPartyIntegrations: Array.isArray(restaurantDetails.thirdPartyIntegrations) ? restaurantDetails.thirdPartyIntegrations.map(String) : [],
+    amenities: Array.isArray(restaurantDetails.amenities) ? restaurantDetails.amenities.map(String) : [],
+    foodLicenseNumber: stringValue(restaurantDetails.foodLicenseNumber),
+    healthInspectionRating: stringValue(restaurantDetails.healthInspectionRating),
+    alcoholLicenseNumber: stringValue(restaurantDetails.alcoholLicenseNumber),
+    tableBooking: restaurantDetails.tableBookingEnabled === true,
+    orderNow: restaurantDetails.orderNowEnabled === true,
+    enableChat: restaurantDetails.enableChat !== false,
+    enableCall: restaurantDetails.enableCall !== false,
+    bulkOrderNotes: stringValue(restaurantDetails.bulkOrderNotes),
+    customOrderOptions: stringValue(restaurantDetails.customOrderOptions),
+    eventLocationNotes: stringValue(restaurantDetails.eventLocationNotes),
+    ageRestrictedNotice: stringValue(restaurantDetails.ageRestrictedNotice),
+  };
+}
+
+function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttributes {
+  const details = listing.vehicleDetails || {};
+  const values: CategoryAttributes = {
+    brand: stringValue(details.brand),
+    model: stringValue(details.model),
+    variant: stringValue(details.variant),
+    yearOfManufacture: stringValue(details.yearOfManufacture),
+    registrationYear: stringValue(details.registrationYear),
+    vehicleCondition: stringValue(details.vehicleCondition),
+    fuelType: stringValue(details.fuelType),
+    transmission: stringValue(details.transmission),
+    kilometersDriven: stringValue(details.kmDriven),
+    ownerCount: stringValue(details.numberOfOwners),
+    insurance: stringValue(details.insuranceStatus),
+    insuranceValidTill: stringValue(details.insuranceValidTill).slice(0, 10),
+    registrationState: stringValue(details.registrationState),
+    rto: stringValue(details.rto),
+    color: stringValue(details.color),
+    bodyType: stringValue(details.bodyType),
+    seatingCapacity: stringValue(details.seatingCapacity),
+    bootSpace: stringValue(details.bootSpace),
+    mileage: stringValue(details.mileage),
+    engineCapacity: stringValue(details.engineCapacityCc),
+    bikeType: stringValue(details.bikeType),
+    vehicleType: stringValue(details.commercialVehicleType),
+    loadCapacity: stringValue(details.loadCapacity),
+    numberOfWheels: stringValue(details.numberOfWheels),
+    permitType: stringValue(details.permitType),
+    rentalType: stringValue(details.rentalType),
+    pricePerHour: stringValue(details.pricePerHour),
+    pricePerDay: stringValue(details.pricePerDay),
+    securityDepositVehicle: stringValue(details.securityDeposit),
+    partType: stringValue(details.partType),
+    compatibleModels: stringValue(details.compatibleModels),
+    condition: stringValue(details.partCondition),
+    rcAvailable: booleanSelectValue(details.rcAvailable),
+    pucAvailable: booleanSelectValue(details.pucAvailable),
+    serviceHistory: stringValue(details.serviceHistoryStatus),
+    loanStatus: stringValue(details.loanStatus),
+  };
+
+  const features = Array.isArray(details.features) ? details.features.map(String) : [];
+  for (const [feature, keys] of [
+    ["Air Conditioning", ["airConditioning"]],
+    ["Power Steering", ["powerSteering"]],
+    ["ABS", ["abs"]],
+    ["Airbags", ["airbags"]],
+    ["Sunroof", ["sunroof"]],
+    ["Alloy Wheels", ["alloyWheels"]],
+    ["Bluetooth / GPS", ["bluetoothGps"]],
+    ["Reverse Camera", ["reverseCamera"]],
+    ["Cruise Control", ["cruiseControl"]],
+  ] as Array<[string, string[]]>) {
+    if (features.includes(feature)) {
+      values[keys[0]] = "true";
+    }
+  }
+
+  return trimCategoryAttributes(values);
+}
+
+function mapRestaurantMenuItemsFromListing(listing: ListingSummary): RestaurantMenuItem[] {
+  const menuItems = listing.restaurantMenuItems || [];
+  if (!menuItems.length) {
+    return [{ ...initialRestaurantMenuItem }];
+  }
+
+  return menuItems.map((item, index) => ({
+    itemName: stringValue(item.itemName),
+    menuCategory: stringValue(item.menuCategory),
+    description: stringValue(item.description),
+    price: stringValue(item.price),
+    foodType: stringValue(item.foodType),
+    calories: stringValue(item.calories),
+    imageUrl: stringValue(item.imageUrl),
+    displayOrder: stringValue(item.displayOrder) || String(index + 1),
+    isAvailable: item.isAvailable !== false,
+  }));
+}
+
+function mapRestaurantHoursFromListing(listing: ListingSummary, propertyDetails: Record<string, unknown>): BusinessHour[] {
+  const hours = listing.restaurantOperatingHours || [];
+  if (!hours.length) {
+    return parseJsonArray<BusinessHour>(propertyDetails.businessHours, defaultBusinessHours);
+  }
+
+  return defaultBusinessHours.map((defaultHour) => {
+    const hour = hours.find((item) => stringValue(item.dayOfWeek) === defaultHour.day);
+    if (!hour) {
+      return defaultHour;
+    }
+
+    return {
+      day: defaultHour.day,
+      status: hour.isOpen === false ? "Closed" : "Open",
+      open: stringValue(hour.openTime).slice(0, 5),
+      close: stringValue(hour.closeTime).slice(0, 5),
+      is24Hours: hour.is24Hours === true,
+      specialHoursNote: stringValue(hour.specialHoursNote),
+    };
+  });
 }
 
 function stringValue(value: unknown) {
@@ -2842,6 +3767,52 @@ function boolOrNull(value?: string) {
   return null;
 }
 
+function getAttributeValue(values: CategoryAttributes, ...keys: string[]) {
+  for (const key of keys) {
+    const direct = values[key];
+    if (direct !== undefined) {
+      return direct;
+    }
+
+    const normalizedKey = normalizeFieldKey(key);
+    const match = Object.entries(values).find(([itemKey]) => normalizeFieldKey(itemKey) === normalizedKey);
+    if (match) {
+      return match[1];
+    }
+  }
+
+  return "";
+}
+
+function numberAttribute(values: CategoryAttributes, ...keys: string[]) {
+  return numberOrNull(getAttributeValue(values, ...keys));
+}
+
+function boolAttribute(values: CategoryAttributes, ...keys: string[]) {
+  const value = getAttributeValue(values, ...keys);
+  if (value === "true" || value === "Yes") return true;
+  if (value === "false" || value === "No") return false;
+  return null;
+}
+
+function vehicleFeatureValues(values: CategoryAttributes) {
+  const featureMap: Array<[string, string[]]> = [
+    ["Air Conditioning", ["airConditioning", "air_conditioning"]],
+    ["Power Steering", ["powerSteering", "power_steering"]],
+    ["ABS", ["abs"]],
+    ["Airbags", ["airbags"]],
+    ["Sunroof", ["sunroof"]],
+    ["Alloy Wheels", ["alloyWheels", "alloy_wheels"]],
+    ["Bluetooth / GPS", ["bluetoothGps", "bluetooth_gps"]],
+    ["Reverse Camera", ["reverseCamera", "reverse_camera"]],
+    ["Cruise Control", ["cruiseControl", "cruise_control"]],
+  ];
+
+  return featureMap
+    .filter(([, keys]) => boolAttribute(values, ...keys) === true)
+    .map(([feature]) => feature);
+}
+
 function getCategoryAttributeFields(categoryName: string, subCategory: string, detailCategory: string) {
   const fieldSet = categoryAttributeFieldSetsByCategory[categoryName];
 
@@ -2859,14 +3830,25 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
 
 function shouldShowCategoryAttributeField(field: CategoryAttributeField, values: CategoryAttributes, form: FormState) {
   const key = normalizeFieldKey(field.key);
-  const vehicleCondition = values.vehicleCondition || values.vehicle_condition;
+  const vehicleCondition = getAttributeValue(values, "vehicleCondition", "vehicle_condition", "condition");
   const isNewVehicle = form.detailCategory.toLowerCase().includes("new") || vehicleCondition === "New";
+  const isAccessories = form.subCategory === "Spare Parts & Accessories";
+  const isRental = form.subCategory === "Rentals";
+  const insurance = getAttributeValue(values, "insurance", "insuranceStatus", "insurance_status");
 
-  if (form.categoryName === "Vehicles" && isNewVehicle && ["kilometersdriven", "kilometers_driven", "ownercount", "owner_count"].includes(key)) {
+  if (form.categoryName === "Vehicles" && isNewVehicle && ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && form.subCategory !== "Rentals" && ["rentaltype", "rental_type", "priceperhourday", "price_per_hour_day", "securitydepositvehicle", "security_deposit_vehicle"].includes(key)) {
+  if (form.categoryName === "Vehicles" && !isRental && ["rentaltype", "rental_type", "priceperhour", "price_per_hour", "priceperday", "price_per_day", "priceperhourday", "price_per_hour_day", "securitydepositvehicle", "security_deposit_vehicle"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && insurance !== "Active" && ["insurancevalidtill", "insurance_valid_till"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && isAccessories && ["yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vehiclecondition", "vehicle_condition", "fueltype", "fuel_type", "transmission", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
     return false;
   }
 
@@ -2986,6 +3968,14 @@ function isCommercialRealEstateSubCategory(subCategory: string) {
   return ["Commercial", "Commercial Sale", "Commercial Rent"].includes(subCategory);
 }
 
+function isRentRealEstateSubCategory(subCategory: string) {
+  return ["Rent", "Residential Rent", "Commercial Rent", "PG", "PG / Co-living"].includes(subCategory);
+}
+
+function isSaleRealEstateSubCategory(subCategory: string) {
+  return ["Sale", "Residential Sale", "Commercial Sale"].includes(subCategory);
+}
+
 function isPlotRealEstateSubCategory(subCategory: string) {
   return ["Plot", "Land / Plots"].includes(subCategory);
 }
@@ -2996,7 +3986,7 @@ function getListingKind(subCategory: string, detailCategory: string) {
   if (isCommercialRealEstateSubCategory(subCategory)) return "Commercial";
   if (["PG", "PG / Co-living"].includes(subCategory)) return "PG";
   if (isPlotRealEstateSubCategory(subCategory)) return "Plot";
-  if (["Restaurants", "Restaurant", "Fast Food", "Cafes", "Cafe", "Bakery", "Cloud Kitchen", "Catering"].includes(subCategory)) return "Restaurant";
+  if (["Restaurants", "Restaurant", "Fast Food", "Cafes", "Cafe", "Bakery", "Cloud Kitchen", "Catering", "Bars & Beverages", "Food Trucks & Pop-ups"].includes(subCategory)) return "Restaurant";
   if (subCategory === "Job Listings") return "Job";
   if (subCategory === "Freelance Services") return "Service";
   return "Classified";
@@ -3006,19 +3996,31 @@ function getRequiredDetailFields(subCategory: string, detailCategory: string): A
   void detailCategory;
 
   if (isResidentialRealEstateSubCategory(subCategory)) {
-    return [["bhk", "BHK"], ["bathrooms", "Bathrooms"]];
+    return [
+      ["propertyType", "Property Type"],
+      ["bhk", "BHK"],
+      ["bathrooms", "Bathrooms"],
+      ["balconies", "Balconies"],
+      ["furnishingType", "Furnishing Type"],
+      ["superBuiltUpArea", "Super Built-up Area"],
+      ["floorNumber", "Floor Number"],
+      ["totalFloors", "Total Floors"],
+      ["propertyAge", "Property Age"],
+      ["facing", "Facing"],
+      ["availabilityType", "Availability"],
+    ];
   }
 
   if (isPlotRealEstateSubCategory(subCategory)) {
-    return [["plotArea", "Plot Area"]];
+    return [["plotArea", "Plot Area"], ["length", "Length"], ["breadth", "Breadth"], ["boundaryWall", "Boundary Wall"], ["facing", "Facing"], ["approvalType", "Approval Type"], ["roadWidth", "Road Width"]];
   }
 
   if (isCommercialRealEstateSubCategory(subCategory)) {
-    return [["area", "Area"], ["washrooms", "Washrooms"]];
+    return [["propertyType", "Property Type"], ["area", "Area"], ["furnishingType", "Furnishing"], ["washrooms", "Washrooms"], ["parking", "Parking"], ["suitableFor", "Suitable For"]];
   }
 
   if (["PG", "PG / Co-living"].includes(subCategory)) {
-    return [["roomType", "Room Type"], ["genderPreference", "Gender Preference"]];
+    return [["roomType", "Room Type"], ["genderPreference", "Gender Preference"], ["foodIncluded", "Food Included"], ["pgAmenities", "Amenities"]];
   }
 
   return [];
