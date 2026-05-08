@@ -30,6 +30,8 @@ export type ListingCategoryFieldDefinition = {
   fieldType: "text" | "number" | "date" | "dropdown" | "checkbox" | "textarea";
   placeholder?: string | null;
   options: string[];
+  sectionName: string;
+  sectionOrder: number;
   isRequired: boolean;
   displayOrder: number;
   isActive: boolean;

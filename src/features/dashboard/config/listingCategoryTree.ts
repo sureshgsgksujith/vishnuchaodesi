@@ -27,6 +27,10 @@ export const fallbackListingCategoryTree: ListingCategoryOption[] = [
         { id: 1010, name: "Agricultural Land", slug: "agricultural-land" },
         { id: 1011, name: "Farmhouses", slug: "farmhouses" },
       ] },
+      { id: 106, name: "PG / Co-living", slug: "pg-co-living", detailedCategories: [
+        { id: 1012, name: "Single Room", slug: "single-room" },
+        { id: 1013, name: "Shared Room", slug: "shared-room" },
+      ] },
     ],
   },
   {
@@ -48,6 +52,32 @@ export const fallbackListingCategoryTree: ListingCategoryOption[] = [
       { id: 204, name: "Spare Parts & Accessories", slug: "spare-parts-accessories", detailedCategories: [
         { id: 2006, name: "Car Accessories", slug: "car-accessories" },
         { id: 2007, name: "Tyres / Batteries", slug: "tyres-batteries" },
+      ] },
+      { id: 205, name: "Rentals", slug: "rentals", detailedCategories: [
+        { id: 2008, name: "Self-drive", slug: "self-drive" },
+        { id: 2009, name: "With Driver", slug: "with-driver" },
+      ] },
+    ],
+  },
+  {
+    id: 11,
+    name: "Restaurants & Food",
+    slug: "restaurants-food",
+    subCategories: [
+      { id: 1101, name: "Restaurant", slug: "restaurant", detailedCategories: [
+        { id: 11001, name: "Dine-in Restaurant", slug: "dine-in-restaurant" },
+      ] },
+      { id: 1102, name: "Cafe", slug: "cafe", detailedCategories: [
+        { id: 11002, name: "Coffee Shop", slug: "coffee-shop" },
+      ] },
+      { id: 1103, name: "Bakery", slug: "bakery", detailedCategories: [
+        { id: 11003, name: "Bakery Shop", slug: "bakery-shop" },
+      ] },
+      { id: 1104, name: "Cloud Kitchen", slug: "cloud-kitchen", detailedCategories: [
+        { id: 11004, name: "Delivery Kitchen", slug: "delivery-kitchen" },
+      ] },
+      { id: 1105, name: "Catering", slug: "catering", detailedCategories: [
+        { id: 11005, name: "Event Catering", slug: "event-catering" },
       ] },
     ],
   },

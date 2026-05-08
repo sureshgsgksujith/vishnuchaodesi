@@ -40,6 +40,8 @@ type CategoryAttributeField = {
   key: string;
   label: string;
   isRequired?: boolean;
+  sectionName?: string;
+  sectionOrder?: number;
   type?: "text" | "number" | "date" | "checkbox" | "textarea";
   options?: string[];
 };
@@ -250,26 +252,83 @@ const initialRestaurantInfo: RestaurantInfo = {
 };
 
 const commonConditionOptions = ["New", "Like New", "Good", "Fair", "Needs Repair"];
+const yesNoOptions = ["Yes", "No"];
+const vehicleConditionOptions = ["New", "Used"];
+const vehicleFuelOptions = ["Petrol", "Diesel", "Electric", "CNG", "Hybrid", "Not Applicable"];
+const transmissionOptions = ["Manual", "Automatic", "Not Applicable"];
+const listingTypeOptions = ["Free", "Featured", "Premium"];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
   { key: "brand", label: "Brand" },
   { key: "model", label: "Model" },
-  { key: "year", label: "Year", type: "number" },
-  { key: "condition", label: "Condition", options: commonConditionOptions },
+  { key: "variant", label: "Variant" },
+  { key: "yearOfManufacture", label: "Year of Manufacture", type: "number" },
+  { key: "registrationYear", label: "Registration Year", type: "number" },
+  { key: "vehicleCondition", label: "Vehicle Condition", options: vehicleConditionOptions },
+  { key: "fuelType", label: "Fuel Type", options: vehicleFuelOptions },
+  { key: "transmission", label: "Transmission", options: transmissionOptions },
+  { key: "kilometersDriven", label: "KM Driven", type: "number" },
+  { key: "ownerCount", label: "Number of Owners", options: ["1st Owner", "2nd Owner", "3rd Owner", "4th Owner or More"] },
+  { key: "insurance", label: "Insurance", options: ["Active", "Expired"] },
+  { key: "insuranceValidTill", label: "Insurance Valid Till", type: "date" },
+  { key: "registrationState", label: "Registration State (RTO)" },
+  { key: "color", label: "Color" },
 ];
 
 const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]> = {
+  "Real Estate": [
+    { key: "superBuiltUpArea", label: "Super Built-up Area (sq ft)", type: "number" },
+    { key: "carpetArea", label: "Carpet Area", type: "number" },
+    { key: "floorNumber", label: "Floor Number", type: "number" },
+    { key: "totalFloors", label: "Total Floors", type: "number" },
+    { key: "propertyAge", label: "Property Age", options: ["New", "<1 yr", "1-5 yrs", "5+ yrs"] },
+    { key: "availability", label: "Availability", options: ["Immediate", "Date"] },
+    { key: "landmark", label: "Landmark" },
+    { key: "googleMapLatLong", label: "Google Map Location (lat/long)" },
+    { key: "sellerType", label: "Seller Type", options: ["Owner", "Agent", "Builder"] },
+    { key: "reraNumber", label: "RERA Number" },
+    { key: "ownershipType", label: "Ownership Type", options: ["Freehold", "Leasehold"] },
+  ],
   Vehicles: [
-    { key: "brand", label: "Brand" },
-    { key: "model", label: "Model" },
-    { key: "year", label: "Year", type: "number" },
-    { key: "condition", label: "Condition", options: commonConditionOptions },
-    { key: "fuelType", label: "Fuel Type", options: ["Petrol", "Diesel", "CNG", "Hybrid", "Electric", "Not Applicable"] },
-    { key: "transmission", label: "Transmission", options: ["Manual", "Automatic", "Not Applicable"] },
-    { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
-    { key: "ownerCount", label: "Owner Count", options: ["1st Owner", "2nd Owner", "3rd Owner", "4th Owner or More"] },
-    { key: "registrationYear", label: "Registration Year", type: "number" },
-    { key: "insuranceValidTill", label: "Insurance Valid Till", type: "date" },
+    ...vehicleCoreFields,
+    { key: "priceNegotiableVehicle", label: "Price Negotiable", options: yesNoOptions },
+    { key: "areaLocality", label: "Area / Locality" },
+    { key: "mapLatLong", label: "Map Location (lat/long)" },
+    { key: "rcAvailable", label: "RC Available", options: yesNoOptions },
+    { key: "pucAvailable", label: "Pollution Certificate (PUC)", options: yesNoOptions },
+    { key: "serviceHistory", label: "Service History", options: ["Available", "Not Available"] },
+    { key: "loanStatus", label: "Loan Status", options: ["Clear", "Active Loan"] },
+    { key: "sellerType", label: "Seller Type", options: ["Owner", "Dealer"] },
+    { key: "adType", label: "Ad Type", options: listingTypeOptions },
+    { key: "adDuration", label: "Ad Duration", options: ["7 days", "15 days", "30 days"] },
+  ],
+  "Restaurants & Food": [
+    { key: "businessType", label: "Business Type", options: ["Individual", "Company", "Franchise"] },
+    { key: "yearEstablished", label: "Year Established", type: "number" },
+    { key: "staffCount", label: "Number of Staff", type: "number" },
+    { key: "serviceType", label: "Service Type", options: ["Dine-in", "Takeaway", "Delivery", "Catering"] },
+    { key: "serviceRadius", label: "Service Radius (miles)" },
+    { key: "contactPerson", label: "Contact Person" },
+    { key: "specialHours", label: "Special Hours", type: "textarea" },
+    { key: "open24x7", label: "Open 24/7", options: yesNoOptions },
+    { key: "menuItems", label: "Menu Items", type: "textarea" },
+    { key: "averageCostForTwo", label: "Average Cost for Two (USD)", type: "number" },
+    { key: "discountsOffers", label: "Discounts / Offers", type: "textarea" },
+    { key: "couponCodes", label: "Coupon Codes" },
+    { key: "happyHours", label: "Happy Hours" },
+    { key: "deliveryAvailable", label: "Delivery Available", options: yesNoOptions },
+    { key: "deliveryFee", label: "Delivery Fee", type: "number" },
+    { key: "minimumOrderValue", label: "Minimum Order Value", type: "number" },
+    { key: "onlineOrdering", label: "Online Ordering", options: yesNoOptions },
+    { key: "thirdPartyIntegration", label: "Third-party Integration" },
+    { key: "foodLicenseNumber", label: "Food License Number" },
+    { key: "healthInspectionRating", label: "Health Inspection Rating" },
+    { key: "alcoholLicense", label: "Alcohol License", options: ["Not Applicable", "Active", "Expired"] },
+    { key: "taxId", label: "Tax ID" },
+    { key: "enableChat", label: "Enable Chat", options: yesNoOptions },
+    { key: "enableCall", label: "Enable Call", options: yesNoOptions },
+    { key: "tableBooking", label: "Table Booking", options: yesNoOptions },
+    { key: "orderNowButton", label: "Order Now Button", options: yesNoOptions },
   ],
   "Electronics & Appliances": [
     { key: "brand", label: "Brand" },
@@ -347,39 +406,99 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
 };
 
 const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFieldSet> = {
+  "Real Estate": {
+    default: categoryAttributeFieldsByCategory["Real Estate"],
+    subCategories: {
+      "Residential Sale": [
+        ...categoryAttributeFieldsByCategory["Real Estate"],
+        { key: "salePriceLabel", label: "Price Type", options: ["Total Price"] },
+        { key: "loanEligibleDetail", label: "Loan Eligible", options: yesNoOptions },
+      ],
+      "Residential Rent": [
+        ...categoryAttributeFieldsByCategory["Real Estate"],
+        { key: "monthlyRentLabel", label: "Price Type", options: ["Monthly Rent"] },
+        { key: "securityDepositDetail", label: "Security Deposit", type: "number" },
+      ],
+      "Commercial Sale": [
+        { key: "commercialPropertyType", label: "Property Type", options: ["Office", "Shop", "Warehouse"] },
+        { key: "commercialArea", label: "Area (sq ft)", type: "number" },
+        { key: "commercialFurnishing", label: "Furnishing", options: ["Furnished", "Unfurnished"] },
+        { key: "washrooms", label: "Washrooms", type: "number" },
+        { key: "parkingAvailable", label: "Parking", options: yesNoOptions },
+        { key: "suitableFor", label: "Suitable For", options: ["Office", "Retail", "Storage"] },
+        { key: "sellerType", label: "Seller Type", options: ["Owner", "Agent", "Builder"] },
+      ],
+      "Commercial Rent": [
+        { key: "commercialPropertyType", label: "Property Type", options: ["Office", "Shop", "Warehouse"] },
+        { key: "commercialArea", label: "Area (sq ft)", type: "number" },
+        { key: "commercialFurnishing", label: "Furnishing", options: ["Furnished", "Unfurnished"] },
+        { key: "washrooms", label: "Washrooms", type: "number" },
+        { key: "parkingAvailable", label: "Parking", options: yesNoOptions },
+        { key: "suitableFor", label: "Suitable For", options: ["Office", "Retail", "Storage"] },
+        { key: "securityDepositDetail", label: "Security Deposit", type: "number" },
+        { key: "sellerType", label: "Seller Type", options: ["Owner", "Agent", "Builder"] },
+      ],
+      "Land / Plots": [
+        { key: "plotAreaDetail", label: "Plot Area", type: "number" },
+        { key: "lengthDetail", label: "Length", type: "number" },
+        { key: "breadthDetail", label: "Breadth", type: "number" },
+        { key: "boundaryWallDetail", label: "Boundary Wall", options: yesNoOptions },
+        { key: "facingDetail", label: "Facing", options: ["East", "West", "North", "South"] },
+        { key: "approvalTypeDetail", label: "Approval Type" },
+        { key: "roadWidthDetail", label: "Road Width", type: "number" },
+        { key: "ownershipType", label: "Ownership Type", options: ["Freehold", "Leasehold"] },
+      ],
+      "PG / Co-living": [
+        { key: "roomTypeDetail", label: "Room Type", options: ["Single", "Shared"] },
+        { key: "genderPreferenceDetail", label: "Gender Preference", options: ["Male", "Female", "Any"] },
+        { key: "foodIncludedDetail", label: "Food Included", options: yesNoOptions },
+        { key: "pgAmenitiesDetail", label: "Amenities", options: ["WiFi", "Laundry", "AC"] },
+      ],
+    },
+  },
   Vehicles: {
     default: categoryAttributeFieldsByCategory.Vehicles,
     subCategories: {
       Cars: [
         ...vehicleCoreFields,
-        { key: "fuelType", label: "Fuel Type", options: ["Petrol", "Diesel", "CNG", "Hybrid", "Electric"] },
-        { key: "transmission", label: "Transmission", options: ["Manual", "Automatic"] },
-        { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
-        { key: "ownerCount", label: "Owner Count", options: ["1st Owner", "2nd Owner", "3rd Owner", "4th Owner or More"] },
-        { key: "registrationYear", label: "Registration Year", type: "number" },
-        { key: "insuranceValidTill", label: "Insurance Valid Till", type: "date" },
+        { key: "bodyType", label: "Body Type", options: ["Hatchback", "Sedan", "SUV"] },
+        { key: "seatingCapacity", label: "Seating Capacity", type: "number" },
+        { key: "bootSpace", label: "Boot Space" },
+        { key: "mileage", label: "Mileage (km/l)" },
+        { key: "airConditioning", label: "Air Conditioning", type: "checkbox" },
+        { key: "powerSteering", label: "Power Steering", type: "checkbox" },
+        { key: "abs", label: "ABS", type: "checkbox" },
+        { key: "airbags", label: "Airbags", type: "checkbox" },
+        { key: "sunroof", label: "Sunroof", type: "checkbox" },
+        { key: "alloyWheels", label: "Alloy Wheels", type: "checkbox" },
+        { key: "bluetoothGps", label: "Bluetooth / GPS", type: "checkbox" },
+        { key: "reverseCamera", label: "Reverse Camera", type: "checkbox" },
+        { key: "cruiseControl", label: "Cruise Control", type: "checkbox" },
       ],
       Bikes: [
         ...vehicleCoreFields,
         { key: "engineCapacity", label: "Engine Capacity (cc)", type: "number" },
-        { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
-        { key: "ownerCount", label: "Owner Count", options: ["1st Owner", "2nd Owner", "3rd Owner", "4th Owner or More"] },
-        { key: "registrationYear", label: "Registration Year", type: "number" },
-        { key: "insuranceValidTill", label: "Insurance Valid Till", type: "date" },
+        { key: "mileage", label: "Mileage" },
+        { key: "bikeType", label: "Bike Type", options: ["Sports", "Cruiser", "Scooter"] },
       ],
       "Commercial Vehicles": [
         ...vehicleCoreFields,
         { key: "vehicleType", label: "Vehicle Type", options: ["Truck", "Bus", "Van", "Pickup", "Other"] },
-        { key: "loadOrSeatingCapacity", label: "Load / Seating Capacity" },
-        { key: "fuelType", label: "Fuel Type", options: ["Diesel", "Petrol", "CNG", "Electric"] },
-        { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
-        { key: "permitType", label: "Permit Type" },
+        { key: "loadCapacity", label: "Load Capacity" },
+        { key: "numberOfWheels", label: "Number of Wheels", type: "number" },
+        { key: "permitType", label: "Permit Type", options: ["National", "State"] },
+      ],
+      Rentals: [
+        ...vehicleCoreFields,
+        { key: "rentalType", label: "Rental Type", options: ["Self-drive", "With driver"] },
+        { key: "pricePerHourDay", label: "Price per hour/day", type: "number" },
+        { key: "securityDepositVehicle", label: "Security Deposit", type: "number" },
       ],
       "Spare Parts & Accessories": [
-        { key: "partType", label: "Part Type" },
-        { key: "compatibleVehicle", label: "Compatible Vehicle" },
+        { key: "partType", label: "Part Type", options: ["Tyres", "Battery", "Music System", "Other"] },
+        { key: "compatibleModels", label: "Compatible Models" },
         { key: "brand", label: "Brand" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
+        { key: "condition", label: "Condition", options: vehicleConditionOptions },
         { key: "warranty", label: "Warranty", options: ["No Warranty", "Seller Warranty", "Manufacturer Warranty"] },
       ],
     },
@@ -399,6 +518,26 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
         { key: "manufacturingDate", label: "Manufacturing Date" },
         { key: "condition", label: "Condition", options: commonConditionOptions },
         { key: "warranty", label: "Warranty", options: ["No Warranty", "Seller Warranty", "Manufacturer Warranty"] },
+      ],
+    },
+  },
+  "Restaurants & Food": {
+    default: categoryAttributeFieldsByCategory["Restaurants & Food"],
+    subCategories: {
+      Restaurant: categoryAttributeFieldsByCategory["Restaurants & Food"],
+      Cafe: categoryAttributeFieldsByCategory["Restaurants & Food"],
+      Bakery: [
+        ...categoryAttributeFieldsByCategory["Restaurants & Food"],
+        { key: "bakerySpecialties", label: "Bakery Specialties", type: "textarea" },
+      ],
+      "Cloud Kitchen": [
+        ...categoryAttributeFieldsByCategory["Restaurants & Food"],
+        { key: "deliveryOnly", label: "Delivery Only", options: yesNoOptions },
+      ],
+      Catering: [
+        ...categoryAttributeFieldsByCategory["Restaurants & Food"],
+        { key: "eventCapacity", label: "Event Capacity", type: "number" },
+        { key: "cateringPackages", label: "Catering Packages", type: "textarea" },
       ],
     },
   },
@@ -1070,6 +1209,9 @@ export default function ListingFormPage() {
       if (name === "categoryName") {
         nextForm.subCategory = "";
         nextForm.detailCategory = "";
+        if (value === "Restaurants & Food" && !nextForm.country) {
+          nextForm.country = "United States";
+        }
         setCategoryAttributes({});
       }
 
@@ -1351,6 +1493,7 @@ export default function ListingFormPage() {
                         categoryName={form.categoryName}
                         subCategory={form.subCategory}
                         detailCategory={form.detailCategory}
+                        form={form}
                         dynamicFields={dynamicCategoryFields}
                         values={categoryAttributes}
                         onChange={setCategoryAttributes}
@@ -1667,6 +1810,7 @@ function CategoryAttributesFields({
   categoryName,
   subCategory,
   detailCategory,
+  form,
   dynamicFields,
   values,
   onChange,
@@ -1674,13 +1818,16 @@ function CategoryAttributesFields({
   categoryName: string;
   subCategory: string;
   detailCategory: string;
+  form: FormState;
   dynamicFields: CategoryAttributeField[];
   values: CategoryAttributes;
   onChange: (value: CategoryAttributes) => void;
 }) {
-  const fields = dynamicFields.length
+  const baseFields = dynamicFields.length
     ? dynamicFields
     : getCategoryAttributeFields(categoryName, subCategory, detailCategory);
+  const fields = baseFields.filter((field) => shouldShowCategoryAttributeField(field, values, form));
+  const sections = groupCategoryAttributeFields(fields, categoryName);
 
   if (!fields.length) {
     return null;
@@ -1692,52 +1839,56 @@ function CategoryAttributesFields({
 
   return (
     <>
-      <h5 className="mt-3 mb-3">{categoryName} Details</h5>
-      <div className="row">
-        {fields.map((field) => {
-          const displayLabel = field.isRequired ? `${field.label}*` : field.label;
+      {sections.map((section) => (
+        <div key={section.name}>
+          <h5 className="mt-3 mb-3">{section.name}</h5>
+          <div className="row">
+            {section.fields.map((field) => {
+              const displayLabel = field.isRequired ? `${field.label}*` : field.label;
 
-          return field.options?.length ? (
-            <SelectColumn
-              key={field.key}
-              placeholder={displayLabel}
-              value={values[field.key] || ""}
-              options={field.options}
-              onChange={(value) => updateAttribute(field.key, value)}
-            />
-          ) : (
-            field.type === "textarea" ? (
-              <div className="col-md-12" key={field.key}>
-                <div className="form-group">
-                  <textarea
-                    className="form-control"
-                    placeholder={displayLabel}
-                    value={values[field.key] || ""}
-                    rows={3}
-                    onChange={(event) => updateAttribute(field.key, event.target.value)}
-                  />
-                </div>
-              </div>
-            ) : field.type === "checkbox" ? (
-              <div className="col-md-6" key={field.key}>
-                <CheckboxField
-                  label={displayLabel}
-                  checked={values[field.key] === "true"}
-                  onChange={(value) => updateAttribute(field.key, String(value))}
+              return field.options?.length ? (
+                <SelectColumn
+                  key={field.key}
+                  placeholder={displayLabel}
+                  value={values[field.key] || ""}
+                  options={field.options}
+                  onChange={(value) => updateAttribute(field.key, value)}
                 />
-              </div>
-            ) : (
-              <InputColumn
-                key={field.key}
-                placeholder={displayLabel}
-                type={field.type || "text"}
-                value={values[field.key] || ""}
-                onChange={(value) => updateAttribute(field.key, value)}
-              />
-            )
-          );
-        })}
-      </div>
+              ) : (
+                field.type === "textarea" ? (
+                  <div className="col-md-12" key={field.key}>
+                    <div className="form-group">
+                      <textarea
+                        className="form-control"
+                        placeholder={displayLabel}
+                        value={values[field.key] || ""}
+                        rows={3}
+                        onChange={(event) => updateAttribute(field.key, event.target.value)}
+                      />
+                    </div>
+                  </div>
+                ) : field.type === "checkbox" ? (
+                  <div className="col-md-6" key={field.key}>
+                    <CheckboxField
+                      label={displayLabel}
+                      checked={values[field.key] === "true"}
+                      onChange={(value) => updateAttribute(field.key, String(value))}
+                    />
+                  </div>
+                ) : (
+                  <InputColumn
+                    key={field.key}
+                    placeholder={displayLabel}
+                    type={field.type || "text"}
+                    value={values[field.key] || ""}
+                    onChange={(value) => updateAttribute(field.key, value)}
+                  />
+                )
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </>
   );
 }
@@ -1809,7 +1960,7 @@ function DetailCategoryFields({
     );
   }
 
-  if (form.subCategory === "PG") {
+  if (["PG", "PG / Co-living"].includes(form.subCategory)) {
     return (
       <>
         <h5 className="mt-3 mb-3">PG / Co-living</h5>
@@ -2013,7 +2164,7 @@ function RestaurantInfoFields({
         <InputColumn placeholder="Tagline" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
       </div>
       <div className="row">
-        <SelectColumn placeholder="Cuisine" value={restaurantInfo.cuisine} options={["Indian", "Chinese", "Italian", "Mexican"]} onChange={(value) => onChange({ ...restaurantInfo, cuisine: value })} />
+        <SelectColumn placeholder="Cuisine" value={restaurantInfo.cuisine} options={["Indian", "Chinese", "Italian", "Mexican", "Multi-cuisine"]} onChange={(value) => onChange({ ...restaurantInfo, cuisine: value })} />
         <SelectColumn placeholder="Food Type" value={restaurantInfo.foodType} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => onChange({ ...restaurantInfo, foodType: value })} />
       </div>
     </>
@@ -2706,14 +2857,65 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
   );
 }
 
+function shouldShowCategoryAttributeField(field: CategoryAttributeField, values: CategoryAttributes, form: FormState) {
+  const key = normalizeFieldKey(field.key);
+  const vehicleCondition = values.vehicleCondition || values.vehicle_condition;
+  const isNewVehicle = form.detailCategory.toLowerCase().includes("new") || vehicleCondition === "New";
+
+  if (form.categoryName === "Vehicles" && isNewVehicle && ["kilometersdriven", "kilometers_driven", "ownercount", "owner_count"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && form.subCategory !== "Rentals" && ["rentaltype", "rental_type", "priceperhourday", "price_per_hour_day", "securitydepositvehicle", "security_deposit_vehicle"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Real Estate" && isPlotRealEstateSubCategory(form.subCategory) && ["bhk", "bathrooms", "balconies", "furnishingtype", "furnishing_type"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Real Estate" && !form.subCategory.toLowerCase().includes("rent") && ["securitydepositdetail", "security_deposit_detail", "monthlyrentlabel", "monthly_rent_label"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Real Estate" && !form.subCategory.toLowerCase().includes("sale") && ["loaneligibledetail", "loan_eligible_detail", "salepricelabel", "sale_price_label"].includes(key)) {
+    return false;
+  }
+
+  return true;
+}
+
+function normalizeFieldKey(key: string) {
+  return key.replace(/[^a-z0-9_]/gi, "").toLowerCase();
+}
+
 function mapDynamicFieldDefinition(field: ListingCategoryFieldDefinition): CategoryAttributeField {
   return {
     key: field.fieldKey,
     isRequired: field.isRequired,
     label: field.label,
+    sectionName: field.sectionName,
+    sectionOrder: field.sectionOrder,
     type: field.fieldType === "dropdown" ? "text" : field.fieldType,
     options: field.fieldType === "dropdown" ? field.options : undefined,
   };
+}
+
+function groupCategoryAttributeFields(fields: CategoryAttributeField[], categoryName: string) {
+  const sectionMap = new Map<string, { name: string; order: number; fields: CategoryAttributeField[] }>();
+
+  for (const field of fields) {
+    const sectionName = field.sectionName?.trim() || `${categoryName} Details`;
+    const sectionOrder = field.sectionOrder || 1;
+    const section = sectionMap.get(sectionName) || { name: sectionName, order: sectionOrder, fields: [] };
+    section.order = Math.min(section.order, sectionOrder);
+    section.fields.push(field);
+    sectionMap.set(sectionName, section);
+  }
+
+  return Array.from(sectionMap.values()).sort((left, right) =>
+    left.order - right.order || left.name.localeCompare(right.name)
+  );
 }
 
 function includeCurrentValue(options: string[], currentValue: string) {
@@ -2792,9 +2994,9 @@ function getListingKind(subCategory: string, detailCategory: string) {
   void detailCategory;
 
   if (isCommercialRealEstateSubCategory(subCategory)) return "Commercial";
-  if (subCategory === "PG") return "PG";
+  if (["PG", "PG / Co-living"].includes(subCategory)) return "PG";
   if (isPlotRealEstateSubCategory(subCategory)) return "Plot";
-  if (["Restaurants", "Fast Food", "Cafes"].includes(subCategory)) return "Restaurant";
+  if (["Restaurants", "Restaurant", "Fast Food", "Cafes", "Cafe", "Bakery", "Cloud Kitchen", "Catering"].includes(subCategory)) return "Restaurant";
   if (subCategory === "Job Listings") return "Job";
   if (subCategory === "Freelance Services") return "Service";
   return "Classified";
@@ -2815,7 +3017,7 @@ function getRequiredDetailFields(subCategory: string, detailCategory: string): A
     return [["area", "Area"], ["washrooms", "Washrooms"]];
   }
 
-  if (subCategory === "PG") {
+  if (["PG", "PG / Co-living"].includes(subCategory)) {
     return [["roomType", "Room Type"], ["genderPreference", "Gender Preference"]];
   }
 
