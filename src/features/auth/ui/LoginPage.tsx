@@ -367,7 +367,7 @@ export default function LoginPage() {
           <div className="row">
             <div className="col-md-6 offset-md-3">
               <div className="login-main">
-                <span className="tit-tag">GENERAL USER LOGIN</span>
+                <span className="tit-tag">USER LOGIN</span>
 
                 {mode === "login" && (
                   <div style={{ display: "block" }}>
@@ -380,7 +380,7 @@ export default function LoginPage() {
                         />
                       </div>
 
-                      <h4>Visitors Login</h4>
+                      <h4>Login</h4>
 
                       <form id="login_form" onSubmit={handleLoginSubmit}>
                         <div className="form-group mb-3">

@@ -15,6 +15,7 @@ import HomeLawyersSection from "./HomeLawyersSection";
 import HomeTravelCarsSection from "./HomeTravelCarsSection";
 import HomeBuySellSection from "./HomeBuySellSection";
 import HomeBannerSliderSection from "./HomeBannerSliderSection";
+import HomeFeaturedListingsSection from "./HomeFeaturedListingsSection";
 import HomePlansSection from "./HomePlansSection";
 import HomeFeaturedAreasSection from "./HomeFeaturedAreasSection";
 import HomeListBusinessSection from "./HomeListBusinessSection";
@@ -80,6 +81,7 @@ export default function HomePage() {
       <HomeTravelCarsSection />
       <HomeBuySellSection />
       <HomeBannerSliderSection />
+      <HomeFeaturedListingsSection />
       <HomePlansSection />
       <HomeFeaturedAreasSection />
       <HomeAdsSection />

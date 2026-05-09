@@ -93,6 +93,30 @@ export async function getMyListings(search = "", page = 1, pageSize = 10) {
   return response.data;
 }
 
+export async function getRealEstateListings(page = 1, pageSize = 4) {
+  const response = await apiClient.get<ListingListResponse>("/Listings/real-estate", {
+    params: {
+      page,
+      pageSize,
+    },
+    timeout: 8000,
+  });
+
+  return response.data;
+}
+
+export async function getRestaurantFoodListings(page = 1, pageSize = 4) {
+  const response = await apiClient.get<ListingListResponse>("/Listings/restaurants-food", {
+    params: {
+      page,
+      pageSize,
+    },
+    timeout: 8000,
+  });
+
+  return response.data;
+}
+
 export async function createListing(
   payload: UpsertListingPayload,
   files?: ListingUploadFiles
