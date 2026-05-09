@@ -2882,14 +2882,6 @@ function BusinessHoursEditor({
         </div>
       </div>
       <div className="listing-hours-grid">
-        <div className="listing-hours-grid-head">
-          <span>Day</span>
-          <span>Status</span>
-          <span>24/7</span>
-          <span>Opening</span>
-          <span>Closing</span>
-          <span>Special Hours</span>
-        </div>
         {hours.map((hour, index) => (
           <div className="listing-hours-row" key={hour.day}>
             <div className="listing-hours-day">{hour.day}</div>
@@ -2900,16 +2892,10 @@ function BusinessHoursEditor({
               </select>
             </div>
             <div>
-              <input type="checkbox" checked={hour.is24Hours} disabled={hour.status === "Closed"} onChange={(event) => updateHour(index, { ...hour, is24Hours: event.target.checked })} />
-            </div>
-            <div>
               <input type="time" className="form-control" value={hour.open} disabled={hour.status === "Closed" || hour.is24Hours} onChange={(event) => updateHour(index, { ...hour, open: event.target.value })} />
             </div>
             <div>
               <input type="time" className="form-control" value={hour.close} disabled={hour.status === "Closed" || hour.is24Hours} onChange={(event) => updateHour(index, { ...hour, close: event.target.value })} />
-            </div>
-            <div>
-              <input type="text" className="form-control" value={hour.specialHoursNote} onChange={(event) => updateHour(index, { ...hour, specialHoursNote: event.target.value })} />
             </div>
           </div>
         ))}

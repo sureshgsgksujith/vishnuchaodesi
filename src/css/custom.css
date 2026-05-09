@@ -2150,14 +2150,35 @@ button.add-list-rem-btn {
 
 .listing-hours-bulk-fields {
     display: grid;
-    grid-template-columns: minmax(120px, .9fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(120px, .9fr) minmax(105px, 1fr) minmax(105px, 1fr) max-content;
     gap: 8px;
+    align-items: center;
 }
 
 .listing-hours-bulk-fields .form-control,
 .listing-hours-grid .form-control {
     min-width: 0;
     height: 38px;
+}
+
+.listing-inline-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 38px;
+    margin: 0;
+    color: #2d374f;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.listing-inline-check input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #0d6efd;
 }
 
 .listing-hours-action-row {
@@ -2230,29 +2251,21 @@ button.add-list-rem-btn {
 
 .listing-hours-grid {
     display: grid;
-    gap: 8px;
+    gap: 12px;
 }
 
-.listing-hours-grid-head,
 .listing-hours-row {
     display: grid;
-    grid-template-columns: 1.1fr 1fr 1fr 1fr;
-    gap: 10px;
+    grid-template-columns: minmax(120px, 1.15fr) minmax(135px, .95fr) minmax(135px, .95fr) minmax(135px, .95fr);
+    gap: 36px;
     align-items: center;
 }
 
-.listing-hours-grid-head {
-    color: #64748b;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
 .listing-hours-row {
-    padding: 9px;
-    border: 1px solid #e0e7f2;
-    border-radius: 8px;
-    background: #fff;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
 }
 
 .listing-hours-day {
@@ -2290,17 +2303,13 @@ button.add-list-rem-btn {
     .listing-hours-bulk-row,
     .listing-hours-bulk-fields,
     .listing-hours-action-row,
-    .listing-hours-grid-head,
     .listing-hours-row {
         grid-template-columns: 1fr;
+        gap: 8px;
     }
 
     .listing-hours-day-select {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .listing-hours-grid-head {
-        display: none;
     }
 
     .listing-hours-day {
