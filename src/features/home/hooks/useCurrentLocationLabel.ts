@@ -93,12 +93,12 @@ const reverseGeocodeWithOpenCage = async (latitude: number, longitude: number) =
   }
 
   return formatFallbackLocationLabel(
-    components.state_district ||
-      components.city ||
+    components.city ||
       components._normalized_city ||
       components.town ||
       components.village ||
-      components.county,
+      components.county ||
+      components.state_district,
     components.state,
   );
 };

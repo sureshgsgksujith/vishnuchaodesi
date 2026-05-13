@@ -41,6 +41,23 @@ export type ListingSummary = {
   coverBannerUrl?: string | null;
   averageRating?: number;
   totalReviews?: number;
+  reviews?: ListingReview[];
+};
+
+export type ListingReview = {
+  id: number;
+  listingId: number;
+  userId: number;
+  reviewerName: string;
+  rating: number;
+  reviewMessage?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+};
+
+export type ListingReviewPayload = {
+  rating: number;
+  reviewMessage?: string;
 };
 
 export type ListingListResponse = {
@@ -167,6 +184,11 @@ export async function createListing(
 
 export async function getListing(listingId: number) {
   const response = await apiClient.get<ListingSummary>(`/Listings/${listingId}`);
+  return response.data;
+}
+
+export async function submitListingReview(listingId: number, payload: ListingReviewPayload) {
+  const response = await apiClient.post<ListingSummary>(`/Listings/${listingId}/reviews`, payload);
   return response.data;
 }
 

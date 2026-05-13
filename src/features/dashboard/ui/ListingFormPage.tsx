@@ -33,7 +33,7 @@ type InfoItem = { question: string; answer: string };
 type BusinessHour = { day: string; status: string; open: string; close: string; is24Hours: boolean; specialHoursNote: string };
 type ContactInfo = { mainPhone: string; alternatePhone: string; tollFree: string; email: string; streetAddress: string; suite: string; zipcode: string; city: string; state: string };
 type WebLinks = { mainWebsite: string; displayWebsite: string; iosApp: string; androidApp: string };
-type SocialLinks = { facebook: string; instagram: string; twitter: string; linkedin: string; tiktok: string; youtube: string };
+type SocialLinks = { facebook: string; instagram: string; twitter: string; linkedin: string; youtube: string };
 type PaymentMethods = { creditCard: boolean; cash: boolean; upi: boolean; googlePay: boolean; applePay: boolean; insurance: boolean };
 type RestaurantInfo = {
   restaurantName: string;
@@ -132,6 +132,9 @@ type FormState = {
   whatsapp: string;
   website: string;
   address: string;
+  countryId: number | null;
+  stateId: number | null;
+  cityId: number | null;
   country: string;
   state: string;
   city: string;
@@ -145,8 +148,6 @@ type FormState = {
   coverImageName: string;
   serviceLocations: string;
   listingVideo: string;
-  googleMap: string;
-  view360: string;
   galleryMedia: string[];
   propertyType: string;
   bhk: string;
@@ -216,6 +217,9 @@ const initialForm: FormState = {
   whatsapp: "",
   website: "",
   address: "",
+  countryId: null,
+  stateId: null,
+  cityId: null,
   country: "",
   state: "",
   city: "",
@@ -229,8 +233,6 @@ const initialForm: FormState = {
   coverImageName: "",
   serviceLocations: "",
   listingVideo: "",
-  googleMap: "",
-  view360: "",
   galleryMedia: [],
   propertyType: "",
   bhk: "",
@@ -320,7 +322,6 @@ const initialSocialLinks: SocialLinks = {
   instagram: "",
   twitter: "",
   linkedin: "",
-  tiktok: "",
   youtube: "",
 };
 
@@ -1039,13 +1040,13 @@ export default function ListingFormPage() {
   }, [isEditMode]);
 
   const selectedCountry = useMemo(
-    () => countries.find((country) => country.name === form.country),
-    [countries, form.country],
+    () => countries.find((country) => country.id === form.countryId) || countries.find((country) => country.name === form.country),
+    [countries, form.country, form.countryId],
   );
   const currencyCountry = selectedCountry?.name || form.country;
   const selectedState = useMemo(
-    () => states.find((state) => state.name === form.state),
-    [states, form.state],
+    () => states.find((state) => state.id === form.stateId) || states.find((state) => state.name === form.state),
+    [states, form.state, form.stateId],
   );
   useEffect(() => {
     let isActive = true;
@@ -1363,14 +1364,23 @@ export default function ListingFormPage() {
       }
 
       if (name === "country") {
+        nextForm.countryId = null;
+        nextForm.stateId = null;
+        nextForm.cityId = null;
         nextForm.state = "";
         nextForm.city = "";
         nextForm.pincode = "";
       }
 
       if (name === "state") {
+        nextForm.stateId = null;
+        nextForm.cityId = null;
         nextForm.city = "";
         nextForm.pincode = "";
+      }
+
+      if (name === "city") {
+        nextForm.cityId = null;
       }
 
       if (name === "subCategory") {
@@ -1425,6 +1435,44 @@ export default function ListingFormPage() {
       }
       return nextErrors;
     });
+  }
+
+  function updateCountry(value: string) {
+    clearFieldError("country");
+    const country = countries.find((item) => item.name === value);
+    setForm((currentForm) => ({
+      ...currentForm,
+      country: value,
+      countryId: country?.id ?? null,
+      state: "",
+      stateId: null,
+      city: "",
+      cityId: null,
+      pincode: "",
+    }));
+  }
+
+  function updateState(value: string) {
+    clearFieldError("state");
+    const state = states.find((item) => item.name === value);
+    setForm((currentForm) => ({
+      ...currentForm,
+      state: value,
+      stateId: state?.id ?? null,
+      city: "",
+      cityId: null,
+      pincode: "",
+    }));
+  }
+
+  function updateCity(value: string) {
+    clearFieldError("city");
+    const city = cities.find((item) => item.name === value);
+    setForm((currentForm) => ({
+      ...currentForm,
+      city: value,
+      cityId: city?.id ?? null,
+    }));
   }
 
   function clearFieldError(name: string) {
@@ -1542,8 +1590,10 @@ export default function ListingFormPage() {
       }
     }
 
-    dynamicCategoryFields.forEach((field) => {
-      if (field.isRequired && !categoryAttributes[field.key]?.trim()) {
+    dynamicCategoryFields
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+      if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
         addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
       }
     });
@@ -1888,9 +1938,9 @@ export default function ListingFormPage() {
                       {form.categoryName === "Vehicles" && !hasDynamicSellerTypeField ? (
                         <Select placeholder="Seller Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Dealer"]} onChange={(value) => updateField("sellerType", value)} />
                       ) : null}
-                      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={countries.map((country) => country.name)} onChange={(value) => updateField("country", value)} />
-                      <Select placeholder="Select State*" value={form.state} error={fieldErrors.state} options={states.map((state) => state.name)} onChange={(value) => updateField("state", value)} disabled={!form.country} />
-                      <Select placeholder="Select City*" value={form.city} error={fieldErrors.city} options={cities.map((city) => city.name)} onChange={(value) => updateField("city", value)} disabled={!form.state} />
+                      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={countries.map((country) => country.name)} onChange={updateCountry} />
+                      <Select placeholder="Select State*" value={form.state} error={fieldErrors.state} options={states.map((state) => state.name)} onChange={updateState} disabled={!form.country} />
+                      <Select placeholder="Select City*" value={form.city} error={fieldErrors.city} options={cities.map((city) => city.name)} onChange={updateCity} disabled={!form.state} />
                       <AddressAutocompleteInput
                         placeholder="Listing address*"
                         value={form.address}
@@ -1933,11 +1983,6 @@ export default function ListingFormPage() {
                             updateField={updateField}
                             updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
                           />
-                          <ListingSettingsFields
-                            form={form}
-                            updateField={updateField}
-                            updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
-                          />
                         </>
                       ) : null}
                       {form.categoryName === "Restaurants & Food" && !hasDynamicCategoryFields ? (
@@ -1950,7 +1995,6 @@ export default function ListingFormPage() {
                             onChange={setRestaurantInfo}
                             onMenuItemsChange={setRestaurantMenuItems}
                           />
-                          <RestaurantListingSettingsFields form={form} updateField={updateField} />
                         </>
                       ) : null}
                       {form.categoryName && !hasDynamicPriceField && !isRealEstateCategory(form.categoryName) && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && form.subCategory === "Rentals") ? (
@@ -2099,9 +2143,6 @@ export default function ListingFormPage() {
                       <p></p>
                       <h4>Video Gallery</h4>
                       <Textarea placeholder="Paste Your Youtube iframe Code here" value={form.listingVideo} onChange={(value) => updateField("listingVideo", value)} />
-                      <h4>Map and 360 view</h4>
-                      <Textarea placeholder="Shop location" value={form.googleMap} onChange={(value) => updateField("googleMap", value)} />
-                      <Textarea placeholder="360 view" value={form.view360} onChange={(value) => updateField("view360", value)} />
                       <div className="row">
                         <div className="col-md-6">
                           <button type="button" className="btn btn-primary" onClick={handlePrevious}>Previous</button>
@@ -2623,7 +2664,7 @@ function CategoryAttributesFields({
                   <div className="col-md-12" key={field.key}>
                     <div className="form-group">
                       <textarea
-                        className="form-control"
+                        className={`form-control${error ? " is-invalid" : ""}`}
                         placeholder={displayLabel}
                         value={values[field.key] || ""}
                         rows={3}
@@ -2835,30 +2876,6 @@ function PriceAndAmenitiesFields({
           <CheckboxField label="Children's Play Area" checked={form.amenityChildrensPlayArea} onChange={(value) => updateBooleanField("amenityChildrensPlayArea", value)} />
         </div>
       </div>
-    </>
-  );
-}
-
-function ListingSettingsFields({
-  form,
-  updateField,
-  updateBooleanField,
-}: {
-  form: FormState;
-  updateField: (name: StringFormField, value: string) => void;
-  updateBooleanField: (name: BooleanFormField, value: boolean) => void;
-}) {
-  return (
-    <>
-      <h5 className="mt-3 mb-3">Listing Settings</h5>
-      <div className="row">
-        <SelectColumn placeholder="Ad Type" value={form.adType} options={["Free", "Featured", "Premium"]} onChange={(value) => updateField("adType", value)} />
-        <SelectColumn placeholder="Ad Duration" value={form.adDurationDays} options={["7", "15", "30"]} onChange={(value) => updateField("adDurationDays", value)} />
-      </div>
-      <CheckboxField label="Auto-renew" checked={form.autoRenew} onChange={(value) => updateBooleanField("autoRenew", value)} />
-      <h5 className="mt-3 mb-3">SEO</h5>
-      <Input placeholder="Meta Title" value={form.metaTitle} onChange={(value) => updateField("metaTitle", value)} />
-      <Textarea placeholder="Meta Description" value={form.metaDescription} onChange={(value) => updateField("metaDescription", value)} />
     </>
   );
 }
@@ -3221,24 +3238,6 @@ function MultiSelectCheckboxes({
   );
 }
 
-function RestaurantListingSettingsFields({
-  form,
-  updateField,
-}: {
-  form: FormState;
-  updateField: (name: StringFormField, value: string) => void;
-}) {
-  return (
-    <>
-      <h5 className="mt-3 mb-3">Listing Settings</h5>
-      <div className="row">
-        <SelectColumn placeholder="Listing Type*" value={form.adType} options={["Free", "Featured", "Premium"]} onChange={(value) => updateField("adType", value)} />
-        <SelectColumn placeholder="Ad Duration*" value={form.adDurationDays === "7" || form.adDurationDays === "15" ? "30" : form.adDurationDays} options={["30", "60", "90"]} onChange={(value) => updateField("adDurationDays", value)} />
-      </div>
-    </>
-  );
-}
-
 function BusinessHoursEditor({
   hours,
   onChange,
@@ -3461,7 +3460,6 @@ function SocialLinksFields({
       <h4 className="mt-2">Social Media</h4>
       <InputColumnWithLabel label="Facebook" placeholder="Facebook link" value={socialLinks.facebook} onChange={(value) => onChange({ ...socialLinks, facebook: value })} />
       <InputColumnWithLabel label="Instagram" placeholder="Instagram link" value={socialLinks.instagram} onChange={(value) => onChange({ ...socialLinks, instagram: value })} />
-      <InputColumnWithLabel label="TikTok" placeholder="TikTok link" value={socialLinks.tiktok} onChange={(value) => onChange({ ...socialLinks, tiktok: value })} />
       <InputColumnWithLabel label="Twitter" placeholder="Twitter link" value={socialLinks.twitter} onChange={(value) => onChange({ ...socialLinks, twitter: value })} />
       <InputColumnWithLabel label="YouTube" placeholder="YouTube link" value={socialLinks.youtube} onChange={(value) => onChange({ ...socialLinks, youtube: value })} />
       <InputColumnWithLabel label="LinkedIn" placeholder="LinkedIn link" value={socialLinks.linkedin} onChange={(value) => onChange({ ...socialLinks, linkedin: value })} />
@@ -3725,6 +3723,9 @@ function buildListingPayload(
       pricePerSqFt: numberOrNull(form.pricePerSqFt) ?? numberAttribute(categoryAttributes, "price_per_sq_ft", "pricePerSqFt"),
     },
     locationDetails: {
+      countryId: form.countryId,
+      stateId: form.stateId,
+      cityId: form.cityId,
       country: form.country.trim(),
       state: form.state.trim(),
       city: form.city.trim(),
@@ -3752,7 +3753,6 @@ function buildListingPayload(
         ...form.galleryMedia,
       ].map((value) => value.trim()).filter((value) => value && !isVideoValue(value)),
       videoUrl: form.listingVideo.trim() || form.galleryMedia.find(isVideoValue) || "",
-      virtualTourUrl: form.view360.trim(),
       logoUrl: form.profileImageName.trim(),
       coverBannerUrl: form.coverImageName.trim(),
     },
@@ -3786,7 +3786,6 @@ function buildListingPayload(
       serviceRadiusMiles: numberOrNull(restaurantInfo.serviceRadiusMiles) ?? numberAttribute(categoryAttributes, "service_radius", "service_radius_miles", "serviceRadiusMiles"),
       instagramUrl: socialLinks.instagram.trim(),
       facebookUrl: socialLinks.facebook.trim(),
-      tikTokUrl: socialLinks.tiktok.trim(),
       twitterUrl: socialLinks.twitter.trim(),
       youTubeUrl: socialLinks.youtube.trim(),
       averageCostForTwo: numberOrNull(restaurantInfo.averageCostForTwo) ?? numberAttribute(categoryAttributes, "average_cost_for_two", "averageCostForTwo"),
@@ -3892,6 +3891,9 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     whatsapp: stringValue(sellerInformation.whatsAppNumber),
     website: stringValue(sellerInformation.websiteUrl),
     address: stringValue(locationDetails.locality),
+    countryId: numberOrNull(stringValue(locationDetails.countryId)),
+    stateId: numberOrNull(stringValue(locationDetails.stateId)),
+    cityId: numberOrNull(stringValue(locationDetails.cityId)),
     country: stringValue(locationDetails.country),
     state: stringValue(locationDetails.state),
     city: stringValue(locationDetails.city || listing.city),
@@ -3905,7 +3907,6 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     coverImageName,
     serviceLocations: isDuplicate ? "" : stringValue(locationDetails.landmark),
     listingVideo: listing.videoUrl || "",
-    view360: listing.virtualTourUrl || "",
     galleryMedia,
     propertyType: stringValue(propertyDetails.propertyType) || listing.detailCategory || "",
     bhk: stringValue(propertyDetails.bhk),
@@ -4403,6 +4404,14 @@ function hasAnyFieldKey(fields: CategoryAttributeField[], ...keys: string[]) {
 
 function categoryFieldErrorKey(key: string) {
   return `categoryAttributes.${key}`;
+}
+
+function isMissingRequiredCategoryValue(field: CategoryAttributeField, value?: string) {
+  if (field.type === "checkbox") {
+    return value !== "true";
+  }
+
+  return !String(value || "").trim();
 }
 
 function vehicleFeatureValues(values: CategoryAttributes) {

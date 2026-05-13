@@ -259,7 +259,9 @@
 .chaodesi-customer-header .chaodesi-header-actions .al,
 .chaodesi-customer-header .chaodesi-header-actions .top-noti {
   float: none;
-  display: block !important;
+  display: flex !important;
+  align-items: center;
+  gap: 18px;
   margin: 0;
   padding: 0;
   position: relative;
@@ -268,6 +270,10 @@
 .chaodesi-customer-header .chaodesi-header-actions .bl li {
   float: none;
   margin: 0;
+}
+
+.chaodesi-customer-header .chaodesi-header-actions .bl li:last-child a {
+  margin-left: 0;
 }
 
 .chaodesi-customer-header .chaodesi-header-actions .bl li a {

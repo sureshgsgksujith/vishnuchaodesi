@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { MouseEvent, SyntheticEvent } from "react";
+import type { FormEvent, MouseEvent, SyntheticEvent } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import HomeHeader from "../../home/ui/HomeHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
@@ -7,12 +7,14 @@ import {
   getListing,
   getListingApiErrorMessage,
   getPublicListings,
+  submitListingReview,
   type ListingSummary,
   type PublicListingQuery,
 } from "../../dashboard/api/listingsApi";
 import {
   resolveListingImageUrl,
 } from "../../dashboard/utils/listingImages";
+import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import "../styles/publicListings.css";
 
@@ -104,15 +106,36 @@ export default function ListingDetailPage() {
             <div className="alert alert-danger">{errorMessage}</div>
           </div>
         ) : null}
-        {listing ? <ListingDetail listing={listing} relatedListings={relatedListings} /> : null}
+        {listing ? (
+          <ListingDetail
+            listing={listing}
+            relatedListings={relatedListings}
+            onListingUpdate={(updatedListing) => setListing(updatedListing)}
+          />
+        ) : null}
       </main>
       <HomeFooterSection />
     </>
   );
 }
 
-function ListingDetail({ listing, relatedListings }: { listing: ListingSummary; relatedListings: ListingSummary[] }) {
+function ListingDetail({
+  listing,
+  relatedListings,
+  onListingUpdate,
+}: {
+  listing: ListingSummary;
+  relatedListings: ListingSummary[];
+  onListingUpdate: (listing: ListingSummary) => void;
+}) {
   const galleryImages = useMemo(() => getGalleryImages(listing), [listing]);
+  const reviews = listing.reviews || [];
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewSuccess, setReviewSuccess] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const scrollingRelatedListings = relatedListings.length > 1 ? [...relatedListings, ...relatedListings] : relatedListings;
   const country = getString(listing.locationDetails, "country");
   const address = buildAddress(listing);
@@ -132,11 +155,56 @@ function ListingDetail({ listing, relatedListings }: { listing: ListingSummary; 
   const offers = getOfferItems(listing);
   const products = getProducts(listing);
   const profileImage = listing.logoUrl || listing.primaryImageUrl || galleryImages[0] || "";
-  const bannerImages = galleryImages.length ? galleryImages : profileImage ? [profileImage] : [];
+  const bannerImage = getBannerImage(listing);
+  const bannerImages = bannerImage ? [bannerImage] : [];
   const ownerImage = listing.logoUrl || listing.primaryImageUrl || "";
   const businessProfileName = listing.sellerName || getString(listing.sellerInformation, "name") || listing.title;
   const businessProfileText = address || [listing.categoryName, listing.subCategory].filter(Boolean).join(", ");
   const isVerified = getBoolean(listing.settings, "verifiedByAdmin");
+  const currentUserId = getCurrentCustomerUserId();
+  const isOwnerViewing = currentUserId === listing.userId;
+
+  async function handleReviewSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setReviewSuccess("");
+    setReviewError("");
+
+    if (!isCustomerAuthenticated() || !currentUserId) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    if (isOwnerViewing) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    if (reviewRating < 1 || reviewRating > 5) {
+      setReviewError("Please select a rating.");
+      return;
+    }
+
+    try {
+      setIsReviewSubmitting(true);
+      const updatedListing = await submitListingReview(listing.id, {
+        rating: reviewRating,
+        reviewMessage,
+      });
+      onListingUpdate(updatedListing);
+      setReviewSuccess("Review submitted.");
+    } catch (error) {
+      const message = getListingApiErrorMessage(error);
+      if (message.toLowerCase().includes("own listing")) {
+        setReviewError("");
+        setShowLoginPrompt(true);
+        return;
+      }
+
+      setReviewError(message);
+    } finally {
+      setIsReviewSubmitting(false);
+    }
+  }
 
   return (
     <article className="public-detail-v3">
@@ -345,23 +413,53 @@ function ListingDetail({ listing, relatedListings }: { listing: ListingSummary; 
                 <TemplateSection id="ld-rev" eyebrow="Write Your" title="Reviews">
                   <div className="list-pg-inn-sp">
                     <div className="list-pg-write-rev">
-                      <form onSubmit={(event) => event.preventDefault()}>
-                        <div className="row">
-                          <div className="col-md-6">
-                            <input type="text" className="form-control" placeholder="Name" />
-                          </div>
-                          <div className="col-md-6">
-                            <input type="email" className="form-control" placeholder="Email" />
-                          </div>
+                      <form onSubmit={handleReviewSubmit}>
+                        <div className="form-group public-review-rating-input" aria-label="Rating">
+                          {[1, 2, 3, 4, 5].map((value) => (
+                            <button
+                              key={value}
+                              type="button"
+                              className={value <= reviewRating ? "active" : ""}
+                              aria-label={`${value} star rating`}
+                              onClick={() => setReviewRating(value)}
+                            >
+                              ★
+                            </button>
+                          ))}
                         </div>
                         <div className="form-group">
-                          <textarea className="form-control" placeholder="Write review" />
+                          <textarea
+                            className="form-control"
+                            placeholder="Write review"
+                            value={reviewMessage}
+                            onChange={(event) => setReviewMessage(event.target.value)}
+                          />
                         </div>
-                        <input type="submit" className="btn btn-primary" value="Submit Review" />
+                        {reviewSuccess ? <div className="alert alert-success">{reviewSuccess}</div> : null}
+                        {reviewError ? <div className="alert alert-danger">{reviewError}</div> : null}
+                        <input
+                          type="submit"
+                          className="btn btn-primary"
+                          value={isReviewSubmitting ? "Submitting..." : "Submit Review"}
+                          disabled={isReviewSubmitting}
+                        />
                       </form>
                     </div>
                   </div>
                 </TemplateSection>
+
+                {showLoginPrompt ? (
+                  <div className="public-login-prompt-backdrop" role="dialog" aria-modal="true" aria-labelledby="review-login-title">
+                    <div className="public-login-prompt">
+                      <h4 id="review-login-title">Login required</h4>
+                      <p>Please login to submit your rating and review.</p>
+                      <div>
+                        <Link className="btn btn-primary" to="/login">Login</Link>
+                        <button type="button" className="btn btn-default" onClick={() => setShowLoginPrompt(false)}>Close</button>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
 
                 <section className="pglist-p3 pglist-bg pglist-p-com">
                   <div className="pglist-p-com-ti">
@@ -377,6 +475,20 @@ function ListingDetail({ listing, relatedListings }: { listing: ListingSummary; 
                         <p><label><RatingStars rating={displayRating} /></label></p>
                       </div>
                     </div>
+                    {reviews.length ? (
+                      <div className="public-user-review-list">
+                        {reviews.map((review) => (
+                          <div className="public-user-review" key={review.id}>
+                            <div>
+                              <strong>{review.reviewerName || "User"}</strong>
+                              <span>{formatShortDate(review.updatedAt || review.createdAt)}</span>
+                            </div>
+                            <RatingStars rating={review.rating} />
+                            {review.reviewMessage ? <p>{review.reviewMessage}</p> : null}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 </section>
               </div>
@@ -588,6 +700,10 @@ function getGalleryImages(listing: ListingSummary) {
   ].filter(Boolean) as string[];
 
   return Array.from(new Set(images)).slice(0, 8);
+}
+
+function getBannerImage(listing: ListingSummary) {
+  return listing.coverBannerUrl || listing.primaryImageUrl || "";
 }
 
 function buildAddress(listing: ListingSummary) {
@@ -822,6 +938,12 @@ function formatMonthYear(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "recently";
   return date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
+function formatShortDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function formatPrice(value?: number | null, country?: string) {

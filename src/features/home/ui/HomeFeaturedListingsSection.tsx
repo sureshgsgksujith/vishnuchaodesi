@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import {
-  getRealEstateListings,
-  getRestaurantFoodListings,
+  getPublicListings,
   type ListingSummary,
 } from "../../dashboard/api/listingsApi";
 import {
   resolveListingImageUrl,
   setFallbackListingImage,
 } from "../../dashboard/utils/listingImages";
+import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
 
 type FeaturedListingCard = {
   title: string;
@@ -76,11 +76,18 @@ const restaurantFallbackItems: FeaturedListingCard[] = [
   },
 ];
 
-function buildListingGroupHref(category: "real-estate" | "restaurants-food", listing?: ListingSummary) {
-  const params = new URLSearchParams({ category });
+type FeaturedListingCategory = "real-estate" | "restaurants-food";
 
-  if (listing?.city) {
-    params.set("city", listing.city);
+function getCityFromLocationLabel(label?: string | null) {
+  return label?.split(",")[0]?.trim() || "";
+}
+
+function buildListingGroupHref(category: FeaturedListingCategory, listing?: ListingSummary, selectedCity?: string) {
+  const params = new URLSearchParams({ category });
+  const city = listing?.city || selectedCity;
+
+  if (city) {
+    params.set("city", city);
   }
 
   return `/all-listing?${params.toString()}`;
@@ -89,12 +96,13 @@ function buildListingGroupHref(category: "real-estate" | "restaurants-food", lis
 function mapListingsToCards(
   listings: ListingSummary[],
   fallbackItems: FeaturedListingCard[],
-  category: "real-estate" | "restaurants-food",
+  category: FeaturedListingCategory,
+  selectedCity?: string,
 ) {
   if (!listings.length) {
     return fallbackItems.map((item) => ({
       ...item,
-      href: buildListingGroupHref(category),
+      href: buildListingGroupHref(category, undefined, selectedCity),
     }));
   }
 
@@ -102,43 +110,55 @@ function mapListingsToCards(
     title: listing.title,
     image: resolveListingImageUrl(listing.primaryImageUrl || listing.imageUrls?.[0]),
     rating: listing.rating || 5,
-    href: buildListingGroupHref(category, listing),
+    href: buildListingGroupHref(category, listing, selectedCity),
   }));
 }
 
 function useFeaturedListingGroups() {
   const [realEstateItems, setRealEstateItems] = useState(realEstateFallbackItems);
   const [restaurantItems, setRestaurantItems] = useState(restaurantFallbackItems);
+  const currentLocation = useCurrentLocationLabel();
+  const currentCity = getCityFromLocationLabel(currentLocation.label);
 
   useEffect(() => {
     let isActive = true;
 
+    if (currentLocation.status === "loading" || currentLocation.status === "idle") {
+      return () => {
+        isActive = false;
+      };
+    }
+
     Promise.allSettled([
-      getRealEstateListings(1, 10),
-      getRestaurantFoodListings(1, 10),
+      getPublicListings({ category: "real-estate", city: currentCity || undefined, page: 1, pageSize: 10 }),
+      getPublicListings({ category: "restaurants-food", city: currentCity || undefined, page: 1, pageSize: 10 }),
     ]).then(([realEstateResult, restaurantResult]) => {
       if (!isActive) {
         return;
       }
 
       if (realEstateResult.status === "fulfilled") {
-        setRealEstateItems(mapListingsToCards(realEstateResult.value.items, realEstateFallbackItems, "real-estate"));
+        setRealEstateItems(
+          mapListingsToCards(realEstateResult.value.items, realEstateFallbackItems, "real-estate", currentCity),
+        );
       }
 
       if (restaurantResult.status === "fulfilled") {
-        setRestaurantItems(mapListingsToCards(restaurantResult.value.items, restaurantFallbackItems, "restaurants-food"));
+        setRestaurantItems(
+          mapListingsToCards(restaurantResult.value.items, restaurantFallbackItems, "restaurants-food", currentCity),
+        );
       }
     });
 
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [currentCity, currentLocation.status]);
 
   return [
     {
       titleLead: "Featured Real Estate",
-      titleRest: "in your city",
+      titleRest: currentCity ? `in ${currentCity}` : "in your city",
       description: "Explore premium apartments, commercial spaces, villas, and properties near you.",
       iconClass: "plac-hom-tit-ic-ser",
       showDetails: true,

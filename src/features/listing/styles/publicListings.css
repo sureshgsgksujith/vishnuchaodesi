@@ -534,8 +534,8 @@
   width: 100% !important;
 }
 
-.public-detail-banner-single .list-ban-sli-25 {
-  grid-template-columns: 1fr;
+.public-detail-banner-strip.public-detail-banner-single .list-ban-sli-25 {
+  grid-template-columns: 1fr !important;
 }
 
 .public-detail-banner-strip,
@@ -560,10 +560,9 @@
 }
 
 .public-detail-banner-single .list-ban-sli-25 img {
-  background: #e9edf0;
-  height: 360px !important;
-  object-fit: contain;
-  object-position: top center;
+  height: 430px !important;
+  object-fit: cover;
+  object-position: center center;
 }
 
 .public-detail-template .list-pg-bg {
@@ -739,6 +738,92 @@
   height: 100%;
   margin: 0;
   overflow: hidden;
+}
+
+.public-review-rating-input {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.public-review-rating-input button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #d6dbe7;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #8b95a7;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.public-review-rating-input button.active {
+  border-color: #f5a400;
+  color: #f5a400;
+}
+
+.public-user-review-list {
+  margin-top: 22px;
+  display: grid;
+  gap: 14px;
+}
+
+.public-user-review {
+  border-top: 1px solid #e6ebf3;
+  padding-top: 14px;
+}
+
+.public-user-review > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #6d7890;
+}
+
+.public-user-review strong {
+  color: #10213f;
+}
+
+.public-user-review p {
+  margin: 8px 0 0;
+}
+
+.public-login-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(7, 15, 32, 0.55);
+}
+
+.public-login-prompt {
+  width: min(420px, 100%);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 26px;
+  box-shadow: 0 22px 60px rgba(7, 15, 32, 0.28);
+}
+
+.public-login-prompt h4 {
+  margin: 0 0 10px;
+  color: #10213f;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.public-login-prompt p {
+  margin: 0 0 22px;
+  color: #58657c;
+  font-size: 16px;
+}
+
+.public-login-prompt > div {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
 }
 
 .public-detail-product-list ul {

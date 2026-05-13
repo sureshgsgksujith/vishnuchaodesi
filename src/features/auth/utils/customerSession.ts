@@ -39,6 +39,15 @@ export function isCustomerAuthenticated() {
   return !isCustomerTokenExpired(getCustomerToken());
 }
 
+export function getCurrentCustomerUserId() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const userId = Number(localStorage.getItem("userId"));
+  return Number.isFinite(userId) && userId > 0 ? userId : null;
+}
+
 export function clearCustomerSession() {
   if (typeof window === "undefined") {
     return;
