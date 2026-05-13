@@ -23,9 +23,6 @@ import HomeFooterSection from "./HomeFooterSection";
 import HomeAdsSection from "./HomeAdsSection";
 import "../styles/home.css";
 
-import { reinitializeTemplate } from "../../../utils/reinitializeTemplate";
-import { ensureTemplateScriptsLoaded } from "../../../utils/loadTemplateScripts";
-
 declare global {
   interface Window {
     $?: any;
@@ -40,24 +37,6 @@ export default function HomePage() {
     const token = localStorage.getItem("token");
     setIsLoggedIn(!!token);
   }, []);
-
-  useEffect(() => {
-    let isActive = true;
-
-    ensureTemplateScriptsLoaded()
-      .then(() => {
-        if (isActive) {
-          reinitializeTemplate();
-        }
-      })
-      .catch((error) => {
-        console.error("Template scripts failed to load:", error);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [isLoggedIn]);
 
   return (
     <div className="chao-home-page">

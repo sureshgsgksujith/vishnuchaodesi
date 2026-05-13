@@ -37,6 +37,10 @@ export type ListingSummary = {
   imageUrls?: string[];
   videoUrl?: string | null;
   virtualTourUrl?: string | null;
+  logoUrl?: string | null;
+  coverBannerUrl?: string | null;
+  averageRating?: number;
+  totalReviews?: number;
 };
 
 export type ListingListResponse = {
@@ -110,6 +114,33 @@ export async function getRestaurantFoodListings(page = 1, pageSize = 4) {
     params: {
       page,
       pageSize,
+    },
+    timeout: 8000,
+  });
+
+  return response.data;
+}
+
+export type PublicListingQuery = {
+  category?: "real-estate" | "restaurants-food" | "vehicles";
+  subCategory?: string;
+  city?: string;
+  locality?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export async function getPublicListings(query: PublicListingQuery = {}) {
+  const categoryPath = query.category ? `/${query.category}` : "";
+  const response = await apiClient.get<ListingListResponse>(`/Listings${categoryPath}`, {
+    params: {
+      page: query.page || 1,
+      pageSize: query.pageSize || 10,
+      search: query.search || undefined,
+      subCategory: query.subCategory || undefined,
+      city: query.city || undefined,
+      locality: query.locality || undefined,
     },
     timeout: 8000,
   });

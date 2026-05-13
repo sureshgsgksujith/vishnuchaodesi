@@ -130,7 +130,7 @@ export default function HomeHeroSection() {
             </form>
           </div>
 
-          <div className="ban-short-links">
+          <div className="ban-short-links ani">
             <ul>
               {quickLinks.map((item) => (
                 <li key={item.title}>

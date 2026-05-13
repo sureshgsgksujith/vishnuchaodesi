@@ -76,16 +76,33 @@ const restaurantFallbackItems: FeaturedListingCard[] = [
   },
 ];
 
-function mapListingsToCards(listings: ListingSummary[], fallbackItems: FeaturedListingCard[]) {
-  if (!listings.length) {
-    return fallbackItems;
+function buildListingGroupHref(category: "real-estate" | "restaurants-food", listing?: ListingSummary) {
+  const params = new URLSearchParams({ category });
+
+  if (listing?.city) {
+    params.set("city", listing.city);
   }
 
-  return listings.slice(0, 4).map((listing) => ({
+  return `/all-listing?${params.toString()}`;
+}
+
+function mapListingsToCards(
+  listings: ListingSummary[],
+  fallbackItems: FeaturedListingCard[],
+  category: "real-estate" | "restaurants-food",
+) {
+  if (!listings.length) {
+    return fallbackItems.map((item) => ({
+      ...item,
+      href: buildListingGroupHref(category),
+    }));
+  }
+
+  return listings.slice(0, 10).map((listing) => ({
     title: listing.title,
     image: resolveListingImageUrl(listing.primaryImageUrl || listing.imageUrls?.[0]),
     rating: listing.rating || 5,
-    href: "/all-listing",
+    href: buildListingGroupHref(category, listing),
   }));
 }
 
@@ -97,19 +114,19 @@ function useFeaturedListingGroups() {
     let isActive = true;
 
     Promise.allSettled([
-      getRealEstateListings(1, 4),
-      getRestaurantFoodListings(1, 4),
+      getRealEstateListings(1, 10),
+      getRestaurantFoodListings(1, 10),
     ]).then(([realEstateResult, restaurantResult]) => {
       if (!isActive) {
         return;
       }
 
       if (realEstateResult.status === "fulfilled") {
-        setRealEstateItems(mapListingsToCards(realEstateResult.value.items, realEstateFallbackItems));
+        setRealEstateItems(mapListingsToCards(realEstateResult.value.items, realEstateFallbackItems, "real-estate"));
       }
 
       if (restaurantResult.status === "fulfilled") {
-        setRestaurantItems(mapListingsToCards(restaurantResult.value.items, restaurantFallbackItems));
+        setRestaurantItems(mapListingsToCards(restaurantResult.value.items, restaurantFallbackItems, "restaurants-food"));
       }
     });
 
@@ -139,57 +156,9 @@ function useFeaturedListingGroups() {
   ] satisfies FeaturedListingGroup[];
 }
 
-function useFeaturedListingsSlider(groups: FeaturedListingGroup[]) {
-  const sliderSignature = groups
-    .map((group) => group.items.map((item) => item.title).join("|"))
-    .join("::");
-
-  useEffect(() => {
-    let tries = 0;
-
-    const initSlider = () => {
-      const $ = window.$ || window.jQuery;
-
-      if ($ && $.fn && $.fn.slick) {
-        $(".home-featured-listings-slider").each(function initFeaturedSlider(this: HTMLElement) {
-          const slider = $(this);
-
-          if (slider.hasClass("slick-initialized")) {
-            slider.slick("unslick");
-          }
-
-          slider.slick({
-            infinite: true,
-            slidesToShow: 3,
-            slidesToScroll: 1,
-            autoplay: false,
-            responsive: [
-              {
-                breakpoint: 992,
-                settings: {
-                  slidesToShow: 1,
-                  slidesToScroll: 1,
-                  centerMode: false,
-                },
-              },
-            ],
-          });
-        });
-
-        return;
-      }
-
-      tries += 1;
-      if (tries < 20) {
-        setTimeout(initSlider, 300);
-      }
-    };
-
-    initSlider();
-  }, [sliderSignature]);
-}
-
 function FeaturedListingGroup({ group }: { group: FeaturedListingGroup }) {
+  const scrollingItems = [...group.items, ...group.items];
+
   return (
     <section>
       <div className="plac-hom-bd plac-deta-sec plac-deta-sec-com">
@@ -205,8 +174,8 @@ function FeaturedListingGroup({ group }: { group: FeaturedListingGroup }) {
 
             <div className={`plac-hom-all-pla ${group.wrapperClass || ""}`.trim()}>
               <ul className="travel-sliser home-featured-listings-slider">
-                {group.items.map((item) => (
-                  <li key={`${group.titleLead}-${item.title}`}>
+                {scrollingItems.map((item, index) => (
+                  <li key={`${group.titleLead}-${item.title}-${index}`} aria-hidden={index >= group.items.length}>
                     <div className="plac-hom-box">
                       <div className="plac-hom-box-im">
                         <img src={item.image} alt={item.title} loading="lazy" onError={setFallbackListingImage} />
@@ -238,7 +207,6 @@ function FeaturedListingGroup({ group }: { group: FeaturedListingGroup }) {
 
 export default function HomeFeaturedListingsSection() {
   const groups = useFeaturedListingGroups();
-  useFeaturedListingsSlider(groups);
 
   return (
     <>

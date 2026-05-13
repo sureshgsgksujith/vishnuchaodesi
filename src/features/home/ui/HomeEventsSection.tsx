@@ -1,3 +1,6 @@
+import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
+import { replaceDollarCurrency } from "../../../shared/utils/currency";
+
 const events = [
   {
     image: "/template-17/images/events/1.jpg",
@@ -62,6 +65,8 @@ const events = [
 ];
 
 export default function HomeEventsSection() {
+  const currentCountry = useCurrentCountry();
+
   return (
     <section className="home-events">
       <div className="container">
@@ -126,7 +131,7 @@ export default function HomeEventsSection() {
                     <i className="material-icons">check_circle</i>
                     Available
                   </span>
-                  <span className="price">{event.price}</span>
+                  <span className="price">{replaceDollarCurrency(event.price, currentCountry)}</span>
                   <a href="#" className="btn-ticket">
                     Buy Tickets
                   </a>

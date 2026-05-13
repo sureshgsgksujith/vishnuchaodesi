@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 import DashboardSupportWidget from "../components/DashboardSupportWidget";
+import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
 
 export default function PlanChangePage() {
   const fullName =
@@ -12,6 +14,8 @@ export default function PlanChangePage() {
     "Rn53";
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("");
+  const currentCountry = useCurrentCountry();
+  const premiumPlusPrice = formatCurrencyAmount(20, currentCountry);
 
   const handlePlanSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -53,7 +57,7 @@ export default function PlanChangePage() {
                           onChange={(event) => setSelectedPlan(event.target.value)}
                         >
                           <option value="">Choose your plan</option>
-                          <option value="4">Premium Plus - $20/year</option>
+                          <option value="4">Premium Plus - {premiumPlusPrice}/year</option>
                         </select>
                         <Link
                           to="/pricing-details"

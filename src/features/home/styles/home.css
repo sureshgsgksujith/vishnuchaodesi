@@ -93,6 +93,43 @@
   max-width: 100%;
 }
 
+.chao-home-page .artist-sliser-auto,
+.chao-home-page .home-featured-listings-slider {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 18px;
+  width: max-content;
+  min-width: 100%;
+  animation: chao-home-slide-left 28s linear infinite;
+  will-change: transform;
+}
+
+.chao-home-page .home-featured-listings-slider {
+  animation-duration: 34s;
+}
+
+.chao-home-page .plac-hom-all-pla {
+  overflow: hidden;
+}
+
+.chao-home-page .artist-sliser-auto:hover,
+.chao-home-page .home-featured-listings-slider:hover {
+  animation-play-state: paused;
+}
+
+.chao-home-page .artist-sliser-auto > li,
+.chao-home-page .home-featured-listings-slider > li {
+  display: block;
+  flex: 0 0 360px;
+  width: 360px;
+  padding: 10px;
+}
+
+.chao-home-page .home-featured-listings-slider .plac-hom-box {
+  height: 100%;
+}
+
 .chao-home-page .chaodesi-header-actions {
   float: right;
   display: flex;
@@ -157,6 +194,16 @@ html {
   overflow-x: hidden !important;
 }
 
+@keyframes chao-home-slide-left {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(calc(-50% - 9px));
+  }
+}
+
 @media (max-width: 768px) {
   .chao-home-page .ban-tit h1 {
     font-size: 28px;
@@ -165,5 +212,32 @@ html {
 
   .chao-home-page .ban-search.ban-sear-all ul li select {
     padding-left: 48px;
+  }
+
+  .chao-home-page .artist-sliser-auto,
+  .chao-home-page .home-featured-listings-slider {
+    animation-duration: 22s;
+  }
+
+  .chao-home-page .artist-sliser-auto > li,
+  .chao-home-page .home-featured-listings-slider > li {
+    flex-basis: 285px;
+    width: 285px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+  .chao-home-page .artist-sliser-auto > li,
+  .chao-home-page .home-featured-listings-slider > li {
+    flex-basis: 320px;
+    width: 320px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chao-home-page .artist-sliser-auto,
+  .chao-home-page .home-featured-listings-slider {
+    animation: none;
+    overflow-x: auto;
   }
 }

@@ -1,3 +1,6 @@
+import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
+import { replaceDollarCurrency } from "../../../shared/utils/currency";
+
 type CareCard = {
   name: string;
   role: string;
@@ -69,6 +72,8 @@ for (let i = 0; i < careCards.length; i += 3) {
 }
 
 export default function HomeCareServicesSection() {
+  const currentCountry = useCurrentCountry();
+
   return (
     <section className="home-care-section">
       <div className="container">
@@ -233,7 +238,7 @@ export default function HomeCareServicesSection() {
                           </ul>
 
                           <div className="bottom">
-                            <span>{card.price}</span>
+                            <span>{replaceDollarCurrency(card.price, currentCountry)}</span>
                             <a href="#">View Profile</a>
                           </div>
                         </div>

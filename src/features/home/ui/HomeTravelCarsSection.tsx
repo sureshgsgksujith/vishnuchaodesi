@@ -1,4 +1,9 @@
+import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
+
 export default function HomeTravelCarsSection() {
+  const currentCountry = useCurrentCountry();
+
   return (
     <section className="chao-travel-car">
       <div className="container">
@@ -46,7 +51,7 @@ export default function HomeTravelCarsSection() {
                     <div className="car-item">
                       <h5>Used Toyota Camry</h5>
                       <p>New York, NY</p>
-                      <span>$1200</span>
+                      <span>{formatCurrencyAmount(1200, currentCountry)}</span>
                       <a href="#">Contact</a>
                     </div>
                   </div>
@@ -55,7 +60,7 @@ export default function HomeTravelCarsSection() {
                     <div className="car-item">
                       <h5>Honda Civic 2018</h5>
                       <p>New Jersey</p>
-                      <span>$9000</span>
+                      <span>{formatCurrencyAmount(9000, currentCountry)}</span>
                       <a href="#">Contact</a>
                     </div>
                   </div>

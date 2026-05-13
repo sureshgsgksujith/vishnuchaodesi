@@ -2043,6 +2043,87 @@ button.add-list-rem-btn {
     margin: 0 0 12px;
 }
 
+.listing-field-error {
+    color: #dc3545;
+    font-size: 13px;
+    line-height: 1.35;
+    margin-top: 6px;
+}
+
+.listing_form_1 .form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.listing-gallery-uploader {
+    cursor: default;
+}
+
+.listing-gallery-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+    text-align: left;
+    width: 100%;
+}
+
+.listing-gallery-preview {
+    position: relative;
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+}
+
+.listing-gallery-preview img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    background: #f6f6f6;
+}
+
+.listing-gallery-preview .btn-danger {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 2;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: 50%;
+    line-height: 28px;
+}
+
+.listing-gallery-preview .material-icons {
+    font-size: 18px;
+    line-height: 28px;
+}
+
+.listing-gallery-preview-meta {
+    padding: 8px 10px;
+}
+
+.listing-gallery-preview-meta span,
+.listing-gallery-preview-meta small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.listing-gallery-preview-meta span {
+    color: #333;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.listing-gallery-preview-meta small {
+    color: #777;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
 .listing-info-arrow {
     text-align: center;
 }

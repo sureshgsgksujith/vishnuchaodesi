@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-
 const artistSlides = [
   [
     {
@@ -60,62 +58,7 @@ const artistSlides = [
 ];
 
 export default function HomeArtistToursSection() {
-  useEffect(() => {
-    let tries = 0;
-
-    const initSlider = () => {
-      const $ = (window as any).$ || (window as any).jQuery;
-
-      if ($ && $.fn && $.fn.slick) {
-        const slider = $(".artist-sliser-auto");
-
-        if (slider.length === 0) return;
-
-        if (slider.hasClass("slick-initialized")) {
-          slider.slick("unslick");
-        }
-
-        slider.slick({
-          slidesToShow: 3,
-          slidesToScroll: 1,
-          autoplay: true,
-          autoplaySpeed: 2500,
-          arrows: true,
-          dots: false,
-          infinite: true,
-          responsive: [
-            {
-              breakpoint: 1200,
-              settings: {
-                slidesToShow: 3,
-              },
-            },
-            {
-              breakpoint: 992,
-              settings: {
-                slidesToShow: 2,
-              },
-            },
-            {
-              breakpoint: 768,
-              settings: {
-                slidesToShow: 1,
-              },
-            },
-          ],
-        });
-
-        return;
-      }
-
-      tries += 1;
-      if (tries < 20) {
-        setTimeout(initSlider, 300);
-      }
-    };
-
-    initSlider();
-  }, []);
+  const scrollingSlides = [...artistSlides, ...artistSlides];
 
   return (
     <section className="home-artist">
@@ -130,8 +73,8 @@ export default function HomeArtistToursSection() {
 
             <div className="plac-hom-all-pla">
               <ul className="artist-sliser-auto">
-                {artistSlides.map((group, index) => (
-                  <li key={index}>
+                {scrollingSlides.map((group, index) => (
+                  <li key={`${index}-${group[0]?.name}`} aria-hidden={index >= artistSlides.length}>
                     <div className="artist-slide-group">
                       {group.map((artist) => (
                         <div className="service-card" key={artist.name + artist.date + artist.image}>

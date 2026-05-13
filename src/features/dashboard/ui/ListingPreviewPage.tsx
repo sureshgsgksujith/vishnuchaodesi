@@ -4,6 +4,7 @@ import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 import { getListing, getListingApiErrorMessage, type ListingSummary } from "../api/listingsApi";
 import { resolveListingImageUrl, setFallbackListingImage } from "../utils/listingImages";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
 
 export default function ListingPreviewPage() {
   const { listingId } = useParams();
@@ -63,6 +64,7 @@ export default function ListingPreviewPage() {
 function ListingPreview({ listing }: { listing: ListingSummary }) {
   const imageUrls = listing.imageUrls?.length ? listing.imageUrls : [listing.primaryImageUrl || ""];
   const location = [listing.locality, listing.city].filter(Boolean).join(", ");
+  const country = stringFromRecord(listing.locationDetails, "country");
 
   return (
     <article className="listing-preview">
@@ -93,7 +95,7 @@ function ListingPreview({ listing }: { listing: ListingSummary }) {
           </div>
           <div>
             <dt>Price</dt>
-            <dd>{formatPrice(listing.price)}</dd>
+            <dd>{formatPrice(listing.price, country)}</dd>
           </div>
           <div>
             <dt>Views</dt>
@@ -130,14 +132,16 @@ function isEmbeddableMarkup(value: string) {
   return /<iframe[\s>]/i.test(value);
 }
 
-function formatPrice(value?: number | null) {
+function formatPrice(value?: number | null, country?: string | null) {
   if (!value) {
     return "Not listed";
   }
 
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(value);
+  return formatCurrencyAmount(value, country);
+}
+
+function stringFromRecord(record: Record<string, string | number | null> | undefined, key: string) {
+  const value = record?.[key];
+
+  return typeof value === "string" ? value : null;
 }

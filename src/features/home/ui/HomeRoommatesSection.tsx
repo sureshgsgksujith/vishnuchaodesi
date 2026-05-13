@@ -1,4 +1,6 @@
 import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
+import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
+import { replaceDollarCurrency } from "../../../shared/utils/currency";
 
 const roommateListings = [
   {
@@ -69,6 +71,7 @@ const whyItems = [
 
 export default function HomeRoommatesSection() {
   const currentLocation = useCurrentLocationLabel();
+  const currentCountry = useCurrentCountry();
   const hasCurrentLocation = currentLocation.status === "ready" && currentLocation.label;
   const locationChipText =
     currentLocation.status === "loading"
@@ -183,7 +186,7 @@ export default function HomeRoommatesSection() {
                     </ul>
 
                     <div className="room-bottom">
-                      <span className="room-price">{item.price} <small>/Month</small></span>
+                      <span className="room-price">{replaceDollarCurrency(item.price, currentCountry)} <small>/Month</small></span>
                       <a href="#" className="room-link">View More</a>
                     </div>
                   </div>

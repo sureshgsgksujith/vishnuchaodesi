@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
 
 type PaymentGateway = {
   id: string;
@@ -71,6 +72,7 @@ export default function PaymentPage() {
   const [selectedGateway, setSelectedGateway] = useState(paymentGateways[0].id);
   const [billingForm, setBillingForm] =
     useState<BillingFormState>(initialBillingState);
+  const checkoutAmount = formatCurrencyAmount(20, billingForm.country);
 
   const handleBillingChange = (
     event: ChangeEvent<HTMLInputElement>
@@ -117,7 +119,7 @@ export default function PaymentPage() {
                   <b>Remaining Days :</b> 3533
                 </li>
                 <li>
-                  <span className="ud-stat-pay-btn">Checkout amount: $20</span>
+                  <span className="ud-stat-pay-btn">Checkout amount: {checkoutAmount}</span>
                 </li>
                 <li>
                   <span className="ud-stat-pay-btn">

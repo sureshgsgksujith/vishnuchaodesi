@@ -25,6 +25,8 @@ import ListingFormPage from "../../features/dashboard/ui/ListingFormPage";
 import ListingPreviewPage from "../../features/dashboard/ui/ListingPreviewPage";
 import ListingStartPage from "../../features/dashboard/ui/ListingStartPage";
 import PricingDetailsPage from "../../features/pricing/ui/PricingDetailsPage";
+import AllListingPage from "../../features/listing/ui/AllListingPage";
+import ListingDetailPage from "../../features/listing/ui/ListingDetailPage";
 import { isCustomerAuthenticated, redirectToCustomerHomeAfterSessionPopup } from "../../features/auth/utils/customerSession";
 
 function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
@@ -72,6 +74,9 @@ export function AppRouter() {
     "/dashboard/listings/start",
     "/dashboard/listings/:listingId/edit",
     "/dashboard/listings/:listingId/preview",
+    "/all-listing",
+    "/listing-details",
+    "/listing/:listingId",
     "/pricing-details",
   ];
 
@@ -105,6 +110,9 @@ export function AppRouter() {
       <Route path="/dashboard/listings/new" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/edit" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/preview" element={<ProtectedCustomerRoute><ListingPreviewPage /></ProtectedCustomerRoute>} />
+      <Route path="/all-listing" element={<AllListingPage />} />
+      <Route path="/listing-details" element={<ListingDetailPage />} />
+      <Route path="/listing/:listingId" element={<ListingDetailPage />} />
       <Route path="/pricing-details" element={<PricingDetailsPage />} />
 
       {customerTemplateRoutes

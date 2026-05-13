@@ -1,4 +1,9 @@
+import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
+
 export default function HomePlansSection() {
+  const currentCountry = useCurrentCountry();
+
   return (
     <section className="pri">
       <div className="container">
@@ -43,7 +48,7 @@ export default function HomePlansSection() {
                   <div className="c3">
                     <h2>
                       <span></span>
-                      $9
+                      {formatCurrencyAmount(9, currentCountry)}
                     </h2>
                     <p>Startup business</p>
                   </div>
@@ -67,7 +72,7 @@ export default function HomePlansSection() {
                   <div className="c3">
                     <h2>
                       <span></span>
-                      $19
+                      {formatCurrencyAmount(19, currentCountry)}
                     </h2>
                     <p>Medium business</p>
                   </div>
@@ -91,7 +96,7 @@ export default function HomePlansSection() {
                   <div className="c3">
                     <h2>
                       <span></span>
-                      $20
+                      {formatCurrencyAmount(20, currentCountry)}
                     </h2>
                     <p>Made for enterprises</p>
                   </div>

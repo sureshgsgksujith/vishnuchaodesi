@@ -10,6 +10,8 @@ import {
   type PlanUsage,
   type PricingPlan,
 } from "../api/pricingApi";
+import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import "./pricingDetails.css";
 
 export default function PricingDetailsPage() {
@@ -20,6 +22,7 @@ export default function PricingDetailsPage() {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+  const currentCountry = useCurrentCountry();
   const isAuthenticated = isCustomerAuthenticated();
   const pricingState = location.state as
     | {
@@ -162,7 +165,7 @@ export default function PricingDetailsPage() {
                 </div>
                 <div className="pricing-card-body">
                   <div className="pricing-price">
-                    {plan.price === 0 ? "FREE" : `$${plan.price}`}
+                    {plan.price === 0 ? "FREE" : formatCurrencyAmount(plan.price, currentCountry)}
                   </div>
                   <p>{plan.code === "FREE" ? "Single user" : plan.isHighlighted ? "Made for enterprises" : "Business plan"}</p>
                   <button

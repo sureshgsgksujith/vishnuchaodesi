@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createListing, getListing, getListingApiErrorMessage, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
@@ -6,11 +6,12 @@ import { getListingCategoryFields, getListingCategoryTree, type ListingCategoryF
 import { getMyProfile } from "../api/profileApi";
 import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
+import { getAddressPlaceDetail, searchAddressPredictions } from "../../../shared/api/addressAutocompleteApi";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
-import { fallbackListingCategoryTree } from "../config/listingCategoryTree";
 import { resolveListingImageUrl } from "../utils/listingImages";
+import { labelWithCountryCurrency } from "../../../shared/utils/currency";
 import "../styles/listings.css";
 
 const wizardSteps = [
@@ -92,6 +93,7 @@ type CategoryAttributeFieldSet = {
   subCategories?: Record<string, CategoryAttributeField[]>;
   detailedCategories?: Record<string, CategoryAttributeField[]>;
 };
+type FieldErrors = Record<string, string>;
 type GalleryUploadFile = { file: File; marker: string };
 type InlineUploadFile = { file: File; marker: string };
 
@@ -438,7 +440,7 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "specialHours", label: "Special Hours", type: "textarea" },
     { key: "open24x7", label: "Open 24/7", options: yesNoOptions },
     { key: "menuItems", label: "Menu Items", type: "textarea" },
-    { key: "averageCostForTwo", label: "Average Cost for Two (USD)", type: "number" },
+    { key: "averageCostForTwo", label: "Average Cost for Two", type: "number" },
     { key: "discountsOffers", label: "Discounts / Offers", type: "textarea" },
     { key: "couponCodes", label: "Coupon Codes" },
     { key: "happyHours", label: "Happy Hours" },
@@ -988,6 +990,7 @@ export default function ListingFormPage() {
   const [restaurantMenuItems, setRestaurantMenuItems] = useState<RestaurantMenuItem[]>([{ ...initialRestaurantMenuItem }]);
   const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttributes>({});
   const [errorMessage, setErrorMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [editLockedMessage, setEditLockedMessage] = useState("");
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
@@ -997,7 +1000,7 @@ export default function ListingFormPage() {
   const [countries, setCountries] = useState<CountryOption[]>([]);
   const [states, setStates] = useState<StateOption[]>([]);
   const [cities, setCities] = useState<CityOption[]>([]);
-  const [listingCategories, setListingCategories] = useState<ListingCategoryOption[]>(fallbackListingCategoryTree);
+  const [listingCategories, setListingCategories] = useState<ListingCategoryOption[]>([]);
   const [dynamicCategoryFields, setDynamicCategoryFields] = useState<CategoryAttributeField[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
@@ -1039,6 +1042,7 @@ export default function ListingFormPage() {
     () => countries.find((country) => country.name === form.country),
     [countries, form.country],
   );
+  const currencyCountry = selectedCountry?.name || form.country;
   const selectedState = useMemo(
     () => states.find((state) => state.name === form.state),
     [states, form.state],
@@ -1048,13 +1052,13 @@ export default function ListingFormPage() {
 
     getListingCategoryTree()
       .then((items) => {
-        if (isActive && items.length) {
-          setListingCategories(mergeListingCategoryTrees(items));
+        if (isActive) {
+          setListingCategories(items);
         }
       })
       .catch(() => {
         if (isActive) {
-          setListingCategories(fallbackListingCategoryTree);
+          setListingCategories([]);
         }
       });
 
@@ -1218,6 +1222,8 @@ export default function ListingFormPage() {
         setBusinessHours(mapRestaurantHoursFromListing(listing, propertyDetails));
         setCategoryAttributes({
           ...otherInformation.categoryAttributes,
+          ...mapPropertyAttributesFromListing(listing),
+          ...mapRestaurantAttributesFromListing(listing),
           ...mapVehicleAttributesFromListing(listing),
         });
         setServiceFiles([]);
@@ -1304,6 +1310,9 @@ export default function ListingFormPage() {
     () => includeCurrentValue(selectedListingSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [], form.detailCategory),
     [selectedListingSubCategory, form.detailCategory],
   );
+  const hasDynamicCategoryFields = dynamicCategoryFields.length > 0;
+  const hasDynamicPriceField = hasAnyFieldKey(dynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price");
+  const hasDynamicSellerTypeField = hasAnyFieldKey(dynamicCategoryFields, "seller_type", "sellerType");
 
   useEffect(() => {
     let isActive = true;
@@ -1337,6 +1346,7 @@ export default function ListingFormPage() {
   }, [selectedListingCategory?.id, selectedListingSubCategory?.id, selectedListingDetailedCategory?.id]);
 
   function updateField(name: StringFormField, value: string) {
+    clearFieldError(name);
     setForm((currentForm) => {
       const nextForm = { ...currentForm, [name]: value };
 
@@ -1404,17 +1414,54 @@ export default function ListingFormPage() {
     });
   }
 
+  function updateCategoryAttributes(values: CategoryAttributes) {
+    setCategoryAttributes(values);
+    setFieldErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors };
+      for (const key of Object.keys(values)) {
+        if (String(values[key] || "").trim()) {
+          delete nextErrors[categoryFieldErrorKey(key)];
+        }
+      }
+      return nextErrors;
+    });
+  }
+
+  function clearFieldError(name: string) {
+    setFieldErrors((currentErrors) => {
+      if (!currentErrors[name]) {
+        return currentErrors;
+      }
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[name];
+      return nextErrors;
+    });
+  }
+
+  const handleAddressPlaceSelect = useCallback((addressDetails: ListingAddressDetails) => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      address: addressDetails.address || currentForm.address,
+      pincode: addressDetails.pincode || currentForm.pincode,
+      latitude: addressDetails.latitude || currentForm.latitude,
+      longitude: addressDetails.longitude || currentForm.longitude,
+    }));
+  }, []);
+
   function handleNext(skipValidation = false) {
     if (!skipValidation && !validateStep(currentStep)) {
       return;
     }
 
     setErrorMessage("");
+    setFieldErrors({});
     setCurrentStep((step) => Math.min(step + 1, wizardSteps.length - 1));
   }
 
   function handlePrevious() {
     setErrorMessage("");
+    setFieldErrors({});
     setCurrentStep((step) => Math.max(step - 1, 0));
   }
 
@@ -1423,16 +1470,12 @@ export default function ListingFormPage() {
       return true;
     }
 
-    // const requiredFields: Array<[StringFormField, string]> = [
-    //   ["title", "Listing Name"],
-    //   ["country", "Country"],
-    //   ["city", "City"],
-    //   ["categoryName", "Category"],
-    //   ["subCategory", "Sub Category"],
-    //   ["description", "Details about your listing"],
-    //   ["profileImageName", "Profile image"],
-    //   ["coverImageName", "Cover image"],
-    // ];
+    const nextFieldErrors: FieldErrors = {};
+    const addFieldError = (name: string, message: string) => {
+      if (!nextFieldErrors[name]) {
+        nextFieldErrors[name] = message;
+      }
+    };
 
     const requiredFields: Array<[StringFormField, string]> = [
       ["title", "Ad Title"],
@@ -1445,69 +1488,73 @@ export default function ListingFormPage() {
       ["sellerType", "Seller Type"],
       ["categoryName", "Category"],
       ["subCategory", "Sub Category"],
-      ["description", "Details about your listing"],
+      ["businessDescription", "Business Description"],
     ];
 
     if (detailCategoryOptions.length) {
       requiredFields.splice(5, 0, ["detailCategory", "Detailed Category"]);
     }
 
-    const missingField = requiredFields.find(([name]) => !form[name].trim());
-
-    if (missingField) {
-      setErrorMessage(`${missingField[1]} is required.`);
-      return false;
-    }
+    requiredFields.forEach(([name, label]) => {
+      if (!form[name].trim()) {
+        addFieldError(name, `${label} is required.`);
+      }
+    });
 
     if (!sellerName.trim()) {
-      setErrorMessage("Name is required.");
+      addFieldError("sellerName", "Name is required.");
+    }
+
+    if (form.businessDescription.trim() && form.businessDescription.trim().length < 50) {
+      addFieldError("businessDescription", "Business Description must be at least 50 characters.");
+    }
+
+    if (!hasDynamicCategoryFields && form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
       return false;
     }
 
-    if (form.description.trim().length < 50) {
-      setErrorMessage("Description must be at least 50 characters.");
+    if (!hasDynamicCategoryFields && form.categoryName === "Vehicles" && !validateVehicleFields()) {
       return false;
     }
 
-    if (form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
-      return false;
-    }
-
-    if (form.categoryName === "Vehicles" && !validateVehicleFields()) {
-      return false;
-    }
-
-    const missingDetailField = getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
+    const missingDetailField = hasDynamicCategoryFields
+      ? undefined
+      : getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
 
     if (missingDetailField) {
-      setErrorMessage(`${missingDetailField[1]} is required.`);
+      addFieldError(missingDetailField[0], `${missingDetailField[1]} is required.`);
+    }
+
+    if (!hasDynamicCategoryFields && form.availabilityType === "Date" && !form.availabilityDate.trim()) {
+      addFieldError("availabilityDate", "Availability Date is required.");
+    }
+
+    if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && !form.price.trim()) {
+      addFieldError("price", isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
+    }
+
+    if (!hasDynamicCategoryFields && isRentRealEstateSubCategory(form.subCategory) && (!form.securityDeposit.trim() || !form.maintenanceCharges.trim())) {
+      if (!form.securityDeposit.trim()) {
+        addFieldError("securityDeposit", "Security Deposit is required.");
+      }
+      if (!form.maintenanceCharges.trim()) {
+        addFieldError("maintenanceCharges", "Maintenance Charges are required.");
+      }
+    }
+
+    dynamicCategoryFields.forEach((field) => {
+      if (field.isRequired && !categoryAttributes[field.key]?.trim()) {
+        addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+      }
+    });
+
+    if (Object.keys(nextFieldErrors).length) {
+      setFieldErrors(nextFieldErrors);
+      setErrorMessage("");
       return false;
     }
 
-    if (form.availabilityType === "Date" && !form.availabilityDate.trim()) {
-      setErrorMessage("Availability Date is required.");
-      return false;
-    }
-
-    if (isRealEstateCategory(form.categoryName) && !form.price.trim()) {
-      setErrorMessage(isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
-      return false;
-    }
-
-    if (isRentRealEstateSubCategory(form.subCategory) && (!form.securityDeposit.trim() || !form.maintenanceCharges.trim())) {
-      setErrorMessage("Security Deposit and Maintenance Charges are required.");
-      return false;
-    }
-
-    const missingDynamicField = isRealEstateCategory(form.categoryName)
-      ? undefined
-      : dynamicCategoryFields.find((field) => field.isRequired && !categoryAttributes[field.key]?.trim());
-
-    if (missingDynamicField) {
-      setErrorMessage(`${missingDynamicField.label} is required.`);
-      return false;
-    }
-
+    setFieldErrors({});
     return true;
   }
 
@@ -1816,38 +1863,54 @@ export default function ListingFormPage() {
                   <div className="login">
                     <h4>{isEditMode ? "Edit Listing" : "Listing Details"}</h4>
                     <form className="listing_form_1" noValidate>
-                      <Input placeholder={form.categoryName === "Restaurants & Food" ? "Contact Person*" : "Listing Name*"} value={sellerName} onChange={setSellerName} />
+                      <Input
+                        placeholder={form.categoryName === "Restaurants & Food" ? "Contact Person*" : "Listing Name*"}
+                        value={sellerName}
+                        error={fieldErrors.sellerName}
+                        onChange={(value) => {
+                          clearFieldError("sellerName");
+                          setSellerName(value);
+                        }}
+                      />
                       <div className="row">
-                        <InputColumn placeholder="Phone number" value={form.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
-                        <InputColumn placeholder="Email Id" type="email" value={form.email} onChange={(value) => updateField("email", value)} />
+                        <InputColumn placeholder="Phone number" value={form.mobileNumber} error={fieldErrors.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
+                        <InputColumn placeholder="Email Id" type="email" value={form.email} error={fieldErrors.email} onChange={(value) => updateField("email", value)} />
                       </div>
-                      <Input placeholder="Whatsapp Number (e.g. +919876543210)" value={form.whatsapp} onChange={(value) => updateField("whatsapp", value)} />
-                      <Input placeholder="Website(www.Symplore)" value={form.website} onChange={(value) => updateField("website", value)} />
-                      {isRealEstateCategory(form.categoryName) ? (
+                      {isRealEstateCategory(form.categoryName) && !hasDynamicSellerTypeField ? (
                         <>
-                          <Select placeholder="Seller Type*" value={form.sellerType} options={["Owner", "Agent", "Builder"]} onChange={(value) => updateField("sellerType", value)} />
+                          <Select placeholder="Seller Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Agent", "Builder"]} onChange={(value) => updateField("sellerType", value)} />
                           <div className="row">
                             <InputColumn placeholder="RERA Number" value={form.reraNumber} onChange={(value) => updateField("reraNumber", value)} />
                             <SelectColumn placeholder="Ownership Type" value={form.ownershipType} options={["Freehold", "Leasehold"]} onChange={(value) => updateField("ownershipType", value)} />
                           </div>
                         </>
                       ) : null}
-                      {form.categoryName === "Vehicles" ? (
-                        <Select placeholder="Seller Type*" value={form.sellerType} options={["Owner", "Dealer"]} onChange={(value) => updateField("sellerType", value)} />
+                      {form.categoryName === "Vehicles" && !hasDynamicSellerTypeField ? (
+                        <Select placeholder="Seller Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Dealer"]} onChange={(value) => updateField("sellerType", value)} />
                       ) : null}
-                      <Select placeholder="Select Country*" value={form.country} options={countries.map((country) => country.name)} onChange={(value) => updateField("country", value)} />
-                      <Select placeholder="Select State*" value={form.state} options={states.map((state) => state.name)} onChange={(value) => updateField("state", value)} disabled={!form.country} />
-                      <Select placeholder="Select City*" value={form.city} options={cities.map((city) => city.name)} onChange={(value) => updateField("city", value)} disabled={!form.state} />
-                      <Input placeholder="Shop address*" value={form.address} onChange={(value) => updateField("address", value)} />
-                      <Input placeholder="Zip code" value={form.pincode} onChange={(value) => updateField("pincode", value)} />
+                      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={countries.map((country) => country.name)} onChange={(value) => updateField("country", value)} />
+                      <Select placeholder="Select State*" value={form.state} error={fieldErrors.state} options={states.map((state) => state.name)} onChange={(value) => updateField("state", value)} disabled={!form.country} />
+                      <Select placeholder="Select City*" value={form.city} error={fieldErrors.city} options={cities.map((city) => city.name)} onChange={(value) => updateField("city", value)} disabled={!form.state} />
+                      <AddressAutocompleteInput
+                        placeholder="Listing address*"
+                        value={form.address}
+                        error={fieldErrors.address}
+                        country={form.country}
+                        state={form.state}
+                        city={form.city}
+                        onChange={(value) => updateField("address", value)}
+                        onPlaceSelect={handleAddressPlaceSelect}
+                      />
+                      <Input placeholder="Zip code" value={form.pincode} error={fieldErrors.pincode} onChange={(value) => updateField("pincode", value)} />
                       <div className="row">
                         <InputColumn placeholder="Google Map Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
                         <InputColumn placeholder="Google Map Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
                       </div>
-                      <Select placeholder="Select Category" value={form.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} />
+                      <Select placeholder="Select Category" value={form.categoryName} error={fieldErrors.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} />
                       <Select
                         placeholder="Select Sub Category"
                         value={form.subCategory}
+                        error={fieldErrors.subCategory}
                         options={subCategoryOptions}
                         onChange={(value) => updateField("subCategory", value)}
                         disabled={!form.categoryName}
@@ -1855,16 +1918,18 @@ export default function ListingFormPage() {
                       <Select
                         placeholder="Select Detailed Category"
                         value={form.detailCategory}
+                        error={fieldErrors.detailCategory}
                         options={detailCategoryOptions}
                         onChange={(value) => updateField("detailCategory", value)}
                         disabled={!form.subCategory || !detailCategoryOptions.length}
                       />
-                      <Input placeholder="Ad Title (e.g., 2BHK Flat for Rent in Hyderabad)*" value={form.title} onChange={(value) => updateField("title", value)} />
-                      {isRealEstateCategory(form.categoryName) ? (
+                      <Input placeholder="Add title" value={form.title} error={fieldErrors.title} onChange={(value) => updateField("title", value)} />
+                      {isRealEstateCategory(form.categoryName) && !hasDynamicCategoryFields ? (
                         <>
                           <DetailCategoryFields form={form} updateField={updateField} />
                           <PriceAndAmenitiesFields
                             form={form}
+                            currencyCountry={currencyCountry}
                             updateField={updateField}
                             updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
                           />
@@ -1875,10 +1940,11 @@ export default function ListingFormPage() {
                           />
                         </>
                       ) : null}
-                      {form.categoryName === "Restaurants & Food" ? (
+                      {form.categoryName === "Restaurants & Food" && !hasDynamicCategoryFields ? (
                         <>
                           <RestaurantInfoFields
                             form={form}
+                            currencyCountry={currencyCountry}
                             restaurantInfo={restaurantInfo}
                             menuItems={restaurantMenuItems}
                             onChange={setRestaurantInfo}
@@ -1887,21 +1953,38 @@ export default function ListingFormPage() {
                           <RestaurantListingSettingsFields form={form} updateField={updateField} />
                         </>
                       ) : null}
-                      {form.categoryName && !isRealEstateCategory(form.categoryName) && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && form.subCategory === "Rentals") ? (
-                        <ListingPriceFields form={form} updateField={updateField} />
+                      {form.categoryName && !hasDynamicPriceField && !isRealEstateCategory(form.categoryName) && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && form.subCategory === "Rentals") ? (
+                        <ListingPriceFields form={form} currencyCountry={currencyCountry} updateField={updateField} />
                       ) : null}
-                      {!isRealEstateCategory(form.categoryName) && form.categoryName !== "Restaurants & Food" ? (
+                      {form.categoryName ? (
                         <CategoryAttributesFields
                           categoryName={form.categoryName}
                           subCategory={form.subCategory}
                           detailCategory={form.detailCategory}
                           form={form}
+                          currencyCountry={currencyCountry}
                           dynamicFields={dynamicCategoryFields}
                           values={categoryAttributes}
-                          onChange={setCategoryAttributes}
+                          fieldErrors={fieldErrors}
+                          onChange={updateCategoryAttributes}
                         />
                       ) : null}
-                      <Textarea placeholder="Details about your listing" value={form.description} onChange={(value) => updateField("description", value)} />
+                      <h4>Business Details</h4>
+                      <div className="row">
+                        <div className="col-md-12">
+                          <div className="form-group">
+                            <label>Business Description *</label>
+                            <textarea
+                              name="business_description"
+                              className="form-control"
+                              placeholder="Describe your business"
+                              value={form.businessDescription}
+                              onChange={(event) => updateField("businessDescription", event.target.value)}
+                            />
+                            <FieldError message={fieldErrors.businessDescription} />
+                          </div>
+                        </div>
+                      </div>
                       <div className="row">
                         <TemplateImageColumn
                           label="Choose profile image"
@@ -1921,7 +2004,7 @@ export default function ListingFormPage() {
                         />
                       </div>
                       <Textarea
-                        placeholder={"Enter your service locations...\n(i.e) London, Dallas, Wall Street, Opera House"}
+                        placeholder="Enter your service location"
                         value={form.serviceLocations}
                         onChange={(value) => updateField("serviceLocations", value)}
                       />
@@ -1943,28 +2026,16 @@ export default function ListingFormPage() {
                     <form className="listing_form_2" noValidate>
                       <ul className="listing-section-stack">
                         <li>
-                          <ListingSectionCard title="Business Description">
-                            <div className="row">
-                              <div className="col-md-12">
-                                <div className="form-group">
-                                  <label>Business Description *</label>
-                                  <textarea
-                                    name="business_description"
-                                    className="form-control"
-                                    placeholder="Describe your business"
-                                    value={form.businessDescription}
-                                    onChange={(event) => updateField("businessDescription", event.target.value)}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </ListingSectionCard>
-                        </li>
-                        <li>
                           <BusinessHoursEditor hours={businessHours} onChange={setBusinessHours} />
                         </li>
                         <li>
-                          <ContactLocationFields contactInfo={contactInfo} onChange={setContactInfo} />
+                          <ContactLocationFields
+                            contactInfo={contactInfo}
+                            country={form.country}
+                            fallbackState={form.state}
+                            fallbackCity={form.city}
+                            onChange={setContactInfo}
+                          />
                         </li>
                       </ul>
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={40} />
@@ -2107,19 +2178,295 @@ function WizardSteps({ activeStep }: { activeStep: number }) {
   );
 }
 
-function Input({ placeholder, value, onChange, type = "text", readOnly = false }: FieldProps & { type?: string; readOnly?: boolean }) {
+function Input({ placeholder, value, onChange, error, type = "text", readOnly = false }: FieldProps & { type?: string; readOnly?: boolean }) {
   return (
     <div className="row">
-      <InputColumn placeholder={placeholder} value={value} onChange={onChange} type={type} width="col-md-12" readOnly={readOnly} />
+      <InputColumn placeholder={placeholder} value={value} error={error} onChange={onChange} type={type} width="col-md-12" readOnly={readOnly} />
     </div>
   );
 }
 
-function InputColumn({ placeholder, value, onChange, type = "text", width = "col-md-6", readOnly = false }: FieldProps & { type?: string; width?: string; readOnly?: boolean }) {
+function AddressAutocompleteInput({
+  placeholder,
+  value,
+  error,
+  country,
+  state,
+  city,
+  onChange,
+  onPlaceSelect,
+}: FieldProps & {
+  country: string;
+  state: string;
+  city: string;
+  onPlaceSelect: (addressDetails: ListingAddressDetails) => void;
+}) {
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const query = value.trim();
+
+    if (query.length < 3 || !country.trim() || !state.trim() || !city.trim()) {
+      setSuggestions([]);
+      setIsOpen(false);
+      setIsLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      setIsLoading(true);
+      searchAddressSuggestions({
+        query,
+        country,
+        state,
+        city,
+        signal: controller.signal,
+      })
+        .then((items) => {
+          setSuggestions(items);
+          setIsOpen(items.length > 0);
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setSuggestions([]);
+            setIsOpen(false);
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setIsLoading(false);
+          }
+        });
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [city, country, state, value]);
+
+  const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
+    setIsLoading(true);
+    try {
+      const details = suggestion.placeId
+        ? await getAddressPlaceDetail(suggestion.placeId)
+        : null;
+
+      onPlaceSelect({
+        address: details?.formattedAddress || suggestion.address,
+        pincode: details?.postalCode || suggestion.pincode,
+        latitude: details?.latitude != null ? String(details.latitude) : suggestion.latitude,
+        longitude: details?.longitude != null ? String(details.longitude) : suggestion.longitude,
+      });
+    } catch {
+      onPlaceSelect({
+        address: suggestion.address,
+        pincode: suggestion.pincode,
+        latitude: suggestion.latitude,
+        longitude: suggestion.longitude,
+      });
+    } finally {
+      setIsLoading(false);
+      setSuggestions([]);
+      setIsOpen(false);
+    }
+  };
+
+  const helperText = !country || !state || !city
+    ? "Select country, state, and city before searching address."
+    : isLoading
+      ? "Searching..."
+      : "";
+
+  return (
+    <div className="row">
+      <div className="col-md-12">
+        <div className="form-group listing-address-autocomplete">
+          <input
+            className={`form-control${error ? " is-invalid" : ""}`}
+            type="text"
+            value={value}
+            placeholder={placeholder}
+            autoComplete="off"
+            onChange={(event) => onChange(event.target.value)}
+            onFocus={() => {
+              if (suggestions.length) setIsOpen(true);
+            }}
+            onBlur={() => {
+              window.setTimeout(() => setIsOpen(false), 150);
+            }}
+          />
+          <FieldError message={error} />
+          {helperText ? <div className="listing-address-helper">{helperText}</div> : null}
+          {isOpen ? (
+            <ul className="listing-address-suggestions">
+              {suggestions.map((suggestion) => (
+                <li key={suggestion.id}>
+                  <button
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => handleSelectSuggestion(suggestion)}
+                  >
+                    <strong>{suggestion.title}</strong>
+                    <span>{suggestion.subtitle}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+async function searchAddressSuggestions({
+  query,
+  country,
+  state,
+  city,
+  signal,
+}: {
+  query: string;
+  country: string;
+  state: string;
+  city: string;
+  signal: AbortSignal;
+}) {
+  const googleSuggestions = await searchGoogleAddressSuggestions({ query, country, state, city, signal });
+  if (googleSuggestions.length) {
+    return googleSuggestions;
+  }
+
+  const params = new URLSearchParams({
+    format: "jsonv2",
+    addressdetails: "1",
+    limit: "8",
+    q: `${query}, ${city}, ${state}, ${country}`,
+  });
+  const countryCode = getCountryCode(country);
+  if (countryCode) {
+    params.set("countrycodes", countryCode);
+  }
+
+  const response = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
+    signal,
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const results = (await response.json()) as NominatimAddressResult[];
+  const cityResults = results.filter((item) => isAddressInSelectedCity(item, country, state, city));
+  return (cityResults.length ? cityResults : results).map(mapAddressSuggestion);
+}
+
+async function searchGoogleAddressSuggestions({
+  query,
+  country,
+  state,
+  city,
+  signal,
+}: {
+  query: string;
+  country: string;
+  state: string;
+  city: string;
+  signal: AbortSignal;
+}) {
+  try {
+    const predictions = await searchAddressPredictions(query, country, state, city, signal);
+    return predictions.map((item) => ({
+      id: item.placeId,
+      placeId: item.placeId,
+      title: item.description.split(",")[0] || item.description,
+      subtitle: item.description,
+      address: item.description,
+      pincode: "",
+      latitude: "",
+      longitude: "",
+    }));
+  } catch {
+    return [];
+  }
+}
+
+function mapAddressSuggestion(item: NominatimAddressResult): AddressSuggestion {
+  const title = item.name || item.address?.road || item.address?.suburb || item.display_name.split(",")[0] || item.display_name;
+  const subtitle = item.display_name;
+
+  return {
+    id: String(item.place_id),
+    title,
+    subtitle,
+    address: item.display_name,
+    pincode: item.address?.postcode || "",
+    latitude: item.lat,
+    longitude: item.lon,
+  };
+}
+
+function isAddressInSelectedCity(item: NominatimAddressResult, country: string, state: string, city: string) {
+  const displayName = item.display_name.toLowerCase();
+
+  return [city, state, country].every((part) => {
+    const normalized = part.trim().toLowerCase();
+    return !normalized || displayName.includes(normalized);
+  });
+}
+
+function getCountryCode(country: string) {
+  const normalized = country.trim().toLowerCase();
+  const countryCodes: Record<string, string> = {
+    india: "in",
+    "united states": "us",
+    usa: "us",
+    "united states of america": "us",
+    england: "gb",
+    "united kingdom": "gb",
+    uk: "gb",
+  };
+
+  return countryCodes[normalized] || "";
+}
+
+type AddressSuggestion = {
+  id: string;
+  placeId?: string;
+  title: string;
+  subtitle: string;
+  address: string;
+  pincode: string;
+  latitude: string;
+  longitude: string;
+};
+
+type NominatimAddressResult = {
+  place_id: number | string;
+  lat: string;
+  lon: string;
+  name?: string;
+  display_name: string;
+  address?: {
+    postcode?: string;
+    road?: string;
+    suburb?: string;
+  };
+};
+
+function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false }: FieldProps & { type?: string; width?: string; readOnly?: boolean }) {
   return (
     <div className={width}>
       <div className="form-group">
-        <input className="form-control" type={type} value={value} placeholder={placeholder} readOnly={readOnly} onChange={(event) => onChange(event.target.value)} />
+        <input className={`form-control${error ? " is-invalid" : ""}`} type={type} value={value} placeholder={placeholder} readOnly={readOnly} onChange={(event) => onChange(event.target.value)} />
+        <FieldError message={error} />
       </div>
     </div>
   );
@@ -2143,22 +2490,23 @@ function LabeledInputColumn({
   );
 }
 
-function SelectColumn({ placeholder, value, options, onChange, width = "col-md-6", disabled = false }: FieldProps & { options: string[]; width?: string; disabled?: boolean }) {
+function SelectColumn({ placeholder, value, options, onChange, error, width = "col-md-6", disabled = false }: FieldProps & { options: string[]; width?: string; disabled?: boolean }) {
   return (
     <div className={width}>
       <div className="form-group">
-        <select className="chosen-select form-control" value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
+        <select className={`chosen-select form-control${error ? " is-invalid" : ""}`} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
           <option value="">{placeholder}</option>
           {options.map((option) => (
             <option key={option} value={option}>{option}</option>
           ))}
         </select>
+        <FieldError message={error} />
       </div>
     </div>
   );
 }
 
-function CheckboxField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (value: boolean) => void }) {
+function CheckboxField({ label, checked, onChange, error }: { label: string; checked: boolean; onChange: (value: boolean) => void; error?: string }) {
   const inputId = `listing-checkbox-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   return (
@@ -2167,16 +2515,18 @@ function CheckboxField({ label, checked, onChange }: { label: string; checked: b
         <input id={inputId} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
         <label htmlFor={inputId}>{label}</label>
       </div>
+      <FieldError message={error} />
     </div>
   );
 }
 
-function Textarea({ placeholder, value, onChange }: FieldProps) {
+function Textarea({ placeholder, value, onChange, error }: FieldProps) {
   return (
     <div className="row">
       <div className="col-md-12">
         <div className="form-group">
-          <textarea className="form-control" value={value} rows={4} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+          <textarea className={`form-control${error ? " is-invalid" : ""}`} value={value} rows={4} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+          <FieldError message={error} />
         </div>
       </div>
     </div>
@@ -2192,21 +2542,26 @@ function ListingSectionCard({ title, children, className = "" }: { title: string
   );
 }
 
-function Select({ placeholder, value, options, onChange, disabled = false }: FieldProps & { options: string[]; disabled?: boolean }) {
+function Select({ placeholder, value, options, onChange, error, disabled = false }: FieldProps & { options: string[]; disabled?: boolean }) {
   return (
     <div className="row">
       <div className="col-md-12">
         <div className="form-group">
-          <select className="chosen-select form-control" value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
+          <select className={`chosen-select form-control${error ? " is-invalid" : ""}`} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
             <option value="">{placeholder}</option>
             {options.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </select>
+          <FieldError message={error} />
         </div>
       </div>
     </div>
   );
+}
+
+function FieldError({ message }: { message?: string }) {
+  return message ? <div className="listing-field-error">{message}</div> : null;
 }
 
 function CategoryAttributesFields({
@@ -2214,16 +2569,20 @@ function CategoryAttributesFields({
   subCategory,
   detailCategory,
   form,
+  currencyCountry,
   dynamicFields,
   values,
+  fieldErrors,
   onChange,
 }: {
   categoryName: string;
   subCategory: string;
   detailCategory: string;
   form: FormState;
+  currencyCountry: string;
   dynamicFields: CategoryAttributeField[];
   values: CategoryAttributes;
+  fieldErrors: FieldErrors;
   onChange: (value: CategoryAttributes) => void;
 }) {
   const baseFields = dynamicFields.length
@@ -2247,13 +2606,15 @@ function CategoryAttributesFields({
           <h5 className="mt-3 mb-3">{section.name}</h5>
           <div className="row">
             {section.fields.map((field) => {
-              const displayLabel = field.isRequired ? `${field.label}*` : field.label;
+              const displayLabel = labelWithCountryCurrency(field.isRequired ? `${field.label}*` : field.label, currencyCountry);
+              const error = fieldErrors[categoryFieldErrorKey(field.key)];
 
               return field.options?.length ? (
                 <SelectColumn
                   key={field.key}
                   placeholder={displayLabel}
                   value={values[field.key] || ""}
+                  error={error}
                   options={field.options}
                   onChange={(value) => updateAttribute(field.key, value)}
                 />
@@ -2268,6 +2629,7 @@ function CategoryAttributesFields({
                         rows={3}
                         onChange={(event) => updateAttribute(field.key, event.target.value)}
                       />
+                      <FieldError message={error} />
                     </div>
                   </div>
                 ) : field.type === "checkbox" ? (
@@ -2275,6 +2637,7 @@ function CategoryAttributesFields({
                     <CheckboxField
                       label={displayLabel}
                       checked={values[field.key] === "true"}
+                      error={error}
                       onChange={(value) => updateAttribute(field.key, String(value))}
                     />
                   </div>
@@ -2284,6 +2647,7 @@ function CategoryAttributesFields({
                     placeholder={displayLabel}
                     type={field.type || "text"}
                     value={values[field.key] || ""}
+                    error={error}
                     onChange={(value) => updateAttribute(field.key, value)}
                   />
                 )
@@ -2398,16 +2762,18 @@ function DetailCategoryFields({
 
 function ListingPriceFields({
   form,
+  currencyCountry,
   updateField,
 }: {
   form: FormState;
+  currencyCountry: string;
   updateField: (name: StringFormField, value: string) => void;
 }) {
   return (
     <>
       <h5 className="mt-3 mb-3">Price Details</h5>
       <div className="row">
-        <InputColumn placeholder="Price" type="number" value={form.price} onChange={(value) => updateField("price", value)} />
+        <InputColumn placeholder={labelWithCountryCurrency("Price", currencyCountry)} type="number" value={form.price} onChange={(value) => updateField("price", value)} />
         <SelectColumn placeholder="Price Type" value={form.priceNegotiable} options={["Negotiable", "Fixed"]} onChange={(value) => updateField("priceNegotiable", value)} />
       </div>
     </>
@@ -2416,10 +2782,12 @@ function ListingPriceFields({
 
 function PriceAndAmenitiesFields({
   form,
+  currencyCountry,
   updateField,
   updateBooleanField,
 }: {
   form: FormState;
+  currencyCountry: string;
   updateField: (name: StringFormField, value: string) => void;
   updateBooleanField: (name: BooleanFormField, value: boolean) => void;
 }) {
@@ -2432,23 +2800,23 @@ function PriceAndAmenitiesFields({
     <>
       <h5 className="mt-3 mb-3">Price Details</h5>
       <div className="row">
-        <InputColumn placeholder={pricePlaceholder} type="number" value={form.price} onChange={(value) => updateField("price", value)} />
+        <InputColumn placeholder={labelWithCountryCurrency(pricePlaceholder, currencyCountry)} type="number" value={form.price} onChange={(value) => updateField("price", value)} />
         <SelectColumn placeholder="Price Type" value={form.priceNegotiable} options={["Negotiable", "Fixed"]} onChange={(value) => updateField("priceNegotiable", value)} />
       </div>
       {isRent ? (
         <div className="row">
-          <InputColumn placeholder="Security Deposit*" type="number" value={form.securityDeposit} onChange={(value) => updateField("securityDeposit", value)} />
-          <InputColumn placeholder="Maintenance Charges*" type="number" value={form.maintenanceCharges} onChange={(value) => updateField("maintenanceCharges", value)} />
+          <InputColumn placeholder={labelWithCountryCurrency("Security Deposit*", currencyCountry)} type="number" value={form.securityDeposit} onChange={(value) => updateField("securityDeposit", value)} />
+          <InputColumn placeholder={labelWithCountryCurrency("Maintenance Charges*", currencyCountry)} type="number" value={form.maintenanceCharges} onChange={(value) => updateField("maintenanceCharges", value)} />
         </div>
       ) : null}
       {isSale ? (
         <>
           <CheckboxField label="Loan Eligible" checked={form.loanEligible} onChange={(value) => updateBooleanField("loanEligible", value)} />
-          <Input placeholder="Maintenance Charges" type="number" value={form.maintenanceCharges} onChange={(value) => updateField("maintenanceCharges", value)} />
+          <Input placeholder={labelWithCountryCurrency("Maintenance Charges", currencyCountry)} type="number" value={form.maintenanceCharges} onChange={(value) => updateField("maintenanceCharges", value)} />
         </>
       ) : null}
       {isPlot ? (
-        <Input placeholder="Price per sq ft" type="number" value={form.pricePerSqFt} onChange={(value) => updateField("pricePerSqFt", value)} />
+        <Input placeholder={labelWithCountryCurrency("Price per sq ft", currencyCountry)} type="number" value={form.pricePerSqFt} onChange={(value) => updateField("pricePerSqFt", value)} />
       ) : null}
 
       <h5 className="mt-3 mb-3">Amenities</h5>
@@ -2588,15 +2956,35 @@ function GalleryMediaEditor({
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function handleFilesChange(fileList: FileList | null) {
-    const nextFiles = Array.from(fileList || []).map((file, index) => ({
+    const selectedFiles = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
+    if (!selectedFiles.length) {
+      return;
+    }
+
+    const nextFiles = selectedFiles.map((file, index) => ({
       file,
-      marker: `${galleryImageUploadMarkerPrefix}${index}__`,
+      marker: `${galleryImageUploadMarkerPrefix}${Date.now()}_${files.length + index}_${Math.random().toString(36).slice(2)}__`,
     }));
 
-    const existingUrls = items.filter((item) => item && !item.startsWith(galleryImageUploadMarkerPrefix));
-    onFilesChange(nextFiles);
-    onChange([...existingUrls, ...nextFiles.map((item) => item.marker)]);
+    onFilesChange([...files, ...nextFiles]);
+    onChange([...items, ...nextFiles.map((item) => item.marker)]);
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
   }
+
+  function handleDrop(event: React.DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    handleFilesChange(event.dataTransfer.files);
+  }
+
+  function removeItem(value: string) {
+    onFilesChange(files.filter((file) => file.marker !== value));
+    onChange(items.filter((item) => item !== value));
+  }
+
+  const existingImages = items.filter((item) => item && !item.startsWith(galleryImageUploadMarkerPrefix));
 
   return (
     <div>
@@ -2609,7 +2997,11 @@ function GalleryMediaEditor({
         style={{ display: "none" }}
         onChange={(event) => handleFilesChange(event.target.files)}
       />
-      <div className="imageuploadify well">
+      <div
+        className="imageuploadify well listing-gallery-uploader"
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={handleDrop}
+      >
         <div className="imageuploadify-overlay">
           <i className="fa fa-picture-o"></i>
         </div>
@@ -2618,36 +3010,76 @@ function GalleryMediaEditor({
           <span className="imageuploadify-message">
             Drag&amp;Drop your image here or <button type="button" className="btn-default" onClick={() => inputRef.current?.click()}>select file to upload</button>
           </span>
-          <span className="img-notes">Supports: JPG,JPEG and PNG</span>
-          {files.map((item) => (
-            <div className="imageuploadify-container" key={item.marker}>
-              <button type="button" className="btn btn-danger" onClick={() => {
-                onFilesChange(files.filter((file) => file.marker !== item.marker));
-                onChange(items.filter((value) => value !== item.marker));
-              }}>
-                <i className="material-icons">close</i>
-              </button>
-              <div className="imageuploadify-details">
-                <span>{item.file.name}</span>
-                <span>{item.file.type}</span>
-                <span>{item.file.size}</span>
-              </div>
+          <span className="img-notes">Supports multiple JPG, JPEG, PNG and other image files</span>
+          {(existingImages.length || files.length) ? (
+            <div className="listing-gallery-preview-grid">
+              {existingImages.map((imageUrl) => (
+                <div className="listing-gallery-preview" key={imageUrl}>
+                  <button type="button" className="btn btn-danger" onClick={() => removeItem(imageUrl)}>
+                    <i className="material-icons">close</i>
+                  </button>
+                  <img src={resolveListingImageUrl(imageUrl)} alt="" />
+                  <div className="listing-gallery-preview-meta">
+                    <span>Saved image</span>
+                  </div>
+                </div>
+              ))}
+              {files.map((item) => (
+                <GalleryFilePreview item={item} onRemove={() => removeItem(item.marker)} key={item.marker} />
+              ))}
             </div>
-          ))}
+          ) : null}
         </div>
       </div>
     </div>
   );
 }
 
+function GalleryFilePreview({ item, onRemove }: { item: GalleryUploadFile; onRemove: () => void }) {
+  const [previewUrl, setPreviewUrl] = useState("");
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(item.file);
+    setPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [item.file]);
+
+  return (
+    <div className="listing-gallery-preview">
+      <button type="button" className="btn btn-danger" onClick={onRemove}>
+        <i className="material-icons">close</i>
+      </button>
+      {previewUrl ? <img src={previewUrl} alt="" /> : null}
+      <div className="listing-gallery-preview-meta">
+        <span>{item.file.name}</span>
+        <small>{formatFileSize(item.file.size)}</small>
+      </div>
+    </div>
+  );
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+
+  if (bytes < 1024 * 1024) {
+    return `${Math.round(bytes / 1024)} KB`;
+  }
+
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 function RestaurantInfoFields({
   form,
+  currencyCountry,
   restaurantInfo,
   menuItems,
   onChange,
   onMenuItemsChange,
 }: {
   form: FormState;
+  currencyCountry: string;
   restaurantInfo: RestaurantInfo;
   menuItems: RestaurantMenuItem[];
   onChange: (value: RestaurantInfo) => void;
@@ -2696,7 +3128,7 @@ function RestaurantInfoFields({
           </div>
           <Textarea placeholder="Description" value={item.description} onChange={(value) => updateMenuItem(index, { ...item, description: value })} />
           <div className="row">
-            <InputColumn placeholder="Price in USD*" type="number" value={item.price} onChange={(value) => updateMenuItem(index, { ...item, price: value })} />
+            <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry)} type="number" value={item.price} onChange={(value) => updateMenuItem(index, { ...item, price: value })} />
             <SelectColumn placeholder="Food Type*" value={item.foodType} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => updateMenuItem(index, { ...item, foodType: value })} />
           </div>
           <div className="row">
@@ -2713,7 +3145,7 @@ function RestaurantInfoFields({
 
       <h5 className="mt-3 mb-3">Pricing & Offers</h5>
       <div className="row">
-        <InputColumn placeholder="Average Cost for Two in USD" type="number" value={restaurantInfo.averageCostForTwo} onChange={(value) => onChange({ ...restaurantInfo, averageCostForTwo: value })} />
+        <InputColumn placeholder={labelWithCountryCurrency("Average Cost for Two", currencyCountry)} type="number" value={restaurantInfo.averageCostForTwo} onChange={(value) => onChange({ ...restaurantInfo, averageCostForTwo: value })} />
         <InputColumn placeholder="Coupon Codes" value={restaurantInfo.couponCodes} onChange={(value) => onChange({ ...restaurantInfo, couponCodes: value })} />
       </div>
       <Textarea placeholder="Discounts / Offers" value={restaurantInfo.discountsOffers} onChange={(value) => onChange({ ...restaurantInfo, discountsOffers: value })} />
@@ -2728,8 +3160,8 @@ function RestaurantInfoFields({
       <CheckboxField label="Delivery Available" checked={restaurantInfo.deliveryAvailable} onChange={(value) => onChange({ ...restaurantInfo, deliveryAvailable: value })} />
       {showDeliveryFields ? (
         <div className="row">
-          <InputColumn placeholder="Delivery Fee" type="number" value={restaurantInfo.deliveryFee} onChange={(value) => onChange({ ...restaurantInfo, deliveryFee: value })} />
-          <InputColumn placeholder="Minimum Order Value" type="number" value={restaurantInfo.minimumOrderValue} onChange={(value) => onChange({ ...restaurantInfo, minimumOrderValue: value })} />
+          <InputColumn placeholder={labelWithCountryCurrency("Delivery Fee", currencyCountry)} type="number" value={restaurantInfo.deliveryFee} onChange={(value) => onChange({ ...restaurantInfo, deliveryFee: value })} />
+          <InputColumn placeholder={labelWithCountryCurrency("Minimum Order Value", currencyCountry)} type="number" value={restaurantInfo.minimumOrderValue} onChange={(value) => onChange({ ...restaurantInfo, minimumOrderValue: value })} />
         </div>
       ) : null}
       <CheckboxField label="Online Ordering" checked={restaurantInfo.onlineOrdering} onChange={(value) => onChange({ ...restaurantInfo, onlineOrdering: value })} />
@@ -2906,11 +3338,20 @@ function BusinessHoursEditor({
 
 function ContactLocationFields({
   contactInfo,
+  country,
+  fallbackState,
+  fallbackCity,
   onChange,
 }: {
   contactInfo: ContactInfo;
+  country: string;
+  fallbackState: string;
+  fallbackCity: string;
   onChange: (value: ContactInfo) => void;
 }) {
+  const searchState = contactInfo.state || fallbackState;
+  const searchCity = contactInfo.city || fallbackCity;
+
   useEffect(() => {
     const zipcode = contactInfo.zipcode.trim();
 
@@ -2962,7 +3403,21 @@ function ContactLocationFields({
         </div>
       </ListingSectionCard>
       <ListingSectionCard title="Address" className="listing-address-card">
-        <Input placeholder="Street Address" value={contactInfo.streetAddress} onChange={(value) => onChange({ ...contactInfo, streetAddress: value })} />
+        <AddressAutocompleteInput
+          placeholder="Street Address"
+          value={contactInfo.streetAddress}
+          country={country}
+          state={searchState}
+          city={searchCity}
+          onChange={(value) => onChange({ ...contactInfo, streetAddress: value })}
+          onPlaceSelect={(addressDetails) => onChange({
+            ...contactInfo,
+            streetAddress: addressDetails.address || contactInfo.streetAddress,
+            zipcode: addressDetails.pincode || contactInfo.zipcode,
+            city: contactInfo.city || searchCity,
+            state: contactInfo.state || searchState,
+          })}
+        />
         <Input placeholder="Suite No Flat No" value={contactInfo.suite} onChange={(value) => onChange({ ...contactInfo, suite: value })} />
         <Input placeholder="Zipcode" value={contactInfo.zipcode} onChange={(value) => onChange({ ...contactInfo, zipcode: value })} />
         <div className="row">
@@ -3184,48 +3639,74 @@ function buildListingPayload(
   restaurantMenuItems: RestaurantMenuItem[],
   categoryAttributes: CategoryAttributes,
 ): UpsertListingPayload {
+  const listingDescription = form.description.trim() || form.businessDescription.trim();
+  const businessDescription = form.businessDescription.trim() || form.description.trim();
+  const listingPrice =
+    numberAttribute(categoryAttributes, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price") ??
+    numberOrNull(form.price) ??
+    numberOrNull(offers[0]?.price) ??
+    0;
+  const priceNegotiableValue = getAttributeValue(categoryAttributes, "price_negotiable", "priceNegotiable", "price_type").trim();
+  const adDurationDays =
+    numberAttribute(categoryAttributes, "ad_duration_days", "adDurationDays", "ad_duration") ??
+    numberOrNull(form.adDurationDays) ??
+    30;
+  const sellerType = getAttributeValue(categoryAttributes, "seller_type", "sellerType").trim() || form.sellerType.trim();
+  const restaurantServiceTypes = splitAttributeList(categoryAttributes, "service_type", "service_types", "serviceTypes");
+  const restaurantAmenities = [
+    ["WiFi", "wifi"],
+    ["Parking", "parking"],
+    ["Outdoor Seating", "outdoor_seating"],
+    ["Live Music", "live_music"],
+    ["Family Friendly", "family_friendly"],
+    ["Pet Friendly", "pet_friendly"],
+    ["Wheelchair Accessible / ADA Compliance", "wheelchair_accessible"],
+  ]
+    .filter(([, key]) => boolAttribute(categoryAttributes, key) === true)
+    .map(([label]) => label);
+
   return {
     title: form.title.trim(),
-    description: form.description.trim(),
+    description: listingDescription,
     categoryName: form.categoryName.trim(),
     subCategory: form.subCategory.trim(),
     detailCategory: form.detailCategory.trim() || form.subCategory.trim(),
     propertyDetails: {
       listingKind: getListingKind(form.subCategory, form.detailCategory),
-      propertyType: form.propertyType.trim() || form.detailCategory.trim(),
-      bhk: form.bhk.trim(),
-      bathrooms: numberOrNull(form.bathrooms),
-      balconies: numberOrNull(form.balconies),
-      furnishingType: form.furnishingType.trim(),
-      superBuiltUpArea: numberOrNull(form.superBuiltUpArea),
-      carpetArea: numberOrNull(form.carpetArea),
-      floorNumber: numberOrNull(form.floorNumber),
-      totalFloors: numberOrNull(form.totalFloors),
-      propertyAge: form.propertyAge.trim(),
-      facing: form.facing.trim(),
-      availability: form.availabilityType.trim(),
-      availabilityDate: form.availabilityDate.trim() || null,
-      plotArea: numberOrNull(form.plotArea),
-      length: numberOrNull(form.length),
-      breadth: numberOrNull(form.breadth),
-      boundaryWall: boolOrNull(form.boundaryWall),
-      approvalType: form.approvalType.trim(),
-      roadWidth: numberOrNull(form.roadWidth),
-      area: numberOrNull(form.area),
-      washrooms: numberOrNull(form.washrooms),
-      parking: boolOrNull(form.parking),
-      suitableFor: form.suitableFor.trim(),
-      roomType: form.roomType.trim(),
-      genderPreference: form.genderPreference.trim(),
-      foodIncluded: form.foodIncluded ? form.foodIncluded === "Yes" : null,
-      pgAmenities: form.pgAmenities.trim(),
+      propertyType: form.propertyType.trim() || getAttributeValue(categoryAttributes, "property_type", "propertyType", "commercial_property_type", "commercialPropertyType").trim() || form.detailCategory.trim(),
+      bhk: form.bhk.trim() || getAttributeValue(categoryAttributes, "bhk").trim(),
+      bathrooms: numberOrNull(form.bathrooms) ?? numberAttribute(categoryAttributes, "bathrooms"),
+      balconies: numberOrNull(form.balconies) ?? numberAttribute(categoryAttributes, "balconies"),
+      furnishingType: form.furnishingType.trim() || getAttributeValue(categoryAttributes, "furnishing_type", "furnishingType", "commercial_furnishing").trim(),
+      superBuiltUpArea: numberOrNull(form.superBuiltUpArea) ?? numberAttribute(categoryAttributes, "super_built_up_area", "superBuiltUpArea"),
+      carpetArea: numberOrNull(form.carpetArea) ?? numberAttribute(categoryAttributes, "carpet_area", "carpetArea"),
+      floorNumber: numberOrNull(form.floorNumber) ?? numberAttribute(categoryAttributes, "floor_number", "floorNumber"),
+      totalFloors: numberOrNull(form.totalFloors) ?? numberAttribute(categoryAttributes, "total_floors", "totalFloors"),
+      propertyAge: form.propertyAge.trim() || getAttributeValue(categoryAttributes, "property_age", "propertyAge").trim(),
+      facing: form.facing.trim() || getAttributeValue(categoryAttributes, "facing", "facing_detail").trim(),
+      availability: form.availabilityType.trim() || getAttributeValue(categoryAttributes, "availability", "availability_type").trim(),
+      availabilityDate: form.availabilityDate.trim() || getAttributeValue(categoryAttributes, "availability_date", "availabilityDate").trim() || null,
+      plotArea: numberOrNull(form.plotArea) ?? numberAttribute(categoryAttributes, "plot_area", "plot_area_detail", "plotArea"),
+      length: numberOrNull(form.length) ?? numberAttribute(categoryAttributes, "length", "length_detail"),
+      breadth: numberOrNull(form.breadth) ?? numberAttribute(categoryAttributes, "breadth", "breadth_detail"),
+      boundaryWall: boolOrNull(form.boundaryWall) ?? boolAttribute(categoryAttributes, "boundary_wall", "boundary_wall_detail", "boundaryWall"),
+      approvalType: form.approvalType.trim() || getAttributeValue(categoryAttributes, "approval_type", "approval_type_detail", "approvalType").trim(),
+      roadWidth: numberOrNull(form.roadWidth) ?? numberAttribute(categoryAttributes, "road_width", "road_width_detail", "roadWidth"),
+      area: numberOrNull(form.area) ?? numberAttribute(categoryAttributes, "area", "commercial_area"),
+      washrooms: numberOrNull(form.washrooms) ?? numberAttribute(categoryAttributes, "washrooms"),
+      parking: boolOrNull(form.parking) ?? boolAttribute(categoryAttributes, "parking", "parking_available"),
+      suitableFor: form.suitableFor.trim() || getAttributeValue(categoryAttributes, "suitable_for", "suitableFor").trim(),
+      roomType: form.roomType.trim() || getAttributeValue(categoryAttributes, "room_type", "room_type_detail", "roomType").trim(),
+      genderPreference: form.genderPreference.trim() || getAttributeValue(categoryAttributes, "gender_preference", "gender_preference_detail", "genderPreference").trim(),
+      foodIncluded: form.foodIncluded ? form.foodIncluded === "Yes" : boolAttribute(categoryAttributes, "food_included", "food_included_detail", "foodIncluded"),
+      pgAmenities: form.pgAmenities.trim() || getAttributeValue(categoryAttributes, "pg_amenities", "pg_amenities_detail", "pgAmenities").trim(),
       services: JSON.stringify(services.filter((item) => item.name.trim())),
       offers: JSON.stringify(offers.filter((item) => item.name.trim() || item.price.trim() || item.detail.trim())),
       otherInformation: JSON.stringify({
         items: infoItems.filter((item) => item.question.trim() || item.answer.trim()),
         categoryAttributes: trimCategoryAttributes(categoryAttributes),
       }),
-      businessDescription: form.businessDescription.trim(),
+      businessDescription,
       businessHours: JSON.stringify(businessHours.filter((item) => item.status || item.open || item.close)),
       additionalContactInfo: JSON.stringify(contactInfo),
       webLinks: JSON.stringify(webLinks),
@@ -3236,12 +3717,12 @@ function buildListingPayload(
       restaurantInfo: JSON.stringify(restaurantInfo),
     },
     priceDetails: {
-      price: numberOrNull(form.price) ?? numberOrNull(offers[0]?.price) ?? 0,
-      priceNegotiable: form.priceNegotiable !== "Fixed",
-      maintenanceCharges: numberOrNull(form.maintenanceCharges),
-      securityDeposit: numberOrNull(form.securityDeposit),
-      loanEligible: form.loanEligible,
-      pricePerSqFt: numberOrNull(form.pricePerSqFt),
+      price: listingPrice,
+      priceNegotiable: priceNegotiableValue ? priceNegotiableValue !== "Fixed" : form.priceNegotiable !== "Fixed",
+      maintenanceCharges: numberOrNull(form.maintenanceCharges) ?? numberAttribute(categoryAttributes, "maintenance_charges", "maintenanceCharges"),
+      securityDeposit: numberOrNull(form.securityDeposit) ?? numberAttribute(categoryAttributes, "security_deposit", "security_deposit_detail", "security_deposit_vehicle", "securityDeposit"),
+      loanEligible: form.loanEligible || boolAttribute(categoryAttributes, "loan_eligible", "loan_eligible_detail", "loanEligible") === true,
+      pricePerSqFt: numberOrNull(form.pricePerSqFt) ?? numberAttribute(categoryAttributes, "price_per_sq_ft", "pricePerSqFt"),
     },
     locationDetails: {
       country: form.country.trim(),
@@ -3281,54 +3762,54 @@ function buildListingPayload(
       email: form.email.trim(),
       whatsAppNumber: form.whatsapp.trim(),
       websiteUrl: form.website.trim(),
-      sellerType: form.sellerType.trim(),
+      sellerType,
       isMobileOtpVerified: false,
-      reraNumber: form.reraNumber.trim(),
-      ownershipType: form.ownershipType.trim(),
+      reraNumber: form.reraNumber.trim() || getAttributeValue(categoryAttributes, "rera_number", "reraNumber").trim(),
+      ownershipType: form.ownershipType.trim() || getAttributeValue(categoryAttributes, "ownership_type", "ownershipType").trim(),
     },
     settings: {
-      adType: form.adType.trim() || "Free",
-      adDurationDays: numberOrNull(form.adDurationDays) ?? 30,
+      adType: getAttributeValue(categoryAttributes, "ad_type", "listing_type", "adType").trim() || form.adType.trim() || "Free",
+      adDurationDays,
       autoRenew: form.autoRenew,
       metaTitle: form.metaTitle.trim(),
       metaDescription: form.metaDescription.trim(),
       verifiedByAdmin: false,
     },
     restaurantFoodDetails: {
-      businessName: restaurantInfo.restaurantName.trim() || form.title.trim(),
+      businessName: restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "business_name", "restaurant_name", "restaurantName").trim() || form.title.trim(),
       tagline: restaurantInfo.tagline.trim(),
-      cuisineType: restaurantInfo.cuisine.trim(),
-      businessType: restaurantInfo.businessType.trim(),
-      yearEstablished: numberOrNull(restaurantInfo.yearEstablished),
-      numberOfStaff: numberOrNull(restaurantInfo.staffCount),
-      serviceTypes: restaurantInfo.serviceTypes,
-      serviceRadiusMiles: numberOrNull(restaurantInfo.serviceRadiusMiles),
+      cuisineType: restaurantInfo.cuisine.trim() || getAttributeValue(categoryAttributes, "cuisine_type", "cuisine").trim(),
+      businessType: restaurantInfo.businessType.trim() || getAttributeValue(categoryAttributes, "business_type", "businessType").trim(),
+      yearEstablished: numberOrNull(restaurantInfo.yearEstablished) ?? numberAttribute(categoryAttributes, "year_established", "yearEstablished"),
+      numberOfStaff: numberOrNull(restaurantInfo.staffCount) ?? numberAttribute(categoryAttributes, "staff_count", "staffCount"),
+      serviceTypes: restaurantInfo.serviceTypes.length ? restaurantInfo.serviceTypes : restaurantServiceTypes,
+      serviceRadiusMiles: numberOrNull(restaurantInfo.serviceRadiusMiles) ?? numberAttribute(categoryAttributes, "service_radius", "service_radius_miles", "serviceRadiusMiles"),
       instagramUrl: socialLinks.instagram.trim(),
       facebookUrl: socialLinks.facebook.trim(),
       tikTokUrl: socialLinks.tiktok.trim(),
       twitterUrl: socialLinks.twitter.trim(),
       youTubeUrl: socialLinks.youtube.trim(),
-      averageCostForTwo: numberOrNull(restaurantInfo.averageCostForTwo),
-      discountsOffers: restaurantInfo.discountsOffers.trim(),
-      couponCodes: restaurantInfo.couponCodes.trim(),
-      happyHours: restaurantInfo.happyHours.trim(),
-      deliveryAvailable: restaurantInfo.deliveryAvailable,
-      deliveryFee: numberOrNull(restaurantInfo.deliveryFee),
-      minimumOrderValue: numberOrNull(restaurantInfo.minimumOrderValue),
-      onlineOrderingAvailable: restaurantInfo.onlineOrdering,
-      thirdPartyIntegrations: restaurantInfo.thirdPartyIntegrations,
-      amenities: restaurantInfo.amenities,
-      foodLicenseNumber: restaurantInfo.foodLicenseNumber.trim(),
-      healthInspectionRating: restaurantInfo.healthInspectionRating.trim(),
-      alcoholLicenseNumber: restaurantInfo.alcoholLicenseNumber.trim(),
-      tableBookingEnabled: restaurantInfo.tableBooking,
-      orderNowEnabled: restaurantInfo.orderNow,
-      enableChat: restaurantInfo.enableChat,
-      enableCall: restaurantInfo.enableCall,
-      bulkOrderNotes: restaurantInfo.bulkOrderNotes.trim(),
-      customOrderOptions: restaurantInfo.customOrderOptions.trim(),
-      eventLocationNotes: restaurantInfo.eventLocationNotes.trim(),
-      ageRestrictedNotice: restaurantInfo.ageRestrictedNotice.trim(),
+      averageCostForTwo: numberOrNull(restaurantInfo.averageCostForTwo) ?? numberAttribute(categoryAttributes, "average_cost_for_two", "averageCostForTwo"),
+      discountsOffers: restaurantInfo.discountsOffers.trim() || getAttributeValue(categoryAttributes, "discounts_offers", "discountsOffers").trim(),
+      couponCodes: restaurantInfo.couponCodes.trim() || getAttributeValue(categoryAttributes, "coupon_codes", "couponCodes").trim(),
+      happyHours: restaurantInfo.happyHours.trim() || getAttributeValue(categoryAttributes, "happy_hours", "happyHours").trim(),
+      deliveryAvailable: restaurantInfo.deliveryAvailable || boolAttribute(categoryAttributes, "delivery_available", "deliveryAvailable") === true,
+      deliveryFee: numberOrNull(restaurantInfo.deliveryFee) ?? numberAttribute(categoryAttributes, "delivery_fee", "deliveryFee"),
+      minimumOrderValue: numberOrNull(restaurantInfo.minimumOrderValue) ?? numberAttribute(categoryAttributes, "minimum_order_value", "minimumOrderValue"),
+      onlineOrderingAvailable: restaurantInfo.onlineOrdering || boolAttribute(categoryAttributes, "online_ordering", "onlineOrdering") === true,
+      thirdPartyIntegrations: restaurantInfo.thirdPartyIntegrations.length ? restaurantInfo.thirdPartyIntegrations : splitAttributeList(categoryAttributes, "third_party_integration", "third_party_integrations"),
+      amenities: restaurantInfo.amenities.length ? restaurantInfo.amenities : restaurantAmenities,
+      foodLicenseNumber: restaurantInfo.foodLicenseNumber.trim() || getAttributeValue(categoryAttributes, "food_license_number", "foodLicenseNumber").trim(),
+      healthInspectionRating: restaurantInfo.healthInspectionRating.trim() || getAttributeValue(categoryAttributes, "health_inspection_rating", "healthInspectionRating").trim(),
+      alcoholLicenseNumber: restaurantInfo.alcoholLicenseNumber.trim() || getAttributeValue(categoryAttributes, "alcohol_license_number", "alcohol_license", "alcoholLicenseNumber").trim(),
+      tableBookingEnabled: restaurantInfo.tableBooking || boolAttribute(categoryAttributes, "table_booking", "tableBooking") === true,
+      orderNowEnabled: restaurantInfo.orderNow || boolAttribute(categoryAttributes, "order_now_button", "orderNow") === true,
+      enableChat: restaurantInfo.enableChat && boolAttribute(categoryAttributes, "enable_chat", "enableChat") !== false,
+      enableCall: restaurantInfo.enableCall && boolAttribute(categoryAttributes, "enable_call", "enableCall") !== false,
+      bulkOrderNotes: restaurantInfo.bulkOrderNotes.trim() || getAttributeValue(categoryAttributes, "bulk_order_notes", "bulkOrderNotes").trim(),
+      customOrderOptions: restaurantInfo.customOrderOptions.trim() || getAttributeValue(categoryAttributes, "custom_order_options", "customOrderOptions").trim(),
+      eventLocationNotes: restaurantInfo.eventLocationNotes.trim() || getAttributeValue(categoryAttributes, "event_location_notes", "eventLocationNotes").trim(),
+      ageRestrictedNotice: restaurantInfo.ageRestrictedNotice.trim() || getAttributeValue(categoryAttributes, "age_restricted_notice", "ageRestrictedNotice").trim(),
     },
     vehicleDetails: {
       brand: getAttributeValue(categoryAttributes, "brand").trim(),
@@ -3419,10 +3900,10 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     subCategory: listing.subCategory || "",
     detailCategory: listing.detailCategory || "",
     description: listing.description || "",
-    businessDescription: stringValue(propertyDetails.businessDescription),
+    businessDescription: stringValue(propertyDetails.businessDescription) || listing.description || "",
     profileImageName,
     coverImageName,
-    serviceLocations: stringValue(locationDetails.landmark),
+    serviceLocations: isDuplicate ? "" : stringValue(locationDetails.landmark),
     listingVideo: listing.videoUrl || "",
     view360: listing.virtualTourUrl || "",
     galleryMedia,
@@ -3519,6 +4000,97 @@ function mapRestaurantInfoFromListing(listing: ListingSummary, propertyDetails: 
   };
 }
 
+function mapPropertyAttributesFromListing(listing: ListingSummary): CategoryAttributes {
+  const propertyDetails = listing.propertyDetails || {};
+  const priceDetails = listing.priceDetails || {};
+  const sellerInformation = listing.sellerInformation || {};
+  const settings = listing.settings || {};
+
+  return trimCategoryAttributes({
+    property_type: stringValue(propertyDetails.propertyType) || listing.detailCategory || "",
+    bhk: stringValue(propertyDetails.bhk),
+    bathrooms: stringValue(propertyDetails.bathrooms),
+    balconies: stringValue(propertyDetails.balconies),
+    furnishing_type: stringValue(propertyDetails.furnishingType),
+    super_built_up_area: stringValue(propertyDetails.superBuiltUpArea),
+    carpet_area: stringValue(propertyDetails.carpetArea),
+    floor_number: stringValue(propertyDetails.floorNumber),
+    total_floors: stringValue(propertyDetails.totalFloors),
+    property_age: stringValue(propertyDetails.propertyAge),
+    facing: stringValue(propertyDetails.facing),
+    availability: stringValue(propertyDetails.availability),
+    availability_date: stringValue(propertyDetails.availabilityDate).slice(0, 10),
+    plot_area: stringValue(propertyDetails.plotArea),
+    length: stringValue(propertyDetails.length),
+    breadth: stringValue(propertyDetails.breadth),
+    boundary_wall: booleanSelectValue(propertyDetails.boundaryWall),
+    approval_type: stringValue(propertyDetails.approvalType),
+    road_width: stringValue(propertyDetails.roadWidth),
+    commercial_area: stringValue(propertyDetails.area),
+    washrooms: stringValue(propertyDetails.washrooms),
+    parking: booleanSelectValue(propertyDetails.parking),
+    suitable_for: stringValue(propertyDetails.suitableFor),
+    room_type: stringValue(propertyDetails.roomType),
+    gender_preference: stringValue(propertyDetails.genderPreference),
+    food_included: booleanSelectValue(propertyDetails.foodIncluded),
+    pg_amenities: stringValue(propertyDetails.pgAmenities),
+    price: stringValue(priceDetails.price || listing.price),
+    price_negotiable: priceDetails.priceNegotiable === false ? "Fixed" : priceDetails.priceNegotiable === true ? "Negotiable" : "",
+    maintenance_charges: stringValue(priceDetails.maintenanceCharges),
+    security_deposit: stringValue(priceDetails.securityDeposit),
+    loan_eligible: booleanSelectValue(priceDetails.loanEligible),
+    price_per_sq_ft: stringValue(priceDetails.pricePerSqFt),
+    seller_type: stringValue(sellerInformation.sellerType),
+    rera_number: stringValue(sellerInformation.reraNumber),
+    ownership_type: stringValue(sellerInformation.ownershipType),
+    ad_type: stringValue(settings.adType),
+    ad_duration_days: stringValue(settings.adDurationDays),
+  });
+}
+
+function mapRestaurantAttributesFromListing(listing: ListingSummary): CategoryAttributes {
+  const details = listing.restaurantFoodDetails || {};
+  const amenities = Array.isArray(details.amenities) ? details.amenities.map(String) : [];
+
+  return trimCategoryAttributes({
+    business_name: stringValue(details.businessName),
+    restaurant_name: stringValue(details.businessName),
+    cuisine_type: stringValue(details.cuisineType),
+    business_type: stringValue(details.businessType),
+    year_established: stringValue(details.yearEstablished),
+    staff_count: stringValue(details.numberOfStaff),
+    service_type: Array.isArray(details.serviceTypes) ? details.serviceTypes.map(String).join(", ") : "",
+    service_radius: stringValue(details.serviceRadiusMiles),
+    average_cost_for_two: stringValue(details.averageCostForTwo),
+    discounts_offers: stringValue(details.discountsOffers),
+    coupon_codes: stringValue(details.couponCodes),
+    happy_hours: stringValue(details.happyHours),
+    delivery_available: booleanSelectValue(details.deliveryAvailable),
+    delivery_fee: stringValue(details.deliveryFee),
+    minimum_order_value: stringValue(details.minimumOrderValue),
+    online_ordering: booleanSelectValue(details.onlineOrderingAvailable),
+    third_party_integration: Array.isArray(details.thirdPartyIntegrations) ? details.thirdPartyIntegrations.map(String).join(", ") : "",
+    wifi: booleanSelectValue(amenities.some((item) => item.toLowerCase() === "wifi")),
+    parking: booleanSelectValue(amenities.some((item) => item.toLowerCase() === "parking")),
+    outdoor_seating: booleanSelectValue(amenities.some((item) => item.toLowerCase() === "outdoor seating")),
+    live_music: booleanSelectValue(amenities.some((item) => item.toLowerCase() === "live music")),
+    family_friendly: booleanSelectValue(amenities.some((item) => item.toLowerCase() === "family friendly")),
+    pet_friendly: booleanSelectValue(amenities.some((item) => item.toLowerCase() === "pet friendly")),
+    wheelchair_accessible: booleanSelectValue(amenities.some((item) => item.toLowerCase().includes("wheelchair"))),
+    food_license_number: stringValue(details.foodLicenseNumber),
+    health_inspection_rating: stringValue(details.healthInspectionRating),
+    alcohol_license_number: stringValue(details.alcoholLicenseNumber),
+    table_booking: booleanSelectValue(details.tableBookingEnabled),
+    order_now_button: booleanSelectValue(details.orderNowEnabled),
+    enable_chat: booleanSelectValue(details.enableChat),
+    enable_call: booleanSelectValue(details.enableCall),
+    bulk_order_notes: stringValue(details.bulkOrderNotes),
+    custom_order_options: stringValue(details.customOrderOptions),
+    event_location_notes: stringValue(details.eventLocationNotes),
+    age_restricted_notice: stringValue(details.ageRestrictedNotice),
+  });
+}
+
 function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttributes {
   const details = listing.vehicleDetails || {};
   const values: CategoryAttributes = {
@@ -3526,38 +4098,65 @@ function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttri
     model: stringValue(details.model),
     variant: stringValue(details.variant),
     yearOfManufacture: stringValue(details.yearOfManufacture),
+    year_of_manufacture: stringValue(details.yearOfManufacture),
     registrationYear: stringValue(details.registrationYear),
+    registration_year: stringValue(details.registrationYear),
     vehicleCondition: stringValue(details.vehicleCondition),
+    vehicle_condition: stringValue(details.vehicleCondition),
     fuelType: stringValue(details.fuelType),
+    fuel_type: stringValue(details.fuelType),
     transmission: stringValue(details.transmission),
     kilometersDriven: stringValue(details.kmDriven),
+    kilometers_driven: stringValue(details.kmDriven),
     ownerCount: stringValue(details.numberOfOwners),
+    owner_count: stringValue(details.numberOfOwners),
     insurance: stringValue(details.insuranceStatus),
     insuranceValidTill: stringValue(details.insuranceValidTill).slice(0, 10),
+    insurance_valid_till: stringValue(details.insuranceValidTill).slice(0, 10),
     registrationState: stringValue(details.registrationState),
+    registration_state: stringValue(details.registrationState),
     rto: stringValue(details.rto),
     color: stringValue(details.color),
     bodyType: stringValue(details.bodyType),
+    body_type: stringValue(details.bodyType),
     seatingCapacity: stringValue(details.seatingCapacity),
+    seating_capacity: stringValue(details.seatingCapacity),
     bootSpace: stringValue(details.bootSpace),
+    boot_space: stringValue(details.bootSpace),
     mileage: stringValue(details.mileage),
     engineCapacity: stringValue(details.engineCapacityCc),
+    engine_capacity: stringValue(details.engineCapacityCc),
     bikeType: stringValue(details.bikeType),
+    bike_type: stringValue(details.bikeType),
     vehicleType: stringValue(details.commercialVehicleType),
+    vehicle_type: stringValue(details.commercialVehicleType),
     loadCapacity: stringValue(details.loadCapacity),
+    load_capacity: stringValue(details.loadCapacity),
     numberOfWheels: stringValue(details.numberOfWheels),
+    number_of_wheels: stringValue(details.numberOfWheels),
     permitType: stringValue(details.permitType),
+    permit_type: stringValue(details.permitType),
     rentalType: stringValue(details.rentalType),
+    rental_type: stringValue(details.rentalType),
     pricePerHour: stringValue(details.pricePerHour),
+    price_per_hour: stringValue(details.pricePerHour),
     pricePerDay: stringValue(details.pricePerDay),
+    price_per_day: stringValue(details.pricePerDay),
     securityDepositVehicle: stringValue(details.securityDeposit),
+    security_deposit_vehicle: stringValue(details.securityDeposit),
     partType: stringValue(details.partType),
+    part_type: stringValue(details.partType),
     compatibleModels: stringValue(details.compatibleModels),
+    compatible_models: stringValue(details.compatibleModels),
     condition: stringValue(details.partCondition),
     rcAvailable: booleanSelectValue(details.rcAvailable),
+    rc_available: booleanSelectValue(details.rcAvailable),
     pucAvailable: booleanSelectValue(details.pucAvailable),
+    puc_available: booleanSelectValue(details.pucAvailable),
     serviceHistory: stringValue(details.serviceHistoryStatus),
+    service_history: stringValue(details.serviceHistoryStatus),
     loanStatus: stringValue(details.loanStatus),
+    loan_status: stringValue(details.loanStatus),
   };
 
   const features = Array.isArray(details.features) ? details.features.map(String) : [];
@@ -3574,6 +4173,7 @@ function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttri
   ] as Array<[string, string[]]>) {
     if (features.includes(feature)) {
       values[keys[0]] = "true";
+      values[keys[0].replace(/[A-Z]/g, (match) => `_${match.toLowerCase()}`)] = "true";
     }
   }
 
@@ -3735,6 +4335,14 @@ type FieldProps = {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  error?: string;
+};
+
+type ListingAddressDetails = {
+  address: string;
+  pincode: string;
+  latitude: string;
+  longitude: string;
 };
 
 function isVideoValue(value: string) {
@@ -3779,6 +4387,22 @@ function boolAttribute(values: CategoryAttributes, ...keys: string[]) {
   if (value === "true" || value === "Yes") return true;
   if (value === "false" || value === "No") return false;
   return null;
+}
+
+function splitAttributeList(values: CategoryAttributes, ...keys: string[]) {
+  return getAttributeValue(values, ...keys)
+    .split(/[,\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function hasAnyFieldKey(fields: CategoryAttributeField[], ...keys: string[]) {
+  const normalizedKeys = new Set(keys.map(normalizeFieldKey));
+  return fields.some((field) => normalizedKeys.has(normalizeFieldKey(field.key)));
+}
+
+function categoryFieldErrorKey(key: string) {
+  return `categoryAttributes.${key}`;
 }
 
 function vehicleFeatureValues(values: CategoryAttributes) {
@@ -3892,54 +4516,6 @@ function includeCurrentValue(options: string[], currentValue: string) {
   }
 
   return [currentValue, ...options];
-}
-
-function mergeListingCategoryTrees(apiCategories: ListingCategoryOption[]) {
-  const mergedCategories = fallbackListingCategoryTree.map((category) => ({
-    ...category,
-    subCategories: category.subCategories.map((subCategory) => ({
-      ...subCategory,
-      detailedCategories: [...subCategory.detailedCategories],
-    })),
-  }));
-
-  for (const apiCategory of apiCategories) {
-    const category = mergedCategories.find((item) => item.name.toLowerCase() === apiCategory.name.toLowerCase());
-    if (!category) {
-      mergedCategories.push(apiCategory);
-      continue;
-    }
-
-    category.id = apiCategory.id;
-    category.name = apiCategory.name;
-    category.slug = apiCategory.slug;
-
-    for (const apiSubCategory of apiCategory.subCategories) {
-      const subCategory = category.subCategories.find((item) => item.name.toLowerCase() === apiSubCategory.name.toLowerCase());
-      if (!subCategory) {
-        category.subCategories.push(apiSubCategory);
-        continue;
-      }
-
-      subCategory.id = apiSubCategory.id;
-      subCategory.name = apiSubCategory.name;
-      subCategory.slug = apiSubCategory.slug;
-
-      for (const apiDetailCategory of apiSubCategory.detailedCategories) {
-        const detailCategory = subCategory.detailedCategories.find((item) => item.name.toLowerCase() === apiDetailCategory.name.toLowerCase());
-        if (!detailCategory) {
-          subCategory.detailedCategories.push(apiDetailCategory);
-          continue;
-        }
-
-        detailCategory.id = apiDetailCategory.id;
-        detailCategory.name = apiDetailCategory.name;
-        detailCategory.slug = apiDetailCategory.slug;
-      }
-    }
-  }
-
-  return mergedCategories;
 }
 
 function isRealEstateCategory(categoryName: string) {

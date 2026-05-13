@@ -9,8 +9,9 @@ import App from "./app/App";
 import { store } from "./store/rootStore";
 
 const queryClient = new QueryClient();
+const rootElement = document.getElementById("root") ?? createRootElement();
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
@@ -22,3 +23,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </Provider>
   </React.StrictMode>
 );
+
+function createRootElement() {
+  const element = document.createElement("div");
+  element.id = "root";
+  document.body.appendChild(element);
+  return element;
+}

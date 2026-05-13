@@ -4,6 +4,8 @@ import {
   dashboardAdminNotifications,
   dashboardFollowerImages,
 } from "../config/dashboardData";
+import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
 
 type ListingStatus = {
   id: number;
@@ -22,6 +24,8 @@ const initialListingStatuses: ListingStatus[] = [
 export default function DashboardRightRail() {
   const [listingStatuses, setListingStatuses] =
     useState<ListingStatus[]>(initialListingStatuses);
+  const currentCountry = useCurrentCountry();
+  const checkoutCost = formatCurrencyAmount(20, currentCountry);
 
   const handleToggleListing = (id: number) => {
     setListingStatuses((prev) =>
@@ -77,7 +81,7 @@ export default function DashboardRightRail() {
             </li>
             <li>
               <span className="ud-stat-pay-btn">
-                <b>Checkout cost :</b> $20
+                <b>Checkout cost :</b> {checkoutCost}
               </span>
             </li>
             <li>
