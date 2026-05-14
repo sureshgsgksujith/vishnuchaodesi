@@ -76,7 +76,34 @@ const restaurantFallbackItems: FeaturedListingCard[] = [
   },
 ];
 
-type FeaturedListingCategory = "real-estate" | "restaurants-food";
+const vehicleFallbackItems: FeaturedListingCard[] = [
+  {
+    title: "Hyderabad Creta SUV",
+    image: resolveListingImageUrl("/uploads/listings/demo-vehicle-01.png"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "Banjara Hills Sedan",
+    image: resolveListingImageUrl("/uploads/listings/demo-vehicle-02.png"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "Jubilee Hills Cruiser Bike",
+    image: resolveListingImageUrl("/uploads/listings/demo-vehicle-05.png"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "Medchal Pickup Truck",
+    image: resolveListingImageUrl("/uploads/listings/demo-vehicle-07.png"),
+    rating: 5,
+    href: "/all-listing",
+  },
+];
+
+type FeaturedListingCategory = "real-estate" | "restaurants-food" | "vehicles";
 
 function getCityFromLocationLabel(label?: string | null) {
   return label?.split(",")[0]?.trim() || "";
@@ -117,6 +144,7 @@ function mapListingsToCards(
 function useFeaturedListingGroups() {
   const [realEstateItems, setRealEstateItems] = useState(realEstateFallbackItems);
   const [restaurantItems, setRestaurantItems] = useState(restaurantFallbackItems);
+  const [vehicleItems, setVehicleItems] = useState(vehicleFallbackItems);
   const currentLocation = useCurrentLocationLabel();
   const currentCity = getCityFromLocationLabel(currentLocation.label);
 
@@ -132,7 +160,8 @@ function useFeaturedListingGroups() {
     Promise.allSettled([
       getPublicListings({ category: "real-estate", city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "restaurants-food", city: currentCity || undefined, page: 1, pageSize: 10 }),
-    ]).then(([realEstateResult, restaurantResult]) => {
+      getPublicListings({ category: "vehicles", city: currentCity || undefined, page: 1, pageSize: 10 }),
+    ]).then(([realEstateResult, restaurantResult, vehicleResult]) => {
       if (!isActive) {
         return;
       }
@@ -146,6 +175,12 @@ function useFeaturedListingGroups() {
       if (restaurantResult.status === "fulfilled") {
         setRestaurantItems(
           mapListingsToCards(restaurantResult.value.items, restaurantFallbackItems, "restaurants-food", currentCity),
+        );
+      }
+
+      if (vehicleResult.status === "fulfilled") {
+        setVehicleItems(
+          mapListingsToCards(vehicleResult.value.items, vehicleFallbackItems, "vehicles", currentCity),
         );
       }
     });
@@ -172,6 +207,14 @@ function useFeaturedListingGroups() {
       wrapperClass: "plac-det-eve",
       showDetails: false,
       items: restaurantItems,
+    },
+    {
+      titleLead: "Featured Vehicles",
+      titleRest: currentCity ? `in ${currentCity}` : "in your city",
+      description: "Browse cars, bikes, rentals, commercial vehicles, and parts from local sellers.",
+      iconClass: "plac-hom-tit-ic-ser",
+      showDetails: true,
+      items: vehicleItems,
     },
   ] satisfies FeaturedListingGroup[];
 }

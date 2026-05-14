@@ -27,7 +27,8 @@ export default function ListingDetailPage() {
   const [searchParams] = useSearchParams();
   const [listing, setListing] = useState<ListingSummary | null>(null);
   const [relatedListings, setRelatedListings] = useState<ListingSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const isAuthenticated = isCustomerAuthenticated();
+  const [isLoading, setIsLoading] = useState(isAuthenticated);
   const [errorMessage, setErrorMessage] = useState("");
 
   const requestedId = listingId || searchParams.get("id") || searchParams.get("listingId");
@@ -36,6 +37,14 @@ export default function ListingDetailPage() {
     let isActive = true;
 
     async function loadListing() {
+      if (!isAuthenticated) {
+        setListing(null);
+        setRelatedListings([]);
+        setErrorMessage("");
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         setErrorMessage("");
@@ -90,7 +99,7 @@ export default function ListingDetailPage() {
     return () => {
       isActive = false;
     };
-  }, [requestedId]);
+  }, [isAuthenticated, requestedId]);
 
   return (
     <>
@@ -111,6 +120,13 @@ export default function ListingDetailPage() {
             listing={listing}
             relatedListings={relatedListings}
             onListingUpdate={(updatedListing) => setListing(updatedListing)}
+          />
+        ) : null}
+        {!isAuthenticated ? (
+          <LoginRequiredPrompt
+            title="Login required"
+            message="Please login to view listing details."
+            closeTo="/all-listing"
           />
         ) : null}
       </main>
@@ -135,7 +151,7 @@ function ListingDetail({
   const [reviewSuccess, setReviewSuccess] = useState("");
   const [reviewError, setReviewError] = useState("");
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [loginPrompt, setLoginPrompt] = useState<{ title: string; message: string } | null>(null);
   const scrollingRelatedListings = relatedListings.length > 1 ? [...relatedListings, ...relatedListings] : relatedListings;
   const country = getString(listing.locationDetails, "country");
   const address = buildAddress(listing);
@@ -170,12 +186,18 @@ function ListingDetail({
     setReviewError("");
 
     if (!isCustomerAuthenticated() || !currentUserId) {
-      setShowLoginPrompt(true);
+      setLoginPrompt({
+        title: "Login required",
+        message: "Please login to submit your rating and review.",
+      });
       return;
     }
 
     if (isOwnerViewing) {
-      setShowLoginPrompt(true);
+      setLoginPrompt({
+        title: "Review not allowed",
+        message: "You cannot submit a rating or review for your own listing.",
+      });
       return;
     }
 
@@ -196,7 +218,10 @@ function ListingDetail({
       const message = getListingApiErrorMessage(error);
       if (message.toLowerCase().includes("own listing")) {
         setReviewError("");
-        setShowLoginPrompt(true);
+        setLoginPrompt({
+          title: "Review not allowed",
+          message: "You cannot submit a rating or review for your own listing.",
+        });
         return;
       }
 
@@ -448,17 +473,12 @@ function ListingDetail({
                   </div>
                 </TemplateSection>
 
-                {showLoginPrompt ? (
-                  <div className="public-login-prompt-backdrop" role="dialog" aria-modal="true" aria-labelledby="review-login-title">
-                    <div className="public-login-prompt">
-                      <h4 id="review-login-title">Login required</h4>
-                      <p>Please login to submit your rating and review.</p>
-                      <div>
-                        <Link className="btn btn-primary" to="/login">Login</Link>
-                        <button type="button" className="btn btn-default" onClick={() => setShowLoginPrompt(false)}>Close</button>
-                      </div>
-                    </div>
-                  </div>
+                {loginPrompt ? (
+                  <LoginRequiredPrompt
+                    title={loginPrompt.title}
+                    message={loginPrompt.message}
+                    onClose={() => setLoginPrompt(null)}
+                  />
                 ) : null}
 
                 <section className="pglist-p3 pglist-bg pglist-p-com">
@@ -631,6 +651,35 @@ function ListingDetail({
         </div>
       </section>
     </article>
+  );
+}
+
+function LoginRequiredPrompt({
+  title,
+  message,
+  closeTo,
+  onClose,
+}: {
+  title: string;
+  message: string;
+  closeTo?: string;
+  onClose?: () => void;
+}) {
+  return (
+    <div className="public-login-prompt-backdrop" role="dialog" aria-modal="true" aria-labelledby="public-login-prompt-title">
+      <div className="public-login-prompt">
+        <h4 id="public-login-prompt-title">{title}</h4>
+        <p>{message}</p>
+        <div>
+          <Link className="btn btn-primary" to="/login">Login</Link>
+          {closeTo ? (
+            <Link className="btn btn-default" to={closeTo}>Close</Link>
+          ) : (
+            <button type="button" className="btn btn-default" onClick={onClose}>Close</button>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 

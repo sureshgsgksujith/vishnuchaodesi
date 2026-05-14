@@ -386,6 +386,7 @@ const vehicleFuelOptions = ["Petrol", "Diesel", "Electric", "CNG", "Hybrid", "Ot
 const vehicleBrandOptions = ["Maruti Suzuki", "Hyundai", "Honda", "Toyota", "Tata", "Mahindra", "Kia", "MG", "Skoda", "Volkswagen", "Ford", "Renault", "Nissan", "BMW", "Mercedes-Benz", "Audi", "Royal Enfield", "Hero", "Honda Two Wheelers", "Bajaj", "TVS", "Yamaha", "KTM", "Ather", "Ola Electric", "Other"];
 const transmissionOptions = ["Manual", "Automatic", "Not Applicable"];
 const listingTypeOptions = ["Free", "Featured", "Premium"];
+const vehiclePriceNegotiableOptions = ["Yes", "No"];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
   { key: "brand", label: "Brand", options: vehicleBrandOptions },
@@ -404,6 +405,41 @@ const vehicleCoreFields: CategoryAttributeField[] = [
   { key: "color", label: "Color" },
 ];
 
+const vehiclePriceFields: CategoryAttributeField[] = [
+  { key: "price", label: "Price", type: "number", sectionName: "Price Details", sectionOrder: 3 },
+  { key: "price_negotiable", label: "Price Negotiable", options: vehiclePriceNegotiableOptions, sectionName: "Price Details", sectionOrder: 3 },
+];
+
+const vehicleLocationFields: CategoryAttributeField[] = [
+  { key: "area_locality", label: "Area / Locality", sectionName: "Location Details", sectionOrder: 4 },
+  { key: "map_lat_long", label: "Map Location (lat/long)", sectionName: "Location Details", sectionOrder: 4 },
+];
+
+const vehicleDocumentFields: CategoryAttributeField[] = [
+  { key: "rcAvailable", label: "RC Available", options: yesNoOptions, sectionName: "Documents & Compliance", sectionOrder: 6 },
+  { key: "pucAvailable", label: "Pollution Certificate (PUC)", options: yesNoOptions, sectionName: "Documents & Compliance", sectionOrder: 6 },
+  { key: "serviceHistory", label: "Service History", options: ["Available", "Not Available"], sectionName: "Documents & Compliance", sectionOrder: 6 },
+  { key: "loanStatus", label: "Loan Status", options: ["Clear", "Active Loan"], sectionName: "Documents & Compliance", sectionOrder: 6 },
+];
+
+const vehicleSellerFields: CategoryAttributeField[] = [
+  { key: "seller_type", label: "Seller Type", options: ["Owner", "Dealer"], sectionName: "Seller Information", sectionOrder: 7 },
+];
+
+const vehicleListingSettingsFields: CategoryAttributeField[] = [
+  { key: "ad_type", label: "Ad Type", options: listingTypeOptions, sectionName: "Listing Settings", sectionOrder: 8 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Settings", sectionOrder: 8 },
+];
+
+const vehiclePostingCommonFields: CategoryAttributeField[] = [
+  ...vehicleCoreFields,
+  ...vehiclePriceFields,
+  ...vehicleLocationFields,
+  ...vehicleDocumentFields,
+  ...vehicleSellerFields,
+  ...vehicleListingSettingsFields,
+];
+
 const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]> = {
   "Real Estate": [
     { key: "superBuiltUpArea", label: "Super Built-up Area (sq ft)", type: "number" },
@@ -419,17 +455,7 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "ownershipType", label: "Ownership Type", options: ["Freehold", "Leasehold"] },
   ],
   Vehicles: [
-    ...vehicleCoreFields,
-    { key: "priceNegotiableVehicle", label: "Price Negotiable", options: yesNoOptions },
-    { key: "areaLocality", label: "Area / Locality" },
-    { key: "mapLatLong", label: "Map Location (lat/long)" },
-    { key: "rcAvailable", label: "RC Available", options: yesNoOptions },
-    { key: "pucAvailable", label: "Pollution Certificate (PUC)", options: yesNoOptions },
-    { key: "serviceHistory", label: "Service History", options: ["Available", "Not Available"] },
-    { key: "loanStatus", label: "Loan Status", options: ["Clear", "Active Loan"] },
-    { key: "sellerType", label: "Seller Type", options: ["Owner", "Dealer"] },
-    { key: "adType", label: "Ad Type", options: listingTypeOptions },
-    { key: "adDuration", label: "Ad Duration", options: ["7 days", "15 days", "30 days"] },
+    ...vehiclePostingCommonFields,
   ],
   "Restaurants & Food": [
     { key: "businessType", label: "Business Type", options: ["Individual", "Company", "Franchise"] },
@@ -1311,9 +1337,13 @@ export default function ListingFormPage() {
     () => includeCurrentValue(selectedListingSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [], form.detailCategory),
     [selectedListingSubCategory, form.detailCategory],
   );
-  const hasDynamicCategoryFields = dynamicCategoryFields.length > 0;
-  const hasDynamicPriceField = hasAnyFieldKey(dynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price");
-  const hasDynamicSellerTypeField = hasAnyFieldKey(dynamicCategoryFields, "seller_type", "sellerType");
+  const effectiveDynamicCategoryFields = useMemo(
+    () => mergeVehiclePostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
+    [dynamicCategoryFields, form.categoryName, form.detailCategory, form.subCategory],
+  );
+  const hasDynamicCategoryFields = effectiveDynamicCategoryFields.length > 0;
+  const hasDynamicPriceField = hasAnyFieldKey(effectiveDynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price");
+  const hasDynamicSellerTypeField = hasAnyFieldKey(effectiveDynamicCategoryFields, "seller_type", "sellerType");
 
   useEffect(() => {
     let isActive = true;
@@ -1561,7 +1591,7 @@ export default function ListingFormPage() {
       return false;
     }
 
-    if (!hasDynamicCategoryFields && form.categoryName === "Vehicles" && !validateVehicleFields()) {
+    if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Vehicles" && !validateVehicleFields()) {
       return false;
     }
 
@@ -1590,7 +1620,7 @@ export default function ListingFormPage() {
       }
     }
 
-    dynamicCategoryFields
+    effectiveDynamicCategoryFields
       .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
       .forEach((field) => {
       if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
@@ -1699,7 +1729,7 @@ export default function ListingFormPage() {
       return false;
     }
 
-    if (condition === "Used") {
+    if (!isAccessories && condition === "Used") {
       const usedMissing = [
         ["registrationYear", "registration_year", "Registration Year"],
         ["kilometersDriven", "kilometers_driven", "kmDriven", "km_driven", "KM Driven"],
@@ -1763,7 +1793,7 @@ export default function ListingFormPage() {
         setErrorMessage("At least one of Price Per Hour or Price Per Day is required.");
         return false;
       }
-    } else if (!form.price.trim()) {
+    } else if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price", "sale_price", "vehicle_price").trim() && !form.price.trim()) {
       setErrorMessage("Price is required for vehicle sale listings.");
       return false;
     }
@@ -2007,7 +2037,7 @@ export default function ListingFormPage() {
                           detailCategory={form.detailCategory}
                           form={form}
                           currencyCountry={currencyCountry}
-                          dynamicFields={dynamicCategoryFields}
+                          dynamicFields={effectiveDynamicCategoryFields}
                           values={categoryAttributes}
                           fieldErrors={fieldErrors}
                           onChange={updateCategoryAttributes}
@@ -3645,6 +3675,8 @@ function buildListingPayload(
     numberOrNull(offers[0]?.price) ??
     0;
   const priceNegotiableValue = getAttributeValue(categoryAttributes, "price_negotiable", "priceNegotiable", "price_type").trim();
+  const vehicleMapLocation = parseLatLong(getAttributeValue(categoryAttributes, "map_lat_long", "mapLatLong", "google_map_lat_long").trim());
+  const vehicleAreaLocality = getAttributeValue(categoryAttributes, "area_locality", "areaLocality").trim();
   const adDurationDays =
     numberAttribute(categoryAttributes, "ad_duration_days", "adDurationDays", "ad_duration") ??
     numberOrNull(form.adDurationDays) ??
@@ -3716,7 +3748,7 @@ function buildListingPayload(
     },
     priceDetails: {
       price: listingPrice,
-      priceNegotiable: priceNegotiableValue ? priceNegotiableValue !== "Fixed" : form.priceNegotiable !== "Fixed",
+      priceNegotiable: parsePriceNegotiable(priceNegotiableValue, form.priceNegotiable !== "Fixed"),
       maintenanceCharges: numberOrNull(form.maintenanceCharges) ?? numberAttribute(categoryAttributes, "maintenance_charges", "maintenanceCharges"),
       securityDeposit: numberOrNull(form.securityDeposit) ?? numberAttribute(categoryAttributes, "security_deposit", "security_deposit_detail", "security_deposit_vehicle", "securityDeposit"),
       loanEligible: form.loanEligible || boolAttribute(categoryAttributes, "loan_eligible", "loan_eligible_detail", "loanEligible") === true,
@@ -3729,11 +3761,11 @@ function buildListingPayload(
       country: form.country.trim(),
       state: form.state.trim(),
       city: form.city.trim(),
-      locality: form.address.trim(),
+      locality: vehicleAreaLocality || form.address.trim(),
       landmark: form.serviceLocations.trim(),
       pincode: form.pincode.trim(),
-      latitude: numberOrNull(form.latitude),
-      longitude: numberOrNull(form.longitude),
+      latitude: numberOrNull(form.latitude) ?? vehicleMapLocation?.latitude ?? null,
+      longitude: numberOrNull(form.longitude) ?? vehicleMapLocation?.longitude ?? null,
     },
     amenities: {
       parking: form.amenityParking,
@@ -4094,6 +4126,9 @@ function mapRestaurantAttributesFromListing(listing: ListingSummary): CategoryAt
 
 function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttributes {
   const details = listing.vehicleDetails || {};
+  const priceDetails = listing.priceDetails || {};
+  const locationDetails = listing.locationDetails || {};
+  const settings = listing.settings || {};
   const values: CategoryAttributes = {
     brand: stringValue(details.brand),
     model: stringValue(details.model),
@@ -4158,6 +4193,12 @@ function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttri
     service_history: stringValue(details.serviceHistoryStatus),
     loanStatus: stringValue(details.loanStatus),
     loan_status: stringValue(details.loanStatus),
+    price: stringValue(priceDetails.price || listing.price),
+    price_negotiable: priceDetails.priceNegotiable === false ? "No" : priceDetails.priceNegotiable === true ? "Yes" : "",
+    area_locality: stringValue(locationDetails.locality || listing.locality),
+    map_lat_long: locationDetails.latitude || locationDetails.longitude ? [stringValue(locationDetails.latitude), stringValue(locationDetails.longitude)].filter(Boolean).join(", ") : "",
+    ad_type: stringValue(settings.adType),
+    ad_duration_days: stringValue(settings.adDurationDays),
   };
 
   const features = Array.isArray(details.features) ? details.features.map(String) : [];
@@ -4362,6 +4403,28 @@ function boolOrNull(value?: string) {
   return null;
 }
 
+function parsePriceNegotiable(value: string, fallback: boolean) {
+  const normalized = value.trim().toLowerCase();
+
+  if (!normalized) return fallback;
+  if (normalized === "yes" || normalized === "negotiable") return true;
+  if (normalized === "no" || normalized === "fixed") return false;
+
+  return fallback;
+}
+
+function parseLatLong(value: string) {
+  const [latitudeText, longitudeText] = value.split(",").map((item) => item.trim());
+  const latitude = Number(latitudeText);
+  const longitude = Number(longitudeText);
+
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return null;
+  }
+
+  return { latitude, longitude };
+}
+
 function getAttributeValue(values: CategoryAttributes, ...keys: string[]) {
   for (const key of keys) {
     const direct = values[key];
@@ -4447,6 +4510,50 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
   );
 }
 
+function mergeVehiclePostingFields(fields: CategoryAttributeField[], categoryName: string, subCategory: string, detailCategory: string) {
+  if (categoryName !== "Vehicles") {
+    return fields;
+  }
+
+  const requiredFields = [
+    ...vehiclePostingCommonFields,
+    ...getCategoryAttributeFields(categoryName, subCategory, detailCategory),
+  ];
+  const nextFields = [...fields];
+
+  for (const field of requiredFields) {
+    if (!nextFields.some((item) => areEquivalentCategoryFieldKeys(item.key, field.key))) {
+      nextFields.push(field);
+    }
+  }
+
+  return nextFields;
+}
+
+function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
+  const first = normalizeFieldKey(firstKey);
+  const second = normalizeFieldKey(secondKey);
+
+  if (first === second) {
+    return true;
+  }
+
+  const aliases = [
+    ["pricenegotiablevehicle", "pricenegotiable", "price_negotiable"],
+    ["seller_type", "sellertype"],
+    ["ad_type", "adtype"],
+    ["ad_duration_days", "adduration", "addurationdays"],
+    ["area_locality", "arealocality"],
+    ["map_lat_long", "maplatlong", "googlemaplatlong"],
+    ["rcavailable", "rc_available"],
+    ["pucavailable", "puc_available"],
+    ["servicehistory", "service_history"],
+    ["loanstatus", "loan_status"],
+  ].map((group) => new Set(group));
+
+  return aliases.some((group) => group.has(first) && group.has(second));
+}
+
 function shouldShowCategoryAttributeField(field: CategoryAttributeField, values: CategoryAttributes, form: FormState) {
   const key = normalizeFieldKey(field.key);
   const vehicleCondition = getAttributeValue(values, "vehicleCondition", "vehicle_condition", "condition");
@@ -4463,11 +4570,15 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     return false;
   }
 
+  if (form.categoryName === "Vehicles" && isRental && ["price", "listing_price", "totalprice", "total_price", "saleprice", "sale_price", "vehicleprice", "vehicle_price", "pricenegotiable", "price_negotiable", "pricetype", "price_type"].includes(key)) {
+    return false;
+  }
+
   if (form.categoryName === "Vehicles" && insurance !== "Active" && ["insurancevalidtill", "insurance_valid_till"].includes(key)) {
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && isAccessories && ["yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vehiclecondition", "vehicle_condition", "fueltype", "fuel_type", "transmission", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
+  if (form.categoryName === "Vehicles" && isAccessories && ["brand", "model", "variant", "yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vehiclecondition", "vehicle_condition", "fueltype", "fuel_type", "transmission", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "color", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
     return false;
   }
 
