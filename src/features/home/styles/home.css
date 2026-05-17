@@ -130,6 +130,38 @@
   height: 100%;
 }
 
+.chao-home-page .home-featured-card-copy {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+  z-index: 2;
+  color: #fff;
+}
+
+.chao-home-page .home-featured-card-copy h4 {
+  position: static;
+  margin: 0;
+  color: inherit;
+  font-size: 22px;
+  line-height: 1.18;
+  font-weight: 600;
+  white-space: normal;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+}
+
+.chao-home-page .home-featured-card-copy p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+  line-height: 1.25;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
 .chao-home-page .chaodesi-header-actions {
   float: right;
   display: flex;

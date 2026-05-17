@@ -12,6 +12,7 @@ import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
 type FeaturedListingCard = {
   title: string;
   image: string;
+  location?: string;
   rating?: number;
   href: string;
 };
@@ -120,6 +121,18 @@ function buildListingGroupHref(category: FeaturedListingCategory, listing?: List
   return `/all-listing?${params.toString()}`;
 }
 
+function getLocationDetailValue(listing: ListingSummary, key: string) {
+  const value = listing.locationDetails?.[key];
+  return value === undefined || value === null ? "" : String(value).trim();
+}
+
+function getListingLocationLabel(listing: ListingSummary, selectedCity?: string) {
+  const locality = listing.locality || getLocationDetailValue(listing, "locality");
+  const city = listing.city || getLocationDetailValue(listing, "city") || selectedCity;
+
+  return [locality, city].filter(Boolean).join(", ");
+}
+
 function mapListingsToCards(
   listings: ListingSummary[],
   fallbackItems: FeaturedListingCard[],
@@ -136,6 +149,7 @@ function mapListingsToCards(
   return listings.slice(0, 10).map((listing) => ({
     title: listing.title,
     image: resolveListingImageUrl(listing.primaryImageUrl || listing.imageUrls?.[0]),
+    location: getListingLocationLabel(listing, selectedCity),
     rating: listing.rating || 5,
     href: buildListingGroupHref(category, listing, selectedCity),
   }));
@@ -201,8 +215,10 @@ function useFeaturedListingGroups() {
     },
     {
       titleLead: "Top Restaurants",
-      titleRest: "Near You",
-      description: "Discover popular restaurants, cafes, and fine dining experiences in your city.",
+      titleRest: currentCity ? `near ${currentCity}` : "Near You",
+      description: currentCity
+        ? `Discover popular restaurants, cafes, and fine dining experiences near ${currentCity}.`
+        : "Discover popular restaurants, cafes, and fine dining experiences near you.",
       iconClass: "plac-hom-tit-ic-eve",
       wrapperClass: "plac-det-eve",
       showDetails: false,
@@ -242,7 +258,10 @@ function FeaturedListingGroup({ group }: { group: FeaturedListingGroup }) {
                     <div className="plac-hom-box">
                       <div className="plac-hom-box-im">
                         <img src={item.image} alt={item.title} loading="lazy" onError={setFallbackListingImage} />
-                        <h4>{item.title}</h4>
+                        <div className="home-featured-card-copy">
+                          <h4>{item.title}</h4>
+                          {item.location ? <p>{item.location}</p> : null}
+                        </div>
                       </div>
 
                       {group.showDetails ? (

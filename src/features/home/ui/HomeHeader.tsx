@@ -20,11 +20,11 @@ const categoryLinks = [
 const exploreCategories = [
   { label: "Spa and Facial", href: "/all-listing", count: "05" },
   { label: "Wedding halls", href: "/all-listing", count: "00" },
-  { label: "Automobiles", href: "/all-listing", count: "05" },
-  { label: "Restaurants", href: "/all-listing?category=restaurants-food", count: "01" },
+  { label: "Automobiles", href: "/all-listing?category=vehicles", count: "03" },
+  { label: "Restaurants", href: "/all-listing?category=restaurants-food", count: "03" },
   { label: "Technology", href: "/all-listing", count: "04" },
   { label: "Pet shop", href: "/all-listing", count: "00" },
-  { label: "Real Estate", href: "/all-listing?category=real-estate", count: "05" },
+  { label: "Real Estate", href: "/all-listing?category=real-estate", count: "03" },
   { label: "Sports", href: "/all-listing", count: "00" },
   { label: "Hospitals", href: "/all-listing", count: "06" },
   { label: "Education", href: "/all-listing", count: "06" },
@@ -178,11 +178,11 @@ export default function HomeHeader() {
                   <ul>
                     <li><a href="/all-listing">Spa and Facial</a></li>
                     <li><a href="/all-listing">Wedding halls</a></li>
-                    <li><a href="/all-listing">Automobiles</a></li>
-                    <li><a href="/all-listing">Restaurants</a></li>
+                    <li><a href="/all-listing?category=vehicles">Automobiles</a></li>
+                    <li><a href="/all-listing?category=restaurants-food">Restaurants</a></li>
                     <li><a href="/all-listing">Technology</a></li>
                     <li><a href="/all-listing">Pet shop</a></li>
-                    <li><a href="/all-listing">Real Estate</a></li>
+                    <li><a href="/all-listing?category=real-estate">Real Estate</a></li>
                     <li><a href="/all-listing">Sports</a></li>
                     <li><a href="/all-listing">Hospitals</a></li>
                     <li><a href="/all-listing">Education</a></li>
