@@ -440,6 +440,37 @@ const vehiclePostingCommonFields: CategoryAttributeField[] = [
   ...vehicleListingSettingsFields,
 ];
 
+const electronicsConditionOptions = ["New", "Like New", "Used", "Refurbished"];
+const electronicsBrandOptions = ["Apple", "Samsung", "LG", "Sony", "Dell", "HP", "Lenovo", "Asus", "Acer", "Whirlpool", "Godrej", "Voltas", "Blue Star", "Bose", "JBL", "OnePlus", "Xiaomi", "Other"];
+const electronicsFeatures: CategoryAttributeField[] = [
+  { key: "bluetooth", label: "Bluetooth", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
+  { key: "wifi", label: "WiFi", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
+  { key: "touchscreen", label: "Touchscreen", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
+  { key: "fastCharging", label: "Fast Charging", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
+  { key: "smartFeatures", label: "Smart Features", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
+  { key: "remoteControl", label: "Remote Control", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
+];
+
+const electronicsPostingCommonFields: CategoryAttributeField[] = [
+  { key: "brand", label: "Brand", options: electronicsBrandOptions, isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
+  { key: "modelNameNumber", label: "Model Name / Number", isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
+  { key: "condition", label: "Condition", options: electronicsConditionOptions, isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
+  { key: "purchaseYear", label: "Purchase Year", type: "number", isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
+  { key: "billAvailable", label: "Bill Available", options: yesNoOptions, isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
+  { key: "warranty", label: "Warranty", options: yesNoOptions, isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
+  { key: "warrantyRemainingMonths", label: "Warranty Remaining (months)", type: "number", sectionName: "Product Details", sectionOrder: 2 },
+  { key: "color", label: "Color", isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
+  { key: "usageDuration", label: "Usage Duration", sectionName: "Product Details", sectionOrder: 2 },
+  { key: "price", label: "Price", type: "number", isRequired: true, sectionName: "Price Details", sectionOrder: 3 },
+  { key: "price_negotiable", label: "Price Negotiable", options: yesNoOptions, sectionName: "Price Details", sectionOrder: 3 },
+  { key: "area_locality", label: "Area / Locality", sectionName: "Location Details", sectionOrder: 4 },
+  { key: "map_lat_long", label: "Map Location (lat/long)", sectionName: "Location Details", sectionOrder: 4 },
+  ...electronicsFeatures,
+  { key: "seller_type", label: "Seller Type", options: ["Owner", "Dealer"], sectionName: "Seller Information", sectionOrder: 7 },
+  { key: "ad_type", label: "Ad Type", options: listingTypeOptions, sectionName: "Listing Settings", sectionOrder: 8 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Settings", sectionOrder: 8 },
+];
+
 const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]> = {
   "Real Estate": [
     { key: "superBuiltUpArea", label: "Super Built-up Area (sq ft)", type: "number" },
@@ -486,14 +517,7 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "orderNowButton", label: "Order Now Button", options: yesNoOptions },
   ],
   "Electronics & Appliances": [
-    { key: "brand", label: "Brand" },
-    { key: "model", label: "Model" },
-    { key: "condition", label: "Condition", options: commonConditionOptions },
-    { key: "warranty", label: "Warranty", options: ["No Warranty", "Under Warranty", "Extended Warranty"] },
-    { key: "purchaseYear", label: "Purchase Year", type: "number" },
-    { key: "storage", label: "Storage / Capacity" },
-    { key: "ram", label: "RAM" },
-    { key: "accessoriesIncluded", label: "Accessories Included" },
+    ...electronicsPostingCommonFields,
   ],
   "Furniture & Home Decor": [
     { key: "itemCondition", label: "Condition", options: commonConditionOptions },
@@ -701,56 +725,80 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
     default: categoryAttributeFieldsByCategory["Electronics & Appliances"],
     subCategories: {
       Mobiles: [
-        { key: "brand", label: "Brand" },
-        { key: "model", label: "Model" },
-        { key: "storage", label: "Storage" },
-        { key: "ram", label: "RAM" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "warranty", label: "Warranty", options: ["No Warranty", "Under Warranty", "Extended Warranty"] },
-        { key: "boxAndCharger", label: "Box / Charger Included" },
+        ...electronicsPostingCommonFields,
+        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "6GB", "8GB", "12GB", "16GB", "Other"] },
+        { key: "storage", label: "Storage", isRequired: true, options: ["64GB", "128GB", "256GB", "512GB", "1TB", "Other"] },
+        { key: "processor", label: "Processor" },
+        { key: "screenSize", label: "Screen Size", isRequired: true },
+        { key: "batteryHealth", label: "Battery Health" },
+        { key: "network", label: "Network", isRequired: true, options: ["4G", "5G"] },
       ],
       Computers: [
-        { key: "brand", label: "Brand" },
-        { key: "model", label: "Model" },
-        { key: "processor", label: "Processor" },
-        { key: "ram", label: "RAM" },
-        { key: "storage", label: "Storage" },
-        { key: "screenSize", label: "Screen Size" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
+        ...electronicsPostingCommonFields,
+        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "8GB", "16GB", "32GB", "64GB", "Other"] },
+        { key: "storage", label: "Storage (SSD/HDD + size)", isRequired: true },
+        { key: "processor", label: "Processor", isRequired: true },
+        { key: "graphicsCard", label: "Graphics Card" },
+        { key: "screenSize", label: "Screen Size", isRequired: true },
+        { key: "operatingSystem", label: "Operating System", isRequired: true, options: ["Windows", "Mac", "Linux", "Chrome OS", "Other"] },
       ],
       "Home Appliances": [
-        { key: "brand", label: "Brand" },
-        { key: "model", label: "Model" },
-        { key: "capacity", label: "Capacity / Size" },
-        { key: "energyRating", label: "Energy Rating" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "warranty", label: "Warranty", options: ["No Warranty", "Under Warranty", "Extended Warranty"] },
+        ...electronicsPostingCommonFields,
+        { key: "applianceType", label: "Appliance Type", isRequired: true, options: ["AC", "Refrigerator", "Washing Machine", "TV", "Other"] },
+        { key: "capacity", label: "Capacity", isRequired: true },
+        { key: "energyRating", label: "Energy Rating", isRequired: true, options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "Not Rated"] },
+        { key: "inverterTechnology", label: "Inverter Technology", isRequired: true, options: yesNoOptions },
+        { key: "powerConsumption", label: "Power Consumption" },
       ],
       Accessories: [
-        { key: "brand", label: "Brand" },
-        { key: "accessoryType", label: "Accessory Type" },
-        { key: "compatibleWith", label: "Compatible With" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "warranty", label: "Warranty", options: ["No Warranty", "Under Warranty", "Extended Warranty"] },
+        ...electronicsPostingCommonFields,
+        { key: "accessoryType", label: "Type", isRequired: true, options: ["Headphones", "Charger", "Smartwatch", "Speaker", "Cable", "Other"] },
+        { key: "compatibility", label: "Compatibility", isRequired: true, options: ["iOS", "Android", "Universal", "Windows", "Mac", "Other"] },
+        { key: "connectivity", label: "Connectivity", isRequired: true, options: ["Bluetooth", "Wired", "WiFi", "USB-C", "Lightning", "Other"] },
       ],
     },
     detailedCategories: {
       Smartphones: [
-        { key: "brand", label: "Brand" },
-        { key: "model", label: "Model" },
-        { key: "storage", label: "Storage" },
-        { key: "ram", label: "RAM" },
+        ...electronicsPostingCommonFields,
+        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "6GB", "8GB", "12GB", "16GB", "Other"] },
+        { key: "storage", label: "Storage", isRequired: true, options: ["64GB", "128GB", "256GB", "512GB", "1TB", "Other"] },
+        { key: "processor", label: "Processor" },
+        { key: "screenSize", label: "Screen Size", isRequired: true },
         { key: "batteryHealth", label: "Battery Health" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "boxAndCharger", label: "Box / Charger Included" },
+        { key: "network", label: "Network", isRequired: true, options: ["4G", "5G"] },
+      ],
+      "Laptops / Desktops": [
+        ...electronicsPostingCommonFields,
+        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "8GB", "16GB", "32GB", "64GB", "Other"] },
+        { key: "storage", label: "Storage (SSD/HDD + size)", isRequired: true },
+        { key: "processor", label: "Processor", isRequired: true },
+        { key: "graphicsCard", label: "Graphics Card" },
+        { key: "screenSize", label: "Screen Size", isRequired: true },
+        { key: "operatingSystem", label: "Operating System", isRequired: true, options: ["Windows", "Mac", "Linux", "Chrome OS", "Other"] },
+      ],
+      Tablets: [
+        ...electronicsPostingCommonFields,
+        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "6GB", "8GB", "12GB", "16GB", "Other"] },
+        { key: "storage", label: "Storage", isRequired: true, options: ["64GB", "128GB", "256GB", "512GB", "1TB", "Other"] },
+        { key: "processor", label: "Processor" },
+        { key: "screenSize", label: "Screen Size", isRequired: true },
+        { key: "batteryHealth", label: "Battery Health" },
+        { key: "network", label: "Network", isRequired: true, options: ["4G", "5G"] },
+      ],
+      TVs: [
+        ...electronicsPostingCommonFields,
+        { key: "screenSize", label: "Screen Size (inches)", isRequired: true },
+        { key: "displayType", label: "Display Type", isRequired: true, options: ["LED", "OLED", "QLED"] },
+        { key: "resolution", label: "Resolution", isRequired: true, options: ["HD", "Full HD", "4K"] },
+        { key: "smartTv", label: "Smart TV", isRequired: true, options: yesNoOptions },
       ],
       "AC / Coolers": [
-        { key: "brand", label: "Brand" },
-        { key: "type", label: "Type", options: ["Window AC", "Split AC", "Portable AC", "Air Cooler"] },
-        { key: "capacity", label: "Capacity" },
-        { key: "energyRating", label: "Energy Rating" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "installationIncluded", label: "Installation Included", options: ["Yes", "No"] },
+        ...electronicsPostingCommonFields,
+        { key: "applianceType", label: "Appliance Type", isRequired: true, options: ["AC", "Air Cooler"] },
+        { key: "capacity", label: "Capacity", isRequired: true },
+        { key: "energyRating", label: "Energy Rating", isRequired: true, options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "Not Rated"] },
+        { key: "inverterTechnology", label: "Inverter Technology", isRequired: true, options: yesNoOptions },
+        { key: "powerConsumption", label: "Power Consumption" },
       ],
     },
   },
@@ -1252,6 +1300,7 @@ export default function ListingFormPage() {
           ...mapPropertyAttributesFromListing(listing),
           ...mapRestaurantAttributesFromListing(listing),
           ...mapVehicleAttributesFromListing(listing),
+          ...mapElectronicsAttributesFromListing(listing),
         });
         setServiceFiles([]);
         setOfferFiles([]);
@@ -1338,7 +1387,7 @@ export default function ListingFormPage() {
     [selectedListingSubCategory, form.detailCategory],
   );
   const effectiveDynamicCategoryFields = useMemo(
-    () => mergeVehiclePostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
+    () => mergeCategoryPostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
     [dynamicCategoryFields, form.categoryName, form.detailCategory, form.subCategory],
   );
   const hasDynamicCategoryFields = effectiveDynamicCategoryFields.length > 0;
@@ -1595,6 +1644,10 @@ export default function ListingFormPage() {
       return false;
     }
 
+    if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Electronics & Appliances" && !validateElectronicsFields()) {
+      return false;
+    }
+
     const missingDetailField = hasDynamicCategoryFields
       ? undefined
       : getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
@@ -1801,8 +1854,128 @@ export default function ListingFormPage() {
     return true;
   }
 
+  function validateElectronicsFields() {
+    const subCategory = form.subCategory;
+    const detailCategory = form.detailCategory;
+    const condition = getAttributeValue(categoryAttributes, "condition");
+    const warranty = getAttributeValue(categoryAttributes, "warranty");
+    const purchaseYear = numberAttribute(categoryAttributes, "purchaseYear", "purchase_year");
+    const currentYear = new Date().getFullYear() + 1;
+
+    const requiredFields = [
+      ["brand", "Brand"],
+      ["modelNameNumber", "model_name_number", "model", "Model Name / Number"],
+      ["condition", "Condition"],
+      ["purchaseYear", "purchase_year", "Purchase Year"],
+      ["billAvailable", "bill_available", "Bill Available"],
+      ["warranty", "Warranty"],
+      ["color", "Color"],
+    ];
+
+    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    if (missing) {
+      setErrorMessage(`${missing[missing.length - 1]} is required.`);
+      return false;
+    }
+
+    if (!purchaseYear || purchaseYear < 1990 || purchaseYear > currentYear) {
+      setErrorMessage("Purchase Year should be a valid year.");
+      return false;
+    }
+
+    if (warranty === "Yes" && !getAttributeValue(categoryAttributes, "warrantyRemainingMonths", "warranty_remaining_months").trim()) {
+      setErrorMessage("Warranty Remaining is required when Warranty is Yes.");
+      return false;
+    }
+
+    if (condition !== "New" && !getAttributeValue(categoryAttributes, "usageDuration", "usage_duration").trim()) {
+      setErrorMessage("Usage Duration is required for used or refurbished products.");
+      return false;
+    }
+
+    if (subCategory === "Mobiles" || detailCategory === "Smartphones" || detailCategory === "Tablets") {
+      const mobileMissing = [
+        ["ram", "RAM"],
+        ["storage", "Storage"],
+        ["screenSize", "screen_size", "Screen Size"],
+        ["network", "Network"],
+      ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+
+      if (mobileMissing) {
+        setErrorMessage(`${mobileMissing[mobileMissing.length - 1]} is required for mobiles and tablets.`);
+        return false;
+      }
+
+      if (condition !== "New" && !getAttributeValue(categoryAttributes, "batteryHealth", "battery_health").trim()) {
+        setErrorMessage("Battery Health is required for used phones.");
+        return false;
+      }
+    }
+
+    if ((subCategory === "Computers" && detailCategory !== "Tablets") || detailCategory === "Laptops / Desktops") {
+      const computerMissing = [
+        ["ram", "RAM"],
+        ["storage", "Storage"],
+        ["processor", "Processor"],
+        ["screenSize", "screen_size", "Screen Size"],
+        ["operatingSystem", "operating_system", "Operating System"],
+      ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+
+      if (computerMissing) {
+        setErrorMessage(`${computerMissing[computerMissing.length - 1]} is required for computers and laptops.`);
+        return false;
+      }
+    }
+
+    if (detailCategory === "TVs") {
+      const tvMissing = [
+        ["screenSize", "screen_size", "Screen Size"],
+        ["displayType", "display_type", "Display Type"],
+        ["resolution", "Resolution"],
+        ["smartTv", "smart_tv", "Smart TV"],
+      ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+
+      if (tvMissing) {
+        setErrorMessage(`${tvMissing[tvMissing.length - 1]} is required for TVs.`);
+        return false;
+      }
+    } else if (subCategory === "Home Appliances") {
+      const applianceMissing = [
+        ["applianceType", "appliance_type", "Appliance Type"],
+        ["capacity", "Capacity"],
+        ["energyRating", "energy_rating", "Energy Rating"],
+        ["inverterTechnology", "inverter_technology", "Inverter Technology"],
+      ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+
+      if (applianceMissing) {
+        setErrorMessage(`${applianceMissing[applianceMissing.length - 1]} is required for home appliances.`);
+        return false;
+      }
+    }
+
+    if (subCategory === "Accessories") {
+      const accessoryMissing = [
+        ["accessoryType", "accessory_type", "Type"],
+        ["compatibility", "Compatibility"],
+        ["connectivity", "Connectivity"],
+      ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+
+      if (accessoryMissing) {
+        setErrorMessage(`${accessoryMissing[accessoryMissing.length - 1]} is required for accessories.`);
+        return false;
+      }
+    }
+
+    if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
+      setErrorMessage("Price is required for Electronics & Appliances listings.");
+      return false;
+    }
+
+    return true;
+  }
+
   function validateMedia() {
-    if (!isRealEstateCategory(form.categoryName) && form.categoryName !== "Vehicles") {
+    if (!isRealEstateCategory(form.categoryName) && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances") {
       return true;
     }
 
@@ -3881,6 +4054,37 @@ function buildListingPayload(
       loanStatus: getAttributeValue(categoryAttributes, "loanStatus", "loan_status").trim(),
       features: vehicleFeatureValues(categoryAttributes),
     },
+    electronicsDetails: {
+      brand: getAttributeValue(categoryAttributes, "brand").trim(),
+      modelNameNumber: getAttributeValue(categoryAttributes, "modelNameNumber", "model_name_number", "model").trim(),
+      condition: getAttributeValue(categoryAttributes, "condition").trim(),
+      purchaseYear: numberAttribute(categoryAttributes, "purchaseYear", "purchase_year"),
+      billAvailable: boolAttribute(categoryAttributes, "billAvailable", "bill_available"),
+      warranty: boolAttribute(categoryAttributes, "warranty"),
+      warrantyRemainingMonths: numberAttribute(categoryAttributes, "warrantyRemainingMonths", "warranty_remaining_months"),
+      color: getAttributeValue(categoryAttributes, "color").trim(),
+      usageDuration: getAttributeValue(categoryAttributes, "usageDuration", "usage_duration").trim(),
+      ram: getAttributeValue(categoryAttributes, "ram").trim(),
+      storage: getAttributeValue(categoryAttributes, "storage").trim(),
+      processor: getAttributeValue(categoryAttributes, "processor").trim(),
+      screenSize: getAttributeValue(categoryAttributes, "screenSize", "screen_size").trim(),
+      batteryHealth: getAttributeValue(categoryAttributes, "batteryHealth", "battery_health").trim(),
+      network: getAttributeValue(categoryAttributes, "network").trim(),
+      graphicsCard: getAttributeValue(categoryAttributes, "graphicsCard", "graphics_card").trim(),
+      operatingSystem: getAttributeValue(categoryAttributes, "operatingSystem", "operating_system").trim(),
+      displayType: getAttributeValue(categoryAttributes, "displayType", "display_type").trim(),
+      resolution: getAttributeValue(categoryAttributes, "resolution").trim(),
+      smartTv: boolAttribute(categoryAttributes, "smartTv", "smart_tv"),
+      applianceType: getAttributeValue(categoryAttributes, "applianceType", "appliance_type").trim(),
+      capacity: getAttributeValue(categoryAttributes, "capacity").trim(),
+      energyRating: getAttributeValue(categoryAttributes, "energyRating", "energy_rating").trim(),
+      inverterTechnology: boolAttribute(categoryAttributes, "inverterTechnology", "inverter_technology"),
+      powerConsumption: getAttributeValue(categoryAttributes, "powerConsumption", "power_consumption").trim(),
+      accessoryType: getAttributeValue(categoryAttributes, "accessoryType", "accessory_type").trim(),
+      compatibility: getAttributeValue(categoryAttributes, "compatibility", "compatibleWith", "compatible_with").trim(),
+      connectivity: getAttributeValue(categoryAttributes, "connectivity").trim(),
+      features: electronicsFeatureValues(categoryAttributes),
+    },
     restaurantMenuItems: restaurantMenuItems
       .filter((item) => item.itemName.trim() || item.menuCategory.trim() || item.price.trim())
       .map((item, index) => ({
@@ -4222,6 +4426,85 @@ function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttri
   return trimCategoryAttributes(values);
 }
 
+function mapElectronicsAttributesFromListing(listing: ListingSummary): CategoryAttributes {
+  const details = listing.electronicsDetails || {};
+  const priceDetails = listing.priceDetails || {};
+  const locationDetails = listing.locationDetails || {};
+  const sellerInformation = listing.sellerInformation || {};
+  const settings = listing.settings || {};
+  const values: CategoryAttributes = {
+    brand: stringValue(details.brand),
+    modelNameNumber: stringValue(details.modelNameNumber),
+    model_name_number: stringValue(details.modelNameNumber),
+    condition: stringValue(details.condition),
+    purchaseYear: stringValue(details.purchaseYear),
+    purchase_year: stringValue(details.purchaseYear),
+    billAvailable: booleanSelectValue(details.billAvailable),
+    bill_available: booleanSelectValue(details.billAvailable),
+    warranty: booleanSelectValue(details.warranty),
+    warrantyRemainingMonths: stringValue(details.warrantyRemainingMonths),
+    warranty_remaining_months: stringValue(details.warrantyRemainingMonths),
+    color: stringValue(details.color),
+    usageDuration: stringValue(details.usageDuration),
+    usage_duration: stringValue(details.usageDuration),
+    ram: stringValue(details.ram),
+    storage: stringValue(details.storage),
+    processor: stringValue(details.processor),
+    screenSize: stringValue(details.screenSize),
+    screen_size: stringValue(details.screenSize),
+    batteryHealth: stringValue(details.batteryHealth),
+    battery_health: stringValue(details.batteryHealth),
+    network: stringValue(details.network),
+    graphicsCard: stringValue(details.graphicsCard),
+    graphics_card: stringValue(details.graphicsCard),
+    operatingSystem: stringValue(details.operatingSystem),
+    operating_system: stringValue(details.operatingSystem),
+    displayType: stringValue(details.displayType),
+    display_type: stringValue(details.displayType),
+    resolution: stringValue(details.resolution),
+    smartTv: booleanSelectValue(details.smartTv),
+    smart_tv: booleanSelectValue(details.smartTv),
+    applianceType: stringValue(details.applianceType),
+    appliance_type: stringValue(details.applianceType),
+    capacity: stringValue(details.capacity),
+    energyRating: stringValue(details.energyRating),
+    energy_rating: stringValue(details.energyRating),
+    inverterTechnology: booleanSelectValue(details.inverterTechnology),
+    inverter_technology: booleanSelectValue(details.inverterTechnology),
+    powerConsumption: stringValue(details.powerConsumption),
+    power_consumption: stringValue(details.powerConsumption),
+    accessoryType: stringValue(details.accessoryType),
+    accessory_type: stringValue(details.accessoryType),
+    compatibility: stringValue(details.compatibility),
+    connectivity: stringValue(details.connectivity),
+    price: stringValue(priceDetails.price || listing.price),
+    price_negotiable: priceDetails.priceNegotiable === false ? "No" : priceDetails.priceNegotiable === true ? "Yes" : "",
+    area_locality: stringValue(locationDetails.locality || listing.locality),
+    map_lat_long: locationDetails.latitude || locationDetails.longitude ? [stringValue(locationDetails.latitude), stringValue(locationDetails.longitude)].filter(Boolean).join(", ") : "",
+    seller_type: stringValue(sellerInformation.sellerType),
+    ad_type: stringValue(settings.adType),
+    ad_duration_days: stringValue(settings.adDurationDays),
+  };
+
+  const features = Array.isArray(details.features) ? details.features.map(String) : [];
+  for (const [feature, keys] of [
+    ["Bluetooth", ["bluetooth"]],
+    ["WiFi", ["wifi"]],
+    ["Touchscreen", ["touchscreen"]],
+    ["Fast Charging", ["fastCharging", "fast_charging"]],
+    ["Smart Features", ["smartFeatures", "smart_features"]],
+    ["Remote Control", ["remoteControl", "remote_control"]],
+  ] as Array<[string, string[]]>) {
+    if (features.includes(feature)) {
+      for (const key of keys) {
+        values[key] = "true";
+      }
+    }
+  }
+
+  return trimCategoryAttributes(values);
+}
+
 function mapRestaurantMenuItemsFromListing(listing: ListingSummary): RestaurantMenuItem[] {
   const menuItems = listing.restaurantMenuItems || [];
   if (!menuItems.length) {
@@ -4495,6 +4778,21 @@ function vehicleFeatureValues(values: CategoryAttributes) {
     .map(([feature]) => feature);
 }
 
+function electronicsFeatureValues(values: CategoryAttributes) {
+  const featureMap: Array<[string, string[]]> = [
+    ["Bluetooth", ["bluetooth"]],
+    ["WiFi", ["wifi"]],
+    ["Touchscreen", ["touchscreen"]],
+    ["Fast Charging", ["fastCharging", "fast_charging"]],
+    ["Smart Features", ["smartFeatures", "smart_features"]],
+    ["Remote Control", ["remoteControl", "remote_control"]],
+  ];
+
+  return featureMap
+    .filter(([, keys]) => boolAttribute(values, ...keys) === true)
+    .map(([feature]) => feature);
+}
+
 function getCategoryAttributeFields(categoryName: string, subCategory: string, detailCategory: string) {
   const fieldSet = categoryAttributeFieldSetsByCategory[categoryName];
 
@@ -4510,18 +4808,22 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
   );
 }
 
-function mergeVehiclePostingFields(fields: CategoryAttributeField[], categoryName: string, subCategory: string, detailCategory: string) {
-  if (categoryName !== "Vehicles") {
+function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryName: string, subCategory: string, detailCategory: string) {
+  if (categoryName !== "Vehicles" && categoryName !== "Electronics & Appliances") {
     return fields;
   }
 
-  const requiredFields = [
-    ...vehiclePostingCommonFields,
-    ...getCategoryAttributeFields(categoryName, subCategory, detailCategory),
-  ];
-  const nextFields = [...fields];
+  const commonFields = categoryName === "Vehicles" ? vehiclePostingCommonFields : electronicsPostingCommonFields;
+  const requiredFields = [...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
+  const nextFields: CategoryAttributeField[] = [];
 
   for (const field of requiredFields) {
+    if (!nextFields.some((item) => areEquivalentCategoryFieldKeys(item.key, field.key))) {
+      nextFields.push(field);
+    }
+  }
+
+  for (const field of fields) {
     if (!nextFields.some((item) => areEquivalentCategoryFieldKeys(item.key, field.key))) {
       nextFields.push(field);
     }
@@ -4549,6 +4851,25 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["pucavailable", "puc_available"],
     ["servicehistory", "service_history"],
     ["loanstatus", "loan_status"],
+    ["modelnamenumber", "model_name_number", "model"],
+    ["purchaseyear", "purchase_year"],
+    ["billavailable", "bill_available"],
+    ["warrantyremainingmonths", "warranty_remaining_months"],
+    ["usageduration", "usage_duration"],
+    ["screensize", "screen_size"],
+    ["batteryhealth", "battery_health"],
+    ["graphicscard", "graphics_card"],
+    ["operatingsystem", "operating_system"],
+    ["displaytype", "display_type"],
+    ["smarttv", "smart_tv"],
+    ["appliancetype", "appliance_type"],
+    ["energyrating", "energy_rating"],
+    ["invertertechnology", "inverter_technology"],
+    ["powerconsumption", "power_consumption"],
+    ["accessorytype", "accessory_type"],
+    ["fastcharging", "fast_charging"],
+    ["smartfeatures", "smart_features"],
+    ["remotecontrol", "remote_control"],
   ].map((group) => new Set(group));
 
   return aliases.some((group) => group.has(first) && group.has(second));
@@ -4558,6 +4879,8 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const key = normalizeFieldKey(field.key);
   const vehicleCondition = getAttributeValue(values, "vehicleCondition", "vehicle_condition", "condition");
   const isNewVehicle = form.detailCategory.toLowerCase().includes("new") || vehicleCondition === "New";
+  const electronicsCondition = getAttributeValue(values, "condition");
+  const electronicsWarranty = getAttributeValue(values, "warranty");
   const isAccessories = form.subCategory === "Spare Parts & Accessories";
   const isRental = form.subCategory === "Rentals";
   const insurance = getAttributeValue(values, "insurance", "insuranceStatus", "insurance_status");
@@ -4579,6 +4902,18 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   }
 
   if (form.categoryName === "Vehicles" && isAccessories && ["brand", "model", "variant", "yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vehiclecondition", "vehicle_condition", "fueltype", "fuel_type", "transmission", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "color", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Electronics & Appliances" && electronicsCondition === "New" && ["usageduration", "usage_duration", "batteryhealth", "battery_health"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Electronics & Appliances" && electronicsWarranty !== "Yes" && ["warrantyremainingmonths", "warranty_remaining_months"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Electronics & Appliances" && form.subCategory === "Accessories" && ["ram", "storage", "processor", "screensize", "screen_size", "batteryhealth", "battery_health", "network", "graphicscard", "graphics_card", "operatingsystem", "operating_system", "displaytype", "display_type", "resolution", "smarttv", "smart_tv", "appliancetype", "appliance_type", "capacity", "energyrating", "energy_rating", "invertertechnology", "inverter_technology", "powerconsumption", "power_consumption"].includes(key)) {
     return false;
   }
 

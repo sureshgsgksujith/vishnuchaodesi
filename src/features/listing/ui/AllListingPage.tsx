@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import HomeHeader from "../../home/ui/HomeHeader";
+import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import {
   getListingApiErrorMessage,
@@ -119,7 +119,7 @@ export default function AllListingPage() {
 
   return (
     <>
-      <HomeHeader />
+      <CustomerHeader />
       <main className="public-listing-page public-template-page">
         <section className="public-listing-content">
           <div className="container public-listing-shell">
@@ -329,7 +329,7 @@ function ListingCard({ listing }: { listing: ListingSummary }) {
 }
 
 function getCategory(value: string | null): PublicListingQuery["category"] {
-  return value === "real-estate" || value === "restaurants-food" || value === "vehicles" ? value : undefined;
+  return value === "real-estate" || value === "restaurants-food" || value === "vehicles" || value === "electronics-appliances" ? value : undefined;
 }
 
 function getSort(value: string | null): SortKey {
@@ -364,9 +364,22 @@ function categoryLabel(category: PublicCategory, options?: Array<{ value: Public
 }
 
 function buildCategoryOptions(items: ListingSummary[], currentCategory?: PublicCategory) {
-  const options = uniqueValues(items.map((item) => item.categoryName))
+  const defaultOptions: Array<{ value: PublicCategory; label: string }> = [
+    { value: "real-estate", label: "Real Estate" },
+    { value: "restaurants-food", label: "Restaurants & Food" },
+    { value: "vehicles", label: "Vehicles" },
+    { value: "electronics-appliances", label: "Electronics & Appliances" },
+  ];
+  const options = [...defaultOptions];
+
+  uniqueValues(items.map((item) => item.categoryName))
     .map((label) => ({ label, value: categorySlugFromLabel(label) }))
-    .filter((item): item is { label: string; value: PublicCategory } => Boolean(item.value));
+    .filter((item): item is { label: string; value: PublicCategory } => Boolean(item.value))
+    .forEach((item) => {
+      if (!options.some((option) => option.value === item.value)) {
+        options.push(item);
+      }
+    });
 
   if (currentCategory && !options.some((item) => item.value === currentCategory)) {
     options.push({ value: currentCategory, label: buildCategoryLabel(currentCategory) });
@@ -387,6 +400,7 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Real Estate") return "real-estate";
   if (label === "Restaurants & Food") return "restaurants-food";
   if (label === "Vehicles") return "vehicles";
+  if (label === "Electronics & Appliances") return "electronics-appliances";
   return "";
 }
 
@@ -394,6 +408,7 @@ function buildCategoryLabel(category: PublicCategory) {
   if (category === "real-estate") return "Real Estate";
   if (category === "restaurants-food") return "Restaurants & Food";
   if (category === "vehicles") return "Vehicles";
+  if (category === "electronics-appliances") return "Electronics & Appliances";
   return "Listings";
 }
 

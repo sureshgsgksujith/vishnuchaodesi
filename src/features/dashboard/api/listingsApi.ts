@@ -32,6 +32,7 @@ export type ListingSummary = {
   settings?: Record<string, string | number | boolean | null>;
   restaurantFoodDetails?: Record<string, string | number | boolean | string[] | null>;
   vehicleDetails?: Record<string, string | number | boolean | string[] | null>;
+  electronicsDetails?: Record<string, string | number | boolean | string[] | null>;
   restaurantMenuItems?: Array<Record<string, string | number | boolean | null>>;
   restaurantOperatingHours?: Array<Record<string, string | boolean | null>>;
   imageUrls?: string[];
@@ -89,6 +90,7 @@ export type UpsertListingPayload = {
   settings: Record<string, string | number | boolean | null>;
   restaurantFoodDetails?: Record<string, string | number | boolean | string[] | null>;
   vehicleDetails?: Record<string, string | number | boolean | string[] | null>;
+  electronicsDetails?: Record<string, string | number | boolean | string[] | null>;
   restaurantMenuItems?: Array<Record<string, string | number | boolean | null>>;
   restaurantOperatingHours?: Array<Record<string, string | boolean | null>>;
 };
@@ -138,8 +140,20 @@ export async function getRestaurantFoodListings(page = 1, pageSize = 4) {
   return response.data;
 }
 
+export async function getElectronicsListings(page = 1, pageSize = 4) {
+  const response = await apiClient.get<ListingListResponse>("/Listings/electronics-appliances", {
+    params: {
+      page,
+      pageSize,
+    },
+    timeout: 8000,
+  });
+
+  return response.data;
+}
+
 export type PublicListingQuery = {
-  category?: "real-estate" | "restaurants-food" | "vehicles";
+  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances";
   subCategory?: string;
   city?: string;
   locality?: string;

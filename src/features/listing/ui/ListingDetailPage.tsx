@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent, MouseEvent, SyntheticEvent } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
-import HomeHeader from "../../home/ui/HomeHeader";
+import type { CSSProperties, FormEvent, MouseEvent, SyntheticEvent } from "react";
+import { Link, useLocation, useParams, useSearchParams } from "react-router-dom";
+import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import {
   getListing,
@@ -24,6 +24,7 @@ type NamedImageItem = { name: string; imageName?: string; detail?: string; price
 
 export default function ListingDetailPage() {
   const { listingId } = useParams();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [listing, setListing] = useState<ListingSummary | null>(null);
   const [relatedListings, setRelatedListings] = useState<ListingSummary[]>([]);
@@ -103,7 +104,7 @@ export default function ListingDetailPage() {
 
   return (
     <>
-      <HomeHeader />
+      <CustomerHeader />
       <main className="public-detail-page public-detail-template">
         {isLoading ? (
           <div className="container public-detail-status">
@@ -127,6 +128,7 @@ export default function ListingDetailPage() {
             title="Login required"
             message="Please login to view listing details."
             closeTo="/all-listing"
+            returnTo={`${location.pathname}${location.search}`}
           />
         ) : null}
       </main>
@@ -153,6 +155,7 @@ function ListingDetail({
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
   const [loginPrompt, setLoginPrompt] = useState<{ title: string; message: string } | null>(null);
   const scrollingRelatedListings = relatedListings.length > 1 ? [...relatedListings, ...relatedListings] : relatedListings;
+  const relatedScrollDuration = `${Math.max(72, relatedListings.length * 18)}s`;
   const country = getString(listing.locationDetails, "country");
   const address = buildAddress(listing);
   const phone = getString(listing.sellerInformation, "mobileNumber");
@@ -620,6 +623,7 @@ function ListingDetail({
                     className={`prod-sli plac-hom-all-pla public-related-template-list ${
                       relatedListings.length > 1 ? "public-related-auto-list" : ""
                     }`}
+                    style={{ "--related-scroll-duration": relatedScrollDuration } as CSSProperties}
                   >
                     {scrollingRelatedListings.map((item, index) => (
                       <li key={`${item.id}-${index}`} aria-hidden={index >= relatedListings.length}>
@@ -658,20 +662,24 @@ function LoginRequiredPrompt({
   title,
   message,
   closeTo,
+  returnTo,
   onClose,
 }: {
   title: string;
   message: string;
   closeTo?: string;
+  returnTo?: string;
   onClose?: () => void;
 }) {
+  const loginPath = returnTo ? `/login?returnUrl=${encodeURIComponent(returnTo)}` : "/login";
+
   return (
     <div className="public-login-prompt-backdrop" role="dialog" aria-modal="true" aria-labelledby="public-login-prompt-title">
       <div className="public-login-prompt">
         <h4 id="public-login-prompt-title">{title}</h4>
         <p>{message}</p>
         <div>
-          <Link className="btn btn-primary" to="/login">Login</Link>
+          <Link className="btn btn-primary" to={loginPath}>Login</Link>
           {closeTo ? (
             <Link className="btn btn-default" to={closeTo}>Close</Link>
           ) : (
@@ -824,6 +832,22 @@ function getDetailRows(listing: ListingSummary): Array<[string, LooseValue]> {
       ["Transmission", getString(listing.vehicleDetails, "transmission")],
       ["KM driven", getValue(listing.vehicleDetails, "kmDriven")],
       ["Features", getArray(listing.vehicleDetails, "features").join(", ")],
+    ];
+  }
+
+  if (listing.categoryName === "Electronics & Appliances") {
+    return [
+      ["Brand", getString(listing.electronicsDetails, "brand")],
+      ["Model", getString(listing.electronicsDetails, "modelNameNumber")],
+      ["Condition", getString(listing.electronicsDetails, "condition")],
+      ["Purchase year", getValue(listing.electronicsDetails, "purchaseYear")],
+      ["Warranty", getBooleanText(listing.electronicsDetails, "warranty")],
+      ["RAM", getString(listing.electronicsDetails, "ram")],
+      ["Storage", getString(listing.electronicsDetails, "storage")],
+      ["Processor", getString(listing.electronicsDetails, "processor")],
+      ["Screen size", getString(listing.electronicsDetails, "screenSize")],
+      ["Capacity", getString(listing.electronicsDetails, "capacity")],
+      ["Features", getArray(listing.electronicsDetails, "features").join(", ")],
     ];
   }
 

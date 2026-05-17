@@ -29,6 +29,10 @@ export default function LoginPage() {
   const selectedPlanCode = useMemo(() => {
     return searchParams.get("plan")?.trim().toUpperCase() || "";
   }, [searchParams]);
+  const returnUrl = useMemo(() => {
+    const value = searchParams.get("returnUrl") || "";
+    return value.startsWith("/") && !value.startsWith("//") ? value : "";
+  }, [searchParams]);
 
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [loading, setLoading] = useState(false);
@@ -80,11 +84,18 @@ export default function LoginPage() {
   const switchMode = (nextMode: AuthMode) => {
     setMode(nextMode);
 
-    if (nextMode === "login") {
-      setSearchParams({});
-    } else {
-      setSearchParams(selectedPlanCode ? { login: nextMode, plan: selectedPlanCode } : { login: nextMode });
+    const nextParams: Record<string, string> = {};
+    if (nextMode !== "login") {
+      nextParams.login = nextMode;
     }
+    if (selectedPlanCode) {
+      nextParams.plan = selectedPlanCode;
+    }
+    if (returnUrl) {
+      nextParams.returnUrl = returnUrl;
+    }
+
+    setSearchParams(nextParams);
   };
 
   const getMessageClass = (type: MessageType) => {
@@ -237,7 +248,7 @@ export default function LoginPage() {
       if (result.mobileNumber) localStorage.setItem("mobileNumber", result.mobileNumber);
       if (result.userType) localStorage.setItem("userType", result.userType);
 
-      navigate("/home");
+      navigate(returnUrl || "/home");
       window.location.reload();
     } catch (error) {
       alert(error instanceof Error ? error.message : "Login failed");

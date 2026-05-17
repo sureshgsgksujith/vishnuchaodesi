@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import HomeHeader from "./HomeHeader";
-import UserHomeHeader from "./UserHomeHeader";
+import CustomerHeader from "./CustomerHeader";
 import HomeHeroSection from "./HomeHeroSection";
 import HomePromoCards from "./HomePromoCards";
 import HomeArtistToursSection from "./HomeArtistToursSection";
@@ -31,18 +29,11 @@ declare global {
 }
 
 export default function HomePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsLoggedIn(!!token);
-  }, []);
-
   return (
     <div className="chao-home-page">
       <section>
         <div className="str ind2-home">
-          {isLoggedIn ? <UserHomeHeader /> : <HomeHeader />}
+          <CustomerHeader />
           <HomeHeroSection />
         </div>
       </section>

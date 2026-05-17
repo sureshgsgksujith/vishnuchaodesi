@@ -719,7 +719,7 @@
 }
 
 .public-detail-template .public-related-auto-list {
-  animation: public-related-slide-left 34s linear infinite;
+  animation: public-related-slide-left var(--related-scroll-duration, 120s) linear infinite;
 }
 
 .public-detail-template .public-related-auto-list:hover {

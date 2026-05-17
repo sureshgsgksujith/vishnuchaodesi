@@ -104,7 +104,34 @@ const vehicleFallbackItems: FeaturedListingCard[] = [
   },
 ];
 
-type FeaturedListingCategory = "real-estate" | "restaurants-food" | "vehicles";
+const electronicsFallbackItems: FeaturedListingCard[] = [
+  {
+    title: "iPhone 13 128GB Blue",
+    image: resolveListingImageUrl("/uploads/listing-categories/electronics-appliances/account10-electronics-01.jpg"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "MacBook Air M1",
+    image: resolveListingImageUrl("/uploads/listing-categories/electronics-appliances/account10-electronics-02.jpeg"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "LG 55-inch 4K Smart TV",
+    image: resolveListingImageUrl("/uploads/listing-categories/electronics-appliances/account10-electronics-03.jpg"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "Samsung Double Door Fridge",
+    image: resolveListingImageUrl("/uploads/listing-categories/electronics-appliances/account10-electronics-04.jpg"),
+    rating: 5,
+    href: "/all-listing",
+  },
+];
+
+type FeaturedListingCategory = "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances";
 
 function getCityFromLocationLabel(label?: string | null) {
   return label?.split(",")[0]?.trim() || "";
@@ -159,6 +186,7 @@ function useFeaturedListingGroups() {
   const [realEstateItems, setRealEstateItems] = useState(realEstateFallbackItems);
   const [restaurantItems, setRestaurantItems] = useState(restaurantFallbackItems);
   const [vehicleItems, setVehicleItems] = useState(vehicleFallbackItems);
+  const [electronicsItems, setElectronicsItems] = useState(electronicsFallbackItems);
   const currentLocation = useCurrentLocationLabel();
   const currentCity = getCityFromLocationLabel(currentLocation.label);
 
@@ -175,7 +203,8 @@ function useFeaturedListingGroups() {
       getPublicListings({ category: "real-estate", city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "restaurants-food", city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "vehicles", city: currentCity || undefined, page: 1, pageSize: 10 }),
-    ]).then(([realEstateResult, restaurantResult, vehicleResult]) => {
+      getPublicListings({ category: "electronics-appliances", city: currentCity || undefined, page: 1, pageSize: 10 }),
+    ]).then(([realEstateResult, restaurantResult, vehicleResult, electronicsResult]) => {
       if (!isActive) {
         return;
       }
@@ -195,6 +224,12 @@ function useFeaturedListingGroups() {
       if (vehicleResult.status === "fulfilled") {
         setVehicleItems(
           mapListingsToCards(vehicleResult.value.items, vehicleFallbackItems, "vehicles", currentCity),
+        );
+      }
+
+      if (electronicsResult.status === "fulfilled") {
+        setElectronicsItems(
+          mapListingsToCards(electronicsResult.value.items, electronicsFallbackItems, "electronics-appliances", currentCity),
         );
       }
     });
@@ -231,6 +266,14 @@ function useFeaturedListingGroups() {
       iconClass: "plac-hom-tit-ic-ser",
       showDetails: true,
       items: vehicleItems,
+    },
+    {
+      titleLead: "Electronics & Appliances",
+      titleRest: currentCity ? `in ${currentCity}` : "near you",
+      description: "Browse mobiles, laptops, TVs, appliances, accessories, and gadgets from local sellers.",
+      iconClass: "plac-hom-tit-ic-ser",
+      showDetails: true,
+      items: electronicsItems,
     },
   ] satisfies FeaturedListingGroup[];
 }
