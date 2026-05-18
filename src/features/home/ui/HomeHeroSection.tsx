@@ -2,6 +2,8 @@ import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
 
 const quickLinks = [
   { title: "All Services", image: "/template-17/images/icon/shop.png" },
+  { title: "Real Estate", image: "/template-17/images/icon/real-estate.png", category: "real-estate" },
+  { title: "Restaurants & Food", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
   { title: "Classified Listings", image: "/template-17/images/icon/ads.png" },
   { title: "Service Experts", image: "/template-17/images/icon/expert.png" },
   { title: "Jobs & Careers", image: "/template-17/images/icon/employee.png" },
@@ -24,8 +26,27 @@ const topCounts = [
   { title: "Community", count: "15+", image: "/template-17/images/icon/general.png" },
 ];
 
+function getCityFromLocationLabel(label?: string | null) {
+  return label?.split(",")[0]?.trim() || "";
+}
+
+function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
+  if (!item.category) {
+    return "#";
+  }
+
+  const params = new URLSearchParams({ category: item.category });
+
+  if (city) {
+    params.set("city", city);
+  }
+
+  return `/all-listing?${params.toString()}`;
+}
+
 export default function HomeHeroSection() {
   const currentLocation = useCurrentLocationLabel();
+  const currentCity = getCityFromLocationLabel(currentLocation.label);
   const heroLocationText =
     currentLocation.status === "ready" && currentLocation.label
       ? currentLocation.label
@@ -137,7 +158,7 @@ export default function HomeHeroSection() {
                   <div>
                     <img src={item.image} alt={item.title} />
                     <h4>{item.title}</h4>
-                    <a href="#" className="fclick"></a>
+                    <a href={buildQuickLinkHref(item, currentCity)} className="fclick"></a>
                   </div>
                 </li>
               ))}

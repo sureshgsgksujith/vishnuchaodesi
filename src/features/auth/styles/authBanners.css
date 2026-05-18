@@ -1,0 +1,17 @@
+.side-ads a {
+  display: block;
+}
+
+.login-reg-pg .side-ads {
+  padding-top: 0;
+}
+
+.side-ads .ad-img {
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .side-ads {
+    display: none;
+  }
+}

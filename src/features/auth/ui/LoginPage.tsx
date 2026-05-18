@@ -8,10 +8,69 @@ import {
   loginApi,
   resetPasswordApi,
 } from "../api/authApi";
+import { getPageBanners, type PageBanner } from "../api/pageBannersApi";
 import { reinitializeTemplate } from "../../../utils/reinitializeTemplate";
+import "../styles/authBanners.css";
 
 type AuthMode = "login" | "register" | "forgot";
 type MessageType = "success" | "error" | "info";
+
+const fallbackLoginBanners: PageBanner[] = [
+  {
+    id: -1,
+    pageKey: "login",
+    slot: "left",
+    title: "Login left banner 1",
+    imageUrl: "/template-17/images/ads-2/1.jpg",
+    displayOrder: 1,
+    isActive: true,
+  },
+  {
+    id: -2,
+    pageKey: "login",
+    slot: "left",
+    title: "Login left banner 2",
+    imageUrl: "/template-17/images/ads-2/2.jpg",
+    displayOrder: 2,
+    isActive: true,
+  },
+  {
+    id: -3,
+    pageKey: "login",
+    slot: "left",
+    title: "Login left banner 3",
+    imageUrl: "/template-17/images/ads-2/3.jpg",
+    displayOrder: 3,
+    isActive: true,
+  },
+  {
+    id: -4,
+    pageKey: "login",
+    slot: "right",
+    title: "Login right banner 1",
+    imageUrl: "/template-17/images/ads-2/4.jpg",
+    displayOrder: 1,
+    isActive: true,
+  },
+  {
+    id: -5,
+    pageKey: "login",
+    slot: "right",
+    title: "Login right banner 2",
+    imageUrl: "/template-17/images/ads-2/3.jpg",
+    displayOrder: 2,
+    isActive: true,
+  },
+  {
+    id: -6,
+    pageKey: "login",
+    slot: "right",
+    title: "Login right banner 3",
+    imageUrl: "/template-17/images/ads-2/2.jpg",
+    displayOrder: 3,
+    isActive: true,
+  },
+];
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -62,6 +121,7 @@ export default function LoginPage() {
     useState<MessageType>("info");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [banners, setBanners] = useState<PageBanner[]>(fallbackLoginBanners);
 
   useEffect(() => {
     setMode(initialMode);
@@ -70,6 +130,26 @@ export default function LoginPage() {
   useEffect(() => {
     reinitializeTemplate();
   }, [mode]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    getPageBanners("login")
+      .then((items) => {
+        if (isActive) {
+          setBanners(items.length ? items : fallbackLoginBanners);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setBanners(fallbackLoginBanners);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (resendSeconds <= 0) return;
@@ -371,17 +451,23 @@ export default function LoginPage() {
     }
   };
 
+  const leftBanners = getBannersForSlot(banners, "left", "left");
+  const rightBanners = getBannersForSlot(banners, "right", "right");
+
   return (
     <AuthLayout>
       <section className="login-reg login-reg-pg">
-        <div className="container">
+        <div className="container-fluid">
           <div className="row">
-            <div className="col-md-6 offset-md-3">
+            <div className="col-md-3">
+              <AuthBannerColumn banners={leftBanners} />
+            </div>
+            <div className="col-md-6">
               <div className="login-main">
-                <span className="tit-tag">USER LOGIN</span>
+                <span className="tit-tag">General user login</span>
 
                 {mode === "login" && (
-                  <div style={{ display: "block" }}>
+                  <div className="log log-1" style={{ display: "block" }}>
                     <div className="login login-new">
                       <div className="login-hero">
                         <img
@@ -391,14 +477,14 @@ export default function LoginPage() {
                         />
                       </div>
 
-                      <h4>Login</h4>
+                      <h4>Visitors Login</h4>
 
                       <form id="login_form" onSubmit={handleLoginSubmit}>
                         <div className="form-group mb-3">
                           <input
                             type="text"
                             className="form-control"
-                            placeholder="Enter email or mobile*"
+                            placeholder="Enter email*"
                             required
                             value={loginId}
                             onChange={(e) => setLoginId(e.target.value)}
@@ -464,7 +550,7 @@ export default function LoginPage() {
                 )}
 
                 {mode === "register" && (
-                  <div style={{ display: "block" }}>
+                  <div className="log log-2" style={{ display: "block" }}>
                     <div className="login login-new">
                       <h4>Create an account</h4>
                       {selectedPlanCode ? (
@@ -644,7 +730,7 @@ export default function LoginPage() {
                 )}
 
                 {mode === "forgot" && (
-                  <div style={{ display: "block" }}>
+                  <div className="log log-3" style={{ display: "block" }}>
                     <div className="login login-new">
                       <h4>Forgot Password</h4>
 
@@ -768,9 +854,44 @@ export default function LoginPage() {
                 )}
               </div>
             </div>
+            <div className="col-md-3">
+              <AuthBannerColumn banners={rightBanners} />
+            </div>
           </div>
         </div>
       </section>
     </AuthLayout>
   );
+}
+
+function AuthBannerColumn({ banners }: { banners: PageBanner[] }) {
+  return (
+    <div className="side-ads">
+      {banners.map((banner) => (
+        <AuthSideBanner banner={banner} key={`${banner.id}-${banner.slot}-${banner.displayOrder}`} />
+      ))}
+    </div>
+  );
+}
+
+function AuthSideBanner({ banner }: { banner: PageBanner }) {
+  const content = (
+    <img src={banner.imageUrl} className="img-fluid ad-img" alt={banner.altText || banner.title} />
+  );
+
+  return banner.linkUrl ? <a href={banner.linkUrl}>{content}</a> : content;
+}
+
+function getBannersForSlot(banners: PageBanner[], slot: string, fallbackSlot: string) {
+  const matchingBanners = banners
+    .filter((banner) => banner.slot === slot && banner.isActive)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+
+  if (matchingBanners.length) {
+    return matchingBanners;
+  }
+
+  return fallbackLoginBanners
+    .filter((banner) => banner.slot === fallbackSlot)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 }

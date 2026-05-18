@@ -1,6 +1,3 @@
-var fileInput = document.getElementById('fileInput');
-
-if (fileInput) {
 document.getElementById('fileInput').addEventListener('change', function(event) {
     var files = event.target.files; // Get selected files
     var fileObjects = []; // Array to store file objects
@@ -49,7 +46,6 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
         reader.readAsDataURL(files[i]);
     }
 });
-}
 
 // Custom FileListArray to update file input
 function FileListArray(files) {

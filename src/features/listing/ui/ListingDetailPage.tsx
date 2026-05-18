@@ -551,7 +551,7 @@ function ListingDetail({
                     </div>
                     <div className="pg-list-oths">
                       <ul>
-                        <li><span className="cta cta-like"><i className="material-icons">thumb_up</i><b>{listing.views || 0}</b> LIKES</span></li>
+                        <li><span className="cta cta-like"><i className="material-icons">visibility</i><b>{listing.views || 0}</b> VIEWS</span></li>
                         {whatsapp ? <li><a href={`https://wa.me/${numbersOnly(whatsapp)}`} className="cta cta-rev" target="_blank" rel="noreferrer"><i className="material-icons">chat</i>WhatsApp</a></li> : null}
                         <li><button type="button" className="public-share-button"><i className="material-icons">share</i>Share</button></li>
                       </ul>

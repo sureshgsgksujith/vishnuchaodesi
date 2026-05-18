@@ -3129,7 +3129,13 @@ div#review_success {
 .ban-short-links.ani ul li:nth-child(10) {
     transition-delay: 1s
 }
+.ban-short-links.ani ul li:nth-child(11) {
+    transition-delay: 1.1s;
+}
 
+.ban-short-links.ani ul li:nth-child(12) {
+    transition-delay: 1.2s;
+}
 .ban-short-links ul li div {
     text-align: center;
     border: 1px solid #626262;
@@ -6158,7 +6164,7 @@ div#review_success {
 
 .v3-list-ql {
     position: fixed;
-    top: 50px;
+    top: 65px;
     width: 100%;
     background: #151f31;
     z-index: 16;
@@ -26890,4 +26896,25 @@ a[data-command='p'],a[data-command=h2],a[data-command=h4] {
 .product-item,
 .service-item {
     margin-bottom: 10px;
+}
+.side-ads {
+    text-align: center;
+    padding: 20px 10px;
+}
+
+.ad-img {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+@media(max-width:768px){
+
+    .side-ads{
+        display:none;
+    }
+
+    .login-main{
+        margin:20px;
+    }
 }
