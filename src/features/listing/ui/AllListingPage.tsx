@@ -329,7 +329,7 @@ function ListingCard({ listing }: { listing: ListingSummary }) {
 }
 
 function getCategory(value: string | null): PublicListingQuery["category"] {
-  return value === "real-estate" || value === "restaurants-food" || value === "vehicles" || value === "electronics-appliances" ? value : undefined;
+  return value === "real-estate" || value === "restaurants-food" || value === "vehicles" || value === "electronics-appliances" || value === "care-services" ? value : undefined;
 }
 
 function getSort(value: string | null): SortKey {
@@ -351,7 +351,13 @@ function sortListings(items: ListingSummary[], sort: SortKey) {
     return next.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
   }
 
-  return next.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return next.sort((a, b) => getLatestListingTime(b) - getLatestListingTime(a));
+}
+
+function getLatestListingTime(listing: ListingSummary) {
+  const value = listing.updatedAt || listing.createdAt;
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
 }
 
 function categoryLabel(category: PublicCategory, options?: Array<{ value: PublicCategory; label: string }>) {

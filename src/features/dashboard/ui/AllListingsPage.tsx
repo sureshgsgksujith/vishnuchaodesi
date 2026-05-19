@@ -149,7 +149,7 @@ export default function AllListingsPage() {
 
                           <div>
                             <strong>{item.title}</strong>
-                            <span>{formatDate(item.createdAt)}</span>
+                            <span>{formatDate(getLatestListingDate(item))}</span>
                             {item.rejectionReason ? (
                               <small>{item.rejectionReason}</small>
                             ) : null}
@@ -261,6 +261,10 @@ function formatDate(value?: string | null) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function getLatestListingDate(item: ListingSummary) {
+  return item.updatedAt || item.createdAt;
 }
 
 function getStatusClass(status: string) {
