@@ -369,6 +369,7 @@ function buildCategoryOptions(items: ListingSummary[], currentCategory?: PublicC
     { value: "restaurants-food", label: "Restaurants & Food" },
     { value: "vehicles", label: "Vehicles" },
     { value: "electronics-appliances", label: "Electronics & Appliances" },
+    { value: "care-services", label: "Care Services" },
   ];
   const options = [...defaultOptions];
 
@@ -401,6 +402,7 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Restaurants & Food") return "restaurants-food";
   if (label === "Vehicles") return "vehicles";
   if (label === "Electronics & Appliances") return "electronics-appliances";
+  if (label === "Care Services") return "care-services";
   return "";
 }
 
@@ -409,6 +411,7 @@ function buildCategoryLabel(category: PublicCategory) {
   if (category === "restaurants-food") return "Restaurants & Food";
   if (category === "vehicles") return "Vehicles";
   if (category === "electronics-appliances") return "Electronics & Appliances";
+  if (category === "care-services") return "Care Services";
   return "Listings";
 }
 

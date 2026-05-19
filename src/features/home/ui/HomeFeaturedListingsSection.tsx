@@ -77,6 +77,33 @@ const restaurantFallbackItems: FeaturedListingCard[] = [
   },
 ];
 
+const roommateFallbackItems: FeaturedListingCard[] = [
+  {
+    title: "Midtown Furnished Room",
+    image: resolveListingImageUrl("/template-17/images/chao-home-room-listings/1.png"),
+    location: "Near your current location",
+    href: "/all-listing",
+  },
+  {
+    title: "Spacious Master Bedroom",
+    image: resolveListingImageUrl("/template-17/images/chao-home-room-listings/2.jpeg"),
+    location: "Near your current location",
+    href: "/all-listing",
+  },
+  {
+    title: "Private Room for Females",
+    image: resolveListingImageUrl("/template-17/images/chao-home-room-listings/3.png"),
+    location: "Near your current location",
+    href: "/all-listing",
+  },
+  {
+    title: "Shared Co-living Space",
+    image: resolveListingImageUrl("/uploads/listing-categories/real-estate/account10-real-estate-09.png"),
+    location: "Near your current location",
+    href: "/all-listing",
+  },
+];
+
 const vehicleFallbackItems: FeaturedListingCard[] = [
   {
     title: "Hyderabad Creta SUV",
@@ -131,15 +158,51 @@ const electronicsFallbackItems: FeaturedListingCard[] = [
   },
 ];
 
-type FeaturedListingCategory = "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances";
+const careServiceFallbackItems: FeaturedListingCard[] = [
+  {
+    title: "Experienced Live-in Nanny",
+    image: resolveListingImageUrl("/uploads/listing-categories/care-services/care-service-01.jpg"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "Elder Care Companion",
+    image: resolveListingImageUrl("/uploads/listing-categories/care-services/care-service-02.jpg"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "Certified Home Health Aide",
+    image: resolveListingImageUrl("/uploads/listing-categories/care-services/care-service-03.jpg"),
+    rating: 5,
+    href: "/all-listing",
+  },
+  {
+    title: "Pet Sitting and Walking",
+    image: resolveListingImageUrl("/uploads/listing-categories/care-services/care-service-05.jpg"),
+    rating: 5,
+    href: "/all-listing",
+  },
+];
+
+type FeaturedListingCategory = "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services";
 
 function getCityFromLocationLabel(label?: string | null) {
   return label?.split(",")[0]?.trim() || "";
 }
 
-function buildListingGroupHref(category: FeaturedListingCategory, listing?: ListingSummary, selectedCity?: string) {
+function buildListingGroupHref(
+  category: FeaturedListingCategory,
+  listing?: ListingSummary,
+  selectedCity?: string,
+  subCategory?: string,
+) {
   const params = new URLSearchParams({ category });
   const city = listing?.city || selectedCity;
+
+  if (subCategory) {
+    params.set("subCategory", subCategory);
+  }
 
   if (city) {
     params.set("city", city);
@@ -165,11 +228,12 @@ function mapListingsToCards(
   fallbackItems: FeaturedListingCard[],
   category: FeaturedListingCategory,
   selectedCity?: string,
+  subCategory?: string,
 ) {
   if (!listings.length) {
     return fallbackItems.map((item) => ({
       ...item,
-      href: buildListingGroupHref(category, undefined, selectedCity),
+      href: buildListingGroupHref(category, undefined, selectedCity, subCategory),
     }));
   }
 
@@ -178,17 +242,19 @@ function mapListingsToCards(
     image: resolveListingImageUrl(listing.primaryImageUrl || listing.imageUrls?.[0]),
     location: getListingLocationLabel(listing, selectedCity),
     rating: listing.rating || 5,
-    href: buildListingGroupHref(category, listing, selectedCity),
+    href: buildListingGroupHref(category, listing, selectedCity, subCategory),
   }));
 }
 
 function useFeaturedListingGroups() {
   const [realEstateItems, setRealEstateItems] = useState(realEstateFallbackItems);
   const [restaurantItems, setRestaurantItems] = useState(restaurantFallbackItems);
+  const [roommateItems, setRoommateItems] = useState(roommateFallbackItems);
   const [vehicleItems, setVehicleItems] = useState(vehicleFallbackItems);
   const [electronicsItems, setElectronicsItems] = useState(electronicsFallbackItems);
   const currentLocation = useCurrentLocationLabel();
   const currentCity = getCityFromLocationLabel(currentLocation.label);
+  const roommateSubCategory = "PG / Co-living";
 
   useEffect(() => {
     let isActive = true;
@@ -202,9 +268,10 @@ function useFeaturedListingGroups() {
     Promise.allSettled([
       getPublicListings({ category: "real-estate", city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "restaurants-food", city: currentCity || undefined, page: 1, pageSize: 10 }),
+      getPublicListings({ category: "real-estate", subCategory: roommateSubCategory, city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "vehicles", city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "electronics-appliances", city: currentCity || undefined, page: 1, pageSize: 10 }),
-    ]).then(([realEstateResult, restaurantResult, vehicleResult, electronicsResult]) => {
+    ]).then(([realEstateResult, restaurantResult, roommateResult, vehicleResult, electronicsResult]) => {
       if (!isActive) {
         return;
       }
@@ -218,6 +285,12 @@ function useFeaturedListingGroups() {
       if (restaurantResult.status === "fulfilled") {
         setRestaurantItems(
           mapListingsToCards(restaurantResult.value.items, restaurantFallbackItems, "restaurants-food", currentCity),
+        );
+      }
+
+      if (roommateResult.status === "fulfilled") {
+        setRoommateItems(
+          mapListingsToCards(roommateResult.value.items, roommateFallbackItems, "real-estate", currentCity, roommateSubCategory),
         );
       }
 
@@ -260,6 +333,15 @@ function useFeaturedListingGroups() {
       items: restaurantItems,
     },
     {
+      titleLead: "Roommates & Rentals",
+      titleRest: currentCity ? `near ${currentCity}` : "near you",
+      description: "Find furnished rooms, shared spaces, and co-living rentals from local listings.",
+      iconClass: "plac-hom-tit-ic-eve",
+      wrapperClass: "plac-det-eve",
+      showDetails: false,
+      items: roommateItems,
+    },
+    {
       titleLead: "Featured Vehicles",
       titleRest: currentCity ? `in ${currentCity}` : "in your city",
       description: "Browse cars, bikes, rentals, commercial vehicles, and parts from local sellers.",
@@ -276,6 +358,58 @@ function useFeaturedListingGroups() {
       items: electronicsItems,
     },
   ] satisfies FeaturedListingGroup[];
+}
+
+function useCareFeaturedListingGroup() {
+  const [careServiceItems, setCareServiceItems] = useState(careServiceFallbackItems);
+  const currentLocation = useCurrentLocationLabel();
+  const currentCity = getCityFromLocationLabel(currentLocation.label);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (currentLocation.status === "loading" || currentLocation.status === "idle") {
+      return () => {
+        isActive = false;
+      };
+    }
+
+    getPublicListings({ category: "care-services", city: currentCity || undefined, page: 1, pageSize: 10 })
+      .then((result) => {
+        if (!isActive) {
+          return;
+        }
+
+        setCareServiceItems(
+          mapListingsToCards(result.items, careServiceFallbackItems, "care-services", currentCity),
+        );
+      })
+      .catch(() => {
+        if (!isActive) {
+          return;
+        }
+
+        setCareServiceItems(
+          careServiceFallbackItems.map((item) => ({
+            ...item,
+            href: buildListingGroupHref("care-services", undefined, currentCity),
+          })),
+        );
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentCity, currentLocation.status]);
+
+  return {
+    titleLead: "Care Services",
+    titleRest: currentCity ? `near ${currentCity}` : "near you",
+    description: "Browse child care, elder care, nursing, home health, special needs, and pet care providers.",
+    iconClass: "plac-hom-tit-ic-ser",
+    showDetails: true,
+    items: careServiceItems,
+  } satisfies FeaturedListingGroup;
 }
 
 function FeaturedListingGroup({ group }: { group: FeaturedListingGroup }) {
@@ -340,4 +474,10 @@ export default function HomeFeaturedListingsSection() {
       ))}
     </>
   );
+}
+
+export function HomeCareFeaturedListingsSection() {
+  const group = useCareFeaturedListingGroup();
+
+  return <FeaturedListingGroup group={group} />;
 }

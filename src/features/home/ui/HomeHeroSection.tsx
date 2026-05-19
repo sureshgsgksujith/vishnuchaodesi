@@ -3,7 +3,9 @@ import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
 const quickLinks = [
   { title: "All Services", image: "/template-17/images/icon/shop.png" },
   { title: "Real Estate", image: "/template-17/images/icon/real-estate.png", category: "real-estate" },
+  { title: "Roommates & Rentals", image: "/template-17/images/icon/home.png", category: "real-estate", subCategory: "PG / Co-living" },
   { title: "Restaurants & Food", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
+  { title: "Care Services", image: "/template-17/images/icon/expert.png", category: "care-services" },
   { title: "Classified Listings", image: "/template-17/images/icon/ads.png" },
   { title: "Service Experts", image: "/template-17/images/icon/expert.png" },
   { title: "Jobs & Careers", image: "/template-17/images/icon/employee.png" },
@@ -36,6 +38,10 @@ function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
   }
 
   const params = new URLSearchParams({ category: item.category });
+
+  if (item.subCategory) {
+    params.set("subCategory", item.subCategory);
+  }
 
   if (city) {
     params.set("city", city);
@@ -86,12 +92,14 @@ export default function HomeHeroSection() {
                     <option value="1">All Services</option>
                     <option value="2">Service Experts</option>
                     <option value="3">Jobs</option>
-                    <option value="4">Explore Travel</option>
-                    <option value="5">News & Magazines</option>
-                    <option value="6">Events</option>
-                    <option value="7">Products</option>
-                    <option value="8">Coupon & deals</option>
-                    <option value="9">Blogs</option>
+                    <option value="4">Roommates & Rentals</option>
+                    <option value="5">Care Services</option>
+                    <option value="6">Explore Travel</option>
+                    <option value="7">News & Magazines</option>
+                    <option value="8">Events</option>
+                    <option value="9">Products</option>
+                    <option value="10">Coupon & deals</option>
+                    <option value="11">Blogs</option>
                   </select>
                 </li>
 
@@ -116,6 +124,8 @@ export default function HomeHeroSection() {
                     <option value="Wedding halls">Wedding halls</option>
                     <option value="Automobiles">Automobiles</option>
                     <option value="Restaurants">Restaurants</option>
+                    <option value="Roommates & Rentals">Roommates & Rentals</option>
+                    <option value="Care Services">Care Services</option>
                     <option value="Technology">Technology</option>
                     <option value="Pet shop">Pet shop</option>
                     <option value="Real Estate">Real Estate</option>

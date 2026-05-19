@@ -113,6 +113,34 @@ export const fallbackListingCategoryTree: ListingCategoryOption[] = [
     ],
   },
   {
+    id: 12,
+    name: "Care Services",
+    slug: "care-services",
+    subCategories: [
+      { id: 1201, name: "Child Care / Babysitting", slug: "child-care-babysitting", detailedCategories: [
+        { id: 12001, name: "Live-in Nanny", slug: "live-in-nanny" },
+        { id: 12002, name: "Part-time Babysitter", slug: "part-time-babysitter" },
+      ] },
+      { id: 1202, name: "Elder Care", slug: "elder-care", detailedCategories: [
+        { id: 12003, name: "Part-time Caregiver", slug: "part-time-caregiver" },
+        { id: 12004, name: "Live-in Caregiver", slug: "live-in-caregiver" },
+        { id: 12005, name: "Hospice Care", slug: "hospice-care" },
+      ] },
+      { id: 1203, name: "Home Health Care", slug: "home-health-care", detailedCategories: [
+        { id: 12006, name: "Home Health Aide", slug: "home-health-aide" },
+      ] },
+      { id: 1204, name: "Nursing Services", slug: "nursing-services", detailedCategories: [
+        { id: 12007, name: "RN / LPN Care", slug: "rn-lpn-care" },
+      ] },
+      { id: 1205, name: "Pet Care", slug: "pet-care", detailedCategories: [
+        { id: 12008, name: "Pet Sitting / Walking", slug: "pet-sitting-walking" },
+      ] },
+      { id: 1206, name: "Special Needs Care", slug: "special-needs-care", detailedCategories: [
+        { id: 12009, name: "Special Needs Support", slug: "special-needs-support" },
+      ] },
+    ],
+  },
+  {
     id: 4,
     name: "Furniture & Home Decor",
     slug: "furniture-home-decor",

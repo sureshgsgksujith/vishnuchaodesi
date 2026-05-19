@@ -5,6 +5,8 @@ import "../styles/customerHeader.css";
 
 const categoryLinks = [
   { label: "All Services", href: "/all-category", icon: "/template-17/images/icon/shop.png" },
+  { label: "Roommates & Rentals", href: "/all-listing?category=real-estate&subCategory=PG+%2F+Co-living", icon: "/template-17/images/icon/home.png" },
+  { label: "Care Services", href: "/all-listing?category=care-services", icon: "/template-17/images/icon/expert.png" },
   { label: "Classified Ads", href: "/classifieds/index", icon: "/template-17/images/icon/ads.png" },
   { label: "Service Experts", href: "/service-experts/index", icon: "/template-17/images/icon/expert.png" },
   { label: "Jobs", href: "/jobs/index", icon: "/template-17/images/icon/employee.png" },
@@ -22,6 +24,8 @@ const exploreCategories = [
   { label: "Wedding halls", href: "/all-listing", count: "00" },
   { label: "Automobiles", href: "/all-listing?category=vehicles", count: "03" },
   { label: "Restaurants", href: "/all-listing?category=restaurants-food", count: "03" },
+  { label: "Roommates & Rentals", href: "/all-listing?category=real-estate&subCategory=PG+%2F+Co-living", count: "03" },
+  { label: "Care Services", href: "/all-listing?category=care-services", count: "10" },
   { label: "Technology", href: "/all-listing", count: "04" },
   { label: "Pet shop", href: "/all-listing", count: "00" },
   { label: "Real Estate", href: "/all-listing?category=real-estate", count: "03" },
@@ -176,18 +180,9 @@ export default function HomeHeader() {
                 <div className="mv-cate">
                   <h4>All Categories</h4>
                   <ul>
-                    <li><a href="/all-listing">Spa and Facial</a></li>
-                    <li><a href="/all-listing">Wedding halls</a></li>
-                    <li><a href="/all-listing?category=vehicles">Automobiles</a></li>
-                    <li><a href="/all-listing?category=restaurants-food">Restaurants</a></li>
-                    <li><a href="/all-listing">Technology</a></li>
-                    <li><a href="/all-listing">Pet shop</a></li>
-                    <li><a href="/all-listing?category=real-estate">Real Estate</a></li>
-                    <li><a href="/all-listing">Sports</a></li>
-                    <li><a href="/all-listing">Hospitals</a></li>
-                    <li><a href="/all-listing">Education</a></li>
-                    <li><a href="/all-listing">Transportation</a></li>
-                    <li><a href="/all-listing">Electricals</a></li>
+                    {exploreCategories.map((item) => (
+                      <li key={item.label}><Link to={item.href}>{item.label}</Link></li>
+                    ))}
                   </ul>
                 </div>
               </div>

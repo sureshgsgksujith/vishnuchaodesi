@@ -13,7 +13,7 @@ import HomeLawyersSection from "./HomeLawyersSection";
 import HomeTravelCarsSection from "./HomeTravelCarsSection";
 import HomeBuySellSection from "./HomeBuySellSection";
 import HomeBannerSliderSection from "./HomeBannerSliderSection";
-import HomeFeaturedListingsSection from "./HomeFeaturedListingsSection";
+import HomeFeaturedListingsSection, { HomeCareFeaturedListingsSection } from "./HomeFeaturedListingsSection";
 import HomePlansSection from "./HomePlansSection";
 import HomeFeaturedAreasSection from "./HomeFeaturedAreasSection";
 import HomeListBusinessSection from "./HomeListBusinessSection";
@@ -40,6 +40,7 @@ export default function HomePage() {
 
       <HomePromoCards />
       <HomeArtistToursSection />
+      <HomeCareFeaturedListingsSection />
       <HomeRoommatesSection />
       <HomeEventsSection />
       <HomePopularServicesSection />

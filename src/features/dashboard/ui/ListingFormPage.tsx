@@ -471,6 +471,52 @@ const electronicsPostingCommonFields: CategoryAttributeField[] = [
   { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Settings", sectionOrder: 8 },
 ];
 
+const careServiceOptions = ["Childcare", "Elder care", "Medical assistance", "Housekeeping", "Transportation", "Pet care"];
+const careServiceFields: CategoryAttributeField[] = [
+  { key: "providerType", label: "Provider Type", options: ["Individual Caregiver", "Agency / Company"], isRequired: true, sectionName: "Service Provider", sectionOrder: 2 },
+  { key: "experienceYears", label: "Experience (years)", type: "number", isRequired: true, sectionName: "Service Provider", sectionOrder: 2 },
+  { key: "languagesSpoken", label: "Languages Spoken", isRequired: true, sectionName: "Service Provider", sectionOrder: 2 },
+  { key: "childcare", label: "Childcare", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
+  { key: "elderCare", label: "Elder Care", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
+  { key: "medicalAssistance", label: "Medical Assistance", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
+  { key: "housekeeping", label: "Housekeeping", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
+  { key: "transportation", label: "Transportation", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
+  { key: "petCare", label: "Pet Care", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
+  { key: "availabilityType", label: "Availability Type", options: ["Full-time", "Part-time", "Hourly", "Live-in"], isRequired: true, sectionName: "Availability & Schedule", sectionOrder: 4 },
+  { key: "availableDays", label: "Available Days", isRequired: true, sectionName: "Availability & Schedule", sectionOrder: 4 },
+  { key: "availableTimeSlots", label: "Available Time Slots", isRequired: true, sectionName: "Availability & Schedule", sectionOrder: 4 },
+  { key: "startDate", label: "Start Date", type: "date", isRequired: true, sectionName: "Availability & Schedule", sectionOrder: 4 },
+  { key: "rateType", label: "Rate Type", options: ["Hourly", "Daily", "Weekly", "Monthly"], isRequired: true, sectionName: "Pricing", sectionOrder: 5 },
+  { key: "price", label: "Price (USD)", type: "number", isRequired: true, sectionName: "Pricing", sectionOrder: 5 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 5 },
+  { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number", sectionName: "Location & Travel", sectionOrder: 6 },
+  { key: "willingToTravel", label: "Willing to Travel", options: yesNoOptions, isRequired: true, sectionName: "Location & Travel", sectionOrder: 6 },
+  { key: "cprCertified", label: "CPR Certified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+  { key: "firstAidCertified", label: "First Aid Certified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+  { key: "cnaCertified", label: "CNA", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+  { key: "rnLpn", label: "RN / LPN", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+  { key: "licenseNumber", label: "License Number", sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+  { key: "backgroundCheck", label: "Background Check", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+  { key: "referencesAvailable", label: "References Available", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+  { key: "specialSkills", label: "Special Skills", type: "textarea", sectionName: "Experience Details", sectionOrder: 8 },
+  { key: "previousEmployer", label: "Previous Employer", sectionName: "Experience Details", sectionOrder: 8 },
+  { key: "education", label: "Education", sectionName: "Experience Details", sectionOrder: 8 },
+  { key: "ageGroups", label: "Age Group", isRequired: true, sectionName: "Matching Preferences", sectionOrder: 9 },
+  { key: "genderPreference", label: "Gender Preference", options: ["No Preference", "Female", "Male"], sectionName: "Matching Preferences", sectionOrder: 9 },
+  { key: "specialNeedsExperience", label: "Special Needs Experience", options: yesNoOptions, isRequired: true, sectionName: "Matching Preferences", sectionOrder: 9 },
+  { key: "certificationDocuments", label: "Certification Documents", sectionName: "Media Upload", sectionOrder: 10 },
+  { key: "videoIntroductionUrl", label: "Video Introduction", sectionName: "Media Upload", sectionOrder: 10 },
+  { key: "chatEnabled", label: "Chat Enabled", options: yesNoOptions, sectionName: "Contact & Interaction", sectionOrder: 11 },
+  { key: "callEnabled", label: "Call Enabled", options: yesNoOptions, sectionName: "Contact & Interaction", sectionOrder: 11 },
+  { key: "scheduleInterview", label: "Schedule Interview", options: yesNoOptions, sectionName: "Contact & Interaction", sectionOrder: 11 },
+  { key: "identityVerification", label: "Identity Verification", options: yesNoOptions, sectionName: "Safety & Compliance", sectionOrder: 12 },
+  { key: "backgroundVerification", label: "Background Verification", options: yesNoOptions, sectionName: "Safety & Compliance", sectionOrder: 12 },
+  { key: "serviceDisclaimer", label: "Disclaimer", type: "textarea", sectionName: "Safety & Compliance", sectionOrder: 12 },
+  { key: "insurance", label: "Insurance", sectionName: "Safety & Compliance", sectionOrder: 12 },
+  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Settings", sectionOrder: 13 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["15", "30", "60"], sectionName: "Listing Settings", sectionOrder: 13 },
+];
+
 const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]> = {
   "Real Estate": [
     { key: "superBuiltUpArea", label: "Super Built-up Area (sq ft)", type: "number" },
@@ -518,6 +564,9 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
   ],
   "Electronics & Appliances": [
     ...electronicsPostingCommonFields,
+  ],
+  "Care Services": [
+    ...careServiceFields,
   ],
   "Furniture & Home Decor": [
     { key: "itemCondition", label: "Condition", options: commonConditionOptions },
@@ -799,6 +848,36 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
         { key: "energyRating", label: "Energy Rating", isRequired: true, options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "Not Rated"] },
         { key: "inverterTechnology", label: "Inverter Technology", isRequired: true, options: yesNoOptions },
         { key: "powerConsumption", label: "Power Consumption" },
+      ],
+    },
+  },
+  "Care Services": {
+    default: categoryAttributeFieldsByCategory["Care Services"],
+    subCategories: {
+      "Child Care / Babysitting": [
+        ...careServiceFields,
+        { key: "ageGroups", label: "Age Group", isRequired: true, sectionName: "Matching Preferences", sectionOrder: 9 },
+      ],
+      "Elder Care": [
+        ...careServiceFields,
+        { key: "specialSkills", label: "Special Skills (dementia, mobility, companionship)", type: "textarea", sectionName: "Experience Details", sectionOrder: 8 },
+      ],
+      "Home Health Care": [
+        ...careServiceFields,
+        { key: "rnLpn", label: "RN / LPN", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+        { key: "licenseNumber", label: "License Number", sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+      ],
+      "Nursing Services": [
+        ...careServiceFields,
+        { key: "rnLpn", label: "RN / LPN", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+        { key: "licenseNumber", label: "License Number", isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
+      ],
+      "Pet Care": [
+        ...careServiceFields,
+      ],
+      "Special Needs Care": [
+        ...careServiceFields,
+        { key: "specialNeedsExperience", label: "Special Needs Experience", options: yesNoOptions, isRequired: true, sectionName: "Matching Preferences", sectionOrder: 9 },
       ],
     },
   },
@@ -1301,6 +1380,7 @@ export default function ListingFormPage() {
           ...mapRestaurantAttributesFromListing(listing),
           ...mapVehicleAttributesFromListing(listing),
           ...mapElectronicsAttributesFromListing(listing),
+          ...mapCareServiceAttributesFromListing(listing),
         });
         setServiceFiles([]);
         setOfferFiles([]);
@@ -1437,6 +1517,12 @@ export default function ListingFormPage() {
           nextForm.country = "United States";
         }
         if (value === "Restaurants & Food" && !["30", "60", "90"].includes(nextForm.adDurationDays)) {
+          nextForm.adDurationDays = "30";
+        }
+        if (value === "Care Services" && !nextForm.country) {
+          nextForm.country = "United States";
+        }
+        if (value === "Care Services" && !["15", "30", "60"].includes(nextForm.adDurationDays)) {
           nextForm.adDurationDays = "30";
         }
         setCategoryAttributes({});
@@ -1645,6 +1731,10 @@ export default function ListingFormPage() {
     }
 
     if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Electronics & Appliances" && !validateElectronicsFields()) {
+      return false;
+    }
+
+    if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Care Services" && !validateCareServiceFields()) {
       return false;
     }
 
@@ -1974,8 +2064,51 @@ export default function ListingFormPage() {
     return true;
   }
 
+  function validateCareServiceFields() {
+    const requiredFields = [
+      ["providerType", "provider_type", "Provider Type"],
+      ["experienceYears", "experience_years", "Experience"],
+      ["languagesSpoken", "languages_spoken", "Languages Spoken"],
+      ["availabilityType", "availability_type", "Availability Type"],
+      ["availableDays", "available_days", "Available Days"],
+      ["availableTimeSlots", "available_time_slots", "Available Time Slots"],
+      ["startDate", "start_date", "Start Date"],
+      ["rateType", "rate_type", "Rate Type"],
+      ["willingToTravel", "willing_to_travel", "Willing to Travel"],
+      ["cprCertified", "cpr_certified", "CPR Certified"],
+      ["firstAidCertified", "first_aid_certified", "First Aid Certified"],
+      ["backgroundCheck", "background_check", "Background Check"],
+      ["referencesAvailable", "references_available", "References Available"],
+      ["ageGroups", "age_groups", "Age Group"],
+      ["specialNeedsExperience", "special_needs_experience", "Special Needs Experience"],
+    ];
+
+    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    if (missing) {
+      setErrorMessage(`${missing[missing.length - 1]} is required.`);
+      return false;
+    }
+
+    if (!careServiceValues(categoryAttributes).length) {
+      setErrorMessage("At least one service offered is required.");
+      return false;
+    }
+
+    if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
+      setErrorMessage("Price is required for Care Services listings.");
+      return false;
+    }
+
+    if (form.subCategory === "Nursing Services" && !getAttributeValue(categoryAttributes, "licenseNumber", "license_number").trim()) {
+      setErrorMessage("License Number is required for Nursing Services.");
+      return false;
+    }
+
+    return true;
+  }
+
   function validateMedia() {
-    if (!isRealEstateCategory(form.categoryName) && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances") {
+    if (!isRealEstateCategory(form.categoryName) && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances" && form.categoryName !== "Care Services") {
       return true;
     }
 
@@ -1985,8 +2118,14 @@ export default function ListingFormPage() {
       ...form.galleryMedia,
     ].filter((value) => value.trim() && !isVideoValue(value)).length;
 
-    if (imageCount < 3 || imageCount > 15) {
-      setErrorMessage(`${form.categoryName} listings require minimum 3 and maximum 15 images.`);
+    const minImageCount = form.categoryName === "Care Services" ? 1 : 3;
+    if (form.categoryName === "Care Services" && !form.profileImageName.trim()) {
+      setErrorMessage("Profile Photo is required for Care Services listings.");
+      return false;
+    }
+
+    if (imageCount < minImageCount || imageCount > 15) {
+      setErrorMessage(`${form.categoryName} listings require minimum ${minImageCount} and maximum 15 images.`);
       return false;
     }
 
@@ -4085,6 +4224,41 @@ function buildListingPayload(
       connectivity: getAttributeValue(categoryAttributes, "connectivity").trim(),
       features: electronicsFeatureValues(categoryAttributes),
     },
+    careServiceDetails: {
+      providerType: getAttributeValue(categoryAttributes, "providerType", "provider_type").trim(),
+      experienceYears: numberAttribute(categoryAttributes, "experienceYears", "experience_years"),
+      languagesSpoken: splitAttributeList(categoryAttributes, "languagesSpoken", "languages_spoken"),
+      servicesOffered: careServiceValues(categoryAttributes),
+      availabilityType: getAttributeValue(categoryAttributes, "availabilityType", "availability_type").trim(),
+      availableDays: splitAttributeList(categoryAttributes, "availableDays", "available_days"),
+      availableTimeSlots: getAttributeValue(categoryAttributes, "availableTimeSlots", "available_time_slots").trim(),
+      startDate: getAttributeValue(categoryAttributes, "startDate", "start_date").trim() || null,
+      rateType: getAttributeValue(categoryAttributes, "rateType", "rate_type").trim(),
+      willingToTravel: boolAttribute(categoryAttributes, "willingToTravel", "willing_to_travel"),
+      serviceRadiusMiles: numberAttribute(categoryAttributes, "serviceRadiusMiles", "service_radius_miles"),
+      cprCertified: boolAttribute(categoryAttributes, "cprCertified", "cpr_certified"),
+      firstAidCertified: boolAttribute(categoryAttributes, "firstAidCertified", "first_aid_certified"),
+      cnaCertified: boolAttribute(categoryAttributes, "cnaCertified", "cna_certified"),
+      rnLpn: boolAttribute(categoryAttributes, "rnLpn", "rn_lpn"),
+      licenseNumber: getAttributeValue(categoryAttributes, "licenseNumber", "license_number").trim(),
+      backgroundCheck: boolAttribute(categoryAttributes, "backgroundCheck", "background_check"),
+      referencesAvailable: boolAttribute(categoryAttributes, "referencesAvailable", "references_available"),
+      specialSkills: getAttributeValue(categoryAttributes, "specialSkills", "special_skills").trim(),
+      previousEmployer: getAttributeValue(categoryAttributes, "previousEmployer", "previous_employer").trim(),
+      education: getAttributeValue(categoryAttributes, "education").trim(),
+      ageGroups: splitAttributeList(categoryAttributes, "ageGroups", "age_groups"),
+      genderPreference: getAttributeValue(categoryAttributes, "genderPreference", "gender_preference").trim(),
+      specialNeedsExperience: boolAttribute(categoryAttributes, "specialNeedsExperience", "special_needs_experience"),
+      certificationDocuments: splitAttributeList(categoryAttributes, "certificationDocuments", "certification_documents"),
+      videoIntroductionUrl: getAttributeValue(categoryAttributes, "videoIntroductionUrl", "video_introduction_url").trim(),
+      chatEnabled: boolAttribute(categoryAttributes, "chatEnabled", "chat_enabled") !== false,
+      callEnabled: boolAttribute(categoryAttributes, "callEnabled", "call_enabled") !== false,
+      scheduleInterview: boolAttribute(categoryAttributes, "scheduleInterview", "schedule_interview") === true,
+      identityVerification: boolAttribute(categoryAttributes, "identityVerification", "identity_verification") === true,
+      backgroundVerification: boolAttribute(categoryAttributes, "backgroundVerification", "background_verification") === true,
+      serviceDisclaimer: getAttributeValue(categoryAttributes, "serviceDisclaimer", "service_disclaimer").trim(),
+      insurance: getAttributeValue(categoryAttributes, "insurance").trim(),
+    },
     restaurantMenuItems: restaurantMenuItems
       .filter((item) => item.itemName.trim() || item.menuCategory.trim() || item.price.trim())
       .map((item, index) => ({
@@ -4505,6 +4679,100 @@ function mapElectronicsAttributesFromListing(listing: ListingSummary): CategoryA
   return trimCategoryAttributes(values);
 }
 
+function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryAttributes {
+  const details = listing.careServiceDetails || {};
+  const priceDetails = listing.priceDetails || {};
+  const locationDetails = listing.locationDetails || {};
+  const settings = listing.settings || {};
+  const values: CategoryAttributes = {
+    providerType: stringValue(details.providerType),
+    provider_type: stringValue(details.providerType),
+    experienceYears: stringValue(details.experienceYears),
+    experience_years: stringValue(details.experienceYears),
+    languagesSpoken: Array.isArray(details.languagesSpoken) ? details.languagesSpoken.map(String).join(", ") : "",
+    languages_spoken: Array.isArray(details.languagesSpoken) ? details.languagesSpoken.map(String).join(", ") : "",
+    availabilityType: stringValue(details.availabilityType),
+    availability_type: stringValue(details.availabilityType),
+    availableDays: Array.isArray(details.availableDays) ? details.availableDays.map(String).join(", ") : "",
+    available_days: Array.isArray(details.availableDays) ? details.availableDays.map(String).join(", ") : "",
+    availableTimeSlots: stringValue(details.availableTimeSlots),
+    available_time_slots: stringValue(details.availableTimeSlots),
+    startDate: stringValue(details.startDate).slice(0, 10),
+    start_date: stringValue(details.startDate).slice(0, 10),
+    rateType: stringValue(details.rateType),
+    rate_type: stringValue(details.rateType),
+    willingToTravel: booleanSelectValue(details.willingToTravel),
+    willing_to_travel: booleanSelectValue(details.willingToTravel),
+    serviceRadiusMiles: stringValue(details.serviceRadiusMiles),
+    service_radius_miles: stringValue(details.serviceRadiusMiles),
+    cprCertified: booleanSelectValue(details.cprCertified),
+    cpr_certified: booleanSelectValue(details.cprCertified),
+    firstAidCertified: booleanSelectValue(details.firstAidCertified),
+    first_aid_certified: booleanSelectValue(details.firstAidCertified),
+    cnaCertified: booleanSelectValue(details.cnaCertified),
+    cna_certified: booleanSelectValue(details.cnaCertified),
+    rnLpn: booleanSelectValue(details.rnLpn),
+    rn_lpn: booleanSelectValue(details.rnLpn),
+    licenseNumber: stringValue(details.licenseNumber),
+    license_number: stringValue(details.licenseNumber),
+    backgroundCheck: booleanSelectValue(details.backgroundCheck),
+    background_check: booleanSelectValue(details.backgroundCheck),
+    referencesAvailable: booleanSelectValue(details.referencesAvailable),
+    references_available: booleanSelectValue(details.referencesAvailable),
+    specialSkills: stringValue(details.specialSkills),
+    special_skills: stringValue(details.specialSkills),
+    previousEmployer: stringValue(details.previousEmployer),
+    previous_employer: stringValue(details.previousEmployer),
+    education: stringValue(details.education),
+    ageGroups: Array.isArray(details.ageGroups) ? details.ageGroups.map(String).join(", ") : "",
+    age_groups: Array.isArray(details.ageGroups) ? details.ageGroups.map(String).join(", ") : "",
+    genderPreference: stringValue(details.genderPreference),
+    gender_preference: stringValue(details.genderPreference),
+    specialNeedsExperience: booleanSelectValue(details.specialNeedsExperience),
+    special_needs_experience: booleanSelectValue(details.specialNeedsExperience),
+    certificationDocuments: Array.isArray(details.certificationDocuments) ? details.certificationDocuments.map(String).join(", ") : "",
+    certification_documents: Array.isArray(details.certificationDocuments) ? details.certificationDocuments.map(String).join(", ") : "",
+    videoIntroductionUrl: stringValue(details.videoIntroductionUrl),
+    video_introduction_url: stringValue(details.videoIntroductionUrl),
+    chatEnabled: booleanSelectValue(details.chatEnabled),
+    chat_enabled: booleanSelectValue(details.chatEnabled),
+    callEnabled: booleanSelectValue(details.callEnabled),
+    call_enabled: booleanSelectValue(details.callEnabled),
+    scheduleInterview: booleanSelectValue(details.scheduleInterview),
+    schedule_interview: booleanSelectValue(details.scheduleInterview),
+    identityVerification: booleanSelectValue(details.identityVerification),
+    identity_verification: booleanSelectValue(details.identityVerification),
+    backgroundVerification: booleanSelectValue(details.backgroundVerification),
+    background_verification: booleanSelectValue(details.backgroundVerification),
+    serviceDisclaimer: stringValue(details.serviceDisclaimer),
+    service_disclaimer: stringValue(details.serviceDisclaimer),
+    insurance: stringValue(details.insurance),
+    price: stringValue(priceDetails.price || listing.price),
+    price_negotiable: priceDetails.priceNegotiable === false ? "No" : priceDetails.priceNegotiable === true ? "Yes" : "",
+    area_locality: stringValue(locationDetails.locality || listing.locality),
+    ad_type: stringValue(settings.adType),
+    ad_duration_days: stringValue(settings.adDurationDays),
+  };
+
+  const services = Array.isArray(details.servicesOffered) ? details.servicesOffered.map(String) : [];
+  for (const [service, keys] of [
+    ["Childcare", ["childcare"]],
+    ["Elder care", ["elderCare", "elder_care"]],
+    ["Medical assistance", ["medicalAssistance", "medical_assistance"]],
+    ["Housekeeping", ["housekeeping"]],
+    ["Transportation", ["transportation"]],
+    ["Pet care", ["petCare", "pet_care"]],
+  ] as Array<[string, string[]]>) {
+    if (services.includes(service)) {
+      for (const key of keys) {
+        values[key] = "true";
+      }
+    }
+  }
+
+  return trimCategoryAttributes(values);
+}
+
 function mapRestaurantMenuItemsFromListing(listing: ListingSummary): RestaurantMenuItem[] {
   const menuItems = listing.restaurantMenuItems || [];
   if (!menuItems.length) {
@@ -4793,6 +5061,25 @@ function electronicsFeatureValues(values: CategoryAttributes) {
     .map(([feature]) => feature);
 }
 
+function careServiceValues(values: CategoryAttributes) {
+  const serviceMap: Array<[string, string[]]> = [
+    ["Childcare", ["childcare", "child_care"]],
+    ["Elder care", ["elderCare", "elder_care"]],
+    ["Medical assistance", ["medicalAssistance", "medical_assistance"]],
+    ["Housekeeping", ["housekeeping"]],
+    ["Transportation", ["transportation"]],
+    ["Pet care", ["petCare", "pet_care"]],
+  ];
+
+  const selected = serviceMap
+    .filter(([, keys]) => boolAttribute(values, ...keys) === true)
+    .map(([service]) => service);
+  const listed = splitAttributeList(values, "servicesOffered", "services_offered")
+    .filter((service) => careServiceOptions.some((option) => option.toLowerCase() === service.toLowerCase()));
+
+  return Array.from(new Set([...selected, ...listed]));
+}
+
 function getCategoryAttributeFields(categoryName: string, subCategory: string, detailCategory: string) {
   const fieldSet = categoryAttributeFieldSetsByCategory[categoryName];
 
@@ -4809,11 +5096,16 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
 }
 
 function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryName: string, subCategory: string, detailCategory: string) {
-  if (categoryName !== "Vehicles" && categoryName !== "Electronics & Appliances") {
+  if (categoryName !== "Vehicles" && categoryName !== "Electronics & Appliances" && categoryName !== "Care Services") {
     return fields;
   }
 
-  const commonFields = categoryName === "Vehicles" ? vehiclePostingCommonFields : electronicsPostingCommonFields;
+  const commonFields =
+    categoryName === "Vehicles"
+      ? vehiclePostingCommonFields
+      : categoryName === "Electronics & Appliances"
+        ? electronicsPostingCommonFields
+        : careServiceFields;
   const requiredFields = [...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
   const nextFields: CategoryAttributeField[] = [];
 
@@ -4870,6 +5162,39 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["fastcharging", "fast_charging"],
     ["smartfeatures", "smart_features"],
     ["remotecontrol", "remote_control"],
+    ["providertype", "provider_type"],
+    ["experienceyears", "experience_years"],
+    ["languagesspoken", "languages_spoken"],
+    ["eldercare", "elder_care"],
+    ["medicalassistance", "medical_assistance"],
+    ["petcare", "pet_care"],
+    ["availabilitytype", "availability_type"],
+    ["availabledays", "available_days"],
+    ["availabletimeslots", "available_time_slots"],
+    ["startdate", "start_date"],
+    ["ratetype", "rate_type"],
+    ["serviceradiusmiles", "service_radius_miles"],
+    ["willingtotravel", "willing_to_travel"],
+    ["cprcertified", "cpr_certified"],
+    ["firstaidcertified", "first_aid_certified"],
+    ["cnacertified", "cna_certified"],
+    ["rnlpn", "rn_lpn"],
+    ["licensenumber", "license_number"],
+    ["backgroundcheck", "background_check"],
+    ["referencesavailable", "references_available"],
+    ["specialskills", "special_skills"],
+    ["previousemployer", "previous_employer"],
+    ["agegroups", "age_groups"],
+    ["genderpreference", "gender_preference"],
+    ["specialneedsexperience", "special_needs_experience"],
+    ["certificationdocuments", "certification_documents"],
+    ["videointroductionurl", "video_introduction_url"],
+    ["chatenabled", "chat_enabled"],
+    ["callenabled", "call_enabled"],
+    ["scheduleinterview", "schedule_interview"],
+    ["identityverification", "identity_verification"],
+    ["backgroundverification", "background_verification"],
+    ["servicedisclaimer", "service_disclaimer"],
   ].map((group) => new Set(group));
 
   return aliases.some((group) => group.has(first) && group.has(second));

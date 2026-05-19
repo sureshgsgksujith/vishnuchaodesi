@@ -745,6 +745,8 @@ function RatingStars({ rating }: { rating: number }) {
 function getCategorySlug(listing: ListingSummary): PublicListingQuery["category"] {
   if (listing.categoryName === "Restaurants & Food") return "restaurants-food";
   if (listing.categoryName === "Vehicles") return "vehicles";
+  if (listing.categoryName === "Electronics & Appliances") return "electronics-appliances";
+  if (listing.categoryName === "Care Services") return "care-services";
   if (listing.categoryName === "Real Estate") return "real-estate";
   return undefined;
 }
@@ -848,6 +850,22 @@ function getDetailRows(listing: ListingSummary): Array<[string, LooseValue]> {
       ["Screen size", getString(listing.electronicsDetails, "screenSize")],
       ["Capacity", getString(listing.electronicsDetails, "capacity")],
       ["Features", getArray(listing.electronicsDetails, "features").join(", ")],
+    ];
+  }
+
+  if (listing.categoryName === "Care Services") {
+    return [
+      ["Provider type", getString(listing.careServiceDetails, "providerType")],
+      ["Experience", getValue(listing.careServiceDetails, "experienceYears")],
+      ["Languages", getArray(listing.careServiceDetails, "languagesSpoken").join(", ")],
+      ["Services", getArray(listing.careServiceDetails, "servicesOffered").join(", ")],
+      ["Availability", getString(listing.careServiceDetails, "availabilityType")],
+      ["Available days", getArray(listing.careServiceDetails, "availableDays").join(", ")],
+      ["Time slots", getString(listing.careServiceDetails, "availableTimeSlots")],
+      ["Rate type", getString(listing.careServiceDetails, "rateType")],
+      ["CPR certified", getBooleanText(listing.careServiceDetails, "cprCertified")],
+      ["Background check", getBooleanText(listing.careServiceDetails, "backgroundCheck")],
+      ["Age groups", getArray(listing.careServiceDetails, "ageGroups").join(", ")],
     ];
   }
 

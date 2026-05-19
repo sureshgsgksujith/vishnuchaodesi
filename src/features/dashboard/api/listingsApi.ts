@@ -33,6 +33,7 @@ export type ListingSummary = {
   restaurantFoodDetails?: Record<string, string | number | boolean | string[] | null>;
   vehicleDetails?: Record<string, string | number | boolean | string[] | null>;
   electronicsDetails?: Record<string, string | number | boolean | string[] | null>;
+  careServiceDetails?: Record<string, string | number | boolean | string[] | null>;
   restaurantMenuItems?: Array<Record<string, string | number | boolean | null>>;
   restaurantOperatingHours?: Array<Record<string, string | boolean | null>>;
   imageUrls?: string[];
@@ -91,6 +92,7 @@ export type UpsertListingPayload = {
   restaurantFoodDetails?: Record<string, string | number | boolean | string[] | null>;
   vehicleDetails?: Record<string, string | number | boolean | string[] | null>;
   electronicsDetails?: Record<string, string | number | boolean | string[] | null>;
+  careServiceDetails?: Record<string, string | number | boolean | string[] | null>;
   restaurantMenuItems?: Array<Record<string, string | number | boolean | null>>;
   restaurantOperatingHours?: Array<Record<string, string | boolean | null>>;
 };
@@ -152,8 +154,20 @@ export async function getElectronicsListings(page = 1, pageSize = 4) {
   return response.data;
 }
 
+export async function getCareServiceListings(page = 1, pageSize = 4) {
+  const response = await apiClient.get<ListingListResponse>("/Listings/care-services", {
+    params: {
+      page,
+      pageSize,
+    },
+    timeout: 8000,
+  });
+
+  return response.data;
+}
+
 export type PublicListingQuery = {
-  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances";
+  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services";
   subCategory?: string;
   city?: string;
   locality?: string;
