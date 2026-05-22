@@ -77,33 +77,6 @@ const restaurantFallbackItems: FeaturedListingCard[] = [
   },
 ];
 
-const roommateFallbackItems: FeaturedListingCard[] = [
-  {
-    title: "Midtown Furnished Room",
-    image: resolveListingImageUrl("/template-17/images/chao-home-room-listings/1.png"),
-    location: "Near your current location",
-    href: "/all-listing",
-  },
-  {
-    title: "Spacious Master Bedroom",
-    image: resolveListingImageUrl("/template-17/images/chao-home-room-listings/2.jpeg"),
-    location: "Near your current location",
-    href: "/all-listing",
-  },
-  {
-    title: "Private Room for Females",
-    image: resolveListingImageUrl("/template-17/images/chao-home-room-listings/3.png"),
-    location: "Near your current location",
-    href: "/all-listing",
-  },
-  {
-    title: "Shared Co-living Space",
-    image: resolveListingImageUrl("/uploads/listing-categories/real-estate/account10-real-estate-09.png"),
-    location: "Near your current location",
-    href: "/all-listing",
-  },
-];
-
 const vehicleFallbackItems: FeaturedListingCard[] = [
   {
     title: "Hyderabad Creta SUV",
@@ -249,12 +222,10 @@ function mapListingsToCards(
 function useFeaturedListingGroups() {
   const [realEstateItems, setRealEstateItems] = useState(realEstateFallbackItems);
   const [restaurantItems, setRestaurantItems] = useState(restaurantFallbackItems);
-  const [roommateItems, setRoommateItems] = useState(roommateFallbackItems);
   const [vehicleItems, setVehicleItems] = useState(vehicleFallbackItems);
   const [electronicsItems, setElectronicsItems] = useState(electronicsFallbackItems);
   const currentLocation = useCurrentLocationLabel();
   const currentCity = getCityFromLocationLabel(currentLocation.label);
-  const roommateSubCategory = "PG / Co-living";
 
   useEffect(() => {
     let isActive = true;
@@ -268,10 +239,9 @@ function useFeaturedListingGroups() {
     Promise.allSettled([
       getPublicListings({ category: "real-estate", city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "restaurants-food", city: currentCity || undefined, page: 1, pageSize: 10 }),
-      getPublicListings({ category: "real-estate", subCategory: roommateSubCategory, city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "vehicles", city: currentCity || undefined, page: 1, pageSize: 10 }),
       getPublicListings({ category: "electronics-appliances", city: currentCity || undefined, page: 1, pageSize: 10 }),
-    ]).then(([realEstateResult, restaurantResult, roommateResult, vehicleResult, electronicsResult]) => {
+    ]).then(([realEstateResult, restaurantResult, vehicleResult, electronicsResult]) => {
       if (!isActive) {
         return;
       }
@@ -285,12 +255,6 @@ function useFeaturedListingGroups() {
       if (restaurantResult.status === "fulfilled") {
         setRestaurantItems(
           mapListingsToCards(restaurantResult.value.items, restaurantFallbackItems, "restaurants-food", currentCity),
-        );
-      }
-
-      if (roommateResult.status === "fulfilled") {
-        setRoommateItems(
-          mapListingsToCards(roommateResult.value.items, roommateFallbackItems, "real-estate", currentCity, roommateSubCategory),
         );
       }
 
@@ -331,15 +295,6 @@ function useFeaturedListingGroups() {
       wrapperClass: "plac-det-eve",
       showDetails: false,
       items: restaurantItems,
-    },
-    {
-      titleLead: "Roommates & Rentals",
-      titleRest: currentCity ? `near ${currentCity}` : "near you",
-      description: "Find furnished rooms, shared spaces, and co-living rentals from local listings.",
-      iconClass: "plac-hom-tit-ic-eve",
-      wrapperClass: "plac-det-eve",
-      showDetails: false,
-      items: roommateItems,
     },
     {
       titleLead: "Featured Vehicles",

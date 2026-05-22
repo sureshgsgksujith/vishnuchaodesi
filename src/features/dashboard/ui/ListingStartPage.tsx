@@ -27,7 +27,7 @@ export default function ListingStartPage() {
     };
   }, []);
 
-  const canCreateListing = usage?.canCreateListing ?? false;
+  const needsPlanAction = usage ? usage.requiresPlanSelection || usage.isPlanExpired || !usage.canCreateListing : false;
 
   return (
     <>
@@ -42,19 +42,14 @@ export default function ListingStartPage() {
                 <div className="login">
                   <h4>Add New Listing</h4>
                   {isLoadingUsage ? <div className="alert alert-info">Checking your plan...</div> : null}
-                  {!isLoadingUsage && usage && !canCreateListing ? (
-                    <div className="alert alert-danger">
-                      Your {usage.plan.name} allows {usage.plan.listingLimit} listing(s).{" "}
-                      <Link to="/pricing-details">Upgrade your plan</Link> to add more listings.
+                  {!isLoadingUsage && usage && needsPlanAction ? (
+                    <div className="alert alert-info">
+                      {usage.message || `Your ${usage.plan.name} requires a plan update before publishing.`}
                     </div>
                   ) : null}
                   <div className="row cre-dup">
                     <div className="col-md-6">
-                      {canCreateListing ? (
-                        <Link to="/dashboard/listings/new">Create listing from scratch</Link>
-                      ) : (
-                        <span className="cre-dup-btn">Create listing from scratch</span>
-                      )}
+                      <Link to="/dashboard/listings/new">Create listing from scratch</Link>
                     </div>
                     <div className="col-md-6">
                       <span className="cre-dup-btn">Create duplicate listing</span>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { createListing, getListing, getListingApiErrorMessage, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
+import { createListing, getListing, getListingApiErrorMessage, isListingUpgradeRequired, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
 import { getListingCategoryFields, getListingCategoryTree, type ListingCategoryFieldDefinition, type ListingCategoryOption } from "../api/listingCategoriesApi";
 import { getMyProfile } from "../api/profileApi";
 import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
@@ -1171,18 +1171,11 @@ export default function ListingFormPage() {
   const isEditMode = Boolean(editListingId);
 
   useEffect(() => {
-    if (isEditMode) {
-      return;
-    }
-
     let isActive = true;
     getMyPlanUsage()
       .then((usage) => {
         if (isActive) {
           setPlanUsage(usage);
-          if (!usage.canCreateListing) {
-            setErrorMessage(`Your ${usage.plan.name} has reached the listing limit. Upgrade your plan to add more listings.`);
-          }
         }
       })
       .catch(() => undefined);
@@ -1190,7 +1183,7 @@ export default function ListingFormPage() {
     return () => {
       isActive = false;
     };
-  }, [isEditMode]);
+  }, []);
 
   const selectedCountry = useMemo(
     () => countries.find((country) => country.id === form.countryId) || countries.find((country) => country.name === form.country),
@@ -2164,7 +2157,12 @@ export default function ListingFormPage() {
     }
 
     if (!isEditMode && planUsage && !planUsage.canCreateListing) {
-      setErrorMessage(`Your ${planUsage.plan.name} has reached the listing limit. Upgrade your plan to add more listings.`);
+      navigate("/pricing-details", {
+        state: {
+          pendingListingDraft: getListingDraft(),
+          returnTo: "/dashboard/listings/new",
+        },
+      });
       return false;
     }
 
@@ -2204,6 +2202,15 @@ export default function ListingFormPage() {
       setCurrentStep(5);
       return true;
     } catch (error) {
+      if (isListingUpgradeRequired(error)) {
+        navigate("/pricing-details", {
+          state: {
+            pendingListingDraft: isEditMode ? undefined : getListingDraft(),
+            returnTo: location.pathname,
+          },
+        });
+        return false;
+      }
       setErrorMessage(getListingApiErrorMessage(error));
       return false;
     } finally {
@@ -2223,6 +2230,11 @@ export default function ListingFormPage() {
     }
 
     if (isEditMode) {
+      await saveListing();
+      return;
+    }
+
+    if (planUsage && !planUsage.requiresPlanSelection && !planUsage.isPlanExpired && planUsage.canCreateListing) {
       await saveListing();
       return;
     }

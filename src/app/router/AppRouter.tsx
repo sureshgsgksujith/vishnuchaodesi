@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
 import HomePage from "../../features/home/ui/HomePage";
 import LoginPage from "../../features/auth/ui/LoginPage";
 import UserInfoPage from "../../features/auth/ui/UserInfoPage";
@@ -46,6 +46,12 @@ function RegisterRedirect() {
   return <Navigate to={`/login?${searchParams.toString()}`} replace />;
 }
 
+function PostYourAdsRoute() {
+  return isCustomerAuthenticated()
+    ? <Navigate to="/dashboard/listings/start" replace />
+    : <Navigate to="/login?login=register&returnUrl=/dashboard/listings/start" replace />;
+}
+
 export function AppRouter() {
   const excludedStaticRoutes = [
     "/",
@@ -78,6 +84,7 @@ export function AppRouter() {
     "/listing-details",
     "/listing/:listingId",
     "/pricing-details",
+    "/post-your-ads",
   ];
 
   return (
@@ -114,6 +121,7 @@ export function AppRouter() {
       <Route path="/listing-details" element={<ListingDetailPage />} />
       <Route path="/listing/:listingId" element={<ListingDetailPage />} />
       <Route path="/pricing-details" element={<PricingDetailsPage />} />
+      <Route path="/post-your-ads" element={<PostYourAdsRoute />} />
 
       {customerTemplateRoutes
         .filter((route) => !excludedStaticRoutes.includes(route.path))

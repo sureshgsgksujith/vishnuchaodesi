@@ -24,6 +24,9 @@ export type PlanUsage = {
   listingCount: number;
   listingRemaining: number;
   canCreateListing: boolean;
+  isPlanExpired?: boolean;
+  requiresPlanSelection?: boolean;
+  message?: string | null;
 };
 
 export async function getPricingPlans() {

@@ -269,6 +269,10 @@ export function getListingApiErrorMessage(error: unknown) {
   return "Request failed. Please try again.";
 }
 
+export function isListingUpgradeRequired(error: unknown) {
+  return axios.isAxiosError(error) && error.response?.data?.upgradeRequired === true;
+}
+
 function buildListingRequestBody(
   payload: UpsertListingPayload,
   files?: ListingUploadFiles

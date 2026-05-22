@@ -61,10 +61,13 @@ export default function PricingDetailsPage() {
     };
   }, [isAuthenticated]);
 
-  const activePlanCode = usage?.plan?.code;
+  const activePlanCode = usage?.requiresPlanSelection ? undefined : usage?.plan?.code;
 
   const usageText = useMemo(() => {
     if (!usage) return "";
+    if (usage.requiresPlanSelection || usage.isPlanExpired) {
+      return usage.message || "Your plan has expired. Select a plan to continue.";
+    }
     if (usage.listingRemaining < 0) {
       return `${usage.listingCount} listing(s) used. Unlimited remaining.`;
     }
@@ -91,7 +94,7 @@ export default function PricingDetailsPage() {
       return true;
     };
 
-    if (activePlanCode !== plan.code) {
+    if (activePlanCode !== plan.code || usage?.requiresPlanSelection || usage?.isPlanExpired) {
       setIsSelecting(plan.code);
       setMessage("");
       try {
@@ -104,6 +107,7 @@ export default function PricingDetailsPage() {
         if (continueToPendingListing()) {
           return;
         }
+        navigate("/dashboard/listings/start");
       } catch {
         setMessage("Unable to update your plan.");
       } finally {
@@ -146,7 +150,7 @@ export default function PricingDetailsPage() {
           ) : null}
           {usage ? (
             <div className="pricing-usage">
-              <strong>Current plan: {usage.plan.name}</strong>
+              <strong>{usage.requiresPlanSelection || usage.isPlanExpired ? "Plan action required" : `Current plan: ${usage.plan.name}`}</strong>
               <span>{usageText}</span>
             </div>
           ) : null}
