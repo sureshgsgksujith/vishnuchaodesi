@@ -198,7 +198,7 @@ export default function HomeFooterSection() {
             </a>
           </li>
           <li>
-            <a href="/classifieds/index.html">
+            <a href="/classifieds/index">
               <img src="/template-17/images/icon/ads.png" alt="Classifieds" />
               Classifieds
             </a>

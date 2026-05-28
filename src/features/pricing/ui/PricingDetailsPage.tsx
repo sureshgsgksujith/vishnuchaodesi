@@ -24,6 +24,9 @@ export default function PricingDetailsPage() {
   const location = useLocation();
   const currentCountry = useCurrentCountry();
   const isAuthenticated = isCustomerAuthenticated();
+  const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const subscribeSource = searchParams.get("subscribe") || "";
+  const isEmailSubscribeFlow = Boolean(subscribeSource);
   const pricingState = location.state as
     | {
         pendingListingDraft?: unknown;
@@ -32,6 +35,15 @@ export default function PricingDetailsPage() {
     | null;
   const returnTo = pricingState?.returnTo;
   const hasPendingListingDraft = Boolean(pricingState?.pendingListingDraft && returnTo);
+
+  useEffect(() => {
+    if (!isEmailSubscribeFlow || isAuthenticated) {
+      return;
+    }
+
+    const returnUrl = `${location.pathname}${location.search}`;
+    navigate(`/login?returnUrl=${encodeURIComponent(returnUrl)}`, { replace: true });
+  }, [isAuthenticated, isEmailSubscribeFlow, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     let isActive = true;
@@ -94,7 +106,7 @@ export default function PricingDetailsPage() {
       return true;
     };
 
-    if (activePlanCode !== plan.code || usage?.requiresPlanSelection || usage?.isPlanExpired) {
+    if (activePlanCode !== plan.code || usage?.requiresPlanSelection || usage?.isPlanExpired || isEmailSubscribeFlow) {
       setIsSelecting(plan.code);
       setMessage("");
       try {
@@ -107,7 +119,7 @@ export default function PricingDetailsPage() {
         if (continueToPendingListing()) {
           return;
         }
-        navigate("/dashboard/listings/start");
+        navigate(isEmailSubscribeFlow ? "/dashboard/all-listing" : "/dashboard/listings/start");
       } catch {
         setMessage("Unable to update your plan.");
       } finally {
@@ -148,6 +160,12 @@ export default function PricingDetailsPage() {
               <span>Select a plan to continue saving your listing.</span>
             </div>
           ) : null}
+          {isEmailSubscribeFlow ? (
+            <div className="pricing-usage">
+              <strong>Subscription update required</strong>
+              <span>Select a plan to reactivate eligible expired postings.</span>
+            </div>
+          ) : null}
           {usage ? (
             <div className="pricing-usage">
               <strong>{usage.requiresPlanSelection || usage.isPlanExpired ? "Plan action required" : `Current plan: ${usage.plan.name}`}</strong>
@@ -185,7 +203,9 @@ export default function PricingDetailsPage() {
                           ? "Continue to save"
                           : "Select and save"
                         : isActive
-                          ? "Add listing"
+                          ? isEmailSubscribeFlow
+                            ? "Subscribe"
+                            : "Add listing"
                           : "Select plan"}
                   </button>
                   {isActive ? <span className="pricing-active">Active plan</span> : null}

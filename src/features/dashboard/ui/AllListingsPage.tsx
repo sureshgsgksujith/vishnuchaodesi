@@ -120,6 +120,8 @@ export default function AllListingsPage() {
                 <tr>
                   <th>No</th>
                   <th>Listing Name</th>
+                  <th>Module</th>
+                  <th>Expiry Date</th>
                   <th>Rating</th>
                   <th>Views</th>
                   <th>Status</th>
@@ -132,7 +134,7 @@ export default function AllListingsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8}>Loading listings...</td>
+                    <td colSpan={10}>Loading listings...</td>
                   </tr>
                 ) : items.length > 0 ? (
                   items.map((item, index) => (
@@ -149,11 +151,30 @@ export default function AllListingsPage() {
 
                           <div>
                             <strong>{item.title}</strong>
+                            <span className={`dashboard-listing-module-badge ${getListingModuleClass(item)}`}>
+                              {getListingModuleLabel(item)}
+                            </span>
                             <span>{formatDate(getLatestListingDate(item))}</span>
                             {item.rejectionReason ? (
                               <small>{item.rejectionReason}</small>
                             ) : null}
                           </div>
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className={`dashboard-listing-module-pill ${getListingModuleClass(item)}`}>
+                          {getListingModuleLabel(item)}
+                        </span>
+                        <em className="dashboard-listing-category-path">
+                          {getListingCategoryPath(item)}
+                        </em>
+                      </td>
+
+                      <td>
+                        <div className="dashboard-listing-plan-cell">
+                          <strong>{getPlanName(item)}</strong>
+                          <span>{getPlanExpiryText(item)}</span>
                         </div>
                       </td>
 
@@ -187,7 +208,7 @@ export default function AllListingsPage() {
                           </span>
                         ) : (
                           <Link
-                            to={`/dashboard/listings/${item.id}/edit`}
+                            to={isClassifiedListing(item) ? `/dashboard/classifieds/${item.id}/edit/step-1` : `/dashboard/listings/${item.id}/edit`}
                             className="db-list-edit"
                           >
                             Edit
@@ -220,7 +241,7 @@ export default function AllListingsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8}>No listings found.</td>
+                    <td colSpan={10}>No listings found.</td>
                   </tr>
                 )}
               </tbody>
@@ -265,6 +286,38 @@ function formatDate(value?: string | null) {
 
 function getLatestListingDate(item: ListingSummary) {
   return item.updatedAt || item.createdAt;
+}
+
+function isClassifiedListing(item: ListingSummary) {
+  const categoryName = item.categoryName?.trim().toLowerCase();
+  const listingKind = String(item.propertyDetails?.listingKind || "").trim().toLowerCase();
+
+  return categoryName === "classifieds" || listingKind === "classified";
+}
+
+function getListingModuleLabel(item: ListingSummary) {
+  return isClassifiedListing(item) ? "Classified" : "Yellow Pages";
+}
+
+function getListingModuleClass(item: ListingSummary) {
+  return isClassifiedListing(item) ? "is-classified" : "is-yellow-pages";
+}
+
+function getListingCategoryPath(item: ListingSummary) {
+  const parts = isClassifiedListing(item)
+    ? [item.subCategory]
+    : [item.categoryName, item.subCategory, item.detailCategory];
+
+  return parts.map((part) => part?.trim()).filter(Boolean).join(" / ") || "-";
+}
+
+function getPlanName(item: ListingSummary) {
+  return item.userPlanName?.trim() || "Free";
+}
+
+function getPlanExpiryText(item: ListingSummary) {
+  const formattedDate = formatDate(item.userPlanExpiryDate);
+  return formattedDate === "-" ? "No expiry date" : formattedDate;
 }
 
 function getStatusClass(status: string) {

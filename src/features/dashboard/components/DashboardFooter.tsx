@@ -255,7 +255,7 @@ export default function DashboardFooter({
             </Link>
           </li>
           <li>
-            <a href="/template-17/classifieds/index.html">
+            <a href="/classifieds/index">
               <img src="/template-17/images/icon/ads.png" alt="Classifieds" />
               Classifieds
             </a>

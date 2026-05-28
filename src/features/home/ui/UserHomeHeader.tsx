@@ -343,7 +343,7 @@ export default function UserHomeHeader() {
                         </Link>
                       </li>
                       <li>
-                        <Link to="/dashboard/listings/new">
+                        <Link to="/dashboard/listings/start">
                           <i className="material-icons">store</i>
                           {" "}Add your business
                         </Link>
@@ -410,7 +410,7 @@ export default function UserHomeHeader() {
             <div className="chaodesi-header-actions">
               <ul className="bl">
                 <li>
-                  <Link to="/dashboard/listings/new">Add Business</Link>
+                  <Link to="/dashboard/listings/start">Add Business</Link>
                 </li>
               </ul>
 
@@ -624,7 +624,7 @@ export default function UserHomeHeader() {
                   <h4>Business</h4>
                   <ul>
                     <li>
-                      <Link to="/dashboard/listings/new" onClick={closeAllPopups}>
+                      <Link to="/dashboard/listings/start" onClick={closeAllPopups}>
                         Add Business
                       </Link>
                     </li>

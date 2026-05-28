@@ -20,6 +20,9 @@ export type ListingSummary = {
   createdAt: string;
   updatedAt?: string | null;
   sellerName?: string | null;
+  userPlanName?: string | null;
+  userPlanCode?: string | null;
+  userPlanExpiryDate?: string | null;
   city?: string | null;
   locality?: string | null;
   price?: number | null;
@@ -168,6 +171,7 @@ export async function getCareServiceListings(page = 1, pageSize = 4) {
 
 export type PublicListingQuery = {
   category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services";
+  categoryName?: string;
   subCategory?: string;
   city?: string;
   locality?: string;
@@ -183,6 +187,7 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
       page: query.page || 1,
       pageSize: query.pageSize || 10,
       search: query.search || undefined,
+      categoryName: query.categoryName || undefined,
       subCategory: query.subCategory || undefined,
       city: query.city || undefined,
       locality: query.locality || undefined,

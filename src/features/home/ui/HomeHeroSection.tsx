@@ -1,20 +1,15 @@
 import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
 
 const quickLinks = [
-  { title: "All Services", image: "/template-17/images/icon/shop.png" },
+  { title: "All Services", image: "/template-17/images/icon/shop.png", href: "/all-category" },
+  { title: "Classified Listings", image: "/template-17/images/icon/ads.png", href: "/classifieds/index" },
   { title: "Real Estate", image: "/template-17/images/icon/real-estate.png", category: "real-estate" },
-  { title: "Roommates & Rentals", image: "/template-17/images/icon/home.png", category: "real-estate", subCategory: "PG / Co-living" },
-  { title: "Restaurants & Food", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
-  { title: "Care Services", image: "/template-17/images/icon/expert.png", category: "care-services" },
-  { title: "Classified Listings", image: "/template-17/images/icon/ads.png" },
-  { title: "Service Experts", image: "/template-17/images/icon/expert.png" },
-  { title: "Jobs & Careers", image: "/template-17/images/icon/employee.png" },
-  { title: "Travel & Tourism", image: "/template-17/images/places/icons/hot-air-balloon.png" },
-  { title: "Latest News", image: "/template-17/images/icon/news.png" },
-  { title: "Events & Activities", image: "/template-17/images/icon/calendar.png" },
-  { title: "Products & Deals", image: "/template-17/images/icon/cart.png" },
-  { title: "Offers & Coupons", image: "/template-17/images/icon/coupons.png" },
-  { title: "Blogs & Insights", image: "/template-17/images/icon/blog1.png" },
+  { title: "Restaurants", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
+  { title: "Events & Activities", image: "/template-17/images/icon/calendar.png", href: "/events" },
+  { title: "Products & Deals", image: "/template-17/images/icon/cart.png", href: "/products" },
+  { title: "Electronics & Appliances", image: "/template-17/images/icon/electronics.png", category: "electronics-appliances" },
+  { title: "Vehicles", image: "/template-17/images/icon/vehicles.png", category: "vehicles" },
+  { title: "Care Services", image: "/template-17/images/icon/public-service.png", category: "care-services" },
 ];
 
 const topCounts = [
@@ -33,15 +28,15 @@ function getCityFromLocationLabel(label?: string | null) {
 }
 
 function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
+  if (item.href) {
+    return item.href;
+  }
+
   if (!item.category) {
-    return "#";
+    return "/all-category";
   }
 
   const params = new URLSearchParams({ category: item.category });
-
-  if (item.subCategory) {
-    params.set("subCategory", item.subCategory);
-  }
 
   if (city) {
     params.set("city", city);
