@@ -6,9 +6,11 @@ import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import {
   getListing,
   getListingApiErrorMessage,
+  getNearbyServices,
   getPublicListings,
   submitListingReview,
   type ListingSummary,
+  type NearbyService,
   type PublicListingQuery,
 } from "../../dashboard/api/listingsApi";
 import {
@@ -21,6 +23,8 @@ import "../styles/publicListings.css";
 type LooseValue = string | number | boolean | string[] | null | undefined;
 type LooseRecord = Record<string, LooseValue>;
 type NamedImageItem = { name: string; imageName?: string; detail?: string; price?: string | number; link?: string };
+
+const nearbyServiceCategories = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
 
 export default function ListingDetailPage() {
   const { listingId } = useParams();
@@ -154,6 +158,8 @@ function ListingDetail({
   const [reviewError, setReviewError] = useState("");
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
   const [loginPrompt, setLoginPrompt] = useState<{ title: string; message: string } | null>(null);
+  const [nearbyServices, setNearbyServices] = useState<NearbyService[]>([]);
+  const [isNearbyLoading, setIsNearbyLoading] = useState(false);
   const scrollingRelatedListings = relatedListings.length > 1 ? [...relatedListings, ...relatedListings] : relatedListings;
   const relatedScrollDuration = `${Math.max(72, relatedListings.length * 18)}s`;
   const country = getString(listing.locationDetails, "country");
@@ -182,6 +188,50 @@ function ListingDetail({
   const isVerified = getBoolean(listing.settings, "verifiedByAdmin");
   const currentUserId = getCurrentCustomerUserId();
   const isOwnerViewing = currentUserId === listing.userId;
+  const isRealEstateListing = listing.categoryName === "Real Estate";
+  const nearbyLocation = getNearbyLocation(listing);
+  const savedNearbyServices = getSavedNearbyServices(listing);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadNearbyServices() {
+      if (!isRealEstateListing || !nearbyLocation) {
+        setNearbyServices([]);
+        setIsNearbyLoading(false);
+        return;
+      }
+
+      try {
+        setIsNearbyLoading(true);
+        const services = await getNearbyServices({
+          latitude: nearbyLocation.latitude,
+          longitude: nearbyLocation.longitude,
+          categories: nearbyServiceCategories,
+          radiusMiles: 5,
+          limitPerCategory: 5,
+        });
+
+        if (isActive) {
+          setNearbyServices(services);
+        }
+      } catch {
+        if (isActive) {
+          setNearbyServices([]);
+        }
+      } finally {
+        if (isActive) {
+          setIsNearbyLoading(false);
+        }
+      }
+    }
+
+    void loadNearbyServices();
+
+    return () => {
+      isActive = false;
+    };
+  }, [isRealEstateListing, nearbyLocation?.latitude, nearbyLocation?.longitude]);
 
   async function handleReviewSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -435,6 +485,18 @@ function ListingDetail({
                     </div>
                   </div>
                 </TemplateSection>
+
+                {isRealEstateListing ? (
+                  <TemplateSection id="nearby-services" title="Nearby services">
+                    <div className="list-pg-inn-sp">
+                      <NearbyServicesPanel
+                        address={address}
+                        services={savedNearbyServices.length ? savedNearbyServices : nearbyServices}
+                        isLoading={!savedNearbyServices.length && isNearbyLoading}
+                      />
+                    </div>
+                  </TemplateSection>
+                ) : null}
 
                 {!listing.totalReviews ? <div className="spa-first-review">Be the First One To Review This Listing!!!</div> : null}
 
@@ -730,6 +792,95 @@ function InfoList({ rows }: { rows: Array<[string, LooseValue]> }) {
   );
 }
 
+function NearbyServicesPanel({
+  address,
+  services,
+  isLoading,
+}: {
+  address: string;
+  services: NearbyService[];
+  isLoading: boolean;
+}) {
+  const [activeCategory, setActiveCategory] = useState(nearbyServiceCategories[0]);
+  const visibleServices = services
+    .filter((service) => service.category === activeCategory)
+    .sort((left, right) => (left.distanceMiles ?? Number.MAX_VALUE) - (right.distanceMiles ?? Number.MAX_VALUE));
+  const fallbackRows = buildNearbyFallbackRows(activeCategory, address);
+  const rows = visibleServices.length ? visibleServices : fallbackRows;
+
+  return (
+    <div className="public-nearby-services">
+      <div className="public-nearby-tabs" role="tablist" aria-label="Nearby services">
+        {nearbyServiceCategories.map((category) => (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={category === activeCategory}
+            className={category === activeCategory ? "active" : ""}
+            key={category}
+            onClick={() => setActiveCategory(category)}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
+      <div className="public-nearby-list" role="tabpanel">
+        {isLoading ? <div className="public-nearby-loading">Loading nearby services...</div> : null}
+        {!isLoading && rows.map((service, index) => (
+          <a
+            href={buildNearbyServiceHref(service, activeCategory, address)}
+            target="_blank"
+            rel="noreferrer"
+            className="public-nearby-row"
+            key={`${service.name}-${index}`}
+          >
+            <span className="public-nearby-icon"><i className="material-icons">location_on</i></span>
+            <span>
+              <strong>{service.name}</strong>
+              {service.address ? <small>{service.address}</small> : null}
+            </span>
+            {service.distanceMiles !== null && service.distanceMiles !== undefined ? (
+              <em>{service.distanceMiles.toFixed(2)} miles</em>
+            ) : null}
+          </a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getSavedNearbyServices(listing: ListingSummary): NearbyService[] {
+  const otherInformation = parseJsonRecord(getString(listing.propertyDetails, "otherInformation"));
+  const categoryAttributes = otherInformation.categoryAttributes && typeof otherInformation.categoryAttributes === "object" && !Array.isArray(otherInformation.categoryAttributes)
+    ? otherInformation.categoryAttributes as Record<string, unknown>
+    : {};
+  const rawNearbyServices = categoryAttributes.nearby_services;
+
+  if (typeof rawNearbyServices !== "string" || !rawNearbyServices.trim()) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(rawNearbyServices);
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return [];
+    }
+
+    const record = parsed as Record<string, unknown>;
+    return nearbyServiceCategories.flatMap((category) => {
+      const values = Array.isArray(record[category]) ? record[category].map(String) : [];
+      return values
+        .map((name) => name.trim())
+        .filter(Boolean)
+        .map((name) => ({ category, name }));
+    });
+  } catch {
+    return [];
+  }
+}
+
 function RatingStars({ rating }: { rating: number }) {
   const rounded = Math.round(rating || 0);
 
@@ -747,6 +898,7 @@ function getCategorySlug(listing: ListingSummary): PublicListingQuery["category"
   if (listing.categoryName === "Vehicles") return "vehicles";
   if (listing.categoryName === "Electronics & Appliances") return "electronics-appliances";
   if (listing.categoryName === "Care Services") return "care-services";
+  if (listing.categoryName === "Furniture & Home" || listing.categoryName === "Furniture & Home Decor") return "furniture-home-decor";
   if (listing.categoryName === "Real Estate") return "real-estate";
   return undefined;
 }
@@ -772,6 +924,34 @@ function buildAddress(listing: ListingSummary) {
     getString(listing.locationDetails, "state"),
     getString(listing.locationDetails, "country"),
   ].filter(Boolean).join(", ");
+}
+
+function getNearbyLocation(listing: ListingSummary) {
+  const latitude = getCoordinate(listing.locationDetails, "latitude");
+  const longitude = getCoordinate(listing.locationDetails, "longitude");
+
+  return latitude !== null && longitude !== null ? { latitude, longitude } : null;
+}
+
+function buildNearbyFallbackRows(category: string, address: string): NearbyService[] {
+  const location = address || "near this property";
+
+  return [
+    {
+      category,
+      name: `${category} near property`,
+      address: location,
+      distanceMiles: null,
+    },
+  ];
+}
+
+function buildNearbyServiceHref(service: NearbyService, category: string, address: string) {
+  if (service.placeId) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(service.name)}&query_place_id=${encodeURIComponent(service.placeId)}`;
+  }
+
+  return `https://www.google.com/maps/search/${encodeURIComponent(`${service.name || category} near ${address || "property"}`)}`;
 }
 
 function getServiceItems(listing: ListingSummary): NamedImageItem[] {
@@ -883,6 +1063,10 @@ function getDetailRows(listing: ListingSummary): Array<[string, LooseValue]> {
 }
 
 function getBusinessHours(listing: ListingSummary) {
+  if (listing.categoryName === "Real Estate") {
+    return [];
+  }
+
   const savedHours = parseJsonArray<Record<string, LooseValue>>(getString(listing.propertyDetails, "businessHours"));
   const hours = savedHours.length
     ? savedHours.map((item) => ({
@@ -971,6 +1155,21 @@ function getBooleanText(record: Record<string, LooseValue> | undefined, key: str
 function getNumber(record: Record<string, LooseValue> | undefined, key: string) {
   const value = record?.[key];
   return typeof value === "number" ? value : null;
+}
+
+function getCoordinate(record: Record<string, LooseValue> | undefined, key: string) {
+  const value = record?.[key];
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
 }
 
 function parseJsonArray<T>(value: string): T[] {

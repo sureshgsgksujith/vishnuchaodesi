@@ -5,6 +5,7 @@ import DashboardFooter from "../components/DashboardFooter";
 import { getListing, getListingApiErrorMessage, type ListingSummary } from "../api/listingsApi";
 import { resolveListingImageUrl, setFallbackListingImage } from "../utils/listingImages";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import "../styles/listings.css";
 
 type PreviewValue = string | number | boolean | string[] | null | undefined;
 type PreviewRecord = Record<string, PreviewValue>;
@@ -12,6 +13,8 @@ type PreviewSection = {
   title: string;
   fields: Array<{ label: string; value: PreviewValue; format?: (value: PreviewValue) => string }>;
 };
+const nearbyServicesAttributeKey = "nearby_services";
+const nearbyServiceTypes = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
 
 export default function ListingPreviewPage() {
   const { listingId } = useParams();
@@ -210,13 +213,39 @@ function PreviewSectionCard({ section }: { section: PreviewSection }) {
       </div>
       <div className="listing-preview-section-fields">
         {fields.map((field) => (
-          <div key={`${section.title}-${field.label}`} className="listing-preview-field">
-            <span>{field.label}</span>
-            <strong>{getPreviewDisplayValue(field.value, field.format)}</strong>
-          </div>
+          <PreviewField key={`${section.title}-${field.label}`} field={field} />
         ))}
       </div>
     </section>
+  );
+}
+
+function PreviewField({ field }: { field: PreviewSection["fields"][number] }) {
+  const imageUrls = getPreviewImageUrls(field.value);
+
+  if (imageUrls.length) {
+    return (
+      <div className="listing-preview-field listing-preview-image-field">
+        <span>{field.label}</span>
+        <div className="listing-preview-inline-images">
+          {imageUrls.map((imageUrl) => (
+            <img
+              key={imageUrl}
+              src={imageUrl}
+              alt={field.label}
+              onError={setFallbackListingImage}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="listing-preview-field">
+      <span>{field.label}</span>
+      <strong>{getPreviewDisplayValue(field.value, field.format)}</strong>
+    </div>
   );
 }
 
@@ -225,6 +254,8 @@ function isEmbeddableMarkup(value: string) {
 }
 
 function getPreviewSections(listing: ListingSummary): PreviewSection[] {
+  const isRealEstate = isRealEstateListing(listing);
+
   return [
     {
       title: "Basic Information",
@@ -249,12 +280,18 @@ function getPreviewSections(listing: ListingSummary): PreviewSection[] {
         { label: "Last Rejected Date", value: formatDate(listing.lastRejectedAt) },
       ],
     },
-    buildRecordSection("Property / Custom Details", listing.propertyDetails, ["listingKind", "propertyType", "businessDescription", "otherInformation"]),
-    buildRecordSection("Price Details", listing.priceDetails, ["price", "priceNegotiable", "maintenanceCharges", "securityDeposit", "pricePerSqFt", "loanEligible"]),
+    ...(isRealEstate
+      ? getRealEstatePreviewSections(listing)
+      : [
+          buildRecordSection("Property / Custom Details", listing.propertyDetails, ["listingKind", "propertyType", "businessDescription", "otherInformation"]),
+          buildRecordSection("Price Details", listing.priceDetails, ["price", "priceNegotiable", "maintenanceCharges", "securityDeposit", "pricePerSqFt", "loanEligible"]),
+        ]),
     buildRecordSection("Location Details", listing.locationDetails, ["country", "state", "city", "locality", "pincode", "latitude", "longitude", "landmark"]),
-    buildRecordSection("Seller Information", listing.sellerInformation, ["name", "mobileNumber", "email", "whatsAppNumber", "websiteUrl", "sellerType", "isMobileOtpVerified"]),
-    buildRecordSection("Settings", listing.settings, ["adType", "adDurationDays", "autoRenew", "verifiedByAdmin", "metaTitle", "metaDescription"]),
-    buildRecordSection("Amenities", listing.amenities, ["parking", "lift", "powerBackup", "security", "gym", "cctv", "swimmingPool", "garden", "childrensPlayArea"]),
+    ...(isRealEstate ? [] : [
+      buildRecordSection("Seller Information", listing.sellerInformation, ["name", "mobileNumber", "email", "whatsAppNumber", "websiteUrl", "sellerType", "isMobileOtpVerified"]),
+      buildRecordSection("Settings", listing.settings, ["adType", "adDurationDays", "autoRenew", "verifiedByAdmin", "metaTitle", "metaDescription"]),
+      buildRecordSection("Amenities", listing.amenities, ["parking", "lift", "powerBackup", "security", "gym", "cctv", "swimmingPool", "garden", "childrensPlayArea"]),
+    ]),
     buildRecordSection("Restaurant / Food Details", listing.restaurantFoodDetails),
     buildRecordSection("Vehicle Details", listing.vehicleDetails),
     buildRecordSection("Electronics Details", listing.electronicsDetails),
@@ -272,13 +309,15 @@ function getPreviewSections(listing: ListingSummary): PreviewSection[] {
   ];
 }
 
-function buildRecordSection(title: string, record?: PreviewRecord, preferredKeys?: string[]): PreviewSection {
+function buildRecordSection(title: string, record?: PreviewRecord, preferredKeys?: string[], preferredOnly = false): PreviewSection {
   if (!record) {
     return { title, fields: [] };
   }
 
   const keys = preferredKeys?.length
-    ? uniqueStrings([...preferredKeys, ...Object.keys(record)])
+    ? preferredOnly
+      ? preferredKeys
+      : uniqueStrings([...preferredKeys, ...Object.keys(record)])
     : Object.keys(record);
 
   return {
@@ -314,12 +353,271 @@ function formatOtherInformation(value: PreviewValue) {
   }
 }
 
+function getRealEstatePreviewSections(listing: ListingSummary): PreviewSection[] {
+  const propertyDetails = listing.propertyDetails || {};
+  const priceDetails = listing.priceDetails || {};
+  const amenities = listing.amenities || {};
+  const sellerInformation = listing.sellerInformation || {};
+  const settings = listing.settings || {};
+  const categoryAttributes = parseOtherInformationCategoryAttributes(listing.propertyDetails?.otherInformation);
+  const nearbyServices = buildNearbyServicesSection(listing);
+  const usedAttributeKeys = new Set<string>([nearbyServicesAttributeKey]);
+  const country = stringFromRecord(listing.locationDetails, "country");
+  const attr = (key: string) => {
+    usedAttributeKeys.add(key);
+    return categoryAttributes[key];
+  };
+  const attrDate = (key: string) => {
+    usedAttributeKeys.add(key);
+    return formatDate(String(categoryAttributes[key] || ""));
+  };
+  const sections = [
+    realEstatePreviewSection("Pricing", [
+      { label: "Price Type", value: attr("price_type") },
+      { label: "Price", value: priceDetails.price, format: formatMoneyPreview(country) },
+      { label: "Security Deposit", value: priceDetails.securityDeposit, format: formatMoneyPreview(country) },
+      { label: "HOA Fees", value: attr("hoa_fees"), format: formatMoneyPreview(country) },
+      { label: "Property Tax", value: attr("property_tax"), format: formatMoneyPreview(country) },
+      { label: "Price Negotiable", value: attr("price_negotiable") },
+    ]),
+    realEstatePreviewSection("Property Details", [
+      { label: "Property Type", value: attr("property_type_group") },
+      { label: "Office Type", value: propertyDetails.propertyType },
+      { label: "Bedrooms", value: propertyDetails.bhk },
+      { label: "Bathrooms", value: propertyDetails.bathrooms },
+      { label: "Balconies", value: propertyDetails.balconies },
+      { label: "Furnishing", value: propertyDetails.furnishingType },
+      { label: "Area Unit", value: attr("area_unit") },
+      { label: "Area Sq Ft", value: propertyDetails.superBuiltUpArea },
+      { label: "Area Acres / Plot Area", value: propertyDetails.plotArea },
+      { label: "Floor Number", value: propertyDetails.floorNumber },
+      { label: "Total Floors", value: propertyDetails.totalFloors },
+      { label: "Property Age", value: propertyDetails.propertyAge },
+      { label: "Facing", value: propertyDetails.facing },
+      { label: "Year Built", value: attr("year_built") },
+      { label: "Lease Duration", value: attr("lease_duration") },
+      { label: "Preferred Tenant", value: attr("preferred_tenant") },
+      { label: "Occupancy", value: attr("occupancy") },
+      { label: "Office Type", value: attr("office_type") },
+      { label: "Seating Capacity", value: attr("seating_capacity") },
+      { label: "Conference Rooms", value: attr("conference_rooms") },
+      { label: "Pantry", value: attr("pantry") },
+      { label: "Parking Spaces", value: attr("parking_spaces") },
+      { label: "Service Type", value: attr("service_type") },
+      { label: "License Number", value: attr("license_number") },
+    ]),
+    realEstatePreviewSection("Amenities", [
+      { label: "Parking", value: amenities.parking, format: formatYesNoValue },
+      { label: "Gym", value: amenities.gym, format: formatYesNoValue },
+      { label: "Swimming Pool", value: amenities.swimmingPool, format: formatYesNoValue },
+      { label: "Elevator", value: amenities.lift, format: formatYesNoValue },
+      { label: "Security", value: amenities.security, format: formatYesNoValue },
+      { label: "Gated Community", value: attr("amenity_gated_community"), format: formatYesNoValue },
+      { label: "Pet Friendly", value: attr("amenity_pet_friendly"), format: formatYesNoValue },
+      { label: "Laundry", value: attr("amenity_laundry"), format: formatYesNoValue },
+      { label: "Furnished Kitchen", value: attr("amenity_furnished_kitchen"), format: formatYesNoValue },
+      { label: "Air Conditioning", value: attr("amenity_air_conditioning"), format: formatYesNoValue },
+      { label: "Water", value: attr("utilities_water"), format: formatYesNoValue },
+      { label: "Electricity", value: attr("utilities_electricity"), format: formatYesNoValue },
+      { label: "Internet", value: attr("utilities_internet"), format: formatYesNoValue },
+    ]),
+    ...(nearbyServices ? [nearbyServices] : []),
+    realEstatePreviewSection("Contact Information", [
+      { label: "Contact Person Name", value: sellerInformation.name },
+      { label: "Phone", value: sellerInformation.mobileNumber },
+      { label: "Email", value: sellerInformation.email },
+      { label: "Agency Name", value: attr("agency_name") },
+      { label: "Website", value: attr("contact_website") },
+    ]),
+    realEstatePreviewSection("Availability & Scheduling", [
+      { label: "Property Availability Status", value: attr("property_availability_status") },
+      { label: "Availability", value: propertyDetails.availability },
+      { label: "Available From Date", value: formatDate(String(propertyDetails.availabilityDate || "")) },
+      { label: "Open House Date", value: attrDate("open_house_date") },
+      { label: "Schedule Visit", value: attr("schedule_visit") },
+    ]),
+    realEstatePreviewSection("Legal & Compliance", [
+      { label: "Ownership Type", value: sellerInformation.sellerType },
+      { label: "MLS Number", value: attr("mls_number") },
+      { label: "Property Documents Upload", value: attr("property_documents_upload") },
+      { label: "RERA / License", value: sellerInformation.reraNumber },
+    ]),
+    realEstatePreviewSection("Media Upload", [
+      { label: "Primary Image", value: listing.primaryImageUrl },
+      { label: "Gallery Images", value: listing.imageUrls || [] },
+      { label: "Videos", value: listing.videoUrl },
+      { label: "Floor Plans", value: attr("floor_plans") },
+      { label: "Virtual Tour URL", value: attr("virtual_tour_url") },
+      { label: "Brochure PDF", value: attr("brochure_pdf") },
+    ]),
+    realEstatePreviewSection("Listing Visibility & Promotions", [
+      { label: "Listing Type", value: settings.adType || listing.userPlanName || "Free" },
+      { label: "Featured Until Date", value: formatExpiryDate(listing.userPlanExpiryDate) },
+      { label: "Boost Listing", value: attr("boost_listing") },
+    ]),
+  ];
+  const leftoverFields = Object.entries(categoryAttributes)
+    .filter(([key, value]) => !usedAttributeKeys.has(key) && hasPreviewValue(value))
+    .map(([key, value]) => ({ label: toTitleLabel(key), value }));
+
+  if (leftoverFields.length) {
+    sections.push({ title: "Additional Details", fields: leftoverFields });
+  }
+
+  return sections;
+}
+
+function realEstatePreviewSection(title: string, fields: PreviewSection["fields"]): PreviewSection {
+  return {
+    title,
+    fields: fields.filter((field) => hasPreviewValue(field.value, field.format)),
+  };
+}
+
+function buildNearbyServicesSection(listing: ListingSummary): PreviewSection | null {
+  const categoryAttributes = parseOtherInformationCategoryAttributes(listing.propertyDetails?.otherInformation);
+  const nearbyServices = parseNearbyServiceItems(categoryAttributes[nearbyServicesAttributeKey]);
+
+  if (!nearbyServices.length) {
+    return null;
+  }
+
+  return {
+    title: "Nearby Services",
+    fields: nearbyServiceTypes
+      .map((category) => ({
+        label: category,
+        value: nearbyServices
+          .filter((item) => item.category === category)
+          .map((item) => item.name.trim())
+          .filter(Boolean)
+          .map((name, index) => `${index + 1}. ${name}`)
+          .join("\n"),
+      }))
+      .filter((field) => hasPreviewValue(field.value)),
+  };
+}
+
+function parseOtherInformationCategoryAttributes(value: PreviewValue): PreviewRecord {
+  const parsed = parseJsonValue(value);
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return {};
+  }
+
+  const record = parsed as Record<string, unknown>;
+  const source =
+    record.categoryAttributes && typeof record.categoryAttributes === "object" && !Array.isArray(record.categoryAttributes)
+      ? record.categoryAttributes
+      : record.customFields && typeof record.customFields === "object" && !Array.isArray(record.customFields)
+        ? record.customFields
+        : null;
+
+  if (!source) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(source).map(([key, recordValue]) => [key, normalizePreviewValue(recordValue)]),
+  );
+}
+
+function parseNearbyServiceItems(value: PreviewValue): Array<{ category: string; name: string }> {
+  const parsed = parseJsonValue(value);
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    return [];
+  }
+
+  const record = parsed as Record<string, unknown>;
+
+  return nearbyServiceTypes.flatMap((category) => {
+    const rawItems = record[category];
+    const items = Array.isArray(rawItems) ? rawItems : [];
+
+    return items
+      .map((item) => String(item).trim())
+      .filter(Boolean)
+      .map((name) => ({ category, name }));
+  });
+}
+
+function parseJsonValue(value: PreviewValue): unknown {
+  if (typeof value !== "string" || !value.trim()) {
+    return value;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+    return value;
+  }
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    return value;
+  }
+}
+
+function normalizePreviewValue(value: unknown): PreviewValue {
+  if (value === undefined || value === null) {
+    return "";
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(String).filter(Boolean);
+  }
+
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+
+  return JSON.stringify(value);
+}
+
 function formatPrice(value?: number | null, country?: string | null) {
   if (!value) {
     return "Not listed";
   }
 
   return formatCurrencyAmount(value, country);
+}
+
+function formatMoneyPreview(country?: string | null) {
+  return (value: PreviewValue) => {
+    if (value === undefined || value === null || value === "") {
+      return "";
+    }
+
+    const numericValue = typeof value === "number" ? value : Number(value);
+
+    if (Number.isNaN(numericValue)) {
+      return String(value);
+    }
+
+    return formatCurrencyAmount(numericValue, country);
+  };
+}
+
+function formatYesNoValue(value: PreviewValue) {
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+
+    if (normalized === "true") {
+      return "Yes";
+    }
+
+    if (normalized === "false") {
+      return "No";
+    }
+  }
+
+  return formatPreviewValue(value);
 }
 
 function formatDate(value?: string | null) {
@@ -375,12 +673,27 @@ function isClassifiedListing(listing: ListingSummary) {
   return categoryName === "classifieds" || listingKind === "classified";
 }
 
+function isRealEstateListing(listing: ListingSummary) {
+  const categoryName = listing.categoryName?.trim().toLowerCase();
+  return categoryName === "real estate" || categoryName.includes("property");
+}
+
 function hasPreviewValue(value: PreviewValue, format?: (value: PreviewValue) => string) {
-  return getPreviewDisplayValue(value, format).trim().length > 0;
+  const displayValue = getPreviewDisplayValue(value, format).trim();
+  const normalized = displayValue.toLowerCase();
+  return displayValue.length > 0 && normalized !== "not specified" && normalized !== "false";
 }
 
 function getPreviewDisplayValue(value: PreviewValue, format?: (value: PreviewValue) => string) {
   return format ? format(value) : formatPreviewValue(value);
+}
+
+function getPreviewImageUrls(value: PreviewValue) {
+  const values = Array.isArray(value) ? value : value ? [String(value)] : [];
+
+  return values
+    .filter((item) => /\.(apng|avif|gif|jpe?g|png|svg|webp)(\?.*)?$/i.test(item))
+    .map(resolveListingImageUrl);
 }
 
 function formatPreviewValue(value: PreviewValue) {

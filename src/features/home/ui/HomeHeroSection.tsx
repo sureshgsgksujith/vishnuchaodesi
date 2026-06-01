@@ -8,6 +8,7 @@ const quickLinks = [
   { title: "Events & Activities", image: "/template-17/images/icon/calendar.png", href: "/events" },
   { title: "Products & Deals", image: "/template-17/images/icon/cart.png", href: "/products" },
   { title: "Electronics & Appliances", image: "/template-17/images/icon/electronics.png", category: "electronics-appliances" },
+  { title: "Furniture & Home", image: "/template-17/images/icon/home.png", category: "furniture-home-decor" },
   { title: "Vehicles", image: "/template-17/images/icon/vehicles.png", category: "vehicles" },
   { title: "Care Services", image: "/template-17/images/icon/public-service.png", category: "care-services" },
 ];
@@ -89,6 +90,7 @@ export default function HomeHeroSection() {
                     <option value="3">Jobs</option>
                     <option value="4">Roommates & Rentals</option>
                     <option value="5">Care Services</option>
+                    <option value="12">Furniture & Home</option>
                     <option value="6">Explore Travel</option>
                     <option value="7">News & Magazines</option>
                     <option value="8">Events</option>
@@ -121,6 +123,7 @@ export default function HomeHeroSection() {
                     <option value="Restaurants">Restaurants</option>
                     <option value="Roommates & Rentals">Roommates & Rentals</option>
                     <option value="Care Services">Care Services</option>
+                    <option value="Furniture & Home">Furniture & Home</option>
                     <option value="Technology">Technology</option>
                     <option value="Pet shop">Pet shop</option>
                     <option value="Real Estate">Real Estate</option>

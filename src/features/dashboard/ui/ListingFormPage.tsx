@@ -1,27 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createListing, getListing, getListingApiErrorMessage, isListingUpgradeRequired, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
 import { getListingCategoryFields, getListingCategoryTree, type ListingCategoryFieldDefinition, type ListingCategoryOption } from "../api/listingCategoriesApi";
 import { getMyProfile } from "../api/profileApi";
-import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
+import { ensureLocationMaster, getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 import { getAddressPlaceDetail, searchAddressPredictions } from "../../../shared/api/addressAutocompleteApi";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
-import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
+import { getMyPlanUsage, getPricingPlans, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
 import { resolveListingImageUrl } from "../utils/listingImages";
 import { labelWithCountryCurrency } from "../../../shared/utils/currency";
 import "../styles/listings.css";
 
 const wizardSteps = [
   { title: "Step 1", label: "Basic Info" },
-  { title: "Step 2", label: "Business" },
-  { title: "Step 3", label: "Links" },
-  { title: "Step 4", label: "More Info" },
+  { title: "Step 2", label: "Category" },
+  { title: "Step 3", label: "Business" },
+  { title: "Step 4", label: "Links" },
   { title: "Step 5", label: "Media" },
-  { title: "Step 6", label: "Done" },
 ];
+
+const doneStepIndex = wizardSteps.length;
 
 const profileImageUploadMarker = "__profileImageFile__";
 const coverImageUploadMarker = "__coverImageFile__";
@@ -96,6 +97,7 @@ type CategoryAttributeFieldSet = {
 type FieldErrors = Record<string, string>;
 type GalleryUploadFile = { file: File; marker: string };
 type InlineUploadFile = { file: File; marker: string };
+type NearbyServices = Record<string, string[]>;
 
 type ListingDraft = {
   businessHours: BusinessHour[];
@@ -387,6 +389,47 @@ const vehicleBrandOptions = ["Maruti Suzuki", "Hyundai", "Honda", "Toyota", "Tat
 const transmissionOptions = ["Manual", "Automatic", "Not Applicable"];
 const listingTypeOptions = ["Free", "Featured", "Premium"];
 const vehiclePriceNegotiableOptions = ["Yes", "No"];
+const nearbyServiceTypes = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
+const nearbyServicesAttributeKey = "nearby_services";
+const furnitureCategoryNames = ["Furniture & Home", "Furniture & Home Decor"];
+const furnitureConditionOptions = ["New", "Like New", "Good", "Fair", "Salvage"];
+const furnitureMaterialOptions = ["Wood", "Metal", "Plastic", "Glass", "Fabric", "Leather"];
+const furniturePostingCommonFields: CategoryAttributeField[] = [
+  { key: "brand", label: "Brand", sectionName: "Item Details", sectionOrder: 2 },
+  { key: "product_name_model", label: "Product Name / Model", sectionName: "Item Details", sectionOrder: 2 },
+  { key: "condition", label: "Condition", options: furnitureConditionOptions, isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
+  { key: "material", label: "Material", options: furnitureMaterialOptions, isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
+  { key: "color_finish", label: "Color / Finish", isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
+  { key: "age_of_item", label: "Age of Item", options: ["< 6 months", "6-12 months", "1-3 yrs", "3+ yrs"], isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
+  { key: "quantity", label: "Quantity", type: "number", isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
+  { key: "length_inches", label: "Length (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
+  { key: "width_inches", label: "Width (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
+  { key: "height_inches", label: "Height (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
+  { key: "weight_lbs", label: "Weight (lbs)", type: "number", sectionName: "Dimensions & Specifications", sectionOrder: 3 },
+  { key: "assembly_required", label: "Assembly Required", options: yesNoOptions, isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
+  { key: "assembly_included", label: "Assembly Included", options: yesNoOptions, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
+  { key: "price", label: "Price (USD)", type: "number", isRequired: true, sectionName: "Price & Sale Details", sectionOrder: 5 },
+  { key: "price_negotiable", label: "Price Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Price & Sale Details", sectionOrder: 5 },
+  { key: "original_price", label: "Original Price", type: "number", sectionName: "Price & Sale Details", sectionOrder: 5 },
+  { key: "reason_for_selling", label: "Reason for Selling", type: "textarea", sectionName: "Price & Sale Details", sectionOrder: 5 },
+  { key: "pickup_location", label: "Pickup Location (lat-long)", sectionName: "Delivery & Logistics", sectionOrder: 7 },
+  { key: "pickup_only", label: "Pickup Only", options: yesNoOptions, isRequired: true, sectionName: "Delivery & Logistics", sectionOrder: 7 },
+  { key: "delivery_available", label: "Delivery Available", options: yesNoOptions, isRequired: true, sectionName: "Delivery & Logistics", sectionOrder: 7 },
+  { key: "delivery_charges", label: "Delivery Charges", type: "number", sectionName: "Delivery & Logistics", sectionOrder: 7 },
+  { key: "shipping_available", label: "Shipping Available", options: yesNoOptions, sectionName: "Delivery & Logistics", sectionOrder: 7 },
+  { key: "assembly_service", label: "Assembly Service", options: yesNoOptions, sectionName: "Delivery & Logistics", sectionOrder: 7 },
+  { key: "pet_free_home", label: "Pet-Free Home", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
+  { key: "smoke_free_home", label: "Smoke-Free Home", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
+  { key: "scratch_free", label: "No Damage / Scratch-Free", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
+  { key: "recently_purchased", label: "Recently Purchased", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
+  { key: "custom_made", label: "Custom Made", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
+  { key: "eco_friendly", label: "Eco-Friendly", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
+  { key: "video_url", label: "Video URL", sectionName: "Media Upload", sectionOrder: 9 },
+  { key: "seller_type", label: "Seller Type", options: ["Owner", "Dealer", "Store"], isRequired: true, sectionName: "Seller Information", sectionOrder: 10 },
+  { key: "ad_type", label: "Ad Type", options: listingTypeOptions, sectionName: "Listing Settings", sectionOrder: 11 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Settings", sectionOrder: 11 },
+  { key: "auto_renew", label: "Auto-renew", options: yesNoOptions, sectionName: "Listing Settings", sectionOrder: 11 },
+];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
   { key: "brand", label: "Brand", options: vehicleBrandOptions },
@@ -519,6 +562,8 @@ const careServiceFields: CategoryAttributeField[] = [
 
 const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]> = {
   "Real Estate": [
+    { key: "price", label: "Price", type: "number", isRequired: true },
+    { key: "priceNegotiable", label: "Price Type", options: ["Negotiable", "Fixed"] },
     { key: "superBuiltUpArea", label: "Super Built-up Area (sq ft)", type: "number" },
     { key: "carpetArea", label: "Carpet Area", type: "number" },
     { key: "floorNumber", label: "Floor Number", type: "number" },
@@ -568,14 +613,11 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
   "Care Services": [
     ...careServiceFields,
   ],
+  "Furniture & Home": [
+    ...furniturePostingCommonFields,
+  ],
   "Furniture & Home Decor": [
-    { key: "itemCondition", label: "Condition", options: commonConditionOptions },
-    { key: "material", label: "Material" },
-    { key: "color", label: "Color" },
-    { key: "dimensions", label: "Dimensions" },
-    { key: "age", label: "Age" },
-    { key: "assemblyRequired", label: "Assembly Required", options: ["Yes", "No"] },
-    { key: "deliveryAvailable", label: "Delivery Available", options: ["Yes", "No"] },
+    ...furniturePostingCommonFields,
   ],
   "Fashion & Lifestyle": [
     { key: "brand", label: "Brand" },
@@ -637,50 +679,46 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Real Estate": {
     default: categoryAttributeFieldsByCategory["Real Estate"],
     subCategories: {
-      "Residential Sale": [
+      "For Sale": [
         ...categoryAttributeFieldsByCategory["Real Estate"],
         { key: "salePriceLabel", label: "Price Type", options: ["Total Price"] },
         { key: "loanEligibleDetail", label: "Loan Eligible", options: yesNoOptions },
       ],
-      "Residential Rent": [
+      "For Rent": [
         ...categoryAttributeFieldsByCategory["Real Estate"],
         { key: "monthlyRentLabel", label: "Price Type", options: ["Monthly Rent"] },
         { key: "securityDepositDetail", label: "Security Deposit", type: "number" },
-      ],
-      "Commercial Sale": [
-        { key: "commercialPropertyType", label: "Property Type", options: ["Office", "Shop", "Warehouse"] },
-        { key: "commercialArea", label: "Area (sq ft)", type: "number" },
-        { key: "commercialFurnishing", label: "Furnishing", options: ["Furnished", "Unfurnished"] },
-        { key: "washrooms", label: "Washrooms", type: "number" },
-        { key: "parkingAvailable", label: "Parking", options: yesNoOptions },
-        { key: "suitableFor", label: "Suitable For", options: ["Office", "Retail", "Storage"] },
-        { key: "sellerType", label: "Seller Type", options: ["Owner", "Agent", "Builder"] },
-      ],
-      "Commercial Rent": [
-        { key: "commercialPropertyType", label: "Property Type", options: ["Office", "Shop", "Warehouse"] },
-        { key: "commercialArea", label: "Area (sq ft)", type: "number" },
-        { key: "commercialFurnishing", label: "Furnishing", options: ["Furnished", "Unfurnished"] },
-        { key: "washrooms", label: "Washrooms", type: "number" },
-        { key: "parkingAvailable", label: "Parking", options: yesNoOptions },
-        { key: "suitableFor", label: "Suitable For", options: ["Office", "Retail", "Storage"] },
-        { key: "securityDepositDetail", label: "Security Deposit", type: "number" },
-        { key: "sellerType", label: "Seller Type", options: ["Owner", "Agent", "Builder"] },
-      ],
-      "Land / Plots": [
-        { key: "plotAreaDetail", label: "Plot Area", type: "number" },
-        { key: "lengthDetail", label: "Length", type: "number" },
-        { key: "breadthDetail", label: "Breadth", type: "number" },
-        { key: "boundaryWallDetail", label: "Boundary Wall", options: yesNoOptions },
-        { key: "facingDetail", label: "Facing", options: ["East", "West", "North", "South"] },
-        { key: "approvalTypeDetail", label: "Approval Type" },
-        { key: "roadWidthDetail", label: "Road Width", type: "number" },
-        { key: "ownershipType", label: "Ownership Type", options: ["Freehold", "Leasehold"] },
       ],
       "PG / Co-living": [
         { key: "roomTypeDetail", label: "Room Type", options: ["Single", "Shared"] },
         { key: "genderPreferenceDetail", label: "Gender Preference", options: ["Male", "Female", "Any"] },
         { key: "foodIncludedDetail", label: "Food Included", options: yesNoOptions },
         { key: "pgAmenitiesDetail", label: "Amenities", options: ["WiFi", "Laundry", "AC"] },
+      ],
+      "Commercial": [
+        { key: "commercialPropertyType", label: "Property Type", options: ["Office", "Shop", "Warehouse"] },
+        { key: "commercialArea", label: "Area (sq ft)", type: "number" },
+        { key: "commercialFurnishing", label: "Furnishing", options: ["Furnished", "Unfurnished"] },
+        { key: "washrooms", label: "Washrooms", type: "number" },
+        { key: "parkingAvailable", label: "Parking", options: yesNoOptions },
+        { key: "suitableFor", label: "Suitable For", options: ["Office", "Retail", "Storage"] },
+        { key: "sellerType", label: "Seller Type", options: ["Owner", "Agent", "Builder"] },
+      ],
+      "Vacation Rentals": [
+        ...categoryAttributeFieldsByCategory["Real Estate"],
+        { key: "monthlyRentLabel", label: "Price Type", options: ["Monthly Rent"] },
+        { key: "securityDepositDetail", label: "Security Deposit", type: "number" },
+      ],
+      "New Projects / New Construction": [
+        ...categoryAttributeFieldsByCategory["Real Estate"],
+        { key: "salePriceLabel", label: "Price Type", options: ["Total Price"] },
+        { key: "loanEligibleDetail", label: "Loan Eligible", options: yesNoOptions },
+      ],
+      "Real Estate Services": [
+        { key: "serviceType", label: "Service Type" },
+        { key: "serviceArea", label: "Service Area" },
+        { key: "experience", label: "Experience" },
+        { key: "licenseNumber", label: "License Number" },
       ],
     },
   },
@@ -881,38 +919,61 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
       ],
     },
   },
-  "Furniture & Home Decor": {
-    default: categoryAttributeFieldsByCategory["Furniture & Home Decor"],
+  "Furniture & Home": {
+    default: categoryAttributeFieldsByCategory["Furniture & Home"],
     subCategories: {
       "Living Room": [
-        { key: "furnitureType", label: "Furniture Type" },
-        { key: "seatingCapacity", label: "Seating Capacity" },
-        { key: "material", label: "Material" },
-        { key: "dimensions", label: "Dimensions" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
+        ...furniturePostingCommonFields,
+        { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3", "5+"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "upholstery_type", label: "Upholstery Type", options: ["Fabric", "Leather", "Faux Leather"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "recliner", label: "Recliner", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
       ],
       Bedroom: [
-        { key: "furnitureType", label: "Furniture Type" },
-        { key: "size", label: "Size" },
-        { key: "material", label: "Material" },
-        { key: "storageIncluded", label: "Storage Included", options: ["Yes", "No"] },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
+        ...furniturePostingCommonFields,
+        { key: "bed_size", label: "Bed Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "mattress_included", label: "Mattress Included", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "storage", label: "Storage", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
+      ],
+      Dining: [
+        ...furniturePostingCommonFields,
+        { key: "dining_seating_capacity", label: "Seating Capacity", options: ["2", "4", "6", "8+"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "table_shape", label: "Table Shape", options: ["Round", "Rectangle", "Square"], sectionName: "Subcategory Details", sectionOrder: 4 },
+      ],
+      Office: [
+        ...furniturePostingCommonFields,
+        { key: "desk_type", label: "Desk Type", options: ["Standing", "Regular"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "chair_type", label: "Chair Type", options: ["Ergonomic", "Executive"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "adjustable_height", label: "Adjustable Height", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
       ],
       "Office Furniture": [
-        { key: "furnitureType", label: "Furniture Type" },
-        { key: "ergonomic", label: "Ergonomic", options: ["Yes", "No"] },
-        { key: "material", label: "Material" },
-        { key: "quantity", label: "Quantity", type: "number" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
+        ...furniturePostingCommonFields,
+        { key: "desk_type", label: "Desk Type", options: ["Standing", "Regular"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "chair_type", label: "Chair Type", options: ["Ergonomic", "Executive"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "adjustable_height", label: "Adjustable Height", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
+      ],
+      Outdoor: [
+        ...furniturePostingCommonFields,
+        { key: "weather_resistant", label: "Weather Resistant", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "outdoor_usage", label: "Usage", options: ["Patio", "Garden", "Balcony"], sectionName: "Subcategory Details", sectionOrder: 4 },
+      ],
+      Decor: [
+        ...furniturePostingCommonFields,
+        { key: "decor_type", label: "Decor Type", options: ["Wall Art", "Lighting", "Rugs", "Curtains"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "style", label: "Style", options: ["Modern", "Traditional", "Vintage", "Minimalist"], sectionName: "Subcategory Details", sectionOrder: 4 },
       ],
       "Home Decor": [
-        { key: "decorType", label: "Decor Type" },
-        { key: "material", label: "Material" },
-        { key: "color", label: "Color" },
-        { key: "dimensions", label: "Dimensions" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
+        ...furniturePostingCommonFields,
+        { key: "decor_type", label: "Decor Type", options: ["Wall Art", "Lighting", "Rugs", "Curtains"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "style", label: "Style", options: ["Modern", "Traditional", "Vintage", "Minimalist"], sectionName: "Subcategory Details", sectionOrder: 4 },
+      ],
+      Kitchen: [
+        ...furniturePostingCommonFields,
+        { key: "kitchen_item_type", label: "Kitchen Item Type", options: ["Cabinet", "Island", "Storage", "Bar Stool", "Dining Table"], sectionName: "Subcategory Details", sectionOrder: 4 },
       ],
     },
+  },
+  "Furniture & Home Decor": {
+    default: categoryAttributeFieldsByCategory["Furniture & Home Decor"],
   },
   "Fashion & Lifestyle": {
     default: categoryAttributeFieldsByCategory["Fashion & Lifestyle"],
@@ -1158,9 +1219,11 @@ export default function ListingFormPage() {
   const [dynamicCategoryFields, setDynamicCategoryFields] = useState<CategoryAttributeField[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
+  const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [savedListingId, setSavedListingId] = useState<number | null>(null);
   const pricingSaveStartedRef = useRef(false);
+  const planSelectionTouchedRef = useRef(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { listingId } = useParams();
@@ -1184,6 +1247,66 @@ export default function ListingFormPage() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    getPricingPlans()
+      .then((plans) => {
+        if (isActive) {
+          setPricingPlans(plans);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setPricingPlans([]);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const activePlanName = planUsage?.plan?.name;
+    if (!activePlanName) {
+      return;
+    }
+
+    setForm((currentForm) => {
+      if (isEditMode || planSelectionTouchedRef.current) {
+        return currentForm;
+      }
+
+      return currentForm.adType === activePlanName ? currentForm : { ...currentForm, adType: activePlanName };
+    });
+  }, [isEditMode, planUsage?.plan?.name]);
+
+  useEffect(() => {
+    if (!pricingPlans.length) {
+      return;
+    }
+
+    setForm((currentForm) => {
+      if (!isEditMode && !planSelectionTouchedRef.current && planUsage?.plan?.name) {
+        const activePlan = getSelectedPricingPlan(pricingPlans, planUsage.plan.name);
+        const activePlanName = activePlan?.name || planUsage.plan.name;
+        return currentForm.adType === activePlanName ? currentForm : { ...currentForm, adType: activePlanName };
+      }
+
+      const selectedPlan = getSelectedPricingPlan(pricingPlans, currentForm.adType);
+      if (selectedPlan && currentForm.adType !== selectedPlan.name) {
+        return { ...currentForm, adType: selectedPlan.name };
+      }
+
+      if (!selectedPlan && isDefaultListingPlanValue(currentForm.adType)) {
+        return { ...currentForm, adType: pricingPlans[0].name };
+      }
+
+      return currentForm;
+    });
+  }, [isEditMode, planUsage?.plan?.name, pricingPlans]);
 
   const selectedCountry = useMemo(
     () => countries.find((country) => country.id === form.countryId) || countries.find((country) => country.name === form.country),
@@ -1232,6 +1355,24 @@ export default function ListingFormPage() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!isRealEstateCategory(form.categoryName) || form.country || !countries.length) {
+      return;
+    }
+
+    const defaultCountry = countries.find((country) =>
+      ["United States", "United States of America", "USA", "US"].includes(country.name)
+    );
+
+    if (defaultCountry) {
+      setForm((currentForm) => ({
+        ...currentForm,
+        country: defaultCountry.name,
+        countryId: defaultCountry.id,
+      }));
+    }
+  }, [countries, form.categoryName, form.country]);
 
   useEffect(() => {
     let isActive = true;
@@ -1463,9 +1604,9 @@ export default function ListingFormPage() {
     () => mergeCategoryPostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
     [dynamicCategoryFields, form.categoryName, form.detailCategory, form.subCategory],
   );
-  const hasDynamicCategoryFields = effectiveDynamicCategoryFields.length > 0;
-  const hasDynamicPriceField = hasAnyFieldKey(effectiveDynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price");
-  const hasDynamicSellerTypeField = hasAnyFieldKey(effectiveDynamicCategoryFields, "seller_type", "sellerType");
+  const hasDynamicCategoryFields = !isRealEstateCategory(form.categoryName) && effectiveDynamicCategoryFields.length > 0;
+  const hasDynamicPriceField = !isRealEstateCategory(form.categoryName) && hasAnyFieldKey(effectiveDynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price");
+  const hasDynamicSellerTypeField = !isRealEstateCategory(form.categoryName) && hasAnyFieldKey(effectiveDynamicCategoryFields, "seller_type", "sellerType");
 
   useEffect(() => {
     let isActive = true;
@@ -1499,6 +1640,10 @@ export default function ListingFormPage() {
   }, [selectedListingCategory?.id, selectedListingSubCategory?.id, selectedListingDetailedCategory?.id]);
 
   function updateField(name: StringFormField, value: string) {
+    if (name === "adType") {
+      planSelectionTouchedRef.current = true;
+    }
+
     clearFieldError(name);
     setForm((currentForm) => {
       const nextForm = { ...currentForm, [name]: value };
@@ -1517,6 +1662,9 @@ export default function ListingFormPage() {
         }
         if (value === "Care Services" && !["15", "30", "60"].includes(nextForm.adDurationDays)) {
           nextForm.adDurationDays = "30";
+        }
+        if (isRealEstateCategory(value)) {
+          nextForm.sellerType = "";
         }
         setCategoryAttributes({});
       }
@@ -1645,15 +1793,127 @@ export default function ListingFormPage() {
     });
   }
 
+  async function ensureAndApplyResolvedLocation(details: {
+    countryName: string;
+    countryCode?: string;
+    stateName: string;
+    cityName: string;
+    address?: string;
+    pincode?: string;
+    latitude?: string;
+    longitude?: string;
+  }, expectedPincode?: string) {
+    const matchedCountry = countries.find((item) =>
+      namesMatch(item.name, details.countryName) ||
+      (!!details.countryCode && item.code.trim().toLowerCase() === details.countryCode.trim().toLowerCase())
+    );
+    const countryName = matchedCountry?.name || form.country || details.countryName;
+    const stateName = details.stateName.trim();
+    const cityName = details.cityName.trim();
+
+    let ensuredCountry = matchedCountry;
+    let ensuredState: StateOption | null = states.find((item) => namesMatch(item.name, stateName)) || null;
+    let ensuredCity: CityOption | null = cities.find((item) => namesMatch(item.name, cityName)) || null;
+
+    if (countryName && (stateName || cityName)) {
+      try {
+        const ensured = await ensureLocationMaster({
+          countryName,
+          countryCode: matchedCountry?.code || details.countryCode || "",
+          stateName,
+          cityName,
+        });
+
+        ensuredCountry = ensured.country;
+        ensuredState = ensured.state || ensuredState;
+        ensuredCity = ensured.city || ensuredCity;
+
+        if (ensured.state) {
+          setStates((currentStates) => includeLocationOption(currentStates, ensured.state!));
+        }
+
+        if (ensured.city) {
+          setCities((currentCities) => includeLocationOption(currentCities, ensured.city!));
+        }
+      } catch {
+        // Keep the looked-up names visible even if the DB ensure call is unavailable.
+      }
+    }
+
+    setForm((currentForm) => {
+      if (expectedPincode && currentForm.pincode.trim() !== expectedPincode) {
+        return currentForm;
+      }
+
+      return {
+        ...currentForm,
+        address: details.address || currentForm.address,
+        pincode: details.pincode || currentForm.pincode,
+        latitude: details.latitude || currentForm.latitude,
+        longitude: details.longitude || currentForm.longitude,
+        country: ensuredCountry?.name || countryName || currentForm.country,
+        countryId: ensuredCountry?.id ?? currentForm.countryId,
+        state: ensuredState?.name || stateName || currentForm.state,
+        stateId: ensuredState?.id ?? currentForm.stateId,
+        city: ensuredCity?.name || cityName || currentForm.city,
+        cityId: ensuredCity?.id ?? currentForm.cityId,
+      };
+    });
+
+    clearFieldError("address");
+    clearFieldError("pincode");
+    clearFieldError("country");
+    clearFieldError("state");
+    clearFieldError("city");
+  }
+
+  useEffect(() => {
+    const pincode = form.pincode.trim();
+
+    if (!/^\d{5}(-\d{4})?$/.test(pincode) && !/^\d{6}$/.test(pincode)) {
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      lookupPostalCodeLocation(pincode, form.country || undefined, controller.signal)
+        .then((location) => {
+          if (!location || form.pincode.trim() !== pincode) {
+            return;
+          }
+
+          void ensureAndApplyResolvedLocation({
+            countryName: location.country,
+            countryCode: location.countryCode,
+            stateName: location.state,
+            cityName: location.city || location.district,
+            pincode,
+          }, pincode);
+        })
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === "AbortError") {
+            return;
+          }
+        });
+    }, 500);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [cities, countries, form.country, form.pincode, states]);
+
   const handleAddressPlaceSelect = useCallback((addressDetails: ListingAddressDetails) => {
-    setForm((currentForm) => ({
-      ...currentForm,
-      address: addressDetails.address || currentForm.address,
-      pincode: addressDetails.pincode || currentForm.pincode,
-      latitude: addressDetails.latitude || currentForm.latitude,
-      longitude: addressDetails.longitude || currentForm.longitude,
-    }));
-  }, []);
+    void ensureAndApplyResolvedLocation({
+      countryName: addressDetails.country,
+      stateName: addressDetails.state,
+      cityName: addressDetails.city,
+      address: addressDetails.address,
+      pincode: addressDetails.pincode,
+      latitude: addressDetails.latitude,
+      longitude: addressDetails.longitude,
+    });
+  }, [cities, countries, form.country, states]);
 
   function handleNext(skipValidation = false) {
     if (!skipValidation && !validateStep(currentStep)) {
@@ -1671,6 +1931,16 @@ export default function ListingFormPage() {
     setCurrentStep((step) => Math.max(step - 1, 0));
   }
 
+  function scrollToFirstValidationError() {
+    window.setTimeout(() => {
+      const firstInvalidField = document.querySelector<HTMLElement>(".listing-polished-form .is-invalid");
+      const target = firstInvalidField?.closest<HTMLElement>(".form-group") || firstInvalidField;
+
+      target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      firstInvalidField?.focus();
+    }, 0);
+  }
+
   function validateStep(step: number) {
     if (step !== 0) {
       return true;
@@ -1684,21 +1954,17 @@ export default function ListingFormPage() {
     };
 
     const requiredFields: Array<[StringFormField, string]> = [
-      ["title", "Ad Title"],
-      ["country", "Country"],
-      ["state", "State"],
-      ["city", "City"],
-      ["address", "Address"],
-      ["pincode", "Pincode"],
       ["mobileNumber", "Mobile Number"],
-      ["sellerType", "Seller Type"],
       ["categoryName", "Category"],
       ["subCategory", "Sub Category"],
-      ["businessDescription", "Business Description"],
     ];
 
     if (detailCategoryOptions.length) {
-      requiredFields.splice(5, 0, ["detailCategory", "Detailed Category"]);
+      requiredFields.push(["detailCategory", "Detailed Category"]);
+    }
+
+    if (form.categoryName === "Vehicles" && !hasDynamicSellerTypeField) {
+      requiredFields.push(["sellerType", "Seller Type"]);
     }
 
     requiredFields.forEach(([name, label]) => {
@@ -1711,27 +1977,60 @@ export default function ListingFormPage() {
       addFieldError("sellerName", "Name is required.");
     }
 
-    if (form.businessDescription.trim() && form.businessDescription.trim().length < 50) {
-      addFieldError("businessDescription", "Business Description must be at least 50 characters.");
+    if (!form.profileImageName.trim()) {
+      addFieldError("profileImageName", "Profile image is required.");
     }
 
+    if (!form.coverImageName.trim()) {
+      addFieldError("coverImageName", "Cover image is required.");
+    }
+
+    if (Object.keys(nextFieldErrors).length) {
+      setFieldErrors(nextFieldErrors);
+      setErrorMessage("");
+      scrollToFirstValidationError();
+      return false;
+    }
+
+    setFieldErrors({});
+    return true;
+  }
+
+  function validateListingDetailsForSubmit() {
+    const nextFieldErrors: FieldErrors = {};
+    let validationTargetStep = 1;
+    const addFieldError = (name: string, message: string) => {
+      if (!nextFieldErrors[name]) {
+        nextFieldErrors[name] = message;
+      }
+    };
+
     if (!hasDynamicCategoryFields && form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
+      setFieldErrors({});
       return false;
     }
 
     if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Vehicles" && !validateVehicleFields()) {
+      setFieldErrors({});
       return false;
     }
 
     if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Electronics & Appliances" && !validateElectronicsFields()) {
+      setFieldErrors({});
       return false;
     }
 
     if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Care Services" && !validateCareServiceFields()) {
+      setFieldErrors({});
       return false;
     }
 
-    const missingDetailField = hasDynamicCategoryFields
+    if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && isFurnitureCategory(form.categoryName) && !validateFurnitureFields()) {
+      setFieldErrors({});
+      return false;
+    }
+
+    const missingDetailField = hasDynamicCategoryFields || isRealEstateCategory(form.categoryName)
       ? undefined
       : getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
 
@@ -1744,29 +2043,65 @@ export default function ListingFormPage() {
     }
 
     if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && !form.price.trim()) {
+      validationTargetStep = 2;
       addFieldError("price", isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
     }
 
-    if (!hasDynamicCategoryFields && isRentRealEstateSubCategory(form.subCategory) && (!form.securityDeposit.trim() || !form.maintenanceCharges.trim())) {
-      if (!form.securityDeposit.trim()) {
-        addFieldError("securityDeposit", "Security Deposit is required.");
+    if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && !getAttributeValue(categoryAttributes, "price_type").trim()) {
+      validationTargetStep = 2;
+      addFieldError(categoryFieldErrorKey("price_type"), "Price Type is required.");
+    }
+
+    if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && !getAttributeValue(categoryAttributes, "property_type_group").trim()) {
+      validationTargetStep = 2;
+      addFieldError(categoryFieldErrorKey("property_type_group"), "Property Type is required.");
+    }
+
+    if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
+      validationTargetStep = 2;
+      const areaUnit = getAttributeValue(categoryAttributes, "area_unit").trim();
+      if (!areaUnit) {
+        addFieldError(categoryFieldErrorKey("area_unit"), "Area is required.");
+      } else if (areaUnit === "Acres" && !form.plotArea.trim()) {
+        addFieldError("plotArea", "Area Acres is required.");
+      } else if (areaUnit === "Sq Ft" && !form.superBuiltUpArea.trim()) {
+        addFieldError("superBuiltUpArea", "Area Sq Ft is required.");
       }
-      if (!form.maintenanceCharges.trim()) {
-        addFieldError("maintenanceCharges", "Maintenance Charges are required.");
+
+    }
+
+    if (isRealEstateCategory(form.categoryName)) {
+      const nearbyServices = parseNearbyServices(categoryAttributes[nearbyServicesAttributeKey]);
+      const missingNearbyServiceType = nearbyServiceTypes.find((type) => !nearbyServices[type]?.some((item) => item.trim()));
+
+      if (missingNearbyServiceType) {
+        validationTargetStep = 4;
+        addFieldError(categoryFieldErrorKey(nearbyServicesAttributeKey), `Add at least one ${missingNearbyServiceType} nearby service.`);
       }
     }
 
-    effectiveDynamicCategoryFields
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-      if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-        addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+    if (!hasDynamicCategoryFields && isRentRealEstateSubCategory(form.subCategory) && !form.securityDeposit.trim()) {
+      if (!form.securityDeposit.trim()) {
+        validationTargetStep = 2;
+        addFieldError("securityDeposit", "Security Deposit is required.");
       }
-    });
+    }
+
+    if (!isRealEstateCategory(form.categoryName)) {
+      effectiveDynamicCategoryFields
+        .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+        .forEach((field) => {
+          if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+            addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+          }
+        });
+    }
 
     if (Object.keys(nextFieldErrors).length) {
       setFieldErrors(nextFieldErrors);
       setErrorMessage("");
+      setCurrentStep(validationTargetStep);
+      scrollToFirstValidationError();
       return false;
     }
 
@@ -2100,8 +2435,54 @@ export default function ListingFormPage() {
     return true;
   }
 
+  function validateFurnitureFields() {
+    const requiredFields = [
+      ["condition", "item_condition", "Condition"],
+      ["material", "Material"],
+      ["color_finish", "color", "Color / Finish"],
+      ["quantity", "Quantity"],
+      ["length_inches", "Length"],
+      ["width_inches", "Width"],
+      ["height_inches", "Height"],
+      ["assembly_required", "Assembly Required"],
+      ["price", "listing_price", "total_price", "Price"],
+      ["price_negotiable", "priceNegotiable", "Price Negotiable"],
+      ["pickup_only", "Pickup Only"],
+      ["delivery_available", "Delivery Available"],
+      ["seller_type", "sellerType", "Seller Type"],
+    ];
+    const condition = getAttributeValue(categoryAttributes, "condition", "item_condition");
+    const deliveryAvailable = getAttributeValue(categoryAttributes, "delivery_available", "deliveryAvailable");
+
+    if (condition !== "New") {
+      requiredFields.push(["age_of_item", "age", "Age of Item"]);
+    }
+
+    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    if (missing) {
+      setErrorMessage(`${missing[missing.length - 1]} is required.`);
+      return false;
+    }
+
+    if (deliveryAvailable === "Yes" && !getAttributeValue(categoryAttributes, "delivery_charges", "deliveryCharges").trim()) {
+      setErrorMessage("Delivery Charges are required when delivery is available.");
+      return false;
+    }
+
+    if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
+      setErrorMessage("Price is required for Furniture & Home listings.");
+      return false;
+    }
+
+    return true;
+  }
+
   function validateMedia() {
-    if (!isRealEstateCategory(form.categoryName) && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances" && form.categoryName !== "Care Services") {
+    if (isRealEstateCategory(form.categoryName)) {
+      return true;
+    }
+
+    if (!isRealEstateCategory(form.categoryName) && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances" && form.categoryName !== "Care Services" && !isFurnitureCategory(form.categoryName)) {
       return true;
     }
 
@@ -2188,6 +2569,14 @@ export default function ListingFormPage() {
         draft.categoryAttributes,
       );
       const galleryMarkers = new Set(draft.form.galleryMedia);
+      if (draft.form.listingVideo.startsWith(galleryImageUploadMarkerPrefix)) {
+        galleryMarkers.add(draft.form.listingVideo);
+      }
+      Object.values(draft.categoryAttributes).forEach((value) => {
+        if (value.startsWith(galleryImageUploadMarkerPrefix)) {
+          galleryMarkers.add(value);
+        }
+      });
       const uploadFiles = {
         profileImageFile: draft.profileImageFile,
         coverImageFile: draft.coverImageFile,
@@ -2199,7 +2588,7 @@ export default function ListingFormPage() {
         ? await updateListing(editListingId, payload, uploadFiles)
         : await createListing(payload, uploadFiles);
       setSavedListingId(savedListing.id);
-      setCurrentStep(5);
+      setCurrentStep(doneStepIndex);
       return true;
     } catch (error) {
       if (isListingUpgradeRequired(error)) {
@@ -2211,7 +2600,12 @@ export default function ListingFormPage() {
         });
         return false;
       }
-      setErrorMessage(getListingApiErrorMessage(error));
+      const message = getListingApiErrorMessage(error);
+      const obsoleteRealEstateMessage = message
+        .replace(/\bProperty age is required\.\s*/gi, "")
+        .replace(/\bFacing is required\.\s*/gi, "")
+        .trim();
+      setErrorMessage(obsoleteRealEstateMessage || "Please check the visible required fields and try again.");
       return false;
     } finally {
       setIsSaving(false);
@@ -2221,6 +2615,10 @@ export default function ListingFormPage() {
   async function handleFinish() {
     if (!validateStep(0)) {
       setCurrentStep(0);
+      return;
+    }
+
+    if (!validateListingDetailsForSubmit()) {
       return;
     }
 
@@ -2247,6 +2645,80 @@ export default function ListingFormPage() {
     });
   }
 
+  function renderRealEstatePostingSections(formStep: number) {
+    return (
+      <RealEstatePostingSections
+        form={form}
+        sellerName={sellerName}
+        categoryAttributes={categoryAttributes}
+        pricingPlans={pricingPlans}
+        currencyCountry={currencyCountry}
+        countries={countries}
+        states={states}
+        cities={cities}
+        fieldErrors={fieldErrors}
+        profileImageFile={profileImageFile}
+        coverImageFile={coverImageFile}
+        galleryFiles={galleryFiles}
+        updateField={updateField}
+        updateGalleryMedia={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
+        updateSellerName={(value) => {
+          clearFieldError("sellerName");
+          setSellerName(value);
+        }}
+        updateCountry={updateCountry}
+        updateState={updateState}
+        updateCity={updateCity}
+        updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
+        updateCategoryAttributes={updateCategoryAttributes}
+        handleAddressPlaceSelect={handleAddressPlaceSelect}
+        setGalleryFiles={setGalleryFiles}
+        onViewPlans={() => navigate("/pricing-details", {
+          state: {
+            pendingListingDraft: isEditMode ? undefined : getListingDraft(),
+            returnTo: location.pathname,
+          },
+        })}
+        formStep={formStep}
+      />
+    );
+  }
+
+  function renderCategoryDynamicFields() {
+    if (!form.categoryName || isRealEstateCategory(form.categoryName)) {
+      return null;
+    }
+
+    return (
+      <>
+        {form.categoryName === "Restaurants & Food" && !hasDynamicCategoryFields ? (
+          <RestaurantInfoFields
+            form={form}
+            currencyCountry={currencyCountry}
+            restaurantInfo={restaurantInfo}
+            menuItems={restaurantMenuItems}
+            onChange={setRestaurantInfo}
+            onMenuItemsChange={setRestaurantMenuItems}
+          />
+        ) : null}
+        {!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && form.subCategory === "Rentals") ? (
+          <ListingPriceFields form={form} currencyCountry={currencyCountry} updateField={updateField} />
+        ) : null}
+        <CategoryAttributesFields
+          categoryName={form.categoryName}
+          subCategory={form.subCategory}
+          detailCategory={form.detailCategory}
+          form={form}
+          currencyCountry={currencyCountry}
+          dynamicFields={effectiveDynamicCategoryFields}
+          values={categoryAttributes}
+          fieldErrors={fieldErrors}
+          onChange={updateCategoryAttributes}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <UserHomeHeader />
@@ -2258,7 +2730,7 @@ export default function ListingFormPage() {
           <div className="row">
             <div className="login-main add-list">
               <div className="log-bor">&nbsp;</div>
-              <span className="steps">{wizardSteps[currentStep].title}</span>
+              <span className="steps">{currentStep < wizardSteps.length ? wizardSteps[currentStep].title : "Done"}</span>
               {errorMessage ? <div className="alert alert-danger listing-form-alert">{errorMessage}</div> : null}
               {editLockedMessage ? <div className="listing-form-locked">{editLockedMessage}</div> : null}
 
@@ -2266,9 +2738,11 @@ export default function ListingFormPage() {
                 <div className="log">
                   <div className="login">
                     <h4>{isEditMode ? "Edit Listing" : "Listing Details"}</h4>
-                    <form className="listing_form_1" noValidate>
+                    <form className="listing_form_1 listing-polished-form" noValidate autoComplete="off">
+                        <>
+                      <h4>User Info</h4>
                       <Input
-                        placeholder={form.categoryName === "Restaurants & Food" ? "Contact Person*" : "Listing Name*"}
+                        placeholder={isRealEstateCategory(form.categoryName) ? "Name*" : form.categoryName === "Restaurants & Food" ? "Contact Person*" : "Listing Name*"}
                         value={sellerName}
                         error={fieldErrors.sellerName}
                         onChange={(value) => {
@@ -2280,36 +2754,10 @@ export default function ListingFormPage() {
                         <InputColumn placeholder="Phone number" value={form.mobileNumber} error={fieldErrors.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
                         <InputColumn placeholder="Email Id" type="email" value={form.email} error={fieldErrors.email} onChange={(value) => updateField("email", value)} />
                       </div>
-                      {isRealEstateCategory(form.categoryName) && !hasDynamicSellerTypeField ? (
-                        <>
-                          <Select placeholder="Seller Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Agent", "Builder"]} onChange={(value) => updateField("sellerType", value)} />
-                          <div className="row">
-                            <InputColumn placeholder="RERA Number" value={form.reraNumber} onChange={(value) => updateField("reraNumber", value)} />
-                            <SelectColumn placeholder="Ownership Type" value={form.ownershipType} options={["Freehold", "Leasehold"]} onChange={(value) => updateField("ownershipType", value)} />
-                          </div>
-                        </>
-                      ) : null}
                       {form.categoryName === "Vehicles" && !hasDynamicSellerTypeField ? (
                         <Select placeholder="Seller Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Dealer"]} onChange={(value) => updateField("sellerType", value)} />
                       ) : null}
-                      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={countries.map((country) => country.name)} onChange={updateCountry} />
-                      <Select placeholder="Select State*" value={form.state} error={fieldErrors.state} options={states.map((state) => state.name)} onChange={updateState} disabled={!form.country} />
-                      <Select placeholder="Select City*" value={form.city} error={fieldErrors.city} options={cities.map((city) => city.name)} onChange={updateCity} disabled={!form.state} />
-                      <AddressAutocompleteInput
-                        placeholder="Listing address*"
-                        value={form.address}
-                        error={fieldErrors.address}
-                        country={form.country}
-                        state={form.state}
-                        city={form.city}
-                        onChange={(value) => updateField("address", value)}
-                        onPlaceSelect={handleAddressPlaceSelect}
-                      />
-                      <Input placeholder="Zip code" value={form.pincode} error={fieldErrors.pincode} onChange={(value) => updateField("pincode", value)} />
-                      <div className="row">
-                        <InputColumn placeholder="Google Map Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
-                        <InputColumn placeholder="Google Map Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
-                      </div>
+                      <h4>Category Selection</h4>
                       <Select placeholder="Select Category" value={form.categoryName} error={fieldErrors.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} />
                       <Select
                         placeholder="Select Sub Category"
@@ -2327,176 +2775,136 @@ export default function ListingFormPage() {
                         onChange={(value) => updateField("detailCategory", value)}
                         disabled={!form.subCategory || !detailCategoryOptions.length}
                       />
-                      <Input placeholder="Add title" value={form.title} error={fieldErrors.title} onChange={(value) => updateField("title", value)} />
-                      {isRealEstateCategory(form.categoryName) && !hasDynamicCategoryFields ? (
-                        <>
-                          <DetailCategoryFields form={form} updateField={updateField} />
-                          <PriceAndAmenitiesFields
-                            form={form}
-                            currencyCountry={currencyCountry}
-                            updateField={updateField}
-                            updateBooleanField={(name, value) => setForm((currentForm) => ({ ...currentForm, [name]: value }))}
-                          />
-                        </>
-                      ) : null}
-                      {form.categoryName === "Restaurants & Food" && !hasDynamicCategoryFields ? (
-                        <>
-                          <RestaurantInfoFields
-                            form={form}
-                            currencyCountry={currencyCountry}
-                            restaurantInfo={restaurantInfo}
-                            menuItems={restaurantMenuItems}
-                            onChange={setRestaurantInfo}
-                            onMenuItemsChange={setRestaurantMenuItems}
-                          />
-                        </>
-                      ) : null}
-                      {form.categoryName && !hasDynamicPriceField && !isRealEstateCategory(form.categoryName) && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && form.subCategory === "Rentals") ? (
-                        <ListingPriceFields form={form} currencyCountry={currencyCountry} updateField={updateField} />
-                      ) : null}
-                      {form.categoryName ? (
-                        <CategoryAttributesFields
-                          categoryName={form.categoryName}
-                          subCategory={form.subCategory}
-                          detailCategory={form.detailCategory}
-                          form={form}
-                          currencyCountry={currencyCountry}
-                          dynamicFields={effectiveDynamicCategoryFields}
-                          values={categoryAttributes}
-                          fieldErrors={fieldErrors}
-                          onChange={updateCategoryAttributes}
-                        />
-                      ) : null}
-                      <h4>Business Details</h4>
-                      <div className="row">
-                        <div className="col-md-12">
-                          <div className="form-group">
-                            <label>Business Description *</label>
-                            <textarea
-                              name="business_description"
-                              className="form-control"
-                              placeholder="Describe your business"
-                              value={form.businessDescription}
-                              onChange={(event) => updateField("businessDescription", event.target.value)}
-                            />
-                            <FieldError message={fieldErrors.businessDescription} />
-                          </div>
-                        </div>
-                      </div>
+                      <h4>Images</h4>
                       <div className="row">
                         <TemplateImageColumn
-                          label="Choose profile image"
+                          label="Choose profile image*"
                           value={form.profileImageName}
+                          error={fieldErrors.profileImageName}
                           onFileChange={(file) => {
                             setProfileImageFile(file);
                             updateField("profileImageName", file ? profileImageUploadMarker : "");
                           }}
                         />
                         <TemplateImageColumn
-                          label="Choose cover image"
+                          label="Choose cover image*"
                           value={form.coverImageName}
+                          error={fieldErrors.coverImageName}
                           onFileChange={(file) => {
                             setCoverImageFile(file);
                             updateField("coverImageName", file ? coverImageUploadMarker : "");
                           }}
                         />
                       </div>
-                      <Textarea
-                        placeholder="Enter your service location"
-                        value={form.serviceLocations}
-                        onChange={(value) => updateField("serviceLocations", value)}
-                      />
                       <StepNavigation
                         isFirst
                         onCancel={() => navigate("/dashboard/all-listing")}
                         onNext={() => handleNext()}
+                        nextLabel="Next"
+                        nextDisabled={isSaving || Boolean(editLockedMessage)}
                         progress={20}
                       />
+                        </>
                     </form>
                   </div>
                 </div>
               ) : null}
 
-              {currentStep === 1 ? (
+              {wizardSteps.length > 2 && currentStep === 1 ? (
                 <div className="log">
                   <div className="login">
-                    <h4>Business Details</h4>
-                    <form className="listing_form_2" noValidate>
-                      <ul className="listing-section-stack">
-                        <li>
-                          <BusinessHoursEditor hours={businessHours} onChange={setBusinessHours} />
-                        </li>
-                        <li>
-                          <ContactLocationFields
-                            contactInfo={contactInfo}
-                            country={form.country}
-                            fallbackState={form.state}
-                            fallbackCity={form.city}
-                            onChange={setContactInfo}
-                          />
-                        </li>
-                      </ul>
+                    <h4>{isRealEstateCategory(form.categoryName) ? "Property Details" : "Category Details"}</h4>
+                    <form className="listing_form_2" noValidate autoComplete="off">
+                      {isRealEstateCategory(form.categoryName) ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={40} />
                     </form>
                   </div>
                 </div>
               ) : null}
 
-              {currentStep === 2 ? (
+              {wizardSteps.length > 2 && currentStep === 2 ? (
                 <div className="log">
                   <div className="login add-list-off">
-                    <form className="listing_form_3" noValidate>
-                      <ul>
-                        <li>
-                          <WebLinksFields webLinks={webLinks} onChange={setWebLinks} />
-                        </li>
-                        <li>
-                          <SocialLinksFields socialLinks={socialLinks} onChange={setSocialLinks} />
-                        </li>
-                      </ul>
+                    <form className="listing_form_3" noValidate autoComplete="off">
+                      {isRealEstateCategory(form.categoryName) ? renderRealEstatePostingSections(1) : (
+                        <ul className="listing-section-stack">
+                          <li>
+                            <BusinessHoursEditor hours={businessHours} onChange={setBusinessHours} />
+                          </li>
+                          <li>
+                            <ContactLocationFields
+                              contactInfo={contactInfo}
+                              country={form.country}
+                              fallbackState={form.state}
+                              fallbackCity={form.city}
+                              onChange={setContactInfo}
+                            />
+                          </li>
+                        </ul>
+                      )}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={60} />
                     </form>
                   </div>
                 </div>
               ) : null}
 
-              {currentStep === 3 ? (
+              {wizardSteps.length > 2 && currentStep === 3 ? (
                 <div className="log add-list-map">
                   <div className="login add-list-off">
-                    <form className="listing_form_4" noValidate>
-                      <ul>
-                        <ProductsServicesFields
-                          products={products}
-                          services={services}
-                          brands={brands}
-                          onProductsChange={setProducts}
-                          onServicesChange={setServices}
-                          onBrandsChange={setBrands}
-                        />
-                        <li>
-                          <PaymentMethodsFields paymentMethods={paymentMethods} onChange={setPaymentMethods} />
-                        </li>
+                    <form className="listing_form_4" noValidate autoComplete="off">
+                      {isRealEstateCategory(form.categoryName) ? renderRealEstatePostingSections(2) : (
+                        <ul>
+                          <li>
+                            <WebLinksFields webLinks={webLinks} onChange={setWebLinks} />
+                          </li>
+                          <li>
+                            <SocialLinksFields socialLinks={socialLinks} onChange={setSocialLinks} />
+                          </li>
                       </ul>
+                      )}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={80} />
                     </form>
                   </div>
                 </div>
               ) : null}
 
-              {currentStep === 4 ? (
+              {wizardSteps.length > 2 && currentStep === 4 ? (
                 <div className="log">
                   <div className="login add-lis-oth">
-                    <form className="listing_form" noValidate>
-                      <h4>Photo gallery</h4>
-                      <GalleryMediaEditor
-                        items={form.galleryMedia}
-                        files={galleryFiles}
-                        onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
-                        onFilesChange={setGalleryFiles}
-                      />
-                      <p></p>
-                      <h4>Video Gallery</h4>
-                      <Textarea placeholder="Paste Your Youtube iframe Code here" value={form.listingVideo} onChange={(value) => updateField("listingVideo", value)} />
+                    <form className="listing_form" noValidate autoComplete="off">
+                      {isRealEstateCategory(form.categoryName) ? (
+                        <>
+                          {renderRealEstatePostingSections(3)}
+                          {renderRealEstatePostingSections(4)}
+                        </>
+                      ) : (
+                        <>
+                          <h4>More Info</h4>
+                          <ul>
+                            <ProductsServicesFields
+                              products={products}
+                              services={services}
+                              brands={brands}
+                              onProductsChange={setProducts}
+                              onServicesChange={setServices}
+                              onBrandsChange={setBrands}
+                            />
+                            <li>
+                              <PaymentMethodsFields paymentMethods={paymentMethods} onChange={setPaymentMethods} />
+                            </li>
+                          </ul>
+                          <h4>Photo gallery</h4>
+                          <GalleryMediaEditor
+                            items={form.galleryMedia}
+                            files={galleryFiles}
+                            onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
+                            onFilesChange={setGalleryFiles}
+                          />
+                          <p></p>
+                          <h4>Video Gallery</h4>
+                          <Textarea placeholder="Paste Your Youtube iframe Code here" value={form.listingVideo} onChange={(value) => updateField("listingVideo", value)} />
+                        </>
+                      )}
                       <div className="row">
                         <div className="col-md-6">
                           <button type="button" className="btn btn-primary" onClick={handlePrevious}>Previous</button>
@@ -2511,11 +2919,11 @@ export default function ListingFormPage() {
                 </div>
               ) : null}
 
-              {currentStep === 5 ? (
+              {currentStep === doneStepIndex ? (
                 <div className="log">
                   <div className="login add-lis-done">
                     <h4>Success</h4>
-                    <p>Your listing has been submitted successfully.</p>
+                    <p>{isEditMode ? "Your listing has been updated and sent back for admin approval." : "Your listing has been submitted and is waiting for admin approval."}</p>
                     <div className="row">
                       <div className="col-md-12">
                         <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -2581,6 +2989,42 @@ function Input({ placeholder, value, onChange, error, type = "text", readOnly = 
   );
 }
 
+function fieldLabelFromPlaceholder(placeholder: string) {
+  const label = placeholder.trim().replace(/^Select\s+/i, "");
+  return label === "Listing Name*" ? "Name*" : label;
+}
+
+function getSelectedPricingPlan(plans: PricingPlan[], value: string) {
+  const normalizedValue = normalizePlanValue(value);
+  return plans.find((plan) =>
+    normalizePlanValue(plan.name) === normalizedValue ||
+    normalizePlanValue(plan.code) === normalizedValue ||
+    normalizePlanValue(plan.name.replace(/\s+plan$/i, "")) === normalizedValue
+  ) || null;
+}
+
+function normalizePlanValue(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function isDefaultListingPlanValue(value: string) {
+  const normalizedValue = normalizePlanValue(value);
+  return !normalizedValue || normalizedValue === "free" || normalizedValue === "freeplan";
+}
+
+function addMonths(date: Date, months: number) {
+  const nextDate = new Date(date);
+  nextDate.setMonth(nextDate.getMonth() + Math.max(months, 0));
+  return nextDate;
+}
+
+function formatInputDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function AddressAutocompleteInput({
   placeholder,
   value,
@@ -2596,6 +3040,7 @@ function AddressAutocompleteInput({
   city: string;
   onPlaceSelect: (addressDetails: ListingAddressDetails) => void;
 }) {
+  const inputId = useId();
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -2603,7 +3048,7 @@ function AddressAutocompleteInput({
   useEffect(() => {
     const query = value.trim();
 
-    if (query.length < 3 || !country.trim() || !state.trim() || !city.trim()) {
+    if (query.length < 3 || !country.trim()) {
       setSuggestions([]);
       setIsOpen(false);
       setIsLoading(false);
@@ -2655,6 +3100,9 @@ function AddressAutocompleteInput({
         pincode: details?.postalCode || suggestion.pincode,
         latitude: details?.latitude != null ? String(details.latitude) : suggestion.latitude,
         longitude: details?.longitude != null ? String(details.longitude) : suggestion.longitude,
+        country: details?.country || suggestion.country,
+        state: details?.state || suggestion.state,
+        city: details?.city || suggestion.city,
       });
     } catch {
       onPlaceSelect({
@@ -2662,6 +3110,9 @@ function AddressAutocompleteInput({
         pincode: suggestion.pincode,
         latitude: suggestion.latitude,
         longitude: suggestion.longitude,
+        country: suggestion.country,
+        state: suggestion.state,
+        city: suggestion.city,
       });
     } finally {
       setIsLoading(false);
@@ -2670,8 +3121,8 @@ function AddressAutocompleteInput({
     }
   };
 
-  const helperText = !country || !state || !city
-    ? "Select country, state, and city before searching address."
+  const helperText = !country
+    ? "Select country before searching address."
     : isLoading
       ? "Searching..."
       : "";
@@ -2680,12 +3131,17 @@ function AddressAutocompleteInput({
     <div className="row">
       <div className="col-md-12">
         <div className="form-group listing-address-autocomplete">
+          <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
           <input
             className={`form-control${error ? " is-invalid" : ""}`}
             type="text"
+            name={`listing-search-${inputId}`}
             value={value}
             placeholder={placeholder}
-            autoComplete="off"
+            autoComplete="new-password"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
             onChange={(event) => onChange(event.target.value)}
             onFocus={() => {
               if (suggestions.length) setIsOpen(true);
@@ -2740,7 +3196,7 @@ async function searchAddressSuggestions({
     format: "jsonv2",
     addressdetails: "1",
     limit: "8",
-    q: `${query}, ${city}, ${state}, ${country}`,
+    q: [query, city, state, country].filter((part) => part.trim()).join(", "),
   });
   const countryCode = getCountryCode(country);
   if (countryCode) {
@@ -2787,6 +3243,9 @@ async function searchGoogleAddressSuggestions({
       pincode: "",
       latitude: "",
       longitude: "",
+      country: "",
+      state: "",
+      city: "",
     }));
   } catch {
     return [];
@@ -2805,6 +3264,9 @@ function mapAddressSuggestion(item: NominatimAddressResult): AddressSuggestion {
     pincode: item.address?.postcode || "",
     latitude: item.lat,
     longitude: item.lon,
+    country: item.address?.country || "",
+    state: item.address?.state || item.address?.province || item.address?.region || "",
+    city: item.address?.city || item.address?.town || item.address?.village || item.address?.municipality || item.address?.suburb || "",
   };
 }
 
@@ -2832,6 +3294,22 @@ function getCountryCode(country: string) {
   return countryCodes[normalized] || "";
 }
 
+function namesMatch(left: string, right: string) {
+  return normalizeLocationName(left) === normalizeLocationName(right);
+}
+
+function normalizeLocationName(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function includeLocationOption<T extends { id: number; name: string }>(options: T[], option: T) {
+  if (options.some((item) => item.id === option.id || namesMatch(item.name, option.name))) {
+    return options;
+  }
+
+  return [...options, option];
+}
+
 type AddressSuggestion = {
   id: string;
   placeId?: string;
@@ -2841,6 +3319,9 @@ type AddressSuggestion = {
   pincode: string;
   latitude: string;
   longitude: string;
+  country: string;
+  state: string;
+  city: string;
 };
 
 type NominatimAddressResult = {
@@ -2850,17 +3331,28 @@ type NominatimAddressResult = {
   name?: string;
   display_name: string;
   address?: {
+    country?: string;
+    state?: string;
+    province?: string;
+    region?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
     postcode?: string;
     road?: string;
     suburb?: string;
   };
 };
 
-function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false }: FieldProps & { type?: string; width?: string; readOnly?: boolean }) {
+function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password" }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string }) {
+  const inputId = useId();
+
   return (
     <div className={width}>
       <div className="form-group">
-        <input className={`form-control${error ? " is-invalid" : ""}`} type={type} value={value} placeholder={placeholder} readOnly={readOnly} onChange={(event) => onChange(event.target.value)} />
+        <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
+        <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={placeholder} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} onChange={(event) => onChange(event.target.value)} />
         <FieldError message={error} />
       </div>
     </div>
@@ -2875,11 +3367,13 @@ function LabeledInputColumn({
   type = "text",
   width = "col-md-6",
 }: FieldProps & { label: string; type?: string; width?: string }) {
+  const inputId = useId();
+
   return (
     <div className={width}>
       <div className="form-group">
         <label>{label}</label>
-        <input className="form-control" type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+        <input className="form-control" type={type} name={`listing-contact-${inputId}`} value={value} placeholder={placeholder} autoComplete="new-password" onChange={(event) => onChange(event.target.value)} />
       </div>
     </div>
   );
@@ -2889,6 +3383,7 @@ function SelectColumn({ placeholder, value, options, onChange, error, width = "c
   return (
     <div className={width}>
       <div className="form-group">
+        <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
         <select className={`chosen-select form-control${error ? " is-invalid" : ""}`} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
           <option value="">{placeholder}</option>
           {options.map((option) => (
@@ -2920,6 +3415,7 @@ function Textarea({ placeholder, value, onChange, error }: FieldProps) {
     <div className="row">
       <div className="col-md-12">
         <div className="form-group">
+          <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
           <textarea className={`form-control${error ? " is-invalid" : ""}`} value={value} rows={4} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
           <FieldError message={error} />
         </div>
@@ -2942,6 +3438,7 @@ function Select({ placeholder, value, options, onChange, error, disabled = false
     <div className="row">
       <div className="col-md-12">
         <div className="form-group">
+          <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
           <select className={`chosen-select form-control${error ? " is-invalid" : ""}`} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
             <option value="">{placeholder}</option>
             {options.map((option) => (
@@ -3017,6 +3514,7 @@ function CategoryAttributesFields({
                 field.type === "textarea" ? (
                   <div className="col-md-12" key={field.key}>
                     <div className="form-group">
+                      <label className="listing-field-label">{fieldLabelFromPlaceholder(displayLabel)}</label>
                       <textarea
                         className={`form-control${error ? " is-invalid" : ""}`}
                         placeholder={displayLabel}
@@ -3055,6 +3553,417 @@ function CategoryAttributesFields({
   );
 }
 
+function RealEstatePostingSections({
+  form,
+  sellerName,
+  categoryAttributes,
+  pricingPlans,
+  currencyCountry,
+  countries,
+  states,
+  cities,
+  fieldErrors,
+  galleryFiles,
+  updateField,
+  updateGalleryMedia,
+  updateSellerName,
+  updateCountry,
+  updateState,
+  updateCity,
+  updateBooleanField,
+  updateCategoryAttributes,
+  handleAddressPlaceSelect,
+  setGalleryFiles,
+  onViewPlans,
+  formStep,
+}: {
+  form: FormState;
+  sellerName: string;
+  categoryAttributes: CategoryAttributes;
+  pricingPlans: PricingPlan[];
+  currencyCountry: string;
+  countries: CountryOption[];
+  states: StateOption[];
+  cities: CityOption[];
+  fieldErrors: FieldErrors;
+  profileImageFile: File | null;
+  coverImageFile: File | null;
+  galleryFiles: GalleryUploadFile[];
+  updateField: (name: StringFormField, value: string) => void;
+  updateGalleryMedia: (items: string[]) => void;
+  updateSellerName: (value: string) => void;
+  updateCountry: (value: string) => void;
+  updateState: (value: string) => void;
+  updateCity: (value: string) => void;
+  updateBooleanField: (name: BooleanFormField, value: boolean) => void;
+  updateCategoryAttributes: (value: CategoryAttributes) => void;
+  handleAddressPlaceSelect: (addressDetails: ListingAddressDetails) => void;
+  setGalleryFiles: (files: GalleryUploadFile[]) => void;
+  onViewPlans: () => void;
+  formStep?: number;
+}) {
+  const detailCategory = form.detailCategory.trim();
+  const isRental = isRentRealEstateSubCategory(form.subCategory) || /shared|room|pg|co-living/i.test(detailCategory);
+
+  function setAttribute(key: string, value: string) {
+    updateCategoryAttributes({ ...categoryAttributes, [key]: value });
+  }
+
+  function attribute(key: string) {
+    return categoryAttributes[key] || "";
+  }
+
+  const propertyTypeGroup = attribute("property_type_group");
+  const isCommercial = propertyTypeGroup === "Commercial";
+  const isResidential = propertyTypeGroup === "Residential";
+  const isPg = ["PG", "PG / Co-living"].includes(form.subCategory);
+  const isService = form.subCategory === "Real Estate Services";
+  const isPlot = isPlotRealEstateCategory(form.subCategory, detailCategory);
+  const showResidential = isResidential && !isPg && !isService;
+  const listingPlanOptions = includeCurrentValue(
+    pricingPlans.length ? pricingPlans.map((plan) => plan.name) : listingTypeOptions,
+    form.adType,
+  );
+  const selectedListingPlan = getSelectedPricingPlan(pricingPlans, form.adType);
+  const featuredUntilDate = selectedListingPlan
+    ? formatInputDate(addMonths(new Date(), selectedListingPlan.durationMonths))
+    : attribute("featured_until_date");
+
+  function setBooleanAttribute(key: string, value: boolean) {
+    setAttribute(key, String(value));
+  }
+
+  function booleanAttributeValue(key: string) {
+    return categoryAttributes[key] === "true" || categoryAttributes[key] === "Yes";
+  }
+
+  function updateNegotiable(value: string) {
+    updateField("priceNegotiable", value === "No" ? "Fixed" : "Negotiable");
+    setAttribute("price_negotiable", value);
+  }
+
+  const propertyImageFiles = galleryFiles.filter((item) => form.galleryMedia.includes(item.marker));
+
+  function updatePropertyImageFiles(files: GalleryUploadFile[]) {
+    const propertyImageMarkers = new Set(propertyImageFiles.map((item) => item.marker));
+    setGalleryFiles([
+      ...galleryFiles.filter((item) => !propertyImageMarkers.has(item.marker)),
+      ...files,
+    ]);
+  }
+
+  function shouldShowRealEstateStep(steps: number[]) {
+    return formStep == null || steps.includes(formStep);
+  }
+
+  return (
+    <>
+      {shouldShowRealEstateStep([0]) ? (
+        <>
+      <h4>Property Title</h4>
+      <Input placeholder="Listing Title*" value={form.title} error={fieldErrors.title} onChange={(value) => updateField("title", value)} />
+      <Input placeholder="Short Tagline" value={form.description} onChange={(value) => updateField("description", value)} />
+
+      <h4>Property Description</h4>
+      <Textarea placeholder="Detailed Description*" value={form.businessDescription} error={fieldErrors.businessDescription} onChange={(value) => updateField("businessDescription", value)} />
+
+      <h4>Property Location</h4>
+      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
+      <Select placeholder="Select State*" value={form.state} error={fieldErrors.state} options={includeCurrentValue(states.map((state) => state.name), form.state)} onChange={updateState} disabled={!form.country} />
+      <Select placeholder="Select City*" value={form.city} error={fieldErrors.city} options={includeCurrentValue(cities.map((city) => city.name), form.city)} onChange={updateCity} disabled={!form.state} />
+      <Input placeholder="Zip Code*" value={form.pincode} error={fieldErrors.pincode} onChange={(value) => updateField("pincode", value)} />
+      <AddressAutocompleteInput
+        placeholder="Street Address*"
+        value={form.address}
+        error={fieldErrors.address}
+        country={form.country}
+        state={form.state}
+        city={form.city}
+        onChange={(value) => updateField("address", value)}
+        onPlaceSelect={handleAddressPlaceSelect}
+      />
+      <div className="row">
+        <InputColumn placeholder="Google Map Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
+        <InputColumn placeholder="Google Map Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
+      </div>
+      <Input placeholder="Neighborhood" value={form.serviceLocations} onChange={(value) => updateField("serviceLocations", value)} />
+        </>
+      ) : null}
+
+      {shouldShowRealEstateStep([1]) ? (
+        <>
+      <h4>Pricing</h4>
+      <div className="row">
+        <SelectColumn placeholder="Price Type*" value={attribute("price_type")} error={fieldErrors[categoryFieldErrorKey("price_type")]} options={["Total Price", "Monthly Rent", "Lease", "Per Sq Ft"]} onChange={(value) => setAttribute("price_type", value)} />
+        <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry || "United States")} type="number" value={form.price} error={fieldErrors.price} onChange={(value) => updateField("price", value)} />
+      </div>
+      {isRental ? (
+        <Input placeholder={labelWithCountryCurrency("Security Deposit", currencyCountry || "United States")} type="number" value={form.securityDeposit} error={fieldErrors.securityDeposit} onChange={(value) => updateField("securityDeposit", value)} />
+      ) : null}
+      <div className="row">
+        <InputColumn placeholder={labelWithCountryCurrency("HOA Fees", currencyCountry || "United States")} type="number" value={attribute("hoa_fees")} onChange={(value) => setAttribute("hoa_fees", value)} />
+        <InputColumn placeholder={labelWithCountryCurrency("Property Tax", currencyCountry || "United States")} type="number" value={attribute("property_tax")} onChange={(value) => setAttribute("property_tax", value)} />
+      </div>
+      <Select placeholder="Negotiable" value={form.priceNegotiable === "Fixed" ? "No" : "Yes"} options={yesNoOptions} onChange={updateNegotiable} />
+
+      <h4>Property Details</h4>
+      <Select
+        placeholder="Property Type*"
+        value={propertyTypeGroup}
+        error={fieldErrors[categoryFieldErrorKey("property_type_group")]}
+        options={["Residential", "Commercial"]}
+        onChange={(value) => {
+          setAttribute("property_type_group", value);
+          updateField("propertyType", "");
+        }}
+      />
+      {showResidential ? (
+        <>
+          {!isPlot ? (
+            <div className="row">
+              <InputColumn placeholder="Bedrooms*" value={form.bhk} error={fieldErrors.bhk} onChange={(value) => updateField("bhk", value)} />
+              <InputColumn placeholder="Bathrooms*" type="number" value={form.bathrooms} error={fieldErrors.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
+            </div>
+          ) : null}
+          <div className="row">
+            {!isPlot ? <InputColumn placeholder="Balconies" type="number" value={form.balconies} onChange={(value) => updateField("balconies", value)} /> : null}
+            {!isPlot ? <SelectColumn placeholder="Furnishing*" value={form.furnishingType} error={fieldErrors.furnishingType} options={["Furnished", "Semi-Furnished", "Unfurnished"]} onChange={(value) => updateField("furnishingType", value)} /> : null}
+          </div>
+          <div className="row">
+            <SelectColumn
+              placeholder="Area*"
+              value={attribute("area_unit")}
+              error={fieldErrors[categoryFieldErrorKey("area_unit")]}
+              options={["Sq Ft", "Acres"]}
+              onChange={(value) => {
+                setAttribute("area_unit", value);
+                if (value === "Sq Ft") {
+                  updateField("plotArea", "");
+                } else {
+                  updateField("superBuiltUpArea", "");
+                }
+              }}
+            />
+            {attribute("area_unit") ? (
+              <InputColumn
+                placeholder={attribute("area_unit") === "Acres" ? "Area Acres*" : "Area Sq Ft*"}
+                type="number"
+                value={attribute("area_unit") === "Acres" ? form.plotArea : form.superBuiltUpArea}
+                error={fieldErrors[attribute("area_unit") === "Acres" ? "plotArea" : "superBuiltUpArea"]}
+                onChange={(value) => updateField(attribute("area_unit") === "Acres" ? "plotArea" : "superBuiltUpArea", value)}
+              />
+            ) : null}
+          </div>
+          <div className="row">
+            <InputColumn placeholder="Floor Number" type="number" value={form.floorNumber} onChange={(value) => updateField("floorNumber", value)} />
+            <InputColumn placeholder="Total Floors" type="number" value={form.totalFloors} onChange={(value) => updateField("totalFloors", value)} />
+          </div>
+          <div className="row">
+            <SelectColumn
+              placeholder="Property Age"
+              value={form.propertyAge || attribute("property_age")}
+              error={fieldErrors.propertyAge || fieldErrors[categoryFieldErrorKey("property_age")]}
+              options={["New", "Less than 1 year", "1-5 years", "5+ years"]}
+              onChange={(value) => {
+                updateField("propertyAge", value);
+                setAttribute("property_age", value);
+              }}
+            />
+            <SelectColumn
+              placeholder="Facing"
+              value={form.facing || attribute("facing")}
+              error={fieldErrors.facing || fieldErrors[categoryFieldErrorKey("facing")]}
+              options={["East", "West", "North", "South"]}
+              onChange={(value) => {
+                updateField("facing", value);
+                setAttribute("facing", value);
+              }}
+            />
+          </div>
+          <Input placeholder="Year Built" type="number" value={attribute("year_built")} onChange={(value) => setAttribute("year_built", value)} />
+        </>
+      ) : null}
+      {isCommercial && !isPlot ? (
+        <>
+          <Input placeholder="Office Type*" value={form.propertyType || attribute("office_type")} onChange={(value) => {
+            updateField("propertyType", value);
+            setAttribute("office_type", value);
+          }} />
+          <div className="row">
+            <InputColumn placeholder="Seating Capacity" type="number" value={attribute("seating_capacity")} onChange={(value) => setAttribute("seating_capacity", value)} />
+            <InputColumn placeholder="Conference Rooms" type="number" value={attribute("conference_rooms")} onChange={(value) => setAttribute("conference_rooms", value)} />
+          </div>
+          <div className="row">
+            <InputColumn placeholder="Pantry" value={attribute("pantry")} onChange={(value) => setAttribute("pantry", value)} />
+            <InputColumn placeholder="Parking Spaces" type="number" value={attribute("parking_spaces")} onChange={(value) => setAttribute("parking_spaces", value)} />
+          </div>
+        </>
+      ) : null}
+      {isService ? (
+        <div className="row">
+          <InputColumn placeholder="Service Type" value={attribute("service_type")} onChange={(value) => setAttribute("service_type", value)} />
+          <InputColumn placeholder="License Number" value={attribute("license_number")} onChange={(value) => setAttribute("license_number", value)} />
+        </div>
+      ) : null}
+
+      {isRental ? (
+        <>
+          <h4>Rental / Roommate Fields</h4>
+          <div className="row">
+            <InputColumn placeholder="Available From Date" type="date" value={form.availabilityDate} onChange={(value) => updateField("availabilityDate", value)} />
+            <InputColumn placeholder="Lease Duration" value={attribute("lease_duration")} onChange={(value) => setAttribute("lease_duration", value)} />
+          </div>
+          <div className="row">
+            <SelectColumn placeholder="Preferred Tenant" value={attribute("preferred_tenant")} options={["Family", "Students", "Professionals"]} onChange={(value) => setAttribute("preferred_tenant", value)} />
+            <SelectColumn placeholder="Occupancy" value={form.roomType || attribute("occupancy")} options={["Single", "Shared"]} onChange={(value) => {
+              updateField("roomType", value);
+              setAttribute("occupancy", value);
+            }} />
+          </div>
+          <div className="row listing-amenity-row">
+            <div className="col-md-4"><CheckboxField label="Water" checked={booleanAttributeValue("utilities_water")} onChange={(value) => setBooleanAttribute("utilities_water", value)} /></div>
+            <div className="col-md-4"><CheckboxField label="Electricity" checked={booleanAttributeValue("utilities_electricity")} onChange={(value) => setBooleanAttribute("utilities_electricity", value)} /></div>
+            <div className="col-md-4"><CheckboxField label="Internet" checked={booleanAttributeValue("utilities_internet")} onChange={(value) => setBooleanAttribute("utilities_internet", value)} /></div>
+          </div>
+        </>
+      ) : null}
+
+        </>
+      ) : null}
+
+      {shouldShowRealEstateStep([2]) ? (
+        <>
+      <h4>Amenities</h4>
+      <div className="row listing-amenity-row">
+        <div className="col-md-6">
+          <CheckboxField label="Parking" checked={form.amenityParking} onChange={(value) => updateBooleanField("amenityParking", value)} />
+          <CheckboxField label="Gym" checked={form.amenityGym} onChange={(value) => updateBooleanField("amenityGym", value)} />
+          <CheckboxField label="Swimming Pool" checked={form.amenitySwimmingPool} onChange={(value) => updateBooleanField("amenitySwimmingPool", value)} />
+          <CheckboxField label="Elevator" checked={form.amenityLift} onChange={(value) => updateBooleanField("amenityLift", value)} />
+          <CheckboxField label="Security" checked={form.amenitySecurity} onChange={(value) => updateBooleanField("amenitySecurity", value)} />
+        </div>
+        <div className="col-md-6">
+          <CheckboxField label="Gated Community" checked={booleanAttributeValue("amenity_gated_community")} onChange={(value) => setBooleanAttribute("amenity_gated_community", value)} />
+          <CheckboxField label="Pet Friendly" checked={booleanAttributeValue("amenity_pet_friendly")} onChange={(value) => setBooleanAttribute("amenity_pet_friendly", value)} />
+          <CheckboxField label="Laundry" checked={booleanAttributeValue("amenity_laundry")} onChange={(value) => setBooleanAttribute("amenity_laundry", value)} />
+          <CheckboxField label="Furnished Kitchen" checked={booleanAttributeValue("amenity_furnished_kitchen")} onChange={(value) => setBooleanAttribute("amenity_furnished_kitchen", value)} />
+          <CheckboxField label="Air Conditioning" checked={booleanAttributeValue("amenity_air_conditioning")} onChange={(value) => setBooleanAttribute("amenity_air_conditioning", value)} />
+        </div>
+      </div>
+
+      <h4>Media Upload</h4>
+      <div className="form-group">
+        <label>Property Images</label>
+        <GalleryMediaEditor
+          items={form.galleryMedia}
+          files={propertyImageFiles}
+          onChange={updateGalleryMedia}
+          onFilesChange={updatePropertyImageFiles}
+        />
+      </div>
+      <div className="row">
+        <FileUploadColumn
+          label="Videos"
+          accept="video/*,.mp4,.mov,.webm,.m4v"
+          value={form.listingVideo}
+          files={galleryFiles}
+          onFilesChange={setGalleryFiles}
+          onChange={(value) => updateField("listingVideo", value)}
+        />
+        <FileUploadColumn
+          label="Floor Plans"
+          accept="image/*,.jpg,.jpeg,.png,.pdf"
+          value={attribute("floor_plans")}
+          files={galleryFiles}
+          onFilesChange={setGalleryFiles}
+          onChange={(value) => setAttribute("floor_plans", value)}
+        />
+      </div>
+      <Input placeholder="Virtual Tour URL" value={attribute("virtual_tour_url")} onChange={(value) => setAttribute("virtual_tour_url", value)} />
+      <FileUpload
+        label="Brochure PDF"
+        accept=".pdf,application/pdf"
+        value={attribute("brochure_pdf")}
+        files={galleryFiles}
+        onFilesChange={setGalleryFiles}
+        onChange={(value) => setAttribute("brochure_pdf", value)}
+      />
+
+        </>
+      ) : null}
+
+      {shouldShowRealEstateStep([3]) ? (
+        <>
+      <NearbyServicesEditor
+        value={attribute(nearbyServicesAttributeKey)}
+        error={fieldErrors[categoryFieldErrorKey(nearbyServicesAttributeKey)]}
+        onChange={(value) => setAttribute(nearbyServicesAttributeKey, value)}
+      />
+
+      <h4>Contact Information</h4>
+      <Input placeholder="Contact Person Name" value={sellerName} error={fieldErrors.sellerName} onChange={updateSellerName} />
+      <div className="row">
+        <InputColumn placeholder="Phone" value={form.mobileNumber} error={fieldErrors.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
+        <InputColumn placeholder="Email" type="email" value={form.email} error={fieldErrors.email} onChange={(value) => updateField("email", value)} />
+      </div>
+      <div className="row">
+        <InputColumn placeholder="Agency Name" value={attribute("agency_name")} onChange={(value) => setAttribute("agency_name", value)} />
+        <InputColumn placeholder="Website" value={form.website || attribute("contact_website")} onChange={(value) => {
+          updateField("website", value);
+          setAttribute("contact_website", value);
+        }} />
+      </div>
+
+      <h4>Availability & Scheduling</h4>
+      <div className="row">
+        <SelectColumn placeholder="Property Availability Status" value={form.availabilityType || attribute("property_availability_status")} options={["Available", "Sold", "Rented"]} onChange={(value) => {
+          updateField("availabilityType", value);
+          setAttribute("property_availability_status", value);
+        }} />
+        <InputColumn placeholder="Open House Date" type="date" value={attribute("open_house_date")} onChange={(value) => setAttribute("open_house_date", value)} />
+      </div>
+      <Select placeholder="Schedule Visit" value={attribute("schedule_visit")} options={yesNoOptions} onChange={(value) => setAttribute("schedule_visit", value)} />
+
+      <h4>Legal & Compliance</h4>
+      <Select placeholder="Select Ownership Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Agent", "Builder"]} onChange={(value) => updateField("sellerType", value)} />
+      <div className="row">
+        <InputColumn placeholder="MLS Number" value={attribute("mls_number")} onChange={(value) => setAttribute("mls_number", value)} />
+        <FileUploadColumn
+          label="Property Documents Upload"
+          accept=".pdf,.doc,.docx,image/*,.jpg,.jpeg,.png,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          value={attribute("property_documents_upload")}
+          files={galleryFiles}
+          onFilesChange={setGalleryFiles}
+          onChange={(value) => setAttribute("property_documents_upload", value)}
+        />
+      </div>
+      <Input placeholder="RERA / License" value={form.reraNumber} onChange={(value) => updateField("reraNumber", value)} />
+
+        </>
+      ) : null}
+
+      {shouldShowRealEstateStep([4]) ? (
+        <>
+      <h4>Listing Visibility & Promotions</h4>
+      <div className="row">
+        <SelectColumn placeholder="Listing Type" value={form.adType} options={listingPlanOptions} onChange={(value) => updateField("adType", value)} width="col-md-5" />
+        <InputColumn placeholder="Featured Until Date" type="date" value={featuredUntilDate} disabled onChange={() => undefined} width="col-md-5" />
+        <div className="col-md-2">
+          <div className="form-group listing-plan-action">
+            <label className="listing-field-label">&nbsp;</label>
+            <button type="button" className="btn btn-primary listing-plan-action-btn" onClick={onViewPlans}>
+              View Plans
+            </button>
+          </div>
+        </div>
+      </div>
+      <Select placeholder="Boost Listing" value={attribute("boost_listing")} options={yesNoOptions} onChange={(value) => setAttribute("boost_listing", value)} />
+        </>
+      ) : null}
+    </>
+  );
+}
+
 function DetailCategoryFields({
   form,
   updateField,
@@ -3062,11 +3971,34 @@ function DetailCategoryFields({
   form: FormState;
   updateField: (name: StringFormField, value: string) => void;
 }) {
+  const subCategory = form.subCategory.trim();
+  const detailCategory = form.detailCategory.trim();
   if (!form.detailCategory) {
     return null;
   }
 
-  if (isResidentialRealEstateSubCategory(form.subCategory)) {
+  if (isPlotRealEstateCategory(subCategory, detailCategory)) {
+    return (
+      <>
+        <h5 className="mt-3 mb-3">Plot Details</h5>
+        <div className="row">
+          <InputColumn placeholder="Plot Area*" type="number" value={form.plotArea} onChange={(value) => updateField("plotArea", value)} />
+          <InputColumn placeholder="Length" type="number" value={form.length} onChange={(value) => updateField("length", value)} />
+        </div>
+        <div className="row">
+          <InputColumn placeholder="Breadth" type="number" value={form.breadth} onChange={(value) => updateField("breadth", value)} />
+          <SelectColumn placeholder="Boundary Wall" value={form.boundaryWall} options={["Yes", "No"]} onChange={(value) => updateField("boundaryWall", value)} />
+        </div>
+        <div className="row">
+          <SelectColumn placeholder="Facing" value={form.facing} options={["East", "West", "North", "South"]} onChange={(value) => updateField("facing", value)} />
+          <SelectColumn placeholder="Approval Type" value={form.approvalType} options={["DTCP", "HMDA", "Other"]} onChange={(value) => updateField("approvalType", value)} />
+        </div>
+        <Input placeholder="Road Width" type="number" value={form.roadWidth} onChange={(value) => updateField("roadWidth", value)} />
+      </>
+    );
+  }
+
+  if (isResidentialRealEstateSubCategory(subCategory)) {
     return (
       <>
         <h5 className="mt-3 mb-3">Residential Details</h5>
@@ -3088,8 +4020,8 @@ function DetailCategoryFields({
           <InputColumn placeholder="Total Floors*" type="number" value={form.totalFloors} onChange={(value) => updateField("totalFloors", value)} />
         </div>
         <div className="row">
-          <SelectColumn placeholder="Property Age*" value={form.propertyAge} options={["New", "Less than 1 year", "1-5 years", "5+ years"]} onChange={(value) => updateField("propertyAge", value)} />
-          <SelectColumn placeholder="Facing*" value={form.facing} options={["East", "West", "North", "South"]} onChange={(value) => updateField("facing", value)} />
+          <SelectColumn placeholder="Property Age" value={form.propertyAge} options={["New", "Less than 1 year", "1-5 years", "5+ years"]} onChange={(value) => updateField("propertyAge", value)} />
+          <SelectColumn placeholder="Facing" value={form.facing} options={["East", "West", "North", "South"]} onChange={(value) => updateField("facing", value)} />
         </div>
         <div className="row">
           <SelectColumn placeholder="Availability*" value={form.availabilityType} options={["Immediate", "Date"]} onChange={(value) => updateField("availabilityType", value)} />
@@ -3101,7 +4033,7 @@ function DetailCategoryFields({
     );
   }
 
-  if (isPlotRealEstateSubCategory(form.subCategory)) {
+  if (isPlotRealEstateCategory(subCategory, detailCategory)) {
     return (
       <>
         <h5 className="mt-3 mb-3">Plot Details</h5>
@@ -3122,7 +4054,7 @@ function DetailCategoryFields({
     );
   }
 
-  if (isCommercialRealEstateSubCategory(form.subCategory)) {
+  if (isCommercialRealEstateSubCategory(subCategory)) {
     return (
       <>
         <h5 className="mt-3 mb-3">Commercial Details</h5>
@@ -3140,7 +4072,7 @@ function DetailCategoryFields({
     );
   }
 
-  if (["PG", "PG / Co-living"].includes(form.subCategory)) {
+  if (["PG", "PG / Co-living"].includes(subCategory)) {
     return (
       <>
         <h5 className="mt-3 mb-3">PG / Co-living</h5>
@@ -3188,7 +4120,7 @@ function PriceAndAmenitiesFields({
 }) {
   const isRent = isRentRealEstateSubCategory(form.subCategory);
   const isSale = isSaleRealEstateSubCategory(form.subCategory);
-  const isPlot = isPlotRealEstateSubCategory(form.subCategory);
+  const isPlot = isPlotRealEstateCategory(form.subCategory, form.detailCategory);
   const pricePlaceholder = isRent ? "Monthly Rent*" : "Total Price*";
 
   return (
@@ -3262,16 +4194,99 @@ function PgAmenitiesCheckboxes({ value, onChange }: { value: string; onChange: (
   );
 }
 
+function NearbyServicesEditor({
+  value,
+  error,
+  onChange,
+}: {
+  value: string;
+  error?: string;
+  onChange: (value: string) => void;
+}) {
+  const [activeType, setActiveType] = useState(nearbyServiceTypes[0]);
+  const services = parseNearbyServices(value);
+  const activeItems = services[activeType]?.length ? services[activeType] : [""];
+
+  function updateServices(nextServices: NearbyServices) {
+    onChange(serializeNearbyServices(nextServices));
+  }
+
+  function updateItem(index: number, itemValue: string) {
+    updateServices({
+      ...services,
+      [activeType]: updateArrayItem(activeItems, index, itemValue),
+    });
+  }
+
+  function removeItem(index: number) {
+    updateServices({
+      ...services,
+      [activeType]: activeItems.length > 1 ? activeItems.filter((_, itemIndex) => itemIndex !== index) : [""],
+    });
+  }
+
+  function addItem() {
+    updateServices({
+      ...services,
+      [activeType]: [...activeItems, ""],
+    });
+  }
+
+  return (
+    <div className={`listing-nearby-services-editor${error ? " is-invalid" : ""}`}>
+      <h4>Nearby Services*</h4>
+      <div className="listing-nearby-tabs" role="tablist" aria-label="Nearby services">
+        {nearbyServiceTypes.map((type) => (
+          <button
+            key={type}
+            type="button"
+            className={type === activeType ? "is-active" : ""}
+            onClick={() => setActiveType(type)}
+          >
+            {type}
+          </button>
+        ))}
+      </div>
+      <div className="listing-nearby-panel">
+        {activeItems.map((item, index) => (
+          <div className="row" key={`${activeType}-${index}`}>
+            <InputColumn
+              width="col-md-10"
+              placeholder={`${activeType} name or location*`}
+              value={item}
+              onChange={(nextValue) => updateItem(index, nextValue)}
+            />
+            <div className="col-md-2">
+              <button type="button" className="btn btn-danger" onClick={() => removeItem(index)}>X</button>
+            </div>
+          </div>
+        ))}
+        <button type="button" className="btn btn-success mt-2" onClick={addItem}>
+          + Add {activeType}
+        </button>
+      </div>
+      <FieldError message={error} />
+    </div>
+  );
+}
+
+void DetailCategoryFields;
+void PriceAndAmenitiesFields;
+
 function TemplateImageColumn({
   label,
   value,
+  error,
   onFileChange,
 }: {
   label: string;
   value: string;
+  error?: string;
   onFileChange: (file: File | null) => void;
 }) {
+  const inputId = useId();
   const [previewUrl, setPreviewUrl] = useState("");
+  const [fileName, setFileName] = useState("");
 
   useEffect(() => {
     if (!value || value.startsWith("__")) {
@@ -3279,6 +4294,7 @@ function TemplateImageColumn({
     }
 
     setPreviewUrl(resolveListingImageUrl(value));
+    setFileName(getFileNameFromPath(value));
   }, [value]);
 
   function handleFileChange(files: FileList | null) {
@@ -3287,9 +4303,11 @@ function TemplateImageColumn({
 
     if (!file) {
       setPreviewUrl("");
+      setFileName("");
       return;
     }
 
+    setFileName(file.name);
     const reader = new FileReader();
     reader.onload = () => setPreviewUrl(String(reader.result || ""));
     reader.readAsDataURL(file);
@@ -3297,20 +4315,109 @@ function TemplateImageColumn({
 
   return (
     <div className="col-md-6">
-      <div className="form-group">
-        <label>{label}</label>
-        <div className="img-uplo-flex">
+      <div className="form-group listing-image-upload">
+        <label className="listing-field-label">{fieldLabelFromPlaceholder(label)}</label>
+        <div className={`listing-image-upload-box${error ? " is-invalid" : ""}`}>
           <input
+            id={inputId}
             type="file"
             accept="image/*,.jpg,.jpeg,.png"
-            className="form-control file-input"
+            className="listing-image-upload-input"
             onChange={(event) => handleFileChange(event.target.files)}
           />
-          <img className="img-preview" src={previewUrl} alt="" />
+          <label className="listing-image-upload-button" htmlFor={inputId}>Choose file</label>
+          <div className="listing-image-upload-name">{fileName || "No file chosen"}</div>
+          {previewUrl ? (
+            <img className="listing-image-upload-preview" src={previewUrl} alt={`${fieldLabelFromPlaceholder(label)} preview`} />
+          ) : (
+            <div className="listing-image-upload-placeholder">Preview</div>
+          )}
         </div>
+        <FieldError message={error} />
       </div>
     </div>
   );
+}
+
+function FileUploadColumn(props: FileUploadProps) {
+  return (
+    <div className="col-md-6">
+      <FileUpload {...props} />
+    </div>
+  );
+}
+
+type FileUploadProps = {
+  label: string;
+  accept: string;
+  value: string;
+  files: GalleryUploadFile[];
+  onFilesChange: (files: GalleryUploadFile[]) => void;
+  onChange: (value: string) => void;
+};
+
+function FileUpload({
+  label,
+  accept,
+  value,
+  files,
+  onFilesChange,
+  onChange,
+}: FileUploadProps) {
+  const selectedFile = value.startsWith(galleryImageUploadMarkerPrefix)
+    ? files.find((item) => item.marker === value)?.file
+    : null;
+  const savedFileName = !selectedFile && value && !value.startsWith("__")
+    ? getFileNameFromPath(value)
+    : "";
+
+  function handleFileChange(fileList: FileList | null) {
+    const file = fileList?.[0] || null;
+    const remainingFiles = value.startsWith(galleryImageUploadMarkerPrefix)
+      ? files.filter((item) => item.marker !== value)
+      : files;
+
+    if (!file) {
+      onFilesChange(remainingFiles);
+      onChange("");
+      return;
+    }
+
+    const marker = `${galleryImageUploadMarkerPrefix}${Date.now()}_${files.length}_${Math.random().toString(36).slice(2)}__`;
+    onFilesChange([...remainingFiles, { file, marker }]);
+    onChange(marker);
+  }
+
+  function clearFile() {
+    onFilesChange(value.startsWith(galleryImageUploadMarkerPrefix)
+      ? files.filter((item) => item.marker !== value)
+      : files);
+    onChange("");
+  }
+
+  return (
+    <div className="form-group">
+      <label>{label}</label>
+      <input
+        type="file"
+        accept={accept}
+        className="form-control file-input"
+        onChange={(event) => handleFileChange(event.target.files)}
+      />
+      {selectedFile || savedFileName ? (
+        <div className="listing-upload-meta">
+          <span>{selectedFile ? selectedFile.name : savedFileName}</span>
+          {selectedFile ? <small>{formatFileSize(selectedFile.size)}</small> : null}
+          <button type="button" className="btn btn-link" onClick={clearFile}>Remove</button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function getFileNameFromPath(value: string) {
+  const cleanValue = value.split("?")[0].split("#")[0];
+  return cleanValue.split(/[\\/]/).filter(Boolean).pop() || "Uploaded file";
 }
 
 function GalleryMediaEditor({
@@ -3632,12 +4739,21 @@ function BusinessHoursEditor({
         <div className="listing-hours-bulk">
           <div className="listing-hours-bulk-row">
             <div className="listing-hours-bulk-fields">
-              <select className="form-control" value={bulkHour.status} onChange={(event) => setBulkHour((value) => ({ ...value, status: event.target.value }))}>
-                <option>Open</option>
-                <option>Closed</option>
-              </select>
-              <input type="time" className="form-control" value={bulkHour.open} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, open: event.target.value }))} />
-              <input type="time" className="form-control" value={bulkHour.close} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, close: event.target.value }))} />
+              <div className="listing-hours-field">
+                <label className="listing-field-label">Status</label>
+                <select className="form-control" value={bulkHour.status} onChange={(event) => setBulkHour((value) => ({ ...value, status: event.target.value }))}>
+                  <option>Open</option>
+                  <option>Closed</option>
+                </select>
+              </div>
+              <div className="listing-hours-field">
+                <label className="listing-field-label">Open Time</label>
+                <input type="time" className="form-control" value={bulkHour.open} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, open: event.target.value }))} />
+              </div>
+              <div className="listing-hours-field">
+                <label className="listing-field-label">Close Time</label>
+                <input type="time" className="form-control" value={bulkHour.close} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, close: event.target.value }))} />
+              </div>
               <label className="listing-inline-check"><input type="checkbox" checked={bulkHour.is24Hours} disabled={bulkHour.status === "Closed"} onChange={(event) => setBulkHour((value) => ({ ...value, is24Hours: event.target.checked }))} /> 24/7</label>
             </div>
           </div>
@@ -3670,16 +4786,19 @@ function BusinessHoursEditor({
         {hours.map((hour, index) => (
           <div className="listing-hours-row" key={hour.day}>
             <div className="listing-hours-day">{hour.day}</div>
-            <div>
+            <div className="listing-hours-field">
+              <label className="listing-field-label">Status</label>
               <select className="form-control" value={hour.status} onChange={(event) => updateHour(index, { ...hour, status: event.target.value })}>
                 <option>Open</option>
                 <option>Closed</option>
               </select>
             </div>
-            <div>
+            <div className="listing-hours-field">
+              <label className="listing-field-label">Open Time</label>
               <input type="time" className="form-control" value={hour.open} disabled={hour.status === "Closed" || hour.is24Hours} onChange={(event) => updateHour(index, { ...hour, open: event.target.value })} />
             </div>
-            <div>
+            <div className="listing-hours-field">
+              <label className="listing-field-label">Close Time</label>
               <input type="time" className="form-control" value={hour.close} disabled={hour.status === "Closed" || hour.is24Hours} onChange={(event) => updateHour(index, { ...hour, close: event.target.value })} />
             </div>
           </div>
@@ -3935,13 +5054,17 @@ function StepNavigation({
   onPrevious,
   onNext,
   onSkip,
+  nextLabel = "Next",
+  nextDisabled = false,
   progress,
 }: {
   isFirst?: boolean;
   onCancel?: () => void;
   onPrevious?: () => void;
-  onNext: () => void;
+  onNext: () => void | Promise<void>;
   onSkip?: () => void;
+  nextLabel?: string;
+  nextDisabled?: boolean;
   progress: number;
 }) {
   return (
@@ -3953,7 +5076,7 @@ function StepNavigation({
           </button>
         </div>
         <div className="col-md-6">
-          <button type="button" className="btn btn-primary" onClick={onNext}>Next</button>
+          <button type="button" className="btn btn-primary" onClick={onNext} disabled={nextDisabled}>{nextLabel}</button>
         </div>
         {onSkip ? (
           <div className="col-md-12">
@@ -3998,7 +5121,7 @@ function buildListingPayload(
     numberOrNull(form.price) ??
     numberOrNull(offers[0]?.price) ??
     0;
-  const priceNegotiableValue = getAttributeValue(categoryAttributes, "price_negotiable", "priceNegotiable", "price_type").trim();
+  const priceNegotiableValue = getAttributeValue(categoryAttributes, "price_negotiable", "priceNegotiable", "negotiable").trim();
   const vehicleMapLocation = parseLatLong(getAttributeValue(categoryAttributes, "map_lat_long", "mapLatLong", "google_map_lat_long").trim());
   const vehicleAreaLocality = getAttributeValue(categoryAttributes, "area_locality", "areaLocality").trim();
   const adDurationDays =
@@ -4032,7 +5155,7 @@ function buildListingPayload(
       bathrooms: numberOrNull(form.bathrooms) ?? numberAttribute(categoryAttributes, "bathrooms"),
       balconies: numberOrNull(form.balconies) ?? numberAttribute(categoryAttributes, "balconies"),
       furnishingType: form.furnishingType.trim() || getAttributeValue(categoryAttributes, "furnishing_type", "furnishingType", "commercial_furnishing").trim(),
-      superBuiltUpArea: numberOrNull(form.superBuiltUpArea) ?? numberAttribute(categoryAttributes, "super_built_up_area", "superBuiltUpArea"),
+      superBuiltUpArea: numberOrNull(form.superBuiltUpArea) ?? (getAttributeValue(categoryAttributes, "area_unit") === "Acres" ? numberOrNull(form.plotArea) : null) ?? numberAttribute(categoryAttributes, "super_built_up_area", "superBuiltUpArea"),
       carpetArea: numberOrNull(form.carpetArea) ?? numberAttribute(categoryAttributes, "carpet_area", "carpetArea"),
       floorNumber: numberOrNull(form.floorNumber) ?? numberAttribute(categoryAttributes, "floor_number", "floorNumber"),
       totalFloors: numberOrNull(form.totalFloors) ?? numberAttribute(categoryAttributes, "total_floors", "totalFloors"),
@@ -4061,7 +5184,9 @@ function buildListingPayload(
         categoryAttributes: trimCategoryAttributes(categoryAttributes),
       }),
       businessDescription,
-      businessHours: JSON.stringify(businessHours.filter((item) => item.status || item.open || item.close)),
+      businessHours: isRealEstateCategory(form.categoryName)
+        ? ""
+        : JSON.stringify(businessHours.filter((item) => item.status || item.open || item.close)),
       additionalContactInfo: JSON.stringify(contactInfo),
       webLinks: JSON.stringify(webLinks),
       socialLinks: JSON.stringify(socialLinks),
@@ -4363,7 +5488,7 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     securityDeposit: stringValue(priceDetails.securityDeposit),
     pricePerSqFt: stringValue(priceDetails.pricePerSqFt),
     loanEligible: priceDetails.loanEligible === true,
-    sellerType: stringValue(sellerInformation.sellerType) || "Owner",
+    sellerType: stringValue(sellerInformation.sellerType) || (isRealEstateCategory(listing.categoryName || "") ? "" : "Owner"),
     reraNumber: stringValue(sellerInformation.reraNumber),
     ownershipType: stringValue(sellerInformation.ownershipType),
     latitude: stringValue(locationDetails.latitude),
@@ -4902,6 +6027,41 @@ function trimCategoryAttributes(value: CategoryAttributes) {
   );
 }
 
+function parseNearbyServices(value: unknown): NearbyServices {
+  const fallback = Object.fromEntries(nearbyServiceTypes.map((type) => [type, [""]])) as NearbyServices;
+
+  if (typeof value !== "string" || !value.trim()) {
+    return fallback;
+  }
+
+  try {
+    const parsed = JSON.parse(value);
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return fallback;
+    }
+
+    const record = parsed as Record<string, unknown>;
+    return Object.fromEntries(nearbyServiceTypes.map((type) => {
+      const values = Array.isArray(record[type])
+        ? record[type].map(String)
+        : [];
+      return [type, values.length ? values : [""]];
+    })) as NearbyServices;
+  } catch {
+    return fallback;
+  }
+}
+
+function serializeNearbyServices(value: NearbyServices) {
+  return JSON.stringify(Object.fromEntries(
+    nearbyServiceTypes.map((type) => [
+      type,
+      value[type] || [""],
+    ])
+  ));
+}
+
 function parseServiceItems(value: unknown) {
   const items = parseJsonArray<unknown>(value, []);
 
@@ -4948,6 +6108,9 @@ type ListingAddressDetails = {
   pincode: string;
   latitude: string;
   longitude: string;
+  country: string;
+  state: string;
+  city: string;
 };
 
 function isVideoValue(value: string) {
@@ -5108,7 +6271,7 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
 }
 
 function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryName: string, subCategory: string, detailCategory: string) {
-  if (categoryName !== "Vehicles" && categoryName !== "Electronics & Appliances" && categoryName !== "Care Services") {
+  if (categoryName !== "Vehicles" && categoryName !== "Electronics & Appliances" && categoryName !== "Care Services" && !isFurnitureCategory(categoryName)) {
     return fields;
   }
 
@@ -5117,8 +6280,10 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
       ? vehiclePostingCommonFields
       : categoryName === "Electronics & Appliances"
         ? electronicsPostingCommonFields
-        : careServiceFields;
-  const requiredFields = [...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
+        : categoryName === "Care Services"
+          ? careServiceFields
+          : furniturePostingCommonFields;
+  const requiredFields = [...fields, ...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
   const nextFields: CategoryAttributeField[] = [];
 
   for (const field of requiredFields) {
@@ -5221,6 +6386,11 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isAccessories = form.subCategory === "Spare Parts & Accessories";
   const isRental = form.subCategory === "Rentals";
   const insurance = getAttributeValue(values, "insurance", "insuranceStatus", "insurance_status");
+  const furnitureCondition = getAttributeValue(values, "condition", "item_condition");
+  const pickupOnly = getAttributeValue(values, "pickup_only", "pickupOnly");
+  const furnitureDeliveryAvailable = getAttributeValue(values, "delivery_available", "deliveryAvailable");
+  const furnitureSubCategory = form.subCategory.toLowerCase();
+  const furnitureDetailCategory = form.detailCategory.toLowerCase();
 
   if (form.categoryName === "Vehicles" && isNewVehicle && ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
     return false;
@@ -5254,16 +6424,61 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     return false;
   }
 
-  if (form.categoryName === "Real Estate" && isPlotRealEstateSubCategory(form.subCategory) && ["bhk", "bathrooms", "balconies", "furnishingtype", "furnishing_type"].includes(key)) {
+  if (form.categoryName === "Real Estate" && isPlotRealEstateCategory(form.subCategory, form.detailCategory) && ["bhk", "bathrooms", "balconies", "furnishingtype", "furnishing_type"].includes(key)) {
     return false;
   }
 
-  if (form.categoryName === "Real Estate" && !form.subCategory.toLowerCase().includes("rent") && ["securitydepositdetail", "security_deposit_detail", "monthlyrentlabel", "monthly_rent_label"].includes(key)) {
+  if (form.categoryName === "Real Estate" && !isRentRealEstateSubCategory(form.subCategory) && ["securitydepositdetail", "security_deposit_detail", "monthlyrentlabel", "monthly_rent_label"].includes(key)) {
     return false;
   }
 
-  if (form.categoryName === "Real Estate" && !form.subCategory.toLowerCase().includes("sale") && ["loaneligibledetail", "loan_eligible_detail", "salepricelabel", "sale_price_label"].includes(key)) {
+  if (form.categoryName === "Real Estate" && !isSaleRealEstateSubCategory(form.subCategory) && ["loaneligibledetail", "loan_eligible_detail", "salepricelabel", "sale_price_label"].includes(key)) {
     return false;
+  }
+
+  if (isFurnitureCategory(form.categoryName)) {
+    const isBed = furnitureDetailCategory.includes("bed") || furnitureDetailCategory.includes("mattress");
+    const isLivingRoom = furnitureSubCategory.includes("living") || furnitureDetailCategory.includes("sofa") || furnitureDetailCategory.includes("chair");
+    const isDining = furnitureSubCategory.includes("dining") || furnitureDetailCategory.includes("dining");
+    const isOffice = furnitureSubCategory.includes("office") || furnitureDetailCategory.includes("desk") || furnitureDetailCategory.includes("office chair");
+    const isOutdoor = furnitureSubCategory.includes("outdoor") || furnitureDetailCategory.includes("patio") || furnitureDetailCategory.includes("garden");
+    const isDecor = furnitureSubCategory.includes("decor") || ["wall art", "lighting", "rugs", "curtains"].some((item) => furnitureDetailCategory.includes(item));
+
+    if (furnitureCondition === "New" && ["ageofitem", "age_of_item", "age"].includes(key)) {
+      return false;
+    }
+
+    if (pickupOnly === "Yes" && ["shippingavailable", "shipping_available"].includes(key)) {
+      return false;
+    }
+
+    if (furnitureDeliveryAvailable !== "Yes" && ["deliverycharges", "delivery_charges"].includes(key)) {
+      return false;
+    }
+
+    if (!isBed && ["bedsize", "bed_size", "mattressincluded", "mattress_included"].includes(key)) {
+      return false;
+    }
+
+    if (!isLivingRoom && ["seatingcapacity", "seating_capacity", "upholsterytype", "upholstery_type", "recliner"].includes(key)) {
+      return false;
+    }
+
+    if (!isDining && ["diningseatingcapacity", "dining_seating_capacity", "tableshape", "table_shape"].includes(key)) {
+      return false;
+    }
+
+    if (!isOffice && ["desktype", "desk_type", "chairtype", "chair_type", "adjustableheight", "adjustable_height"].includes(key)) {
+      return false;
+    }
+
+    if (!isOutdoor && ["weatherresistant", "weather_resistant", "outdoorusage", "outdoor_usage"].includes(key)) {
+      return false;
+    }
+
+    if (!isDecor && ["decortype", "decor_type", "style"].includes(key)) {
+      return false;
+    }
   }
 
   return true;
@@ -5314,8 +6529,12 @@ function isRealEstateCategory(categoryName: string) {
   return categoryName === "Real Estate";
 }
 
+function isFurnitureCategory(categoryName: string) {
+  return furnitureCategoryNames.includes(categoryName);
+}
+
 function isResidentialRealEstateSubCategory(subCategory: string) {
-  return ["Sale", "Rent", "Residential Sale", "Residential Rent"].includes(subCategory);
+  return ["Sale", "Rent", "Residential Sale", "Residential Rent", "For Sale", "For Rent", "Vacation Rentals", "New Projects / New Construction"].includes(subCategory);
 }
 
 function isCommercialRealEstateSubCategory(subCategory: string) {
@@ -5323,23 +6542,21 @@ function isCommercialRealEstateSubCategory(subCategory: string) {
 }
 
 function isRentRealEstateSubCategory(subCategory: string) {
-  return ["Rent", "Residential Rent", "Commercial Rent", "PG", "PG / Co-living"].includes(subCategory);
+  return ["Rent", "Residential Rent", "Commercial Rent", "For Rent", "Vacation Rentals", "PG", "PG / Co-living"].includes(subCategory);
 }
 
 function isSaleRealEstateSubCategory(subCategory: string) {
-  return ["Sale", "Residential Sale", "Commercial Sale"].includes(subCategory);
+  return ["Sale", "Residential Sale", "Commercial Sale", "For Sale", "New Projects / New Construction"].includes(subCategory);
 }
 
-function isPlotRealEstateSubCategory(subCategory: string) {
-  return ["Plot", "Land / Plots"].includes(subCategory);
+function isPlotRealEstateCategory(subCategory: string, detailCategory = "") {
+  return ["Plot", "Land / Plots"].includes(subCategory) || ["Land / Plots", "Commercial Land"].includes(detailCategory);
 }
 
 function getListingKind(subCategory: string, detailCategory: string) {
-  void detailCategory;
-
+  if (isPlotRealEstateCategory(subCategory, detailCategory)) return "Plot";
   if (isCommercialRealEstateSubCategory(subCategory)) return "Commercial";
   if (["PG", "PG / Co-living"].includes(subCategory)) return "PG";
-  if (isPlotRealEstateSubCategory(subCategory)) return "Plot";
   if (["Restaurants", "Restaurant", "Fast Food", "Cafes", "Cafe", "Bakery", "Cloud Kitchen", "Catering", "Bars & Beverages", "Food Trucks & Pop-ups"].includes(subCategory)) return "Restaurant";
   if (subCategory === "Job Listings") return "Job";
   if (subCategory === "Freelance Services") return "Service";
@@ -5347,30 +6564,22 @@ function getListingKind(subCategory: string, detailCategory: string) {
 }
 
 function getRequiredDetailFields(subCategory: string, detailCategory: string): Array<[StringFormField, string]> {
-  void detailCategory;
+  if (isPlotRealEstateCategory(subCategory, detailCategory)) {
+    return [["plotArea", "Plot Area"], ["length", "Length"], ["breadth", "Breadth"], ["boundaryWall", "Boundary Wall"], ["facing", "Facing"], ["approvalType", "Approval Type"], ["roadWidth", "Road Width"]];
+  }
 
   if (isResidentialRealEstateSubCategory(subCategory)) {
     return [
       ["propertyType", "Property Type"],
       ["bhk", "BHK"],
       ["bathrooms", "Bathrooms"],
-      ["balconies", "Balconies"],
       ["furnishingType", "Furnishing Type"],
       ["superBuiltUpArea", "Super Built-up Area"],
-      ["floorNumber", "Floor Number"],
-      ["totalFloors", "Total Floors"],
-      ["propertyAge", "Property Age"],
-      ["facing", "Facing"],
-      ["availabilityType", "Availability"],
     ];
   }
 
-  if (isPlotRealEstateSubCategory(subCategory)) {
-    return [["plotArea", "Plot Area"], ["length", "Length"], ["breadth", "Breadth"], ["boundaryWall", "Boundary Wall"], ["facing", "Facing"], ["approvalType", "Approval Type"], ["roadWidth", "Road Width"]];
-  }
-
   if (isCommercialRealEstateSubCategory(subCategory)) {
-    return [["propertyType", "Property Type"], ["area", "Area"], ["furnishingType", "Furnishing"], ["washrooms", "Washrooms"], ["parking", "Parking"], ["suitableFor", "Suitable For"]];
+    return [["propertyType", "Office Type"]];
   }
 
   if (["PG", "PG / Co-living"].includes(subCategory)) {

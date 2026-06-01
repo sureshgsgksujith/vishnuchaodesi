@@ -2050,8 +2050,117 @@ button.add-list-rem-btn {
     margin-top: 6px;
 }
 
+.listing-field-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #1f2937;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.listing-polished-form {
+    --section-accent: #1f5eff;
+    --section-accent-dark: #173f9f;
+    background: #ffffff;
+}
+
+.listing-polished-form h4 {
+    position: relative;
+    display: flex;
+    width: 100%;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    margin: 30px 0 22px;
+    border: 1px solid #d9e5ff;
+    border-radius: 6px;
+    background: linear-gradient(90deg, var(--section-accent-dark), var(--section-accent));
+    color: #ffffff !important;
+    box-shadow: 0 10px 22px rgba(31, 94, 255, 0.12);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: 0 !important;
+    text-align: center;
+}
+
+.listing-polished-form h4:first-child {
+    margin-top: 8px;
+}
+
+.listing-polished-form h4:nth-of-type(3n + 1) {
+    --section-accent: #0f766e;
+    --section-accent-dark: #115e59;
+    border-color: #bfe7e2;
+    box-shadow: 0 10px 22px rgba(15, 118, 110, 0.12);
+}
+
+.listing-polished-form h4:nth-of-type(3n + 2) {
+    --section-accent: #2563eb;
+    --section-accent-dark: #1e40af;
+    border-color: #c7d8ff;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.12);
+}
+
+.listing-polished-form h4:nth-of-type(3n) {
+    --section-accent: #b45309;
+    --section-accent-dark: #92400e;
+    border-color: #f6d9a8;
+    box-shadow: 0 10px 22px rgba(180, 83, 9, 0.12);
+}
+
+.listing-polished-form .form-group {
+    margin-bottom: 18px;
+}
+
+.listing-polished-form .form-control {
+    min-height: 54px;
+    border-color: #d7deea;
+    border-radius: 6px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+}
+
+.listing-polished-form textarea.form-control {
+    min-height: 120px;
+}
+
+.listing-polished-form .row {
+    row-gap: 4px;
+}
+
+.listing-polished-form .listing-field-label {
+    color: #263858;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.listing-polished-form .listing-amenity-row {
+    border: 1px solid #e1e8f5;
+    border-radius: 6px;
+    margin: 0 0 18px;
+    padding: 14px 10px 6px;
+    background: #f8fbff;
+}
+
+.listing-polished-form .listing-amenity-row .form-group {
+    margin-bottom: 12px;
+}
+
 .listing_form_1 .form-control.is-invalid {
     border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12);
+}
+
+.listing-polished-form .listing-field-error {
+    display: block;
+    margin-top: 6px;
+    color: #dc3545;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
 }
 
 .listing-gallery-uploader {
@@ -2122,6 +2231,35 @@ button.add-list-rem-btn {
     color: #777;
     font-size: 12px;
     margin-top: 2px;
+}
+
+.listing-upload-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    color: #263858;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.listing-upload-meta span {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.listing-upload-meta small {
+    color: #6b778c;
+    font-weight: 500;
+}
+
+.listing-upload-meta .btn-link {
+    padding: 0;
+    color: #b42318;
+    font-weight: 700;
+    text-decoration: none;
 }
 
 .listing-info-arrow {
@@ -2242,12 +2380,16 @@ button.add-list-rem-btn {
     height: 38px;
 }
 
+.listing-hours-field {
+    min-width: 0;
+}
+
 .listing-inline-check {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     min-height: 38px;
-    margin: 0;
+    margin: 23px 0 0;
     color: #2d374f;
     font-size: 13px;
     font-weight: 700;

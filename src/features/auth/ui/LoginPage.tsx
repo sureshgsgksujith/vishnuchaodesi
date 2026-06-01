@@ -104,6 +104,7 @@ export default function LoginPage() {
   const [mobileNumber, setMobileNumber] = useState("");
   const [countryCode, setCountryCode] = useState("+1");
   const [registerPassword, setRegisterPassword] = useState("");
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
   const [registerOtp, setRegisterOtp] = useState("");
   const [registerOtpSent, setRegisterOtpSent] = useState(false);
   const [registerOtpVerified, setRegisterOtpVerified] = useState(false);
@@ -217,7 +218,7 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-      const result = await sendOtpApi(registerEmail, "Register");
+      const result = await sendOtpApi(registerEmail, "Register", fullName);
       setRegisterOtpSent(true);
       setRegisterOtpVerified(false);
       setRegisterMessage(result.message || "OTP sent successfully to your email.");
@@ -265,6 +266,24 @@ export default function LoginPage() {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!registerPassword.trim()) {
+      setRegisterMessage("Please enter password.");
+      setRegisterMessageType("error");
+      return;
+    }
+
+    if (!registerConfirmPassword.trim()) {
+      setRegisterMessage("Please confirm your password.");
+      setRegisterMessageType("error");
+      return;
+    }
+
+    if (registerPassword !== registerConfirmPassword) {
+      setRegisterMessage("Password and confirm password do not match.");
+      setRegisterMessageType("error");
+      return;
+    }
+
     if (!registerOtpVerified) {
       setRegisterMessage("Please verify OTP before registration.");
       setRegisterMessageType("error");
@@ -293,6 +312,7 @@ export default function LoginPage() {
       setRegisterEmail("");
       setMobileNumber("");
       setRegisterPassword("");
+      setRegisterConfirmPassword("");
       resetRegisterOtpState();
 
       setTimeout(() => {
@@ -654,6 +674,17 @@ export default function LoginPage() {
                             required
                             value={registerPassword}
                             onChange={(e) => setRegisterPassword(e.target.value)}
+                          />
+                        </div>
+
+                        <div className="form-group mb-3">
+                          <input
+                            type="password"
+                            className="form-control"
+                            placeholder="Confirm Password*"
+                            required
+                            value={registerConfirmPassword}
+                            onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                           />
                         </div>
 

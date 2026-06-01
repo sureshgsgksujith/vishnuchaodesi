@@ -23,7 +23,11 @@ async function parseResponse(response: Response): Promise<AuthApiResponse> {
   return data;
 }
 
-export async function sendOtpApi(loginId: string, purpose: "Register" | "ForgotPassword") {
+export async function sendOtpApi(
+  loginId: string,
+  purpose: "Register" | "ForgotPassword",
+  fullName?: string
+) {
   const response = await fetch(`${API_BASE_URL}/send-otp`, {
     method: "POST",
     headers: {
@@ -32,6 +36,7 @@ export async function sendOtpApi(loginId: string, purpose: "Register" | "ForgotP
     body: JSON.stringify({
       loginId,
       purpose,
+      fullName: fullName?.trim() || undefined,
     }),
   });
 

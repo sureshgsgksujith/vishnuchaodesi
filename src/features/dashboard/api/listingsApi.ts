@@ -65,6 +65,15 @@ export type ListingReviewPayload = {
   reviewMessage?: string;
 };
 
+export type NearbyService = {
+  category: string;
+  name: string;
+  address?: string;
+  placeId?: string;
+  rating?: number | null;
+  distanceMiles?: number | null;
+};
+
 export type ListingListResponse = {
   items: ListingSummary[];
   totalCount: number;
@@ -169,8 +178,20 @@ export async function getCareServiceListings(page = 1, pageSize = 4) {
   return response.data;
 }
 
+export async function getFurnitureHomeListings(page = 1, pageSize = 4) {
+  const response = await apiClient.get<ListingListResponse>("/Listings/furniture-home-decor", {
+    params: {
+      page,
+      pageSize,
+    },
+    timeout: 8000,
+  });
+
+  return response.data;
+}
+
 export type PublicListingQuery = {
-  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services";
+  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services" | "furniture-home-decor";
   categoryName?: string;
   subCategory?: string;
   city?: string;
@@ -181,18 +202,19 @@ export type PublicListingQuery = {
 };
 
 export async function getPublicListings(query: PublicListingQuery = {}) {
-  const categoryPath = query.category ? `/${query.category}` : "";
+  const isFurnitureHome = query.category === "furniture-home-decor";
+  const categoryPath = query.category && !isFurnitureHome ? `/${query.category}` : "";
   const response = await apiClient.get<ListingListResponse>(`/Listings${categoryPath}`, {
     params: {
       page: query.page || 1,
       pageSize: query.pageSize || 10,
       search: query.search || undefined,
-      categoryName: query.categoryName || undefined,
+      categoryName: isFurnitureHome ? "Furniture & Home" : query.categoryName || undefined,
       subCategory: query.subCategory || undefined,
       city: query.city || undefined,
       locality: query.locality || undefined,
     },
-    timeout: 8000,
+    timeout: 20000,
   });
 
   return response.data;
@@ -222,6 +244,30 @@ export async function getListing(listingId: number) {
 
 export async function submitListingReview(listingId: number, payload: ListingReviewPayload) {
   const response = await apiClient.post<ListingSummary>(`/Listings/${listingId}/reviews`, payload);
+  return response.data;
+}
+
+export async function getNearbyServices(params: {
+  latitude: number;
+  longitude: number;
+  categories?: string[];
+  radiusMiles?: number;
+  limitPerCategory?: number;
+}) {
+  const response = await apiClient.get<NearbyService[]>("/Address/nearby", {
+    params: {
+      latitude: params.latitude,
+      longitude: params.longitude,
+      categories: params.categories,
+      radiusMiles: params.radiusMiles || 5,
+      limitPerCategory: params.limitPerCategory || 5,
+    },
+    paramsSerializer: {
+      indexes: null,
+    },
+    timeout: 20000,
+  });
+
   return response.data;
 }
 

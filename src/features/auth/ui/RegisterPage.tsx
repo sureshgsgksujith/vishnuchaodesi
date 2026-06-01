@@ -4,6 +4,8 @@ import AuthLayout from "./AuthLayout";
 
 export default function RegisterPage() {
   const [otpSent, setOtpSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   return (
     <AuthLayout>
@@ -43,7 +45,25 @@ export default function RegisterPage() {
                 )}
 
                 <div className="form-group">
-                  <input type="password" placeholder="Password*" className="form-control" />
+                  <input
+                    type="password"
+                    placeholder="Password*"
+                    className="form-control"
+                    required
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <input
+                    type="password"
+                    placeholder="Confirm Password*"
+                    className="form-control"
+                    required
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                  />
                 </div>
 
                 <div className="form-group">

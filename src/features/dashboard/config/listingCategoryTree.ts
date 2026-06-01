@@ -6,30 +6,66 @@ export const fallbackListingCategoryTree: ListingCategoryOption[] = [
     name: "Real Estate",
     slug: "real-estate",
     subCategories: [
-      { id: 101, name: "Residential Sale", slug: "residential-sale", detailedCategories: [
-        { id: 1001, name: "Apartments / Flats", slug: "apartments-flats" },
-        { id: 1002, name: "Villas / Houses", slug: "villas-houses" },
+      { id: 101, name: "For Sale", slug: "for-sale", detailedCategories: [
+        { id: 1001, name: "Apartments / Flats", slug: "for-sale-apartments-flats" },
+        { id: 1002, name: "Independent Houses", slug: "independent-houses" },
+        { id: 1003, name: "Villas", slug: "for-sale-villas" },
+        { id: 1004, name: "Builder Floors", slug: "for-sale-builder-floors" },
+        { id: 1005, name: "Townhouses", slug: "townhouses" },
+        { id: 1006, name: "Condos", slug: "for-sale-condos" },
+        { id: 1007, name: "Duplex / Triplex", slug: "duplex-triplex" },
+        { id: 1008, name: "Farm Houses", slug: "farm-houses" },
+        { id: 1009, name: "Mobile Homes", slug: "mobile-homes" },
+        { id: 1010, name: "Land / Plots", slug: "for-sale-land-plots" },
       ] },
-      { id: 102, name: "Residential Rent", slug: "residential-rent", detailedCategories: [
-        { id: 1003, name: "Apartments / Flats", slug: "rent-apartments-flats" },
-        { id: 1004, name: "Villas / Houses", slug: "rent-villas-houses" },
-        { id: 1005, name: "Builder Floors", slug: "builder-floors" },
+      { id: 102, name: "For Rent", slug: "for-rent", detailedCategories: [
+        { id: 1011, name: "Apartments", slug: "for-rent-apartments" },
+        { id: 1012, name: "Houses", slug: "for-rent-houses" },
+        { id: 1013, name: "Villas", slug: "for-rent-villas" },
+        { id: 1014, name: "Condos", slug: "for-rent-condos" },
+        { id: 1015, name: "Studio Apartments", slug: "studio-apartments" },
+        { id: 1016, name: "Basement Rentals", slug: "basement-rentals" },
+        { id: 1017, name: "Shared Rooms", slug: "for-rent-shared-rooms" },
+        { id: 1018, name: "Single Rooms", slug: "for-rent-single-rooms" },
+        { id: 1019, name: "Entire Homes", slug: "entire-homes" },
       ] },
-      { id: 103, name: "Commercial Sale", slug: "commercial-sale", detailedCategories: [
-        { id: 1006, name: "Office Spaces", slug: "sale-office-spaces" },
-        { id: 1007, name: "Shops / Showrooms", slug: "sale-shops-showrooms" },
+      { id: 103, name: "PG / Co-living", slug: "pg-co-living", detailedCategories: [
+        { id: 1020, name: "PG Accommodation", slug: "pg-accommodation" },
+        { id: 1021, name: "Shared Accommodation", slug: "shared-accommodation" },
+        { id: 1022, name: "Co-living Spaces", slug: "co-living-spaces" },
+        { id: 1023, name: "Student Housing", slug: "student-housing" },
+        { id: 1024, name: "Working Professionals Housing", slug: "working-professionals-housing" },
       ] },
-      { id: 104, name: "Commercial Rent", slug: "commercial-rent", detailedCategories: [
-        { id: 1008, name: "Office Spaces", slug: "rent-office-spaces" },
-        { id: 1009, name: "Shops / Showrooms", slug: "rent-shops-showrooms" },
+      { id: 104, name: "Commercial", slug: "commercial", detailedCategories: [
+        { id: 1025, name: "Office Spaces", slug: "commercial-office-spaces" },
+        { id: 1026, name: "Coworking Spaces", slug: "coworking-spaces" },
+        { id: 1027, name: "Shops / Retail Stores", slug: "shops-retail-stores" },
+        { id: 1028, name: "Warehouses / Godowns", slug: "warehouses-godowns" },
+        { id: 1029, name: "Industrial Spaces", slug: "industrial-spaces" },
+        { id: 1030, name: "Commercial Land", slug: "commercial-land" },
+        { id: 1031, name: "Restaurants / Hospitality Spaces", slug: "restaurants-hospitality-spaces" },
       ] },
-      { id: 105, name: "Land / Plots", slug: "land-plots", detailedCategories: [
-        { id: 1010, name: "Agricultural Land", slug: "agricultural-land" },
-        { id: 1011, name: "Farmhouses", slug: "farmhouses" },
+      { id: 105, name: "Vacation Rentals", slug: "vacation-rentals", detailedCategories: [
+        { id: 1032, name: "Vacation Homes", slug: "vacation-homes" },
+        { id: 1033, name: "Airbnb Rentals", slug: "airbnb-rentals" },
+        { id: 1034, name: "Beach Houses", slug: "beach-houses" },
+        { id: 1035, name: "Cabins / Cottages", slug: "cabins-cottages" },
+        { id: 1036, name: "Resorts & Retreats", slug: "resorts-retreats" },
       ] },
-      { id: 106, name: "PG / Co-living", slug: "pg-co-living", detailedCategories: [
-        { id: 1012, name: "Single Room", slug: "single-room" },
-        { id: 1013, name: "Shared Room", slug: "shared-room" },
+      { id: 106, name: "New Projects / New Construction", slug: "new-projects-new-construction", detailedCategories: [
+        { id: 1037, name: "New Apartments", slug: "new-apartments" },
+        { id: 1038, name: "Under Construction Projects", slug: "under-construction-projects" },
+        { id: 1039, name: "Ready-to-Move Homes", slug: "ready-to-move-homes" },
+        { id: 1040, name: "Builder Projects", slug: "builder-projects" },
+        { id: 1041, name: "Gated Communities", slug: "gated-communities" },
+      ] },
+      { id: 107, name: "Real Estate Services", slug: "real-estate-services", detailedCategories: [
+        { id: 1042, name: "Real Estate Agents", slug: "real-estate-agents" },
+        { id: 1043, name: "Property Management", slug: "property-management" },
+        { id: 1044, name: "Home Inspection", slug: "home-inspection" },
+        { id: 1045, name: "Interior Designers", slug: "interior-designers" },
+        { id: 1046, name: "Movers & Packers", slug: "movers-packers" },
+        { id: 1047, name: "Mortgage & Loan Services", slug: "mortgage-loan-services" },
       ] },
     ],
   },
@@ -142,23 +178,39 @@ export const fallbackListingCategoryTree: ListingCategoryOption[] = [
   },
   {
     id: 4,
-    name: "Furniture & Home Decor",
+    name: "Furniture & Home",
     slug: "furniture-home-decor",
     subCategories: [
       { id: 401, name: "Living Room", slug: "living-room", detailedCategories: [
-        { id: 4001, name: "Sofas", slug: "sofas" },
-        { id: 4002, name: "Dining Tables", slug: "dining-tables" },
+        { id: 4001, name: "Sofa", slug: "sofa" },
+        { id: 4002, name: "Chairs", slug: "chairs" },
       ] },
       { id: 402, name: "Bedroom", slug: "bedroom", detailedCategories: [
-        { id: 4003, name: "Beds / Mattresses", slug: "beds-mattresses" },
+        { id: 4003, name: "Bed", slug: "bed" },
+        { id: 4008, name: "Mattress", slug: "mattress" },
         { id: 4004, name: "Wardrobes", slug: "wardrobes" },
       ] },
-      { id: 403, name: "Office Furniture", slug: "office-furniture", detailedCategories: [
-        { id: 4005, name: "Chairs / Tables", slug: "chairs-tables" },
+      { id: 403, name: "Office", slug: "office-furniture", detailedCategories: [
+        { id: 4005, name: "Desk", slug: "desk" },
+        { id: 4009, name: "Office Chair", slug: "office-chair" },
       ] },
-      { id: 404, name: "Home Decor", slug: "home-decor", detailedCategories: [
-        { id: 4006, name: "Curtains / Carpets", slug: "curtains-carpets" },
-        { id: 4007, name: "Wall Decor", slug: "wall-decor" },
+      { id: 404, name: "Decor", slug: "home-decor", detailedCategories: [
+        { id: 4006, name: "Wall Art", slug: "wall-art" },
+        { id: 4007, name: "Lighting", slug: "lighting" },
+        { id: 4010, name: "Rugs", slug: "rugs" },
+        { id: 4011, name: "Curtains", slug: "curtains" },
+      ] },
+      { id: 405, name: "Dining", slug: "dining", detailedCategories: [
+        { id: 4012, name: "Dining Table", slug: "dining-table" },
+        { id: 4013, name: "Dining Chairs", slug: "dining-chairs" },
+      ] },
+      { id: 406, name: "Outdoor", slug: "outdoor", detailedCategories: [
+        { id: 4014, name: "Patio Set", slug: "patio-set" },
+        { id: 4015, name: "Garden Furniture", slug: "garden-furniture" },
+      ] },
+      { id: 407, name: "Kitchen", slug: "kitchen", detailedCategories: [
+        { id: 4016, name: "Kitchen Island", slug: "kitchen-island" },
+        { id: 4017, name: "Kitchen Storage", slug: "kitchen-storage" },
       ] },
     ],
   },

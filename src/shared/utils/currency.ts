@@ -1,36 +1,4 @@
-const defaultCountry = "United States";
 const defaultCurrencyCode = "USD";
-
-const countryCurrencyCodes: Record<string, string> = {
-  australia: "AUD",
-  au: "AUD",
-  canada: "CAD",
-  ca: "CAD",
-  china: "CNY",
-  cn: "CNY",
-  england: "GBP",
-  france: "EUR",
-  germany: "EUR",
-  gb: "GBP",
-  india: "INR",
-  in: "INR",
-  ireland: "EUR",
-  italy: "EUR",
-  japan: "JPY",
-  jp: "JPY",
-  netherlands: "EUR",
-  singapore: "SGD",
-  sg: "SGD",
-  spain: "EUR",
-  uae: "AED",
-  "united arab emirates": "AED",
-  "united kingdom": "GBP",
-  uk: "GBP",
-  "united states": "USD",
-  "united states of america": "USD",
-  us: "USD",
-  usa: "USD",
-};
 
 const currencySymbols: Record<string, string> = {
   AED: "AED",
@@ -45,16 +13,14 @@ const currencySymbols: Record<string, string> = {
   USD: "$",
 };
 
-function normalizeCountry(country?: string | null) {
-  return country?.trim().toLowerCase() || defaultCountry.toLowerCase();
-}
-
 export function getCurrencyCodeForCountry(country?: string | null) {
-  return countryCurrencyCodes[normalizeCountry(country)] || defaultCurrencyCode;
+  void country;
+  return defaultCurrencyCode;
 }
 
 export function getCurrencySymbolForCountry(country?: string | null) {
-  return currencySymbols[getCurrencyCodeForCountry(country)] || currencySymbols[defaultCurrencyCode];
+  void country;
+  return currencySymbols[defaultCurrencyCode];
 }
 
 export function formatCurrencyAmount(value: number | string, country?: string | null) {
@@ -76,7 +42,8 @@ export function replaceDollarCurrency(value: string, country?: string | null) {
 }
 
 export function labelWithCountryCurrency(label: string, country?: string | null) {
-  const symbol = getCurrencySymbolForCountry(country);
+  void country;
+  const currencyCode = defaultCurrencyCode;
   const requiredSuffix = label.endsWith("*") ? "*" : "";
   const baseLabel = label
     .replace(/\*$/, "")
@@ -87,7 +54,7 @@ export function labelWithCountryCurrency(label: string, country?: string | null)
     return label;
   }
 
-  return `${baseLabel} (${symbol})${requiredSuffix}`;
+  return `${baseLabel} (${currencyCode})${requiredSuffix}`;
 }
 
 function isAmountLabel(label: string) {

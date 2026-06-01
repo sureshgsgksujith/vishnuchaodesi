@@ -11,98 +11,8 @@ import {
   PROFILE_UPDATED_EVENT,
 } from "../../dashboard/utils/profileStorage";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
+import { categoryLinks, useExploreCategories, type ExploreMenuLink } from "./exploreMenuData";
 import "../styles/customerHeader.css";
-
-type ExploreItem = {
-  label: string;
-  href: string;
-  icon: string;
-};
-
-const categoryLinks: ExploreItem[] = [
-  {
-    label: "All Services",
-    href: "/all-category",
-    icon: "/template-17/images/icon/shop.png",
-  },
-  {
-    label: "Roommates & Rentals",
-    href: "/all-listing?category=real-estate&subCategory=PG+%2F+Co-living",
-    icon: "/template-17/images/icon/home.png",
-  },
-  {
-    label: "Care Services",
-    href: "/all-listing?category=care-services",
-    icon: "/template-17/images/icon/expert.png",
-  },
-  {
-    label: "Classified Ads",
-    href: "/classifieds/index",
-    icon: "/template-17/images/icon/ads.png",
-  },
-  {
-    label: "Service Experts",
-    href: "/service-experts/index",
-    icon: "/template-17/images/icon/expert.png",
-  },
-  {
-    label: "Jobs",
-    href: "/jobs/index",
-    icon: "/template-17/images/icon/employee.png",
-  },
-  {
-    label: "Explore Travel",
-    href: "/places/index",
-    icon: "/template-17/images/places/icons/hot-air-balloon.png",
-  },
-  {
-    label: "News & Magazines",
-    href: "/news/index",
-    icon: "/template-17/images/icon/news.png",
-  },
-  {
-    label: "Events",
-    href: "/events",
-    icon: "/template-17/images/icon/calendar.png",
-  },
-  {
-    label: "Products",
-    href: "/products",
-    icon: "/template-17/images/icon/cart.png",
-  },
-  {
-    label: "Coupon & Deals",
-    href: "/coupons",
-    icon: "/template-17/images/icon/coupons.png",
-  },
-  {
-    label: "Blogs",
-    href: "/blog-posts",
-    icon: "/template-17/images/icon/blog1.png",
-  },
-  {
-    label: "Community",
-    href: "/community",
-    icon: "/template-17/images/icon/11.png",
-  },
-];
-
-const exploreCategories = [
-  { label: "Spa and Facial", href: "/all-listing", count: "05" },
-  { label: "Wedding halls", href: "/all-listing", count: "00" },
-  { label: "Automobiles", href: "/all-listing?category=vehicles", count: "03" },
-  { label: "Restaurants", href: "/all-listing?category=restaurants-food", count: "03" },
-  { label: "Roommates & Rentals", href: "/all-listing?category=real-estate&subCategory=PG+%2F+Co-living", count: "03" },
-  { label: "Care Services", href: "/all-listing?category=care-services", count: "10" },
-  { label: "Technology", href: "/all-listing", count: "04" },
-  { label: "Pet shop", href: "/all-listing", count: "00" },
-  { label: "Real Estate", href: "/all-listing?category=real-estate", count: "03" },
-  { label: "Sports", href: "/all-listing", count: "00" },
-  { label: "Hospitals", href: "/all-listing", count: "06" },
-  { label: "Education", href: "/all-listing", count: "06" },
-  { label: "Transportation", href: "/all-listing", count: "05" },
-  { label: "Electricals", href: "/all-listing", count: "04" },
-];
 
 const notifications = [
   "Welcome back to Chao Desi",
@@ -120,6 +30,7 @@ export default function UserHomeHeader() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const exploreCategories = useExploreCategories();
 
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
   const { fullName, joinDate, profileImageUrl } = identity;
@@ -143,7 +54,7 @@ export default function UserHomeHeader() {
       window.removeEventListener(PROFILE_UPDATED_EVENT, syncIdentity);
   }, []);
 
-  const filteredCategories = useMemo(() => {
+  const filteredCategories = useMemo<ExploreMenuLink[]>(() => {
     if (!searchText.trim()) return [];
     return categoryLinks.filter((item) =>
       item.label.toLowerCase().includes(searchText.toLowerCase())

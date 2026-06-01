@@ -20,6 +20,19 @@ export type CityOption = {
   name: string;
 };
 
+export type EnsureLocationRequest = {
+  countryName: string;
+  countryCode?: string;
+  stateName?: string;
+  cityName?: string;
+};
+
+export type EnsureLocationResponse = {
+  country: CountryOption;
+  state?: StateOption | null;
+  city?: CityOption | null;
+};
+
 type ListResponse<T> = {
   items: T[];
 };
@@ -43,4 +56,9 @@ export async function getLocationCities(stateId?: number) {
     params: { stateId, page: 1, pageSize: 200 },
   });
   return response.data.items;
+}
+
+export async function ensureLocationMaster(payload: EnsureLocationRequest) {
+  const response = await apiClient.post<EnsureLocationResponse>("/location-masters/ensure", payload);
+  return response.data;
 }

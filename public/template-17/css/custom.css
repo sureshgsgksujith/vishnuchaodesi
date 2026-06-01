@@ -4,6 +4,134 @@
     overflow: hidden; 
 }
 
+.log form.listing-polished-form {
+    --section-accent: #1f5eff;
+    --section-accent-dark: #173f9f;
+    background: #ffffff;
+}
+
+.log form.listing-polished-form > h4,
+.login .log form.listing-polished-form > h4,
+.login form.listing-polished-form > h4 {
+    position: relative !important;
+    display: flex !important;
+    width: 100% !important;
+    min-height: 50px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 30px 0 22px !important;
+    padding: 10px 16px !important;
+    border: 1px solid #d9e5ff !important;
+    border-radius: 6px !important;
+    background: linear-gradient(90deg, var(--section-accent-dark), var(--section-accent)) !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 22px rgba(31, 94, 255, 0.12) !important;
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    letter-spacing: 0 !important;
+    text-align: center !important;
+}
+
+.login form.listing-polished-form > h4:first-child {
+    margin-top: 8px !important;
+}
+
+.login form.listing-polished-form > h4:nth-of-type(3n + 1) {
+    --section-accent: #0f766e;
+    --section-accent-dark: #115e59;
+    border-color: #bfe7e2 !important;
+    box-shadow: 0 10px 22px rgba(15, 118, 110, 0.12) !important;
+}
+
+.login form.listing-polished-form > h4:nth-of-type(3n + 2) {
+    --section-accent: #2563eb;
+    --section-accent-dark: #1e40af;
+    border-color: #c7d8ff !important;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.12) !important;
+}
+
+.login form.listing-polished-form > h4:nth-of-type(3n) {
+    --section-accent: #b45309;
+    --section-accent-dark: #92400e;
+    border-color: #f6d9a8 !important;
+    box-shadow: 0 10px 22px rgba(180, 83, 9, 0.12) !important;
+}
+
+.login form.listing-polished-form .form-group {
+    margin-bottom: 18px;
+}
+
+.login form.listing-polished-form .form-control {
+    min-height: 54px;
+    border-color: #d7deea;
+    border-radius: 6px;
+    background-color: #ffffff;
+    box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03);
+}
+
+.login form.listing-polished-form .form-control.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.12) !important;
+}
+
+.login form.listing-polished-form .listing-field-error {
+    display: block;
+    margin-top: 6px;
+    color: #dc3545;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.login form.listing-polished-form textarea.form-control {
+    min-height: 120px;
+}
+
+.login form.listing-polished-form .listing-field-label {
+    color: #263858;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.login form.listing-polished-form .listing-amenity-row {
+    border: 1px solid #e1e8f5;
+    border-radius: 6px;
+    margin: 0 0 18px;
+    padding: 14px 10px 6px;
+    background: #f8fbff;
+}
+
+.login form.listing-polished-form .listing-upload-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    color: #263858;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.login form.listing-polished-form .listing-upload-meta span {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.login form.listing-polished-form .listing-upload-meta small {
+    color: #6b778c;
+    font-weight: 500;
+}
+
+.login form.listing-polished-form .listing-upload-meta .btn-link {
+    padding: 0;
+    color: #b42318;
+    font-weight: 700;
+    text-decoration: none;
+}
+
 .home-artist .plac-det-tit-inn {
     text-align: center;
     margin-bottom: 40px;

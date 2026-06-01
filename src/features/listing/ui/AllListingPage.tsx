@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import CustomerHeader from "../../home/ui/CustomerHeader";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import HomeHeader from "../../home/ui/HomeHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
+import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
+import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
+import { getMyProfile } from "../../dashboard/api/profileApi";
 import {
   getListingApiErrorMessage,
   getPublicListings,
@@ -11,38 +14,155 @@ import {
 import {
   resolveListingImageUrl,
 } from "../../dashboard/utils/listingImages";
+import { submitRequirement } from "../api/requirementsApi";
 import "../styles/publicListings.css";
 
 const PAGE_SIZE = 12;
+const FEATURE_FILTERS = [
+  "Trusted services provider",
+  "Premium services",
+  "Verified services",
+  "Trending services",
+  "Offers and discounts",
+  "Latest updated",
+  "Most likes",
+];
+const RATING_FILTERS = ["5", "4", "3", "2", "1"];
+const fallbackListingBanners: PageBanner[] = [
+  {
+    id: 0,
+    pageKey: "all-listing",
+    slot: "top",
+    title: "Listing banner",
+    imageUrl: "/template-17/images/ads/32207ads.png",
+    displayOrder: 1,
+    isActive: true,
+  },
+  {
+    id: -1,
+    pageKey: "all-listing",
+    slot: "left",
+    title: "Sidebar banner",
+    imageUrl: "/template-17/images/ads/ads1.jpg",
+    displayOrder: 1,
+    isActive: true,
+  },
+];
 
 type PublicCategory = NonNullable<PublicListingQuery["category"]>;
 type SortKey = "recent" | "rating" | "price-low" | "price-high";
 
 export default function AllListingPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [facetItems, setFacetItems] = useState<ListingSummary[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [searchDraft, setSearchDraft] = useState("");
+  const [pageBanners, setPageBanners] = useState<PageBanner[]>(fallbackListingBanners);
+  const [topBannerIndex, setTopBannerIndex] = useState(0);
+  const [leftBannerIndex, setLeftBannerIndex] = useState(0);
+  const [requirementForm, setRequirementForm] = useState({
+    name: "",
+    email: "",
+    mobileNumber: "",
+    message: "",
+  });
+  const [requirementStatus, setRequirementStatus] = useState("");
+  const [isSubmittingRequirement, setIsSubmittingRequirement] = useState(false);
+  const [quoteListing, setQuoteListing] = useState<ListingSummary | null>(null);
+  const [quoteForm, setQuoteForm] = useState({
+    name: "",
+    email: "",
+    mobileNumber: "",
+    message: "",
+  });
+  const [quoteStatus, setQuoteStatus] = useState("");
+  const [isQuoteProfileLoading, setIsQuoteProfileLoading] = useState(false);
+  const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
 
-  const category = getCategory(searchParams.get("category"));
+  const categoryName = searchParams.get("categoryName") || "";
+  const category = getCategory(searchParams.get("category")) || categorySlugFromLabel(categoryName) || undefined;
   const subCategory = searchParams.get("subCategory") || "";
   const city = searchParams.get("city") || "";
   const search = searchParams.get("search") || "";
   const sort = getSort(searchParams.get("sort"));
+  const feature = searchParams.get("feature") || "";
+  const rating = searchParams.get("rating") || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const totalPages = useMemo(() => Math.max(1, Math.ceil(totalCount / PAGE_SIZE)), [totalCount]);
-  const sortedItems = useMemo(() => sortListings(items, sort), [items, sort]);
+  const sortedItems = useMemo(() => sortListings(filterListings(items, feature, rating), sort), [feature, items, rating, sort]);
+  const displayCount = feature || rating ? sortedItems.length : totalCount;
   const dynamicCategories = useMemo(() => buildCategoryOptions(facetItems, category), [facetItems, category]);
-  const categoryFacetItems = useMemo(() => getFacetItemsForCategory(facetItems, category), [facetItems, category]);
+  const activeCategoryName = category ? categoryLabel(category, dynamicCategories) : categoryName;
+  const categoryFacetItems = useMemo(() => getFacetItemsForCategory(facetItems, category, categoryName), [facetItems, category, categoryName]);
   const dynamicCities = useMemo(() => uniqueValues(categoryFacetItems.map((item) => getListingCity(item))), [categoryFacetItems]);
   const dynamicSubCategories = useMemo(() => uniqueValues(categoryFacetItems.map((item) => item.subCategory)), [categoryFacetItems]);
+  const topBanners = useMemo(() => getBannersForSlot(pageBanners, "top"), [pageBanners]);
+  const leftBanners = useMemo(() => getBannersForSlot(pageBanners, "left"), [pageBanners]);
   const topProviders = useMemo(() => {
     return [...categoryFacetItems]
       .sort((a, b) => Number(b.averageRating || b.rating || b.views || 0) - Number(a.averageRating || a.rating || a.views || 0))
       .slice(0, 5);
   }, [categoryFacetItems]);
+
+  useEffect(() => {
+    setSearchDraft(search);
+  }, [search]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    getPageBanners("all-listing")
+      .then((items) => {
+        if (isActive && items.length) {
+          setPageBanners(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setPageBanners(fallbackListingBanners);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setTopBannerIndex(0);
+  }, [topBanners.length]);
+
+  useEffect(() => {
+    setLeftBannerIndex(0);
+  }, [leftBanners.length]);
+
+  useEffect(() => {
+    if (topBanners.length <= 1) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setTopBannerIndex((current) => (current + 1) % topBanners.length);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [topBanners.length]);
+
+  useEffect(() => {
+    if (leftBanners.length <= 1) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setLeftBannerIndex((current) => (current + 1) % leftBanners.length);
+    }, 6000);
+
+    return () => window.clearInterval(intervalId);
+  }, [leftBanners.length]);
 
   useEffect(() => {
     let isActive = true;
@@ -54,6 +174,7 @@ export default function AllListingPage() {
 
         const result = await getPublicListings({
           category,
+          categoryName: category ? undefined : categoryName || undefined,
           subCategory,
           city,
           search,
@@ -81,7 +202,7 @@ export default function AllListingPage() {
     return () => {
       isActive = false;
     };
-  }, [category, city, page, search, subCategory]);
+  }, [category, categoryName, city, page, search, subCategory]);
 
   useEffect(() => {
     let isActive = true;
@@ -117,19 +238,105 @@ export default function AllListingPage() {
     setSearchParams(next);
   }
 
+  function submitSidebarSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    updateQuery({ search: searchDraft.trim(), page: 1 });
+  }
+
+  async function submitRequirementForm(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setRequirementStatus("");
+    setIsSubmittingRequirement(true);
+
+    try {
+      await submitRequirement({
+        ...requirementForm,
+        categoryName: activeCategoryName || "All Listings",
+        pageUrl: window.location.href,
+      });
+      setRequirementForm({ name: "", email: "", mobileNumber: "", message: "" });
+      setRequirementStatus("Your requirement has been submitted successfully.");
+    } catch {
+      setRequirementStatus("Unable to submit requirement. Please try again.");
+    } finally {
+      setIsSubmittingRequirement(false);
+    }
+  }
+
+  async function openQuoteModal(listing: ListingSummary) {
+    if (!isCustomerAuthenticated()) {
+      const returnUrl = `${window.location.pathname}${window.location.search}`;
+      window.alert("Please login to send enquiry.");
+      navigate(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
+    setQuoteListing(listing);
+    setQuoteStatus("");
+    setQuoteForm({
+      name: localStorage.getItem("fullName") || localStorage.getItem("customer_name") || "",
+      email: localStorage.getItem("email") || "",
+      mobileNumber: localStorage.getItem("mobileNumber") || "",
+      message: "",
+    });
+    setIsQuoteProfileLoading(true);
+
+    try {
+      const { profile } = await getMyProfile();
+      setQuoteForm((current) => ({
+        ...current,
+        name: profile.fullName || current.name,
+        email: profile.email || current.email,
+        mobileNumber: profile.mobileNumber || current.mobileNumber,
+      }));
+    } finally {
+      setIsQuoteProfileLoading(false);
+    }
+  }
+
+  async function submitQuoteForm(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!quoteListing) {
+      return;
+    }
+
+    setQuoteStatus("");
+    setIsSubmittingQuote(true);
+
+    try {
+      await submitRequirement({
+        listingId: quoteListing.id,
+        listingTitle: quoteListing.title,
+        name: quoteForm.name,
+        email: quoteForm.email,
+        mobileNumber: quoteForm.mobileNumber,
+        message: quoteForm.message,
+        categoryName: quoteListing.categoryName || activeCategoryName || "All Listings",
+        pageUrl: `${window.location.origin}/listing-details?id=${quoteListing.id}`,
+      });
+      setQuoteStatus("Your enquiry has been sent successfully.");
+      setQuoteForm((current) => ({ ...current, message: "" }));
+    } catch {
+      setQuoteStatus("Unable to send enquiry. Please try again.");
+    } finally {
+      setIsSubmittingQuote(false);
+    }
+  }
+
   return (
     <>
-      <CustomerHeader />
+      <HomeHeader />
       <main className="public-listing-page public-template-page">
         <section className="public-listing-content">
           <div className="container public-listing-shell">
             <aside className="public-filter-panel">
               <div className="public-filter-title">
-                <h1>{category ? categoryLabel(category, dynamicCategories) : "All Listings"}</h1>
+                <h1>{activeCategoryName || "All Listings"}</h1>
                 <nav>
                   <Link to="/">Home</Link>
                   <span>All Category</span>
-                  {category ? <span>{categoryLabel(category, dynamicCategories)}</span> : null}
+                  {activeCategoryName ? <span>{activeCategoryName}</span> : null}
                   {city ? <span>{city}</span> : null}
                   {subCategory ? <span>{subCategory}</span> : null}
                 </nav>
@@ -152,6 +359,18 @@ export default function AllListingPage() {
                 </SidebarCard>
               ) : null}
 
+              <form className="public-sidebar-search" onSubmit={submitSidebarSearch}>
+                <input
+                  type="search"
+                  value={searchDraft}
+                  placeholder="Search the service"
+                  onChange={(event) => setSearchDraft(event.target.value)}
+                />
+                <button type="submit" aria-label="Search">
+                  <i className="material-icons">search</i>
+                </button>
+              </form>
+
               {dynamicCities.length ? (
                 <SidebarCard title="Cities" icon="apps">
                   <select value={city} onChange={(event) => updateQuery({ city: event.target.value, page: 1 })}>
@@ -165,7 +384,7 @@ export default function AllListingPage() {
 
               {dynamicCategories.length ? (
                 <SidebarCard title="Categories" icon="apps">
-                  <select value={category || ""} onChange={(event) => updateQuery({ category: event.target.value, subCategory: null, page: 1 })}>
+                  <select value={category || ""} onChange={(event) => updateQuery({ category: event.target.value, categoryName: null, subCategory: null, page: 1 })}>
                     <option value="">All Category</option>
                     {dynamicCategories.map((option) => (
                       <option value={option.value} key={option.label}>{option.label}</option>
@@ -183,6 +402,72 @@ export default function AllListingPage() {
                   />
                 </SidebarCard>
               ) : null}
+
+              <SidebarCard title="Features" icon="tune">
+                <CheckList
+                  items={FEATURE_FILTERS}
+                  selectedItem={feature}
+                  onChange={(value) => updateQuery({ feature: value === feature ? null : value, page: 1 })}
+                />
+              </SidebarCard>
+
+              <SidebarCard title="Ratings" icon="star">
+                <RatingList
+                  items={RATING_FILTERS}
+                  selectedItem={rating}
+                  onChange={(value) => updateQuery({ rating: value === rating ? null : value, page: 1 })}
+                />
+              </SidebarCard>
+
+              <SidebarCard title="Sort By" icon="sort">
+                <select value={sort} onChange={(event) => updateQuery({ sort: event.target.value, page: 1 })}>
+                  <option value="recent">Latest updated</option>
+                  <option value="rating">Top rated</option>
+                  <option value="price-low">Price low to high</option>
+                  <option value="price-high">Price high to low</option>
+                </select>
+              </SidebarCard>
+
+              <RotatingBanner
+                banners={leftBanners}
+                className="public-side-ad"
+                index={leftBannerIndex}
+              />
+
+              <form className="public-requirement-card" onSubmit={submitRequirementForm}>
+                <h2>What service do you need?</h2>
+                <h3>Chaodesi will help you</h3>
+                <input
+                  type="text"
+                  placeholder="Enter name*"
+                  required
+                  value={requirementForm.name}
+                  onChange={(event) => setRequirementForm((current) => ({ ...current, name: event.target.value }))}
+                />
+                <input
+                  type="email"
+                  placeholder="Enter email*"
+                  required
+                  value={requirementForm.email}
+                  onChange={(event) => setRequirementForm((current) => ({ ...current, email: event.target.value }))}
+                />
+                <input
+                  type="tel"
+                  placeholder="Enter mobile number*"
+                  required
+                  value={requirementForm.mobileNumber}
+                  onChange={(event) => setRequirementForm((current) => ({ ...current, mobileNumber: event.target.value }))}
+                />
+                <textarea
+                  placeholder="Enter your query or message"
+                  value={requirementForm.message}
+                  onChange={(event) => setRequirementForm((current) => ({ ...current, message: event.target.value }))}
+                />
+                {requirementStatus ? <p className="public-requirement-status">{requirementStatus}</p> : null}
+                <button type="submit" disabled={isSubmittingRequirement}>
+                  {isSubmittingRequirement ? "Submitting..." : "Submit Requirements"}
+                </button>
+              </form>
             </aside>
 
             <div className="public-listing-results">
@@ -197,22 +482,24 @@ export default function AllListingPage() {
               </div>
 
               {sortedItems.length ? (
-                <div className="public-wide-ad">
-                  <span>Ad</span>
-                  <img src="/template-17/images/ads/32207ads.png" alt="" />
-                </div>
+                <RotatingBanner
+                  banners={topBanners}
+                  className="public-wide-ad"
+                  index={topBannerIndex}
+                />
               ) : null}
 
               <div className="public-listing-toolbar">
                 <div>
-                  Total of <strong>{totalCount}</strong> business result(s) found.
+                  Total of <strong>{displayCount}</strong> business result(s) found.
                 </div>
                 <div className="public-filter-tags">
-                  {category ? <span>{categoryLabel(category, dynamicCategories)} <button type="button" onClick={() => updateQuery({ category: null, subCategory: null, page: 1 })}>x</button></span> : null}
+                  {activeCategoryName ? <span>{activeCategoryName} <button type="button" onClick={() => updateQuery({ category: null, categoryName: null, subCategory: null, page: 1 })}>x</button></span> : null}
                   {subCategory ? <span>{subCategory} <button type="button" onClick={() => updateQuery({ subCategory: null, page: 1 })}>x</button></span> : null}
-                  {city ? <span>{city} <button type="button" onClick={() => updateQuery({ city: null, page: 1 })}>×</button></span> : null}
-                  {search ? <span>{search} <button type="button" onClick={() => updateQuery({ search: null, page: 1 })}>×</button></span> : null}
-                  {sortedItems.some((item) => Number(item.averageRating || item.rating || 0) >= 5) ? <span>5 Star <button type="button">×</button></span> : null}
+                  {city ? <span>{city} <button type="button" onClick={() => updateQuery({ city: null, page: 1 })}>x</button></span> : null}
+                  {search ? <span>{search} <button type="button" onClick={() => updateQuery({ search: null, page: 1 })}>x</button></span> : null}
+                  {feature ? <span>{feature} <button type="button" onClick={() => updateQuery({ feature: null, page: 1 })}>x</button></span> : null}
+                  {rating ? <span>{rating} Star <button type="button" onClick={() => updateQuery({ rating: null, page: 1 })}>x</button></span> : null}
                 </div>
               </div>
 
@@ -225,7 +512,7 @@ export default function AllListingPage() {
 
               <div className="public-listing-grid">
                 {sortedItems.map((listing) => (
-                  <ListingCard listing={listing} key={listing.id} />
+                  <ListingCard listing={listing} key={listing.id} onQuoteClick={openQuoteModal} />
                 ))}
               </div>
 
@@ -241,6 +528,18 @@ export default function AllListingPage() {
             </div>
           </div>
         </section>
+        {quoteListing ? (
+          <QuoteModal
+            form={quoteForm}
+            isProfileLoading={isQuoteProfileLoading}
+            isSubmitting={isSubmittingQuote}
+            listing={quoteListing}
+            status={quoteStatus}
+            onClose={() => setQuoteListing(null)}
+            onChange={(updates) => setQuoteForm((current) => ({ ...current, ...updates }))}
+            onSubmit={submitQuoteForm}
+          />
+        ) : null}
       </main>
       <HomeFooterSection />
     </>
@@ -253,6 +552,35 @@ function SidebarCard({ title, icon, className = "", children }: { title: string;
       <h2>{icon ? <i className="material-icons">{icon}</i> : null}{title}</h2>
       {children}
     </section>
+  );
+}
+
+function RotatingBanner({
+  banners,
+  className,
+  index,
+}: {
+  banners: PageBanner[];
+  className: string;
+  index: number;
+}) {
+  const banner = banners[index] || banners[0];
+
+  if (!banner) {
+    return null;
+  }
+
+  const image = (
+    <>
+      <span>Ad</span>
+      <img src={banner.imageUrl} alt={banner.altText || banner.title} loading="lazy" />
+    </>
+  );
+
+  return (
+    <div className={className}>
+      {banner.linkUrl ? <a href={banner.linkUrl}>{image}</a> : image}
+    </div>
   );
 }
 
@@ -281,12 +609,42 @@ function CheckList({
   );
 }
 
-function ListingCard({ listing }: { listing: ListingSummary }) {
+function RatingList({
+  items,
+  selectedItem,
+  onChange,
+}: {
+  items: string[];
+  selectedItem: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="public-rating-filter">
+      {items.map((item) => (
+        <label key={item}>
+          <input
+            type="radio"
+            checked={selectedItem === item}
+            onChange={() => onChange(item)}
+          />
+          <span>
+            {Array.from({ length: 5 }, (_, index) => (
+              <i className="material-icons" key={index}>{index < Number(item) ? "star" : "star_border"}</i>
+            ))}
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function ListingCard({ listing, onQuoteClick }: { listing: ListingSummary; onQuoteClick: (listing: ListingSummary) => void }) {
   const href = `/listing-details?id=${listing.id}`;
   const imageUrl = listing.primaryImageUrl || listing.imageUrls?.[0] || "";
-  const rating = Number(listing.averageRating || listing.rating || 0);
-  const displayRating = rating > 0 ? rating : 5;
+  const displayRating = getDisplayRating(listing);
   const openLabel = getOpenStatusLabel(listing);
+  const phoneNumber = getListingPhone(listing);
+  const whatsAppNumber = getListingWhatsApp(listing) || phoneNumber;
 
   return (
     <article className="public-listing-card">
@@ -321,15 +679,85 @@ function ListingCard({ listing }: { listing: ListingSummary }) {
           <Link to={href}>{listing.title}</Link>
         </h2>
         <div className="public-listing-actions">
-          <Link to={href}>Get quote</Link>
+          <button type="button" onClick={() => onQuoteClick(listing)}>Get quote</button>
+          {phoneNumber ? <a href={`tel:${phoneNumber}`}>Call Now</a> : null}
+          {whatsAppNumber ? <a href={`https://wa.me/${whatsAppNumber.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">WhatsApp</a> : null}
         </div>
       </div>
     </article>
   );
 }
 
+function QuoteModal({
+  form,
+  isProfileLoading,
+  isSubmitting,
+  listing,
+  status,
+  onChange,
+  onClose,
+  onSubmit,
+}: {
+  form: { name: string; email: string; mobileNumber: string; message: string };
+  isProfileLoading: boolean;
+  isSubmitting: boolean;
+  listing: ListingSummary;
+  status: string;
+  onChange: (updates: Partial<{ name: string; email: string; mobileNumber: string; message: string }>) => void;
+  onClose: () => void;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <div className="public-quote-modal-backdrop" role="dialog" aria-modal="true">
+      <form className="public-quote-modal" onSubmit={onSubmit}>
+        <div className="public-quote-ribbon">Send Enquiry</div>
+        <button type="button" className="public-quote-close" aria-label="Close" onClick={onClose}>x</button>
+        <h2>Get Quote</h2>
+        <p>{listing.title}</p>
+        <input
+          type="text"
+          placeholder="Enter name*"
+          required
+          value={form.name}
+          onChange={(event) => onChange({ name: event.target.value })}
+        />
+        <input
+          type="email"
+          placeholder="Email*"
+          readOnly
+          required
+          value={form.email}
+        />
+        <input
+          type="tel"
+          placeholder="Phone number*"
+          required
+          value={form.mobileNumber}
+          onChange={(event) => onChange({ mobileNumber: event.target.value })}
+        />
+        <textarea
+          placeholder="Enter your query or message"
+          value={form.message}
+          onChange={(event) => onChange({ message: event.target.value })}
+        />
+        {status ? <div className="public-quote-status">{status}</div> : null}
+        <button type="submit" disabled={isProfileLoading || isSubmitting || !form.email}>
+          {isProfileLoading ? "Loading..." : isSubmitting ? "Submitting..." : "Submit"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function getCategory(value: string | null): PublicListingQuery["category"] {
-  return value === "real-estate" || value === "restaurants-food" || value === "vehicles" || value === "electronics-appliances" || value === "care-services" ? value : undefined;
+  return value === "real-estate" ||
+    value === "restaurants-food" ||
+    value === "vehicles" ||
+    value === "electronics-appliances" ||
+    value === "care-services" ||
+    value === "furniture-home-decor"
+    ? value
+    : undefined;
 }
 
 function getSort(value: string | null): SortKey {
@@ -354,6 +782,64 @@ function sortListings(items: ListingSummary[], sort: SortKey) {
   return next.sort((a, b) => getLatestListingTime(b) - getLatestListingTime(a));
 }
 
+function filterListings(items: ListingSummary[], feature: string, rating: string) {
+  return items.filter((item) => {
+    if (rating && Math.round(getDisplayRating(item)) < Number(rating)) {
+      return false;
+    }
+
+    if (!feature) {
+      return true;
+    }
+
+    if (feature === "Trusted services provider") {
+      if (!hasRecordKey(item.settings, "trusted") && !hasRecordKey(item.settings, "isTrusted")) {
+        return true;
+      }
+
+      return getBoolean(item.settings, "trusted") || getBoolean(item.settings, "isTrusted");
+    }
+
+    if (feature === "Premium services") {
+      return Boolean(item.userPlanName && !/^free\b/i.test(item.userPlanName));
+    }
+
+    if (feature === "Verified services") {
+      if (!hasRecordKey(item.settings, "verifiedByAdmin") && !hasRecordKey(item.settings, "isVerified")) {
+        return true;
+      }
+
+      return getBoolean(item.settings, "verifiedByAdmin") || getBoolean(item.settings, "isVerified");
+    }
+
+    if (feature === "Trending services") {
+      return Number(item.views || 0) > 0;
+    }
+
+    if (feature === "Offers and discounts") {
+      if (!hasRecordKey(item.settings, "hasOffers") && !hasRecordKey(item.settings, "offerText")) {
+        return true;
+      }
+
+      return getBoolean(item.settings, "hasOffers") || getString(item.settings, "offerText").trim().length > 0;
+    }
+
+    if (feature === "Latest updated") {
+      return getLatestListingTime(item) > 0;
+    }
+
+    if (feature === "Most likes") {
+      if (!hasRecordKey(item.settings, "likes")) {
+        return true;
+      }
+
+      return Number(getString(item.settings, "likes") || 0) > 0;
+    }
+
+    return true;
+  });
+}
+
 function getLatestListingTime(listing: ListingSummary) {
   const value = listing.updatedAt || listing.createdAt;
   const time = new Date(value).getTime();
@@ -376,6 +862,7 @@ function buildCategoryOptions(items: ListingSummary[], currentCategory?: PublicC
     { value: "vehicles", label: "Vehicles" },
     { value: "electronics-appliances", label: "Electronics & Appliances" },
     { value: "care-services", label: "Care Services" },
+    { value: "furniture-home-decor", label: "Furniture & Home" },
   ];
   const options = [...defaultOptions];
 
@@ -395,8 +882,12 @@ function buildCategoryOptions(items: ListingSummary[], currentCategory?: PublicC
   return options;
 }
 
-function getFacetItemsForCategory(items: ListingSummary[], category?: PublicCategory) {
+function getFacetItemsForCategory(items: ListingSummary[], category?: PublicCategory, categoryName?: string) {
   if (!category) {
+    if (categoryName?.trim()) {
+      return items.filter((item) => item.categoryName === categoryName);
+    }
+
     return items;
   }
 
@@ -409,6 +900,7 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Vehicles") return "vehicles";
   if (label === "Electronics & Appliances") return "electronics-appliances";
   if (label === "Care Services") return "care-services";
+  if (label === "Furniture & Home" || label === "Furniture & Home Decor") return "furniture-home-decor";
   return "";
 }
 
@@ -418,7 +910,22 @@ function buildCategoryLabel(category: PublicCategory) {
   if (category === "vehicles") return "Vehicles";
   if (category === "electronics-appliances") return "Electronics & Appliances";
   if (category === "care-services") return "Care Services";
+  if (category === "furniture-home-decor") return "Furniture & Home";
   return "Listings";
+}
+
+function getBannersForSlot(banners: PageBanner[], slot: string) {
+  const matchingBanners = banners
+    .filter((banner) => banner.slot === slot && banner.isActive)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
+
+  if (matchingBanners.length) {
+    return matchingBanners;
+  }
+
+  return fallbackListingBanners
+    .filter((banner) => banner.slot === slot)
+    .sort((a, b) => a.displayOrder - b.displayOrder);
 }
 
 function uniqueValues(values: Array<string | null | undefined>) {
@@ -436,6 +943,27 @@ function buildLocationText(listing: ListingSummary) {
   ].filter(Boolean).join(", ");
 }
 
+function getListingPhone(listing: ListingSummary) {
+  return getString(listing.sellerInformation, "mobileNumber") ||
+    getString(listing.sellerInformation, "phoneNumber") ||
+    getString(listing.sellerInformation, "phone") ||
+    getString(listing.sellerInformation, "contactNumber") ||
+    getString(listing.sellerInformation, "mainPhone") ||
+    getString(listing.sellerInformation, "whatsAppNumber");
+}
+
+function getListingWhatsApp(listing: ListingSummary) {
+  return getString(listing.sellerInformation, "whatsAppNumber") ||
+    getString(listing.sellerInformation, "whatsapp") ||
+    getString(listing.sellerInformation, "whatsApp") ||
+    getString(listing.sellerInformation, "mobileNumber");
+}
+
+function getDisplayRating(listing: ListingSummary) {
+  const rating = Number(listing.averageRating || listing.rating || 0);
+  return rating > 0 ? rating : 5;
+}
+
 function getOpenStatusLabel(listing: ListingSummary) {
   const activeStatus = listing.status?.trim().toLowerCase();
   if (activeStatus === "active" || !activeStatus) {
@@ -450,7 +978,16 @@ function getString(record: Record<string, string | number | boolean | string[] |
   return typeof value === "string" || typeof value === "number" ? String(value) : "";
 }
 
+function getBoolean(record: Record<string, string | number | boolean | string[] | null> | undefined, key: string) {
+  const value = record?.[key];
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
+function hasRecordKey(record: Record<string, string | number | boolean | string[] | null> | undefined, key: string) {
+  return Boolean(record && Object.prototype.hasOwnProperty.call(record, key));
+}
+
 function renderStars(rating: number) {
   const stars = Math.max(1, Math.min(5, Math.round(rating)));
-  return "★".repeat(stars);
+  return String.fromCharCode(9733).repeat(stars);
 }

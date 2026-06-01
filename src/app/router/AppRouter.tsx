@@ -1,39 +1,56 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { type ReactNode } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import HomePage from "../../features/home/ui/HomePage";
-import LoginPage from "../../features/auth/ui/LoginPage";
-import UserInfoPage from "../../features/auth/ui/UserInfoPage";
-import StaticTemplatePage from "../../features/template/ui/StaticTemplatePage";
 import { customerTemplateRoutes } from "./customerTemplateRoutes";
-import DashboardPage from "../../features/dashboard/ui/DashboardPage";
-import PaymentPage from "../../features/dashboard/ui/PaymentPage";
-import PlanChangePage from "../../features/dashboard/ui/PlanChangePage";
-import PointHistoryPage from "../../features/dashboard/ui/PointHistoryPage";
-import NotificationsPage from "../../features/dashboard/ui/NotificationsPage";
-import FollowingsPage from "../../features/dashboard/ui/FollowingsPage";
-import ReviewPage from "../../features/dashboard/ui/ReviewPage";
-import ProductsPage from "../../features/dashboard/ui/ProductsPage";
-import MyServiceBookingsPage from "../../features/dashboard/ui/MyServiceBookingsPage";
-import UserAppliedJobsPage from "../../features/dashboard/ui/UserAppliedJobsPage";
-import EventsPage from "../../features/dashboard/ui/EventsPage";
-import JobsPage from "../../features/dashboard/ui/JobsPage";
-import BlogPostsPage from "../../features/dashboard/ui/BlogPostsPage";
-import CouponsPage from "../../features/dashboard/ui/CouponsPage";
-import MyProfileEditPage from "../../features/dashboard/ui/MyProfileEditPage";
-import AllListingsPage from "../../features/dashboard/ui/AllListingsPage";
-import ListingFormPage from "../../features/dashboard/ui/ListingFormPage";
-import ListingPreviewPage from "../../features/dashboard/ui/ListingPreviewPage";
-import ListingStartPage from "../../features/dashboard/ui/ListingStartPage";
-import ClassifiedPostingPage from "../../features/dashboard/ui/ClassifiedPostingPage";
-import PricingDetailsPage from "../../features/pricing/ui/PricingDetailsPage";
-import AllListingPage from "../../features/listing/ui/AllListingPage";
-import ListingDetailPage from "../../features/listing/ui/ListingDetailPage";
-import { ClassifiedAdDetailsPage, ClassifiedAdsAllPage, ClassifiedsHomePage } from "../../features/classifieds/ui/ClassifiedPages";
 import { isCustomerAuthenticated, redirectToCustomerHomeAfterSessionPopup } from "../../features/auth/utils/customerSession";
+
+const LoginPage = lazy(() => import("../../features/auth/ui/LoginPage"));
+const UserInfoPage = lazy(() => import("../../features/auth/ui/UserInfoPage"));
+const StaticTemplatePage = lazy(() => import("../../features/template/ui/StaticTemplatePage"));
+const DashboardPage = lazy(() => import("../../features/dashboard/ui/DashboardPage"));
+const PaymentPage = lazy(() => import("../../features/dashboard/ui/PaymentPage"));
+const PlanChangePage = lazy(() => import("../../features/dashboard/ui/PlanChangePage"));
+const PointHistoryPage = lazy(() => import("../../features/dashboard/ui/PointHistoryPage"));
+const NotificationsPage = lazy(() => import("../../features/dashboard/ui/NotificationsPage"));
+const FollowingsPage = lazy(() => import("../../features/dashboard/ui/FollowingsPage"));
+const ReviewPage = lazy(() => import("../../features/dashboard/ui/ReviewPage"));
+const ProductsPage = lazy(() => import("../../features/dashboard/ui/ProductsPage"));
+const MyServiceBookingsPage = lazy(() => import("../../features/dashboard/ui/MyServiceBookingsPage"));
+const UserAppliedJobsPage = lazy(() => import("../../features/dashboard/ui/UserAppliedJobsPage"));
+const EventsPage = lazy(() => import("../../features/dashboard/ui/EventsPage"));
+const JobsPage = lazy(() => import("../../features/dashboard/ui/JobsPage"));
+const BlogPostsPage = lazy(() => import("../../features/dashboard/ui/BlogPostsPage"));
+const CouponsPage = lazy(() => import("../../features/dashboard/ui/CouponsPage"));
+const MyProfileEditPage = lazy(() => import("../../features/dashboard/ui/MyProfileEditPage"));
+const AllListingsPage = lazy(() => import("../../features/dashboard/ui/AllListingsPage"));
+const ListingFormPage = lazy(() => import("../../features/dashboard/ui/ListingFormPage"));
+const ListingPreviewPage = lazy(() => import("../../features/dashboard/ui/ListingPreviewPage"));
+const ListingStartPage = lazy(() => import("../../features/dashboard/ui/ListingStartPage"));
+const ClassifiedPostingPage = lazy(() => import("../../features/dashboard/ui/ClassifiedPostingPage"));
+const PricingDetailsPage = lazy(() => import("../../features/pricing/ui/PricingDetailsPage"));
+const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPage"));
+const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
+const ClassifiedsHomePage = lazy(() =>
+  import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
+);
+const ClassifiedAdsAllPage = lazy(() =>
+  import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedAdsAllPage }))
+);
+const ClassifiedAdDetailsPage = lazy(() =>
+  import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedAdDetailsPage }))
+);
+
+function RouteSuspense({ children }: { children: ReactNode }) {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "60vh" }} />}>
+      {children}
+    </Suspense>
+  );
+}
 
 function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
   if (isCustomerAuthenticated()) {
-    return children;
+    return <RouteSuspense>{children}</RouteSuspense>;
   }
 
   redirectToCustomerHomeAfterSessionPopup();
@@ -104,6 +121,7 @@ export function AppRouter() {
   ];
 
   return (
+    <RouteSuspense>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/home" element={<HomePage />} />
@@ -165,5 +183,6 @@ export function AppRouter() {
 
       <Route path="*" element={<StaticTemplatePage src="/template-17/404.html" title="404" />} />
     </Routes>
+    </RouteSuspense>
   );
 }

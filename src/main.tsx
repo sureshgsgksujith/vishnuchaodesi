@@ -8,7 +8,15 @@ import { Provider } from "react-redux";
 import App from "./app/App";
 import { store } from "./store/rootStore";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 const rootElement = document.getElementById("root") ?? createRootElement();
 
 ReactDOM.createRoot(rootElement).render(

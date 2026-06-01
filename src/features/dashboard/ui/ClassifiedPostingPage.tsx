@@ -645,6 +645,7 @@ export default function ClassifiedPostingPage() {
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
+                            <label className="listing-field-label">Country</label>
                             <select
                               className={`chosen-select form-control${fieldErrors.country ? " is-invalid" : ""}`}
                               value={draft.countryId || ""}
@@ -672,6 +673,7 @@ export default function ClassifiedPostingPage() {
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
+                            <label className="listing-field-label">State</label>
                             <select
                               className={`chosen-select form-control${fieldErrors.state ? " is-invalid" : ""}`}
                               value={draft.stateId || ""}
@@ -697,6 +699,7 @@ export default function ClassifiedPostingPage() {
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
+                            <label className="listing-field-label">City</label>
                             <select
                               className={`chosen-select form-control${fieldErrors.city ? " is-invalid" : ""}`}
                               value={draft.cityId || ""}
@@ -735,7 +738,7 @@ export default function ClassifiedPostingPage() {
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
-                            <label>Select Category</label>
+                            <label>Category</label>
                             <select
                               className={`form-control${fieldErrors.category ? " is-invalid" : ""}`}
                               value={draft.category}
@@ -753,7 +756,7 @@ export default function ClassifiedPostingPage() {
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
-                            <label>Select Sub Category</label>
+                            <label>Sub Category</label>
                             <select className={`form-control${fieldErrors.subCategory ? " is-invalid" : ""}`} value={draft.subCategory} onChange={(event) => updateDraft({ subCategory: event.target.value, customFields: {} })}>
                               <option value="">Select Sub Category</option>
                               {subCategories.map((subCategory) => (
@@ -815,7 +818,7 @@ export default function ClassifiedPostingPage() {
                   {step === 3 ? (
                     <>
                       <h4>Success</h4>
-                      <p>{isEditMode ? "Your ad has been updated successfully." : "Your ad has been submitted successfully."}</p>
+                      <p>{isEditMode ? "Your ad has been updated and sent back for admin approval." : "Your ad has been submitted and is waiting for admin approval."}</p>
                       <div className="row">
                         <div className="col-md-12">
                           <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -972,6 +975,10 @@ function InlineInput({
   );
 }
 
+function fieldLabelFromPlaceholder(placeholder: string) {
+  return placeholder.trim().replace(/^Select\s+/i, "");
+}
+
 function InlineInputColumn({
   placeholder,
   value,
@@ -990,6 +997,7 @@ function InlineInputColumn({
   return (
     <div className={width}>
       <div className="form-group">
+        <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
         <input
           className={`form-control${error ? " is-invalid" : ""}`}
           type={type}
@@ -1110,6 +1118,7 @@ function AddressAutocompleteInput({
     <div className="row">
       <div className="col-md-12">
         <div className="form-group listing-address-autocomplete">
+          <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
           <input
             className={`form-control${error ? " is-invalid" : ""}`}
             type="text"
@@ -1449,6 +1458,7 @@ function ClassifiedDynamicField({
     return (
       <div className="col-md-12">
         <div className="form-group">
+          <label className="listing-field-label">{fieldLabelFromPlaceholder(label)}</label>
           <textarea
             className={`form-control${error ? " is-invalid" : ""}`}
             rows={3}
@@ -1466,6 +1476,7 @@ function ClassifiedDynamicField({
     return (
       <div className="col-md-6">
         <div className="form-group">
+          <label className="listing-field-label">{fieldLabelFromPlaceholder(label)}</label>
           <select
             className={`form-control${error ? " is-invalid" : ""}`}
             value={value}
