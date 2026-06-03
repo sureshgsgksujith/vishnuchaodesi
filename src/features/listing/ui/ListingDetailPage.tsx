@@ -23,6 +23,12 @@ import "../styles/publicListings.css";
 type LooseValue = string | number | boolean | string[] | null | undefined;
 type LooseRecord = Record<string, LooseValue>;
 type NamedImageItem = { name: string; imageName?: string; detail?: string; price?: string | number; link?: string };
+type PostedMediaValue = { kind: "image" | "video" | "link"; src: string; label?: string; embed?: boolean };
+type PostedDetailValue = string | PostedMediaValue | PostedMediaValue[];
+type PostedDetailSection = {
+  title: string;
+  rows: Array<{ label: string; value: PostedDetailValue }>;
+};
 
 const nearbyServiceCategories = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
 
@@ -171,9 +177,6 @@ function ListingDetail({
   const rating = Number(listing.averageRating || listing.rating || 0);
   const displayRating = rating > 0 ? rating : 0;
   const businessDescription = getString(listing.propertyDetails, "businessDescription") || listing.description;
-  const services = getServiceItems(listing);
-  const serviceAreas = getServiceAreas(listing);
-  const detailRows = getDetailRows(listing);
   const businessHours = getBusinessHours(listing);
   const todaysHours = getTodayHours(businessHours);
   const companyRows = getCompanyRows(listing);
@@ -191,6 +194,15 @@ function ListingDetail({
   const isRealEstateListing = listing.categoryName === "Real Estate";
   const nearbyLocation = getNearbyLocation(listing);
   const savedNearbyServices = getSavedNearbyServices(listing);
+  const postedDetailSections = getPostedDetailSections(listing);
+  const quickNavItems = [
+    { href: "#ld-abo", icon: "person", label: "About", show: true },
+    { href: "#ld-details", icon: "fact_check", label: "Details", show: postedDetailSections.length > 0 },
+    { href: "#ld-off", icon: "style", label: "Offers", show: offers.length > 0 },
+    { href: "#location", icon: "map", label: "Location", show: true },
+    { href: "#ld-rev", icon: "star_half", label: "Write Review", show: true },
+    { href: "#claim", icon: "store", label: "Claim business", show: true },
+  ];
 
   useEffect(() => {
     let isActive = true;
@@ -291,17 +303,12 @@ function ListingDetail({
           <div className="container">
             <div className="row">
               <div className="v3-list-ql-inn">
-                <ul>
-                  <li className="active">
-                    <a href="#ld-abo" onClick={scrollToSection}><i className="material-icons">person</i> About</a>
-                  </li>
-                  {services.length ? (
-                    <li><a href="#ld-ser" onClick={scrollToSection}><i className="material-icons">business_center</i> Services</a></li>
-                  ) : null}
-                  <li><a href="#ld-off" onClick={scrollToSection}><i className="material-icons">style</i> Offers</a></li>
-                  <li><a href="#location" onClick={scrollToSection}><i className="material-icons">map</i> Location</a></li>
-                  <li><a href="#ld-rev" onClick={scrollToSection}><i className="material-icons">star_half</i> Write Review</a></li>
-                  <li><a href="#claim" onClick={scrollToSection}><i className="material-icons">store</i>Claim business</a></li>
+                <ul className="public-detail-quick-tabs">
+                  {quickNavItems.filter((item) => item.show).map((item, index) => (
+                    <li className={index === 0 ? "active" : ""} key={item.href}>
+                      <a href={item.href} onClick={scrollToSection}><i className="material-icons">{item.icon}</i> {item.label}</a>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
@@ -349,42 +356,8 @@ function ListingDetail({
                   </div>
                 </TemplateSection>
 
-                {services.length ? (
-                  <TemplateSection id="ld-ser" eyebrow="Services" title="Offered">
-                    <div className="list-pg-inn-sp">
-                      <div className="row pg-list-ser">
-                        <ul className="row">
-                          {services.map((service, index) => (
-                            <li className={getDynamicImage(service.imageName, galleryImages, profileImage, index) ? "col-md-3 col-sm-6" : "col-md-3 col-sm-6 public-service-text-only"} key={`${service.name}-${index}`}>
-                              {getDynamicImage(service.imageName, galleryImages, profileImage, index) ? (
-                                <div className="pg-list-ser-p1">
-                                <img
-                                  src={resolveListingImageUrl(getDynamicImage(service.imageName, galleryImages, profileImage, index))}
-                                  alt=""
-                                  onError={hideBrokenImage}
-                                  loading="lazy"
-                                />
-                                </div>
-                              ) : null}
-                              <div className="pg-list-ser-p2">
-                                <h4>{service.name}</h4>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </TemplateSection>
-                ) : null}
-
-                {serviceAreas.length ? (
-                  <TemplateSection id="ld-ser-area" eyebrow="Service" title="Areas">
-                    <div className="list-pg-inn-sp">
-                      <div className="pg-list-ser-area">
-                        {serviceAreas.map((area) => <span key={area}>{area}</span>)}
-                      </div>
-                    </div>
-                  </TemplateSection>
+                {postedDetailSections.length ? (
+                  <PostedDetailsSection sections={postedDetailSections} />
                 ) : null}
 
                 {products.length ? (
@@ -546,20 +519,12 @@ function ListingDetail({
                   />
                 ) : null}
 
-                <section className="pglist-p3 pglist-bg pglist-p-com">
+                <section id="ld-user-reviews" className="pglist-p3 pglist-bg pglist-p-com">
                   <div className="pglist-p-com-ti">
                     <h3><span>User</span> Reviews</h3>
                   </div>
                   <div className="list-pg-inn-sp">
-                    <div className="lp-ur-all">
-                      <div className="lp-ur-all-left">
-                        <span className="lp-ur-all-left-11">{listing.totalReviews || 0} Reviews</span>
-                      </div>
-                      <div className="lp-ur-all-right">
-                        <h5>{displayRating ? displayRating.toFixed(1) : "No ratings yet"}</h5>
-                        <p><label><RatingStars rating={displayRating} /></label></p>
-                      </div>
-                    </div>
+                    <RatingSummary rating={displayRating} reviews={reviews} totalReviews={listing.totalReviews || 0} />
                     {reviews.length ? (
                       <div className="public-user-review-list">
                         {reviews.map((review) => (
@@ -587,15 +552,7 @@ function ListingDetail({
                     </div>
                     <div className="pg-list-1-left">
                       <h1>{listing.title}</h1>
-                      <div className="pg-list-revi-23 row">
-                        <div className="pg-list-revi-lhs">
-                          <div className="list-rat-all">
-                            <b>{displayRating ? displayRating.toFixed(1) : "0.0"}</b>
-                            <label className="rat"><RatingStars rating={displayRating} /></label>
-                          </div>
-                        </div>
-                        <p className="txt"><span><b>{displayRating ? displayRating.toFixed(1) : "0.0"}</b> average based on {listing.totalReviews || 0} Reviews</span></p>
-                      </div>
+                      <CompactRatingSummary rating={displayRating} reviews={reviews} totalReviews={listing.totalReviews || 0} />
                       <div className="list-number pag-p1-phone">
                         <ul>
                           {address ? <li className="ic-addr">{address}</li> : null}
@@ -621,7 +578,7 @@ function ListingDetail({
                   </div>
                 </div>
 
-                <TemplateSection eyebrow="Company" title="Info" className="pglist-p3">
+                <TemplateSection id="company-info" eyebrow="Company" title="Info" className="pglist-p3">
                   <div className="list-pg-inn-sp">
                     {businessHours.length ? (
                       <div className="list-work-hrs public-work-hours-open">
@@ -638,7 +595,7 @@ function ListingDetail({
                       </div>
                     ) : null}
                     <div className="list-pg-oth-info">
-                      <InfoList rows={companyRows.concat(detailRows).slice(0, 10)} />
+                      <InfoList rows={companyRows.slice(0, 10)} />
                     </div>
                     <div className="list-pg-guar" id="claim">
                       <ul>
@@ -651,7 +608,7 @@ function ListingDetail({
                   </div>
                 </TemplateSection>
 
-                <div className="ld-rhs-pro pglist-bg pglist-p-com">
+                <div id="created-by" className="ld-rhs-pro pglist-bg pglist-p-com">
                   <div className="pglist-p-com-ti">
                     <h3><span>Listing</span> Created by</h3>
                   </div>
@@ -664,7 +621,7 @@ function ListingDetail({
                   </div>
                 </div>
 
-                <div className="ld-rhs-pro pglist-bg pglist-p-com">
+                <div id="business-profile" className="ld-rhs-pro pglist-bg pglist-p-com">
                   <div className="pglist-p-com-ti">
                     <h3>Business profile</h3>
                   </div>
@@ -717,6 +674,148 @@ function ListingDetail({
         </div>
       </section>
     </article>
+  );
+}
+
+function PostedDetailsSection({ sections }: { sections: PostedDetailSection[] }) {
+  const sectionGroups = useMemo(() => chunkArray(sections, 5), [sections]);
+  const [activeSectionTitles, setActiveSectionTitles] = useState<Record<number, string>>({});
+
+  useEffect(() => {
+    setActiveSectionTitles((currentTitles) => {
+      const nextTitles: Record<number, string> = {};
+      sectionGroups.forEach((group, index) => {
+        const currentTitle = currentTitles[index];
+        nextTitles[index] = group.some((section) => section.title === currentTitle)
+          ? currentTitle
+          : group[0]?.title || "";
+      });
+      return nextTitles;
+    });
+  }, [sectionGroups]);
+
+  if (!sectionGroups.length) {
+    return null;
+  }
+
+  return (
+    <TemplateSection id="ld-details" eyebrow="Posted" title="Details" className="public-posted-details-section">
+      <div className="list-pg-inn-sp">
+        {sectionGroups.map((group, groupIndex) => {
+          const activeTitle = activeSectionTitles[groupIndex] || group[0]?.title || "";
+          const activeSection = group.find((section) => section.title === activeTitle) || group[0];
+
+          return (
+            <div className="public-posted-detail-group" key={`posted-detail-group-${groupIndex}`}>
+              <div className="public-posted-detail-tabs" role="tablist" aria-label={`Posted detail sections ${groupIndex + 1}`}>
+                {group.map((section) => (
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={section.title === activeSection.title}
+                    className={section.title === activeSection.title ? "active" : ""}
+                    key={section.title}
+                    onClick={() => setActiveSectionTitles((currentTitles) => ({ ...currentTitles, [groupIndex]: section.title }))}
+                  >
+                    {section.title}
+                  </button>
+                ))}
+              </div>
+              <div className="public-posted-detail-card" role="tabpanel">
+                <h4>{activeSection.title}</h4>
+                <dl>
+                  {activeSection.rows.map((row) => (
+                    <div key={`${activeSection.title}-${row.label}`}>
+                      <dt>{row.label}</dt>
+                      <dd><PostedDetailValueView value={row.value} /></dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </TemplateSection>
+  );
+}
+
+function RatingSummary({
+  rating,
+  reviews,
+  totalReviews,
+}: {
+  rating: number;
+  reviews: NonNullable<ListingSummary["reviews"]>;
+  totalReviews: number;
+}) {
+  const counts = getRatingCounts(reviews);
+  const reviewTotal = Math.max(totalReviews, reviews.length);
+  const displayRating = rating > 0 ? rating : getAverageRatingFromReviews(reviews);
+
+  return (
+    <div className="public-rating-summary">
+      <div className="public-rating-score-card">
+        <strong>{displayRating ? displayRating.toFixed(1) : "0.0"}</strong>
+        <RatingStars rating={displayRating} />
+      </div>
+      <div className="public-rating-bars">
+        {[5, 4, 3, 2, 1].map((value) => {
+          const count = counts[value] || 0;
+          const percentage = reviewTotal ? Math.min(100, (count / reviewTotal) * 100) : 0;
+
+          return (
+            <div className={`public-rating-bar public-rating-bar-${value}`} key={value}>
+              <span>{value}+</span>
+              <div>
+                <b style={{ width: `${percentage}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <p>{displayRating ? displayRating.toFixed(1) : "0.0"} average based on {reviewTotal} Reviews</p>
+    </div>
+  );
+}
+
+function CompactRatingSummary({
+  rating,
+  reviews,
+  totalReviews,
+}: {
+  rating: number;
+  reviews: NonNullable<ListingSummary["reviews"]>;
+  totalReviews: number;
+}) {
+  const counts = getRatingCounts(reviews);
+  const reviewTotal = Math.max(totalReviews, reviews.length);
+  const displayRating = rating > 0 ? rating : getAverageRatingFromReviews(reviews);
+
+  return (
+    <div className="public-profile-rating">
+      <div className="public-profile-rating-main">
+        <strong>{displayRating ? displayRating.toFixed(1) : "0.0"}</strong>
+        <RatingStars rating={displayRating} />
+      </div>
+      <div className="public-profile-rating-bars" aria-label="Rating breakdown">
+        {[5, 4, 3, 2, 1].map((value) => {
+          const count = counts[value] || 0;
+          const percentage = reviewTotal ? Math.min(100, (count / reviewTotal) * 100) : 0;
+
+          return (
+            <div className={`public-profile-rating-bar public-profile-rating-bar-${value}`} key={value}>
+              <span>{value}*</span>
+              <div>
+                <b style={{ width: `${percentage}%` }} />
+              </div>
+              <em>{count}</em>
+            </div>
+          );
+        })}
+      </div>
+      <p><b>{displayRating ? displayRating.toFixed(1) : "0.0"}</b> average based on {reviewTotal} Reviews</p>
+    </div>
   );
 }
 
@@ -881,6 +980,398 @@ function getSavedNearbyServices(listing: ListingSummary): NearbyService[] {
   }
 }
 
+function getPostedDetailSections(listing: ListingSummary): PostedDetailSection[] {
+  const sections: PostedDetailSection[] = [];
+  const otherInformation = parseUnknownRecord(getString(listing.propertyDetails, "otherInformation"));
+  const categoryAttributes = asUnknownRecord(otherInformation.categoryAttributes);
+  const customFields = asUnknownRecord(otherInformation.customFields);
+  const categoryName = listing.categoryName || "";
+  const isClassified = categoryName === "Classifieds" || getString(listing.propertyDetails, "listingKind") === "Classified";
+  const classifiedCategory = getUnknownString(otherInformation, "classifiedCategory");
+  const effectiveCategoryName = isClassified ? classifiedCategory : categoryName;
+  const isRealEstate = effectiveCategoryName === "Real Estate";
+  const isRestaurant = effectiveCategoryName === "Restaurants & Food";
+  const isVehicle = effectiveCategoryName === "Vehicles";
+  const isElectronics = effectiveCategoryName === "Electronics & Appliances";
+  const isCareService = effectiveCategoryName === "Care Services";
+  const mediaRows: Array<[string, unknown]> = [
+    ["Profile image", listing.logoUrl],
+    ["Cover banner", listing.coverBannerUrl],
+    ["Primary image", listing.primaryImageUrl],
+    ["Gallery images", listing.imageUrls || []],
+    ["Video URL", listing.videoUrl],
+    ["Virtual tour URL", listing.virtualTourUrl],
+  ];
+
+  addPostedSection(sections, "Listing Info", [
+    ["Title", listing.title],
+    ["Description", listing.description],
+    ["Category", effectiveCategoryName || listing.categoryName],
+    ["Sub category", isClassified ? getUnknownString(otherInformation, "classifiedSubCategory") || listing.subCategory : listing.subCategory],
+    ["Detailed category", isClassified ? "" : listing.detailCategory],
+  ]);
+  addPostedRecordSection(sections, "Location Details", listing.locationDetails);
+  addPostedRecordSection(sections, "Pricing", listing.priceDetails);
+
+  if (isRealEstate && !isClassified) {
+    addPostedRecordSection(sections, "Property Details", listing.propertyDetails, [
+      "otherInformation",
+      "services",
+      "offers",
+      "businessHours",
+      "additionalContactInfo",
+      "webLinks",
+      "socialLinks",
+      "products",
+      "brands",
+      "paymentMethods",
+      "restaurantInfo",
+    ]);
+    addPostedRecordSection(sections, "Amenities", listing.amenities);
+  }
+
+  addPostedRecordSection(sections, "Category Fields", categoryAttributes);
+  addPostedRecordSection(sections, "Custom Fields", customFields);
+
+  if (isRestaurant && !isClassified) {
+    addPostedRecordSection(sections, "Restaurant Details", listing.restaurantFoodDetails);
+    addPostedListSection(sections, "Restaurant Menu", listing.restaurantMenuItems);
+    addPostedListSection(sections, "Operating Hours", listing.restaurantOperatingHours);
+  }
+
+  if (isVehicle && !isClassified) {
+    addPostedRecordSection(sections, "Vehicle Details", listing.vehicleDetails);
+  }
+
+  if (isElectronics && !isClassified) {
+    addPostedRecordSection(sections, "Electronics Details", listing.electronicsDetails);
+  }
+
+  if (isCareService && !isClassified) {
+    addPostedRecordSection(sections, "Care Service Details", listing.careServiceDetails);
+  }
+
+  addPostedSection(sections, "Media", mediaRows);
+
+  return sections;
+}
+
+function addPostedSection(sections: PostedDetailSection[], title: string, rows: Array<[string, unknown]>) {
+  const seenLabels = new Set<string>();
+  const filteredRows = rows
+    .map(([label, value]) => ({ label, value: formatPostedValue(value) }))
+    .filter((row): row is { label: string; value: PostedDetailValue } => {
+      if (row.value === null) return false;
+
+      const labelKey = normalizePostedFieldIdentity(row.label);
+      if (seenLabels.has(labelKey)) return false;
+
+      seenLabels.add(labelKey);
+      return true;
+    });
+
+  if (filteredRows.length) {
+    sections.push({ title, rows: filteredRows });
+  }
+}
+
+function addPostedRecordSection(
+  sections: PostedDetailSection[],
+  title: string,
+  record: Record<string, unknown> | undefined,
+  excludedKeys: string[] = []
+) {
+  if (!record) return;
+
+  const excluded = new Set(excludedKeys);
+  const seenKeys = new Set<string>();
+  addPostedSection(
+    sections,
+    title,
+    Object.entries(record)
+      .filter(([key]) => {
+        if (excluded.has(key) || isHiddenPostedDetailKey(key)) return false;
+
+        const fieldKey = normalizePostedFieldIdentity(key);
+        if (seenKeys.has(fieldKey)) return false;
+
+        seenKeys.add(fieldKey);
+        return true;
+      })
+      .map(([key, value]) => [formatPostedLabel(key), value])
+  );
+}
+
+function addPostedListSection(
+  sections: PostedDetailSection[],
+  title: string,
+  items: Array<Record<string, unknown>> | undefined
+) {
+  if (!items?.length) return;
+
+  addPostedSection(
+    sections,
+    title,
+    items.map((item, index) => [`Item ${index + 1}`, item])
+  );
+}
+
+function isHiddenPostedDetailKey(key: string) {
+  const normalizedKey = key.trim();
+  const lowerKey = normalizedKey.toLowerCase();
+
+  return (
+    lowerKey === "id" ||
+    lowerKey === "userid" ||
+    lowerKey === "listingid" ||
+    lowerKey === "status" ||
+    lowerKey === "views" ||
+    lowerKey === "createdat" ||
+    lowerKey === "updatedat" ||
+    lowerKey === "created" ||
+    lowerKey === "updated" ||
+    /id$/i.test(normalizedKey)
+  );
+}
+
+function normalizePostedFieldIdentity(value: string) {
+  return value.replace(/[^a-z0-9]/gi, "").toLowerCase();
+}
+
+function chunkArray<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
+}
+
+function PostedDetailValueView({ value }: { value: PostedDetailValue }) {
+  if (typeof value === "string") {
+    return <>{value}</>;
+  }
+
+  const items = Array.isArray(value) ? value : [value];
+
+  return (
+    <div className="public-posted-media-list">
+      {items.map((item, index) => {
+        const src = getPostedMediaSrc(item.src);
+
+        if (item.kind === "image") {
+          return <img key={`${item.src}-${index}`} src={src} alt={item.label || "Uploaded image"} loading="lazy" onError={hideBrokenImage} />;
+        }
+
+        if (item.kind === "video") {
+          return item.embed ? (
+            <iframe key={`${item.src}-${index}`} src={src} title={item.label || "Uploaded video"} loading="lazy" allowFullScreen />
+          ) : (
+            <video key={`${item.src}-${index}`} src={src} controls />
+          );
+        }
+
+        return (
+          <a key={`${item.src}-${index}`} href={src} target="_blank" rel="noreferrer">
+            {item.label || "Open file"}
+          </a>
+        );
+      })}
+    </div>
+  );
+}
+
+function formatPostedValue(value: unknown): PostedDetailValue | null {
+  if (value === null || value === undefined) return null;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "[]" || trimmed === "{}") return null;
+
+    const parsed = parsePostedJson(trimmed);
+    if (parsed !== undefined) {
+      return formatPostedValue(parsed);
+    }
+
+    return getPostedMediaValue(trimmed) || trimmed;
+  }
+
+  if (typeof value === "number") return Number.isFinite(value) ? String(value) : null;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+
+  if (Array.isArray(value)) {
+    const formatted = value.map(formatPostedValue).filter((item): item is PostedDetailValue => item !== null);
+    const mediaItems = formatted.flatMap((item) => Array.isArray(item) ? item : typeof item === "string" ? [] : [item]);
+
+    if (mediaItems.length === formatted.length) {
+      return mediaItems;
+    }
+
+    const textItems = formatted.map(formatPostedValueAsText).filter(Boolean);
+    return textItems.length ? textItems.join(", ") : null;
+  }
+
+  if (typeof value === "object") {
+    const seenKeys = new Set<string>();
+    const rows = Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => {
+        if (isHiddenPostedDetailKey(key)) return false;
+
+        const fieldKey = normalizePostedFieldIdentity(key);
+        if (seenKeys.has(fieldKey)) return false;
+
+        seenKeys.add(fieldKey);
+        return true;
+      })
+      .map(([key, nestedValue]) => {
+        const formatted = formatPostedValue(nestedValue);
+        const text = formatted ? formatPostedValueAsText(formatted) : "";
+        return text ? `${formatPostedLabel(key)}: ${text}` : "";
+      })
+      .filter(Boolean);
+
+    return rows.length ? rows.join("; ") : null;
+  }
+
+  return null;
+}
+
+function parsePostedJson(value: string) {
+  if (!/^[\[{]/.test(value)) return undefined;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+}
+
+function getPostedMediaValue(value: string): PostedMediaValue | null {
+  const iframeSrc = getIframeSrc(value);
+  const source = iframeSrc || value;
+  const videoEmbedUrl = getVideoEmbedUrl(source);
+
+  if (isImageSource(source)) {
+    return { kind: "image", src: source };
+  }
+
+  if (videoEmbedUrl) {
+    return { kind: "video", src: videoEmbedUrl, embed: true };
+  }
+
+  if (isVideoSource(source)) {
+    return { kind: "video", src: source };
+  }
+
+  if (isUrlOrUploadPath(source)) {
+    return { kind: "link", src: source, label: getPostedLinkLabel(source) };
+  }
+
+  return null;
+}
+
+function getPostedMediaSrc(src: string) {
+  return isUploadPath(src) ? resolveListingImageUrl(src) : src;
+}
+
+function formatPostedValueAsText(value: PostedDetailValue): string {
+  if (typeof value === "string") return value;
+
+  const items = Array.isArray(value) ? value : [value];
+  return items.map((item) => item.label || (item.kind === "image" ? "Image" : item.kind === "video" ? "Video" : "File")).join(", ");
+}
+
+function isImageSource(value: string) {
+  return /\.(avif|bmp|gif|jpe?g|png|svg|webp)(\?.*)?(#.*)?$/i.test(value);
+}
+
+function isVideoSource(value: string) {
+  return /\.(m4v|mov|mp4|ogg|ogv|webm)(\?.*)?(#.*)?$/i.test(value);
+}
+
+function isUrlOrUploadPath(value: string) {
+  return isUploadPath(value) || /^https?:\/\//i.test(value);
+}
+
+function isUploadPath(value: string) {
+  return /^\/?uploads\//i.test(value);
+}
+
+function getIframeSrc(value: string) {
+  const match = value.match(/<iframe[^>]+src=["']([^"']+)["']/i);
+  return match?.[1] || "";
+}
+
+function getVideoEmbedUrl(value: string) {
+  const youtubeMatch = value.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]+)/i);
+  if (youtubeMatch?.[1]) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+  }
+
+  const vimeoMatch = value.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (vimeoMatch?.[1]) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  }
+
+  return "";
+}
+
+function getPostedLinkLabel(value: string) {
+  if (isUploadPath(value)) return "Open file";
+  return "Open link";
+}
+
+function parseUnknownRecord(value: string): Record<string, unknown> {
+  const parsed = parsePostedJson(value);
+  return asUnknownRecord(parsed);
+}
+
+function asUnknownRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
+function getUnknownString(record: Record<string, unknown>, key: string) {
+  const value = record[key];
+  return typeof value === "string" ? value.trim() : value === null || value === undefined ? "" : String(value).trim();
+}
+
+function formatPostedLabel(key: string) {
+  const knownLabels: Record<string, string> = {
+    bhk: "BHK",
+    hoaFees: "HOA Fees",
+    reraNumber: "RERA / License",
+    whatsAppNumber: "WhatsApp",
+    videoUrl: "Video URL",
+    websiteUrl: "Website URL",
+    isMobileOtpVerified: "Mobile OTP Verified",
+    onlineOrderingAvailable: "Online Ordering",
+    deliveryAvailable: "Delivery",
+    cprCertified: "CPR Certified",
+    kmDriven: "KM Driven",
+  };
+
+  if (knownLabels[key]) return knownLabels[key];
+
+  return key
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function getRatingCounts(reviews: NonNullable<ListingSummary["reviews"]>) {
+  return reviews.reduce<Record<number, number>>((counts, review) => {
+    const rating = Math.max(1, Math.min(5, Math.round(Number(review.rating || 0))));
+    counts[rating] = (counts[rating] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function getAverageRatingFromReviews(reviews: NonNullable<ListingSummary["reviews"]>) {
+  if (!reviews.length) return 0;
+  return reviews.reduce((total, review) => total + Number(review.rating || 0), 0) / reviews.length;
+}
+
 function RatingStars({ rating }: { rating: number }) {
   const rounded = Math.round(rating || 0);
 
@@ -954,20 +1445,6 @@ function buildNearbyServiceHref(service: NearbyService, category: string, addres
   return `https://www.google.com/maps/search/${encodeURIComponent(`${service.name || category} near ${address || "property"}`)}`;
 }
 
-function getServiceItems(listing: ListingSummary): NamedImageItem[] {
-  const services = parseJsonArray<NamedImageItem>(getString(listing.propertyDetails, "services"))
-    .filter((item) => item.name);
-  if (services.length) return services.slice(0, 8);
-
-  const restaurantServices = getArray(listing.restaurantFoodDetails, "serviceTypes").map((name) => ({ name }));
-  if (restaurantServices.length) return restaurantServices.slice(0, 8);
-
-  const amenityServices = getAmenityLabels(listing).map((name) => ({ name }));
-  if (amenityServices.length) return amenityServices.slice(0, 8);
-
-  return [listing.detailCategory, listing.subCategory].filter(Boolean).map((name) => ({ name }));
-}
-
 function getOfferItems(listing: ListingSummary): NamedImageItem[] {
   return parseJsonArray<NamedImageItem>(getString(listing.propertyDetails, "offers"))
     .filter((item) => item.name || item.detail || item.price)
@@ -978,88 +1455,6 @@ function getProducts(listing: ListingSummary) {
   return parseJsonArray<string>(getString(listing.propertyDetails, "products"))
     .filter(Boolean)
     .slice(0, 6);
-}
-
-function getServiceAreas(listing: ListingSummary) {
-  const landmark = getString(listing.locationDetails, "landmark");
-  return [
-    ...splitWords(landmark),
-    getString(listing.locationDetails, "city") || listing.city || "",
-    getString(listing.locationDetails, "state"),
-  ].filter(Boolean).slice(0, 8);
-}
-
-function getDetailRows(listing: ListingSummary): Array<[string, LooseValue]> {
-  if (listing.categoryName === "Restaurants & Food") {
-    const amenities = getArray(listing.restaurantFoodDetails, "amenities");
-    return [
-      ["Business name", getString(listing.restaurantFoodDetails, "businessName") || listing.title],
-      ["Cuisine", getString(listing.restaurantFoodDetails, "cuisineType")],
-      ["Business type", getString(listing.restaurantFoodDetails, "businessType")],
-      ["Service types", getArray(listing.restaurantFoodDetails, "serviceTypes").join(", ")],
-      ["Average cost for two", getValue(listing.restaurantFoodDetails, "averageCostForTwo")],
-      ["Delivery", getBooleanText(listing.restaurantFoodDetails, "deliveryAvailable")],
-      ["Online ordering", getBooleanText(listing.restaurantFoodDetails, "onlineOrderingAvailable")],
-      ["Amenities", amenities.join(", ")],
-    ];
-  }
-
-  if (listing.categoryName === "Vehicles") {
-    return [
-      ["Brand", getString(listing.vehicleDetails, "brand")],
-      ["Model", getString(listing.vehicleDetails, "model")],
-      ["Year", getValue(listing.vehicleDetails, "yearOfManufacture")],
-      ["Condition", getString(listing.vehicleDetails, "vehicleCondition")],
-      ["Fuel", getString(listing.vehicleDetails, "fuelType")],
-      ["Transmission", getString(listing.vehicleDetails, "transmission")],
-      ["KM driven", getValue(listing.vehicleDetails, "kmDriven")],
-      ["Features", getArray(listing.vehicleDetails, "features").join(", ")],
-    ];
-  }
-
-  if (listing.categoryName === "Electronics & Appliances") {
-    return [
-      ["Brand", getString(listing.electronicsDetails, "brand")],
-      ["Model", getString(listing.electronicsDetails, "modelNameNumber")],
-      ["Condition", getString(listing.electronicsDetails, "condition")],
-      ["Purchase year", getValue(listing.electronicsDetails, "purchaseYear")],
-      ["Warranty", getBooleanText(listing.electronicsDetails, "warranty")],
-      ["RAM", getString(listing.electronicsDetails, "ram")],
-      ["Storage", getString(listing.electronicsDetails, "storage")],
-      ["Processor", getString(listing.electronicsDetails, "processor")],
-      ["Screen size", getString(listing.electronicsDetails, "screenSize")],
-      ["Capacity", getString(listing.electronicsDetails, "capacity")],
-      ["Features", getArray(listing.electronicsDetails, "features").join(", ")],
-    ];
-  }
-
-  if (listing.categoryName === "Care Services") {
-    return [
-      ["Provider type", getString(listing.careServiceDetails, "providerType")],
-      ["Experience", getValue(listing.careServiceDetails, "experienceYears")],
-      ["Languages", getArray(listing.careServiceDetails, "languagesSpoken").join(", ")],
-      ["Services", getArray(listing.careServiceDetails, "servicesOffered").join(", ")],
-      ["Availability", getString(listing.careServiceDetails, "availabilityType")],
-      ["Available days", getArray(listing.careServiceDetails, "availableDays").join(", ")],
-      ["Time slots", getString(listing.careServiceDetails, "availableTimeSlots")],
-      ["Rate type", getString(listing.careServiceDetails, "rateType")],
-      ["CPR certified", getBooleanText(listing.careServiceDetails, "cprCertified")],
-      ["Background check", getBooleanText(listing.careServiceDetails, "backgroundCheck")],
-      ["Age groups", getArray(listing.careServiceDetails, "ageGroups").join(", ")],
-    ];
-  }
-
-  return [
-    ["Property type", getString(listing.propertyDetails, "propertyType")],
-    ["BHK", getString(listing.propertyDetails, "bhk")],
-    ["Bathrooms", getValue(listing.propertyDetails, "bathrooms")],
-    ["Balconies", getValue(listing.propertyDetails, "balconies")],
-    ["Furnishing", getString(listing.propertyDetails, "furnishingType")],
-    ["Super built-up area", getValue(listing.propertyDetails, "superBuiltUpArea")],
-    ["Carpet area", getValue(listing.propertyDetails, "carpetArea")],
-    ["Availability", getString(listing.propertyDetails, "availability")],
-    ["Seller type", getString(listing.sellerInformation, "sellerType")],
-  ];
 }
 
 function getBusinessHours(listing: ListingSummary) {
@@ -1094,27 +1489,7 @@ function getCompanyRows(listing: ListingSummary): Array<[string, LooseValue]> {
     ["Email", getString(listing.sellerInformation, "email") || getString(contactInfo, "email")],
     ["WhatsApp", getString(listing.sellerInformation, "whatsAppNumber")],
     ["Pincode", getString(listing.locationDetails, "pincode")],
-    ["Verified", getBooleanText(listing.settings, "verifiedByAdmin")],
-    ["Ad type", getString(listing.settings, "adType")],
   ];
-}
-
-function getAmenityLabels(listing: ListingSummary) {
-  const amenityLabels: Record<string, string> = {
-    parking: "Parking",
-    lift: "Lift",
-    powerBackup: "Power backup",
-    security: "Security",
-    gym: "Gym",
-    swimmingPool: "Swimming pool",
-    garden: "Garden",
-    childrensPlayArea: "Children play area",
-    cctv: "CCTV",
-  };
-
-  return Object.entries(listing.amenities || {})
-    .filter(([, value]) => value === true)
-    .map(([key]) => amenityLabels[key] || key);
 }
 
 function buildBackHref(listing: ListingSummary) {
@@ -1133,23 +1508,8 @@ function getString(record: Record<string, LooseValue> | undefined, key: string) 
   return typeof value === "string" || typeof value === "number" ? String(value) : "";
 }
 
-function getValue(record: Record<string, LooseValue> | undefined, key: string) {
-  const value = record?.[key];
-  return value === null || value === undefined || Array.isArray(value) ? "" : value;
-}
-
-function getArray(record: Record<string, LooseValue> | undefined, key: string) {
-  const value = record?.[key];
-  return Array.isArray(value) ? value.map(String) : [];
-}
-
 function getBoolean(record: Record<string, LooseValue> | undefined, key: string) {
   return record?.[key] === true;
-}
-
-function getBooleanText(record: Record<string, LooseValue> | undefined, key: string) {
-  const value = record?.[key];
-  return typeof value === "boolean" ? (value ? "Yes" : "No") : "";
 }
 
 function getNumber(record: Record<string, LooseValue> | undefined, key: string) {
@@ -1192,10 +1552,6 @@ function parseJsonRecord(value: string): LooseRecord {
   } catch {
     return {};
   }
-}
-
-function splitWords(value: string) {
-  return value.split(/[,\n]/).map((item) => item.trim()).filter(Boolean);
 }
 
 function formatHourRange(open: string, close: string, is24Hours: boolean) {

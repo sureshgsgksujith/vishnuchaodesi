@@ -2,7 +2,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense, type ReactNode } from "react";
 import HomePage from "../../features/home/ui/HomePage";
 import { customerTemplateRoutes } from "./customerTemplateRoutes";
-import { isCustomerAuthenticated, redirectToCustomerHomeAfterSessionPopup } from "../../features/auth/utils/customerSession";
+import { clearCustomerSession, isCustomerAuthenticated } from "../../features/auth/utils/customerSession";
 
 const LoginPage = lazy(() => import("../../features/auth/ui/LoginPage"));
 const UserInfoPage = lazy(() => import("../../features/auth/ui/UserInfoPage"));
@@ -26,7 +26,6 @@ const AllListingsPage = lazy(() => import("../../features/dashboard/ui/AllListin
 const ListingFormPage = lazy(() => import("../../features/dashboard/ui/ListingFormPage"));
 const ListingPreviewPage = lazy(() => import("../../features/dashboard/ui/ListingPreviewPage"));
 const ListingStartPage = lazy(() => import("../../features/dashboard/ui/ListingStartPage"));
-const ClassifiedPostingPage = lazy(() => import("../../features/dashboard/ui/ClassifiedPostingPage"));
 const PricingDetailsPage = lazy(() => import("../../features/pricing/ui/PricingDetailsPage"));
 const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPage"));
 const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
@@ -49,12 +48,17 @@ function RouteSuspense({ children }: { children: ReactNode }) {
 }
 
 function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
+  const location = useLocation();
+
   if (isCustomerAuthenticated()) {
     return <RouteSuspense>{children}</RouteSuspense>;
   }
 
-  redirectToCustomerHomeAfterSessionPopup();
-  return null;
+  clearCustomerSession();
+  const returnUrl = `${location.pathname}${location.search}${location.hash}`;
+  const searchParams = new URLSearchParams({ returnUrl });
+
+  return <Navigate to={`/login?${searchParams.toString()}`} replace />;
 }
 
 function RegisterRedirect() {
@@ -102,10 +106,14 @@ export function AppRouter() {
     "/dashboard/classifieds/step-1",
     "/dashboard/classifieds/step-2",
     "/dashboard/classifieds/step-3",
+    "/dashboard/classifieds/step-4",
+    "/dashboard/classifieds/step-5",
     "/dashboard/classifieds/:listingId/edit",
     "/dashboard/classifieds/:listingId/edit/step-1",
     "/dashboard/classifieds/:listingId/edit/step-2",
     "/dashboard/classifieds/:listingId/edit/step-3",
+    "/dashboard/classifieds/:listingId/edit/step-4",
+    "/dashboard/classifieds/:listingId/edit/step-5",
     "/add-classified-start",
     "/add-classified-step-1",
     "/add-classified-step-2",
@@ -151,17 +159,21 @@ export function AppRouter() {
       <Route path="/dashboard/listings/new" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/edit" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/preview" element={<ProtectedCustomerRoute><ListingPreviewPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/classifieds/step-1" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/classifieds/step-2" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/classifieds/step-3" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/classifieds/:listingId/edit" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/classifieds/:listingId/edit/step-1" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/classifieds/:listingId/edit/step-2" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/classifieds/:listingId/edit/step-3" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/step-1" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/step-2" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/step-3" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/step-4" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/step-5" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/:listingId/edit" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/:listingId/edit/step-1" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/:listingId/edit/step-2" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/:listingId/edit/step-3" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/:listingId/edit/step-4" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/classifieds/:listingId/edit/step-5" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
       <Route path="/add-classified-start" element={<ProtectedCustomerRoute><ListingStartPage /></ProtectedCustomerRoute>} />
-      <Route path="/add-classified-step-1" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
-      <Route path="/add-classified-step-2" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
-      <Route path="/add-classified-step-3" element={<ProtectedCustomerRoute><ClassifiedPostingPage /></ProtectedCustomerRoute>} />
+      <Route path="/add-classified-step-1" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/add-classified-step-2" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
+      <Route path="/add-classified-step-3" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
       <Route path="/classifieds/index" element={<ClassifiedsHomePage />} />
       <Route path="/classifieds/ads-all" element={<ClassifiedAdsAllPage />} />
       <Route path="/classifieds/ads-details" element={<ClassifiedAdDetailsPage />} />

@@ -513,7 +513,7 @@ export default function ClassifiedPostingPage() {
           description: draft.description.trim(),
           categoryName: "Classifieds",
           subCategory: draft.category.trim(),
-          detailCategory: draft.subCategory.trim(),
+          detailCategory: "",
           propertyDetails: {
             listingKind: "Classified",
             propertyType: draft.category.trim(),
@@ -636,12 +636,12 @@ export default function ClassifiedPostingPage() {
               <div className="log-bor">&nbsp;</div>
               <span className="steps">Step {step}</span>
               <div className="log">
-                <div className={`login ${step === 2 ? "add-lis-oth" : ""} ${step === 3 ? "add-lis-done" : ""}`}>
+                <div className={`login listing-polished-form classified-form-card ${step === 2 ? "add-lis-oth" : ""} ${step === 3 ? "add-lis-done classified-success-card" : ""}`}>
                   {error ? <div className="alert alert-danger">{error}</div> : null}
                   {isLoadingListing ? <div className="alert alert-info">Loading classified ad...</div> : null}
                   {step === 1 ? (
                     <>
-                      <h4>{isEditMode ? "Edit your Ad" : "Post your Ad"}</h4>
+                      <h4>{isEditMode ? "Edit Classified Ad" : "Post Classified Ad"}</h4>
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
@@ -738,7 +738,7 @@ export default function ClassifiedPostingPage() {
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
-                            <label>Category</label>
+                            <label className="listing-field-label">Category</label>
                             <select
                               className={`form-control${fieldErrors.category ? " is-invalid" : ""}`}
                               value={draft.category}
@@ -756,7 +756,7 @@ export default function ClassifiedPostingPage() {
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
-                            <label>Sub Category</label>
+                            <label className="listing-field-label">Sub Category</label>
                             <select className={`form-control${fieldErrors.subCategory ? " is-invalid" : ""}`} value={draft.subCategory} onChange={(event) => updateDraft({ subCategory: event.target.value, customFields: {} })}>
                               <option value="">Select Sub Category</option>
                               {subCategories.map((subCategory) => (
@@ -780,7 +780,7 @@ export default function ClassifiedPostingPage() {
 
                   {step === 2 ? (
                     <>
-                      <h4>Include some details</h4>
+                      <h4>Ad Details</h4>
                       <div className="row">
                         <div className="col-md-12">
                           <div className="form-group">
@@ -799,7 +799,7 @@ export default function ClassifiedPostingPage() {
                           </div>
                         </div>
                       </div>
-                      <h4>Photo gallery</h4>
+                      <h4>Photo Gallery</h4>
                       <ClassifiedGalleryUploader files={galleryFiles} onFilesChange={setGalleryFiles} />
                       <div className="row classified-step-actions">
                         <div className="col-md-6">
@@ -1321,9 +1321,19 @@ function shouldShowClassifiedField(
   const electronicsCondition = getClassifiedFieldValue(values, "condition");
   const electronicsWarranty = getClassifiedFieldValue(values, "warranty");
   const isElectronicsAccessory = subCategory.toLowerCase().includes("accessor");
-  const isPlotRealEstate = subCategory.toLowerCase().includes("plot") || subCategory.toLowerCase().includes("land");
-  const isRentRealEstate = subCategory.toLowerCase().includes("rent");
-  const isSaleRealEstate = subCategory.toLowerCase().includes("sale");
+  const categoryKey = categoryName.trim().toLowerCase();
+  const subCategoryKey = subCategory.trim().toLowerCase();
+  const isPropertyClassified = categoryKey === "real estate" || categoryKey === "properties";
+  const isPlotRealEstate = /plot|land/.test(subCategoryKey);
+  const isCommercialRealEstate = /commercial|shop|office|warehouse|industrial|retail/.test(subCategoryKey);
+  const isRentRealEstate = /rent|pg|guest/.test(subCategoryKey);
+  const isSaleRealEstate = /sale|new project|new construction/.test(subCategoryKey);
+  const residentialPropertyKeys = ["bhk", "bedrooms", "bedroom", "bathrooms", "bathroom", "balconies", "furnishingtype", "furnishing_type"];
+  const rentPropertyKeys = ["securitydepositdetail", "security_deposit_detail", "securitydeposit", "security_deposit", "deposit", "monthlyrentlabel", "monthly_rent_label", "monthlyrent", "monthly_rent", "leaseterms", "lease_terms"];
+  const salePropertyKeys = ["loaneligibledetail", "loan_eligible_detail", "loaneligible", "loan_eligible", "salepricelabel", "sale_price_label", "saleprice", "sale_price", "ownershiptype", "ownership_type", "ownership", "mortgageinfo", "mortgage_info"];
+  const leaseDurationKeys = ["leaseduration", "lease_duration"];
+  const plotPropertyKeys = ["plotsize", "plot_size", "plotareadetail", "plot_area_detail", "plotarea", "plot_area", "lotsize", "lot_size", "lotsizesqft", "lot_size_sqft", "zoning", "zoningtype", "zoning_type"];
+  const commercialPropertyKeys = ["commercialpropertytype", "commercial_property_type", "commercialtype", "commercial_type", "officetype", "office_type", "officecapacity", "office_capacity", "seatingcapacity", "seating_capacity", "businessuse", "business_use", "suitablefor", "suitable_for"];
 
   if (categoryName === "Vehicles" && isNewVehicle && ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
     return false;
@@ -1357,15 +1367,35 @@ function shouldShowClassifiedField(
     return false;
   }
 
-  if (categoryName === "Real Estate" && isPlotRealEstate && ["bhk", "bathrooms", "balconies", "furnishingtype", "furnishing_type"].includes(key)) {
+  if (isPropertyClassified && isPlotRealEstate && residentialPropertyKeys.includes(key)) {
     return false;
   }
 
-  if (categoryName === "Real Estate" && !isRentRealEstate && ["securitydepositdetail", "security_deposit_detail", "monthlyrentlabel", "monthly_rent_label"].includes(key)) {
+  if (isPropertyClassified && !isPlotRealEstate && !isRentRealEstate && rentPropertyKeys.includes(key)) {
     return false;
   }
 
-  if (categoryName === "Real Estate" && !isSaleRealEstate && ["loaneligibledetail", "loan_eligible_detail", "salepricelabel", "sale_price_label"].includes(key)) {
+  if (isPropertyClassified && !isPlotRealEstate && !isSaleRealEstate && salePropertyKeys.includes(key)) {
+    return false;
+  }
+
+  if (isPropertyClassified && isSaleRealEstate && leaseDurationKeys.includes(key)) {
+    return false;
+  }
+
+  if (isPropertyClassified && isPlotRealEstate && [...rentPropertyKeys, ...salePropertyKeys, ...leaseDurationKeys].includes(key)) {
+    return false;
+  }
+
+  if (isPropertyClassified && !isPlotRealEstate && plotPropertyKeys.includes(key)) {
+    return false;
+  }
+
+  if (isPropertyClassified && isCommercialRealEstate && residentialPropertyKeys.includes(key)) {
+    return false;
+  }
+
+  if (isPropertyClassified && !isCommercialRealEstate && commercialPropertyKeys.includes(key)) {
     return false;
   }
 

@@ -2,16 +2,16 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createListing, getListing, getListingApiErrorMessage, isListingUpgradeRequired, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
-import { getListingCategoryFields, getListingCategoryTree, type ListingCategoryFieldDefinition, type ListingCategoryOption } from "../api/listingCategoriesApi";
+import { getClassifiedSpecificationFields, getListingCategoryFields, getListingCategoryTree, type ListingCategoryFieldDefinition, type ListingCategoryOption } from "../api/listingCategoriesApi";
 import { getMyProfile } from "../api/profileApi";
 import { ensureLocationMaster, getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 import { getAddressPlaceDetail, searchAddressPredictions } from "../../../shared/api/addressAutocompleteApi";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
-import { getMyPlanUsage, getPricingPlans, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
+import { getMyPlanUsage, getPricingPlans, selectPricingPlan, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
 import { resolveListingImageUrl } from "../utils/listingImages";
-import { labelWithCountryCurrency } from "../../../shared/utils/currency";
+import { formatCurrencyAmount, labelWithCountryCurrency } from "../../../shared/utils/currency";
 import "../styles/listings.css";
 
 const wizardSteps = [
@@ -98,6 +98,7 @@ type FieldErrors = Record<string, string>;
 type GalleryUploadFile = { file: File; marker: string };
 type InlineUploadFile = { file: File; marker: string };
 type NearbyServices = Record<string, string[]>;
+type ListingFormMode = "listing" | "classified";
 
 type ListingDraft = {
   businessHours: BusinessHour[];
@@ -1177,7 +1178,8 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   },
 };
 
-export default function ListingFormPage() {
+export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFormMode } = {}) {
+  const isClassifiedMode = mode === "classified";
   const [form, setForm] = useState<FormState>(initialForm);
   const [sellerName, setSellerName] = useState(
     localStorage.getItem("fullName") ||
@@ -1220,6 +1222,9 @@ export default function ListingFormPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
+  const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
+  const [selectingPlanCode, setSelectingPlanCode] = useState("");
+  const [plansModalMessage, setPlansModalMessage] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
   const [savedListingId, setSavedListingId] = useState<number | null>(null);
   const pricingSaveStartedRef = useRef(false);
@@ -1232,6 +1237,13 @@ export default function ListingFormPage() {
   const duplicateListingId = numberOrNull(searchParams.get("duplicate") || undefined);
   const sourceListingId = editListingId || duplicateListingId;
   const isEditMode = Boolean(editListingId);
+  const isRealEstateListing = !isClassifiedMode && isRealEstateCategory(form.categoryName);
+
+  useEffect(() => {
+    if (isClassifiedMode) {
+      setCurrentStep(getClassifiedListingStepIndex(location.pathname));
+    }
+  }, [isClassifiedMode, location.pathname]);
 
   useEffect(() => {
     let isActive = true;
@@ -1357,7 +1369,7 @@ export default function ListingFormPage() {
   }, []);
 
   useEffect(() => {
-    if (!isRealEstateCategory(form.categoryName) || form.country || !countries.length) {
+    if (!isRealEstateListing || form.country || !countries.length) {
       return;
     }
 
@@ -1372,7 +1384,7 @@ export default function ListingFormPage() {
         countryId: defaultCountry.id,
       }));
     }
-  }, [countries, form.categoryName, form.country]);
+  }, [countries, form.country, isRealEstateListing]);
 
   useEffect(() => {
     let isActive = true;
@@ -1494,7 +1506,7 @@ export default function ListingFormPage() {
         }
         const propertyDetails = listing.propertyDetails || {};
         const otherInformation = parseListingOtherInformation(propertyDetails.otherInformation);
-        setForm((currentForm) => mapListingToForm(listing, currentForm, !isEditMode));
+        setForm((currentForm) => mapListingToForm(listing, currentForm, !isEditMode, mode));
         setServices(parseServiceItems(propertyDetails.services));
         setOffers(parseJsonArray<OfferItem>(propertyDetails.offers, [{ name: "", price: "", detail: "", imageName: "", link: "" }]));
         setInfoItems(otherInformation.items);
@@ -1529,7 +1541,7 @@ export default function ListingFormPage() {
     return () => {
       isActive = false;
     };
-  }, [sourceListingId, isEditMode]);
+  }, [sourceListingId, isEditMode, mode]);
 
   useEffect(() => {
     const pricingState = location.state as ListingPricingState | null;
@@ -1597,16 +1609,16 @@ export default function ListingFormPage() {
   );
 
   const detailCategoryOptions = useMemo(
-    () => includeCurrentValue(selectedListingSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [], form.detailCategory),
-    [selectedListingSubCategory, form.detailCategory],
+    () => isClassifiedMode ? [] : includeCurrentValue(selectedListingSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [], form.detailCategory),
+    [isClassifiedMode, selectedListingSubCategory, form.detailCategory],
   );
   const effectiveDynamicCategoryFields = useMemo(
     () => mergeCategoryPostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
     [dynamicCategoryFields, form.categoryName, form.detailCategory, form.subCategory],
   );
-  const hasDynamicCategoryFields = !isRealEstateCategory(form.categoryName) && effectiveDynamicCategoryFields.length > 0;
-  const hasDynamicPriceField = !isRealEstateCategory(form.categoryName) && hasAnyFieldKey(effectiveDynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price");
-  const hasDynamicSellerTypeField = !isRealEstateCategory(form.categoryName) && hasAnyFieldKey(effectiveDynamicCategoryFields, "seller_type", "sellerType");
+  const hasDynamicCategoryFields = !isRealEstateListing && effectiveDynamicCategoryFields.length > 0;
+  const hasDynamicPriceField = !isRealEstateListing && hasAnyFieldKey(effectiveDynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price");
+  const hasDynamicSellerTypeField = !isRealEstateListing && hasAnyFieldKey(effectiveDynamicCategoryFields, "seller_type", "sellerType");
 
   useEffect(() => {
     let isActive = true;
@@ -1618,11 +1630,15 @@ export default function ListingFormPage() {
       };
     }
 
-    getListingCategoryFields(
-      selectedListingCategory.id,
-      selectedListingSubCategory?.id,
-      selectedListingDetailedCategory?.id,
-    )
+    const fieldsRequest = isClassifiedMode
+      ? getClassifiedSpecificationFields(selectedListingCategory.id, selectedListingSubCategory?.id)
+      : getListingCategoryFields(
+          selectedListingCategory.id,
+          selectedListingSubCategory?.id,
+          selectedListingDetailedCategory?.id,
+        );
+
+    fieldsRequest
       .then((fields) => {
         if (isActive) {
           setDynamicCategoryFields(fields.map(mapDynamicFieldDefinition));
@@ -1637,7 +1653,7 @@ export default function ListingFormPage() {
     return () => {
       isActive = false;
     };
-  }, [selectedListingCategory?.id, selectedListingSubCategory?.id, selectedListingDetailedCategory?.id]);
+  }, [isClassifiedMode, selectedListingCategory?.id, selectedListingSubCategory?.id, selectedListingDetailedCategory?.id]);
 
   function updateField(name: StringFormField, value: string) {
     if (name === "adType") {
@@ -1663,7 +1679,7 @@ export default function ListingFormPage() {
         if (value === "Care Services" && !["15", "30", "60"].includes(nextForm.adDurationDays)) {
           nextForm.adDurationDays = "30";
         }
-        if (isRealEstateCategory(value)) {
+        if (!isClassifiedMode && isRealEstateCategory(value)) {
           nextForm.sellerType = "";
         }
         setCategoryAttributes({});
@@ -1779,6 +1795,21 @@ export default function ListingFormPage() {
       city: value,
       cityId: city?.id ?? null,
     }));
+  }
+
+  async function handleSelectPlan(plan: PricingPlan) {
+    setSelectingPlanCode(plan.code);
+    setPlansModalMessage("");
+    try {
+      const nextUsage = await selectPricingPlan(plan.code);
+      setPlanUsage(nextUsage);
+      updateField("adType", plan.name);
+      setIsPlansModalOpen(false);
+    } catch {
+      setPlansModalMessage("Unable to select this plan. Please try again.");
+    } finally {
+      setSelectingPlanCode("");
+    }
   }
 
   function clearFieldError(name: string) {
@@ -1922,13 +1953,25 @@ export default function ListingFormPage() {
 
     setErrorMessage("");
     setFieldErrors({});
-    setCurrentStep((step) => Math.min(step + 1, wizardSteps.length - 1));
+    setCurrentStep((step) => {
+      const nextStep = Math.min(step + 1, wizardSteps.length - 1);
+      if (isClassifiedMode) {
+        window.history.pushState(null, "", getClassifiedListingFormPath(nextStep + 1, editListingId));
+      }
+      return nextStep;
+    });
   }
 
   function handlePrevious() {
     setErrorMessage("");
     setFieldErrors({});
-    setCurrentStep((step) => Math.max(step - 1, 0));
+    setCurrentStep((step) => {
+      const nextStep = Math.max(step - 1, 0);
+      if (isClassifiedMode) {
+        window.history.pushState(null, "", getClassifiedListingFormPath(nextStep + 1, editListingId));
+      }
+      return nextStep;
+    });
   }
 
   function scrollToFirstValidationError() {
@@ -2005,32 +2048,32 @@ export default function ListingFormPage() {
       }
     };
 
-    if (!hasDynamicCategoryFields && form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
+    if (!isClassifiedMode && !hasDynamicCategoryFields && form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
       setFieldErrors({});
       return false;
     }
 
-    if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Vehicles" && !validateVehicleFields()) {
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Vehicles" && !validateVehicleFields()) {
       setFieldErrors({});
       return false;
     }
 
-    if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Electronics & Appliances" && !validateElectronicsFields()) {
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Electronics & Appliances" && !validateElectronicsFields()) {
       setFieldErrors({});
       return false;
     }
 
-    if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Care Services" && !validateCareServiceFields()) {
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Care Services" && !validateCareServiceFields()) {
       setFieldErrors({});
       return false;
     }
 
-    if (!nextFieldErrors.categoryName && !nextFieldErrors.subCategory && isFurnitureCategory(form.categoryName) && !validateFurnitureFields()) {
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && isFurnitureCategory(form.categoryName) && !validateFurnitureFields()) {
       setFieldErrors({});
       return false;
     }
 
-    const missingDetailField = hasDynamicCategoryFields || isRealEstateCategory(form.categoryName)
+    const missingDetailField = hasDynamicCategoryFields || isRealEstateListing || isClassifiedMode
       ? undefined
       : getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
 
@@ -2038,26 +2081,26 @@ export default function ListingFormPage() {
       addFieldError(missingDetailField[0], `${missingDetailField[1]} is required.`);
     }
 
-    if (!hasDynamicCategoryFields && form.availabilityType === "Date" && !form.availabilityDate.trim()) {
+    if (!isClassifiedMode && !hasDynamicCategoryFields && form.availabilityType === "Date" && !form.availabilityDate.trim()) {
       addFieldError("availabilityDate", "Availability Date is required.");
     }
 
-    if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && !form.price.trim()) {
+    if (!hasDynamicCategoryFields && isRealEstateListing && !form.price.trim()) {
       validationTargetStep = 2;
       addFieldError("price", isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
     }
 
-    if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && !getAttributeValue(categoryAttributes, "price_type").trim()) {
+    if (!hasDynamicCategoryFields && isRealEstateListing && !getAttributeValue(categoryAttributes, "price_type").trim()) {
       validationTargetStep = 2;
       addFieldError(categoryFieldErrorKey("price_type"), "Price Type is required.");
     }
 
-    if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && !getAttributeValue(categoryAttributes, "property_type_group").trim()) {
+    if (!hasDynamicCategoryFields && isRealEstateListing && !getAttributeValue(categoryAttributes, "property_type_group").trim()) {
       validationTargetStep = 2;
       addFieldError(categoryFieldErrorKey("property_type_group"), "Property Type is required.");
     }
 
-    if (!hasDynamicCategoryFields && isRealEstateCategory(form.categoryName) && getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
+    if (!hasDynamicCategoryFields && isRealEstateListing && getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
       validationTargetStep = 2;
       const areaUnit = getAttributeValue(categoryAttributes, "area_unit").trim();
       if (!areaUnit) {
@@ -2070,24 +2113,14 @@ export default function ListingFormPage() {
 
     }
 
-    if (isRealEstateCategory(form.categoryName)) {
-      const nearbyServices = parseNearbyServices(categoryAttributes[nearbyServicesAttributeKey]);
-      const missingNearbyServiceType = nearbyServiceTypes.find((type) => !nearbyServices[type]?.some((item) => item.trim()));
-
-      if (missingNearbyServiceType) {
-        validationTargetStep = 4;
-        addFieldError(categoryFieldErrorKey(nearbyServicesAttributeKey), `Add at least one ${missingNearbyServiceType} nearby service.`);
-      }
-    }
-
-    if (!hasDynamicCategoryFields && isRentRealEstateSubCategory(form.subCategory) && !form.securityDeposit.trim()) {
+    if (!hasDynamicCategoryFields && isRealEstateListing && isRentRealEstateSubCategory(form.subCategory) && !form.securityDeposit.trim()) {
       if (!form.securityDeposit.trim()) {
         validationTargetStep = 2;
         addFieldError("securityDeposit", "Security Deposit is required.");
       }
     }
 
-    if (!isRealEstateCategory(form.categoryName)) {
+    if (!isRealEstateListing) {
       effectiveDynamicCategoryFields
         .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
         .forEach((field) => {
@@ -2478,11 +2511,15 @@ export default function ListingFormPage() {
   }
 
   function validateMedia() {
-    if (isRealEstateCategory(form.categoryName)) {
+    if (isClassifiedMode) {
       return true;
     }
 
-    if (!isRealEstateCategory(form.categoryName) && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances" && form.categoryName !== "Care Services" && !isFurnitureCategory(form.categoryName)) {
+    if (isRealEstateListing) {
+      return true;
+    }
+
+    if (!isRealEstateListing && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances" && form.categoryName !== "Care Services" && !isFurnitureCategory(form.categoryName)) {
       return true;
     }
 
@@ -2537,16 +2574,6 @@ export default function ListingFormPage() {
       return false;
     }
 
-    if (!isEditMode && planUsage && !planUsage.canCreateListing) {
-      navigate("/pricing-details", {
-        state: {
-          pendingListingDraft: getListingDraft(),
-          returnTo: "/dashboard/listings/new",
-        },
-      });
-      return false;
-    }
-
     setIsSaving(true);
     setErrorMessage("");
 
@@ -2567,6 +2594,7 @@ export default function ListingFormPage() {
         draft.restaurantInfo,
         draft.restaurantMenuItems,
         draft.categoryAttributes,
+        mode,
       );
       const galleryMarkers = new Set(draft.form.galleryMedia);
       if (draft.form.listingVideo.startsWith(galleryImageUploadMarkerPrefix)) {
@@ -2592,12 +2620,8 @@ export default function ListingFormPage() {
       return true;
     } catch (error) {
       if (isListingUpgradeRequired(error)) {
-        navigate("/pricing-details", {
-          state: {
-            pendingListingDraft: isEditMode ? undefined : getListingDraft(),
-            returnTo: location.pathname,
-          },
-        });
+        setPlansModalMessage(getListingApiErrorMessage(error));
+        setIsPlansModalOpen(true);
         return false;
       }
       const message = getListingApiErrorMessage(error);
@@ -2627,22 +2651,7 @@ export default function ListingFormPage() {
       return;
     }
 
-    if (isEditMode) {
-      await saveListing();
-      return;
-    }
-
-    if (planUsage && !planUsage.requiresPlanSelection && !planUsage.isPlanExpired && planUsage.canCreateListing) {
-      await saveListing();
-      return;
-    }
-
-    navigate("/pricing-details", {
-      state: {
-        pendingListingDraft: getListingDraft(),
-        returnTo: "/dashboard/listings/new",
-      },
-    });
+    await saveListing();
   }
 
   function renderRealEstatePostingSections(formStep: number) {
@@ -2673,19 +2682,17 @@ export default function ListingFormPage() {
         updateCategoryAttributes={updateCategoryAttributes}
         handleAddressPlaceSelect={handleAddressPlaceSelect}
         setGalleryFiles={setGalleryFiles}
-        onViewPlans={() => navigate("/pricing-details", {
-          state: {
-            pendingListingDraft: isEditMode ? undefined : getListingDraft(),
-            returnTo: location.pathname,
-          },
-        })}
+        onViewPlans={() => {
+          setPlansModalMessage("");
+          setIsPlansModalOpen(true);
+        }}
         formStep={formStep}
       />
     );
   }
 
   function renderCategoryDynamicFields() {
-    if (!form.categoryName || isRealEstateCategory(form.categoryName)) {
+    if (!form.categoryName || isRealEstateListing) {
       return null;
     }
 
@@ -2737,12 +2744,12 @@ export default function ListingFormPage() {
               {currentStep === 0 ? (
                 <div className="log">
                   <div className="login">
-                    <h4>{isEditMode ? "Edit Listing" : "Listing Details"}</h4>
+                    <h4>{isClassifiedMode ? (isEditMode ? "Edit Classified Ad" : "Classified Details") : isEditMode ? "Edit Listing" : "Listing Details"}</h4>
                     <form className="listing_form_1 listing-polished-form" noValidate autoComplete="off">
                         <>
                       <h4>User Info</h4>
                       <Input
-                        placeholder={isRealEstateCategory(form.categoryName) ? "Name*" : form.categoryName === "Restaurants & Food" ? "Contact Person*" : "Listing Name*"}
+                        placeholder={isRealEstateListing ? "Name*" : form.categoryName === "Restaurants & Food" ? "Contact Person*" : "Listing Name*"}
                         value={sellerName}
                         error={fieldErrors.sellerName}
                         onChange={(value) => {
@@ -2767,14 +2774,16 @@ export default function ListingFormPage() {
                         onChange={(value) => updateField("subCategory", value)}
                         disabled={!form.categoryName}
                       />
-                      <Select
-                        placeholder="Select Detailed Category"
-                        value={form.detailCategory}
-                        error={fieldErrors.detailCategory}
-                        options={detailCategoryOptions}
-                        onChange={(value) => updateField("detailCategory", value)}
-                        disabled={!form.subCategory || !detailCategoryOptions.length}
-                      />
+                      {!isClassifiedMode ? (
+                        <Select
+                          placeholder="Select Detailed Category"
+                          value={form.detailCategory}
+                          error={fieldErrors.detailCategory}
+                          options={detailCategoryOptions}
+                          onChange={(value) => updateField("detailCategory", value)}
+                          disabled={!form.subCategory || !detailCategoryOptions.length}
+                        />
+                      ) : null}
                       <h4>Images</h4>
                       <div className="row">
                         <TemplateImageColumn
@@ -2813,9 +2822,9 @@ export default function ListingFormPage() {
               {wizardSteps.length > 2 && currentStep === 1 ? (
                 <div className="log">
                   <div className="login">
-                    <h4>{isRealEstateCategory(form.categoryName) ? "Property Details" : "Category Details"}</h4>
+                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : "Category Details"}</h4>
                     <form className="listing_form_2" noValidate autoComplete="off">
-                      {isRealEstateCategory(form.categoryName) ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
+                      {isRealEstateListing ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={40} />
                     </form>
                   </div>
@@ -2826,7 +2835,7 @@ export default function ListingFormPage() {
                 <div className="log">
                   <div className="login add-list-off">
                     <form className="listing_form_3" noValidate autoComplete="off">
-                      {isRealEstateCategory(form.categoryName) ? renderRealEstatePostingSections(1) : (
+                      {isRealEstateListing ? renderRealEstatePostingSections(1) : (
                         <ul className="listing-section-stack">
                           <li>
                             <BusinessHoursEditor hours={businessHours} onChange={setBusinessHours} />
@@ -2852,7 +2861,7 @@ export default function ListingFormPage() {
                 <div className="log add-list-map">
                   <div className="login add-list-off">
                     <form className="listing_form_4" noValidate autoComplete="off">
-                      {isRealEstateCategory(form.categoryName) ? renderRealEstatePostingSections(2) : (
+                      {isRealEstateListing ? renderRealEstatePostingSections(2) : (
                         <ul>
                           <li>
                             <WebLinksFields webLinks={webLinks} onChange={setWebLinks} />
@@ -2872,7 +2881,7 @@ export default function ListingFormPage() {
                 <div className="log">
                   <div className="login add-lis-oth">
                     <form className="listing_form" noValidate autoComplete="off">
-                      {isRealEstateCategory(form.categoryName) ? (
+                      {isRealEstateListing ? (
                         <>
                           {renderRealEstatePostingSections(3)}
                           {renderRealEstatePostingSections(4)}
@@ -2923,7 +2932,7 @@ export default function ListingFormPage() {
                 <div className="log">
                   <div className="login add-lis-done">
                     <h4>Success</h4>
-                    <p>{isEditMode ? "Your listing has been updated and sent back for admin approval." : "Your listing has been submitted and is waiting for admin approval."}</p>
+                    <p>{isClassifiedMode ? (isEditMode ? "Your ad has been updated and sent back for admin approval." : "Your ad has been submitted and is waiting for admin approval.") : isEditMode ? "Your listing has been updated and sent back for admin approval." : "Your listing has been submitted and is waiting for admin approval."}</p>
                     <div className="row">
                       <div className="col-md-12">
                         <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -2938,11 +2947,10 @@ export default function ListingFormPage() {
                       </div>
                       <div className="col-md-6">
                         <Link
-                          target="_blank"
                           to={savedListingId ? `/dashboard/listings/${savedListingId}/preview` : "/dashboard/all-listing"}
                           className="btn btn-primary"
                         >
-                          Listing preview
+                          Review listing
                         </Link>
                       </div>
                     </div>
@@ -2953,6 +2961,21 @@ export default function ListingFormPage() {
           </div>
         </div>
       </section>
+      {isPlansModalOpen ? (
+        <PlansSelectionModal
+          plans={pricingPlans}
+          selectedPlanName={form.adType}
+          activePlanCode={planUsage?.requiresPlanSelection ? "" : planUsage?.plan?.code || ""}
+          message={plansModalMessage}
+          selectingPlanCode={selectingPlanCode}
+          country={currencyCountry}
+          onSelect={handleSelectPlan}
+          onClose={() => {
+            setPlansModalMessage("");
+            setIsPlansModalOpen(false);
+          }}
+        />
+      ) : null}
       <DashboardFooter onOpenSupport={() => undefined} onOpenMobileMenu={() => undefined} />
     </>
   );
@@ -3603,10 +3626,13 @@ function RealEstatePostingSections({
   formStep?: number;
 }) {
   const detailCategory = form.detailCategory.trim();
-  const isRental = isRentRealEstateSubCategory(form.subCategory) || /shared|room|pg|co-living/i.test(detailCategory);
 
   function setAttribute(key: string, value: string) {
     updateCategoryAttributes({ ...categoryAttributes, [key]: value });
+  }
+
+  function setAttributes(values: CategoryAttributes) {
+    updateCategoryAttributes({ ...categoryAttributes, ...values });
   }
 
   function attribute(key: string) {
@@ -3619,7 +3645,9 @@ function RealEstatePostingSections({
   const isPg = ["PG", "PG / Co-living"].includes(form.subCategory);
   const isService = form.subCategory === "Real Estate Services";
   const isPlot = isPlotRealEstateCategory(form.subCategory, detailCategory);
+  const showPlotDetails = isPlot && Boolean(propertyTypeGroup);
   const showResidential = isResidential && !isPg && !isService;
+  const isRentListing = isRentRealEstateSubCategory(form.subCategory) && !isCommercial && !isPlot;
   const listingPlanOptions = includeCurrentValue(
     pricingPlans.length ? pricingPlans.map((plan) => plan.name) : listingTypeOptions,
     form.adType,
@@ -3697,7 +3725,7 @@ function RealEstatePostingSections({
         <SelectColumn placeholder="Price Type*" value={attribute("price_type")} error={fieldErrors[categoryFieldErrorKey("price_type")]} options={["Total Price", "Monthly Rent", "Lease", "Per Sq Ft"]} onChange={(value) => setAttribute("price_type", value)} />
         <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry || "United States")} type="number" value={form.price} error={fieldErrors.price} onChange={(value) => updateField("price", value)} />
       </div>
-      {isRental ? (
+      {isRentListing ? (
         <Input placeholder={labelWithCountryCurrency("Security Deposit", currencyCountry || "United States")} type="number" value={form.securityDeposit} error={fieldErrors.securityDeposit} onChange={(value) => updateField("securityDeposit", value)} />
       ) : null}
       <div className="row">
@@ -3717,6 +3745,17 @@ function RealEstatePostingSections({
           updateField("propertyType", "");
         }}
       />
+      {showPlotDetails ? (
+        <>
+          <div className="row">
+            <InputColumn placeholder="Lot Size*" type="number" value={form.plotArea} error={fieldErrors.plotArea} onChange={(value) => updateField("plotArea", value)} />
+            <SelectColumn placeholder="Lot Size Unit" value={attribute("lot_size_unit") || attribute("area_unit")} options={["Sq Ft", "Acres"]} onChange={(value) => {
+              setAttributes({ lot_size_unit: value, area_unit: value });
+            }} />
+          </div>
+          <Select placeholder="Zoning Type" value={attribute("zoning_type")} options={["Residential", "Commercial", "Agricultural", "Industrial", "Mixed Use", "Other"]} onChange={(value) => setAttribute("zoning_type", value)} />
+        </>
+      ) : null}
       {showResidential ? (
         <>
           {!isPlot ? (
@@ -3729,31 +3768,33 @@ function RealEstatePostingSections({
             {!isPlot ? <InputColumn placeholder="Balconies" type="number" value={form.balconies} onChange={(value) => updateField("balconies", value)} /> : null}
             {!isPlot ? <SelectColumn placeholder="Furnishing*" value={form.furnishingType} error={fieldErrors.furnishingType} options={["Furnished", "Semi-Furnished", "Unfurnished"]} onChange={(value) => updateField("furnishingType", value)} /> : null}
           </div>
-          <div className="row">
-            <SelectColumn
-              placeholder="Area*"
-              value={attribute("area_unit")}
-              error={fieldErrors[categoryFieldErrorKey("area_unit")]}
-              options={["Sq Ft", "Acres"]}
-              onChange={(value) => {
-                setAttribute("area_unit", value);
-                if (value === "Sq Ft") {
-                  updateField("plotArea", "");
-                } else {
-                  updateField("superBuiltUpArea", "");
-                }
-              }}
-            />
-            {attribute("area_unit") ? (
-              <InputColumn
-                placeholder={attribute("area_unit") === "Acres" ? "Area Acres*" : "Area Sq Ft*"}
-                type="number"
-                value={attribute("area_unit") === "Acres" ? form.plotArea : form.superBuiltUpArea}
-                error={fieldErrors[attribute("area_unit") === "Acres" ? "plotArea" : "superBuiltUpArea"]}
-                onChange={(value) => updateField(attribute("area_unit") === "Acres" ? "plotArea" : "superBuiltUpArea", value)}
+          {!isPlot ? (
+            <div className="row">
+              <SelectColumn
+                placeholder="Area*"
+                value={attribute("area_unit")}
+                error={fieldErrors[categoryFieldErrorKey("area_unit")]}
+                options={["Sq Ft", "Acres"]}
+                onChange={(value) => {
+                  setAttribute("area_unit", value);
+                  if (value === "Sq Ft") {
+                    updateField("plotArea", "");
+                  } else {
+                    updateField("superBuiltUpArea", "");
+                  }
+                }}
               />
-            ) : null}
-          </div>
+              {attribute("area_unit") ? (
+                <InputColumn
+                  placeholder={attribute("area_unit") === "Acres" ? "Area Acres*" : "Area Sq Ft*"}
+                  type="number"
+                  value={attribute("area_unit") === "Acres" ? form.plotArea : form.superBuiltUpArea}
+                  error={fieldErrors[attribute("area_unit") === "Acres" ? "plotArea" : "superBuiltUpArea"]}
+                  onChange={(value) => updateField(attribute("area_unit") === "Acres" ? "plotArea" : "superBuiltUpArea", value)}
+                />
+              ) : null}
+            </div>
+          ) : null}
           <div className="row">
             <InputColumn placeholder="Floor Number" type="number" value={form.floorNumber} onChange={(value) => updateField("floorNumber", value)} />
             <InputColumn placeholder="Total Floors" type="number" value={form.totalFloors} onChange={(value) => updateField("totalFloors", value)} />
@@ -3785,14 +3826,17 @@ function RealEstatePostingSections({
       ) : null}
       {isCommercial && !isPlot ? (
         <>
-          <Input placeholder="Office Type*" value={form.propertyType || attribute("office_type")} onChange={(value) => {
+          <Select placeholder="Commercial Type*" value={form.propertyType || attribute("commercial_type") || attribute("office_type")} options={["Office", "Shop", "Warehouse", "Showroom", "Industrial", "Other"]} onChange={(value) => {
             updateField("propertyType", value);
-            setAttribute("office_type", value);
+            setAttributes({ commercial_type: value, office_type: value });
           }} />
           <div className="row">
-            <InputColumn placeholder="Seating Capacity" type="number" value={attribute("seating_capacity")} onChange={(value) => setAttribute("seating_capacity", value)} />
+            <InputColumn placeholder="Office Capacity" type="number" value={attribute("office_capacity") || attribute("seating_capacity")} onChange={(value) => {
+              setAttributes({ office_capacity: value, seating_capacity: value });
+            }} />
             <InputColumn placeholder="Conference Rooms" type="number" value={attribute("conference_rooms")} onChange={(value) => setAttribute("conference_rooms", value)} />
           </div>
+          <Input placeholder="Business Use" value={attribute("business_use")} onChange={(value) => setAttribute("business_use", value)} />
           <div className="row">
             <InputColumn placeholder="Pantry" value={attribute("pantry")} onChange={(value) => setAttribute("pantry", value)} />
             <InputColumn placeholder="Parking Spaces" type="number" value={attribute("parking_spaces")} onChange={(value) => setAttribute("parking_spaces", value)} />
@@ -3806,12 +3850,14 @@ function RealEstatePostingSections({
         </div>
       ) : null}
 
-      {isRental ? (
+      {isRentListing ? (
         <>
           <h4>Rental / Roommate Fields</h4>
           <div className="row">
             <InputColumn placeholder="Available From Date" type="date" value={form.availabilityDate} onChange={(value) => updateField("availabilityDate", value)} />
-            <InputColumn placeholder="Lease Duration" value={attribute("lease_duration")} onChange={(value) => setAttribute("lease_duration", value)} />
+            <InputColumn placeholder="Lease Terms" value={attribute("lease_terms") || attribute("lease_duration")} onChange={(value) => {
+              setAttributes({ lease_terms: value, lease_duration: "" });
+            }} />
           </div>
           <div className="row">
             <SelectColumn placeholder="Preferred Tenant" value={attribute("preferred_tenant")} options={["Family", "Students", "Professionals"]} onChange={(value) => setAttribute("preferred_tenant", value)} />
@@ -4234,7 +4280,7 @@ function NearbyServicesEditor({
 
   return (
     <div className={`listing-nearby-services-editor${error ? " is-invalid" : ""}`}>
-      <h4>Nearby Services*</h4>
+      <h4>Nearby Services</h4>
       <div className="listing-nearby-tabs" role="tablist" aria-label="Nearby services">
         {nearbyServiceTypes.map((type) => (
           <button
@@ -4252,7 +4298,7 @@ function NearbyServicesEditor({
           <div className="row" key={`${activeType}-${index}`}>
             <InputColumn
               width="col-md-10"
-              placeholder={`${activeType} name or location*`}
+              placeholder={`${activeType} name or location`}
               value={item}
               onChange={(nextValue) => updateItem(index, nextValue)}
             />
@@ -5097,6 +5143,63 @@ function Progress({ value }: { value: number }) {
   );
 }
 
+function PlansSelectionModal({
+  plans,
+  selectedPlanName,
+  activePlanCode,
+  message,
+  selectingPlanCode,
+  country,
+  onSelect,
+  onClose,
+}: {
+  plans: PricingPlan[];
+  selectedPlanName: string;
+  activePlanCode: string;
+  message: string;
+  selectingPlanCode: string;
+  country: string;
+  onSelect: (plan: PricingPlan) => void | Promise<void>;
+  onClose: () => void;
+}) {
+  return (
+    <div className="listing-plan-modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <div className="listing-plan-modal" role="dialog" aria-modal="true" aria-label="Select listing plan" onMouseDown={(event) => event.stopPropagation()}>
+        <div className="listing-plan-modal-head">
+          <h3>View Plans</h3>
+          <button type="button" className="listing-plan-modal-close" aria-label="Close plans" onClick={onClose}>x</button>
+        </div>
+        {message ? <div className="listing-plan-modal-message">{message}</div> : null}
+        <div className="listing-plan-modal-grid">
+          {plans.length ? plans.map((plan) => {
+            const isSelected = selectedPlanName === plan.name || activePlanCode === plan.code;
+            return (
+              <article className={`listing-plan-modal-card${plan.isHighlighted ? " is-highlighted" : ""}`} key={plan.code}>
+                <div>
+                  <h4>{plan.name}</h4>
+                  <p>{plan.tagline}</p>
+                </div>
+                <strong>{plan.price === 0 ? "Free" : formatCurrencyAmount(plan.price, country)}</strong>
+                <span>{plan.durationMonths} month{plan.durationMonths === 1 ? "" : "s"} - {plan.listingLimit < 0 ? "Unlimited" : plan.listingLimit} listings</span>
+                <ul>
+                  {plan.features.slice(0, 4).map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
+                <button type="button" className="btn btn-primary" disabled={selectingPlanCode === plan.code} onClick={() => onSelect(plan)}>
+                  {selectingPlanCode === plan.code ? "Selecting..." : isSelected ? "Selected" : "Select Plan"}
+                </button>
+              </article>
+            );
+          }) : (
+            <div className="listing-plan-modal-empty">Plans are not available right now.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function buildListingPayload(
   form: FormState,
   services: ServiceItem[],
@@ -5113,7 +5216,9 @@ function buildListingPayload(
   restaurantInfo: RestaurantInfo,
   restaurantMenuItems: RestaurantMenuItem[],
   categoryAttributes: CategoryAttributes,
+  mode: ListingFormMode = "listing",
 ): UpsertListingPayload {
+  const isClassifiedMode = mode === "classified";
   const listingDescription = form.description.trim() || form.businessDescription.trim();
   const businessDescription = form.businessDescription.trim() || form.description.trim();
   const listingPrice =
@@ -5145,12 +5250,12 @@ function buildListingPayload(
   return {
     title: form.title.trim(),
     description: listingDescription,
-    categoryName: form.categoryName.trim(),
-    subCategory: form.subCategory.trim(),
-    detailCategory: form.detailCategory.trim() || form.subCategory.trim(),
+    categoryName: isClassifiedMode ? "Classifieds" : form.categoryName.trim(),
+    subCategory: isClassifiedMode ? form.categoryName.trim() : form.subCategory.trim(),
+    detailCategory: isClassifiedMode ? "" : form.detailCategory.trim() || form.subCategory.trim(),
     propertyDetails: {
-      listingKind: getListingKind(form.subCategory, form.detailCategory),
-      propertyType: form.propertyType.trim() || getAttributeValue(categoryAttributes, "property_type", "propertyType", "commercial_property_type", "commercialPropertyType").trim() || form.detailCategory.trim(),
+      listingKind: isClassifiedMode ? "Classified" : getListingKind(form.subCategory, form.detailCategory),
+      propertyType: isClassifiedMode ? form.categoryName.trim() : form.propertyType.trim() || getAttributeValue(categoryAttributes, "property_type", "propertyType", "commercial_property_type", "commercialPropertyType").trim() || form.detailCategory.trim(),
       bhk: form.bhk.trim() || getAttributeValue(categoryAttributes, "bhk").trim(),
       bathrooms: numberOrNull(form.bathrooms) ?? numberAttribute(categoryAttributes, "bathrooms"),
       balconies: numberOrNull(form.balconies) ?? numberAttribute(categoryAttributes, "balconies"),
@@ -5181,10 +5286,13 @@ function buildListingPayload(
       offers: JSON.stringify(offers.filter((item) => item.name.trim() || item.price.trim() || item.detail.trim())),
       otherInformation: JSON.stringify({
         items: infoItems.filter((item) => item.question.trim() || item.answer.trim()),
+        classifiedCategory: isClassifiedMode ? form.categoryName.trim() : undefined,
+        classifiedSubCategory: isClassifiedMode ? form.subCategory.trim() : undefined,
         categoryAttributes: trimCategoryAttributes(categoryAttributes),
+        customFields: isClassifiedMode ? trimCategoryAttributes(categoryAttributes) : undefined,
       }),
       businessDescription,
-      businessHours: isRealEstateCategory(form.categoryName)
+      businessHours: !isClassifiedMode && isRealEstateCategory(form.categoryName)
         ? ""
         : JSON.stringify(businessHours.filter((item) => item.status || item.open || item.close)),
       additionalContactInfo: JSON.stringify(contactInfo),
@@ -5420,7 +5528,7 @@ function buildListingPayload(
   };
 }
 
-function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDuplicate: boolean): FormState {
+function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDuplicate: boolean, mode: ListingFormMode = "listing"): FormState {
   const propertyDetails = listing.propertyDetails || {};
   const priceDetails = listing.priceDetails || {};
   const locationDetails = listing.locationDetails || {};
@@ -5429,6 +5537,10 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
   const settings = listing.settings || {};
   const imageUrls = listing.imageUrls || [];
   const [profileImageName = "", coverImageName = "", ...galleryMedia] = imageUrls;
+  const otherInformation = parseJsonObject<Record<string, unknown>>(propertyDetails.otherInformation, {});
+  const isClassifiedMode = mode === "classified";
+  const classifiedCategory = stringValue(otherInformation.classifiedCategory) || listing.subCategory || stringValue(propertyDetails.propertyType);
+  const classifiedSubCategory = stringValue(otherInformation.classifiedSubCategory) || listing.detailCategory || "";
 
   return {
     ...currentForm,
@@ -5445,9 +5557,9 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     state: stringValue(locationDetails.state),
     city: stringValue(locationDetails.city || listing.city),
     pincode: stringValue(locationDetails.pincode),
-    categoryName: listing.categoryName || "",
-    subCategory: listing.subCategory || "",
-    detailCategory: listing.detailCategory || "",
+    categoryName: isClassifiedMode ? classifiedCategory : listing.categoryName || "",
+    subCategory: isClassifiedMode ? classifiedSubCategory : listing.subCategory || "",
+    detailCategory: isClassifiedMode ? "" : listing.detailCategory || "",
     description: listing.description || "",
     businessDescription: stringValue(propertyDetails.businessDescription) || listing.description || "",
     profileImageName,
@@ -6525,6 +6637,20 @@ function includeCurrentValue(options: string[], currentValue: string) {
   return [currentValue, ...options];
 }
 
+function getClassifiedListingStepIndex(pathname: string) {
+  const match = pathname.match(/step-(\d+)/i);
+  const stepNumber = match ? Number(match[1]) : 1;
+  return Math.min(Math.max(stepNumber - 1, 0), wizardSteps.length - 1);
+}
+
+function getClassifiedListingFormPath(step: number, listingId: number | null) {
+  if (listingId) {
+    return `/dashboard/classifieds/${listingId}/edit/step-${step}`;
+  }
+
+  return `/dashboard/classifieds/step-${step}`;
+}
+
 function isRealEstateCategory(categoryName: string) {
   return categoryName === "Real Estate";
 }
@@ -6550,7 +6676,7 @@ function isSaleRealEstateSubCategory(subCategory: string) {
 }
 
 function isPlotRealEstateCategory(subCategory: string, detailCategory = "") {
-  return ["Plot", "Land / Plots"].includes(subCategory) || ["Land / Plots", "Commercial Land"].includes(detailCategory);
+  return ["Plot", "Plots", "Land / Plot", "Land / Plots", "Land", "Lands & Plots"].includes(subCategory) || ["Land / Plot", "Land / Plots", "Commercial Land", "Lands & Plots"].includes(detailCategory);
 }
 
 function getListingKind(subCategory: string, detailCategory: string) {

@@ -6,6 +6,7 @@ import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { getMyProfile } from "../../dashboard/api/profileApi";
 import {
+  getListing,
   getListingApiErrorMessage,
   getPublicListings,
   type ListingSummary,
@@ -646,6 +647,41 @@ function ListingCard({ listing, onQuoteClick }: { listing: ListingSummary; onQuo
   const phoneNumber = getListingPhone(listing);
   const whatsAppNumber = getListingWhatsApp(listing) || phoneNumber;
 
+  async function openContactAction(action: "call" | "whatsapp") {
+    let contactListing = listing;
+    let nextPhoneNumber = phoneNumber;
+    let nextWhatsAppNumber = whatsAppNumber;
+
+    if (!nextPhoneNumber.trim() || !normalizeWhatsAppNumber(nextWhatsAppNumber)) {
+      try {
+        contactListing = await getListing(listing.id);
+        nextPhoneNumber = getListingPhone(contactListing);
+        nextWhatsAppNumber = getListingWhatsApp(contactListing) || nextPhoneNumber;
+      } catch {
+        window.alert("Contact details are not available for this listing.");
+        return;
+      }
+    }
+
+    if (action === "call") {
+      if (!nextPhoneNumber.trim()) {
+        window.alert("Phone number is not available for this listing.");
+        return;
+      }
+
+      window.location.href = `tel:${nextPhoneNumber}`;
+      return;
+    }
+
+    const whatsAppDigits = normalizeWhatsAppNumber(nextWhatsAppNumber || nextPhoneNumber);
+    if (!whatsAppDigits) {
+      window.alert("WhatsApp number is not available for this listing.");
+      return;
+    }
+
+    window.open(`https://wa.me/${whatsAppDigits}`, "_blank", "noopener,noreferrer");
+  }
+
   return (
     <article className="public-listing-card">
       <Link to={href} className="public-listing-image">
@@ -680,9 +716,11 @@ function ListingCard({ listing, onQuoteClick }: { listing: ListingSummary; onQuo
         </h2>
         <div className="public-listing-actions">
           <button type="button" onClick={() => onQuoteClick(listing)}>Get quote</button>
-          {phoneNumber ? <a href={`tel:${phoneNumber}`}>Call Now</a> : null}
-          {whatsAppNumber ? <a href={`https://wa.me/${whatsAppNumber.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">WhatsApp</a> : null}
         </div>
+      </div>
+      <div className="public-card-hover-actions">
+        <button className="public-card-call-action" type="button" onClick={() => void openContactAction("call")}>Call Now</button>
+        <button className="public-card-whatsapp-action" type="button" onClick={() => void openContactAction("whatsapp")}>WhatsApp</button>
       </div>
     </article>
   );
@@ -949,14 +987,25 @@ function getListingPhone(listing: ListingSummary) {
     getString(listing.sellerInformation, "phone") ||
     getString(listing.sellerInformation, "contactNumber") ||
     getString(listing.sellerInformation, "mainPhone") ||
-    getString(listing.sellerInformation, "whatsAppNumber");
+    getString(listing.sellerInformation, "whatsAppNumber") ||
+    getString(listing.locationDetails, "mainPhone") ||
+    getString(listing.propertyDetails, "mainPhone") ||
+    getString(listing.propertyDetails, "phoneNumber") ||
+    getString(listing.propertyDetails, "contactNumber");
 }
 
 function getListingWhatsApp(listing: ListingSummary) {
   return getString(listing.sellerInformation, "whatsAppNumber") ||
     getString(listing.sellerInformation, "whatsapp") ||
     getString(listing.sellerInformation, "whatsApp") ||
-    getString(listing.sellerInformation, "mobileNumber");
+    getString(listing.sellerInformation, "mobileNumber") ||
+    getString(listing.propertyDetails, "whatsAppNumber") ||
+    getString(listing.propertyDetails, "whatsapp") ||
+    getString(listing.propertyDetails, "whatsApp");
+}
+
+function normalizeWhatsAppNumber(value: string) {
+  return value.replace(/\D/g, "");
 }
 
 function getDisplayRating(listing: ListingSummary) {
