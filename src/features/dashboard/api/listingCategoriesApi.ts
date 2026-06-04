@@ -27,7 +27,7 @@ export type ListingCategoryFieldDefinition = {
   listingDetailedCategoryId?: number | null;
   fieldKey: string;
   label: string;
-  fieldType: "text" | "number" | "date" | "dropdown" | "checkbox" | "textarea";
+  fieldType: "text" | "number" | "date" | "dropdown" | "checkbox" | "textarea" | "file";
   placeholder?: string | null;
   options: string[];
   sectionName: string;

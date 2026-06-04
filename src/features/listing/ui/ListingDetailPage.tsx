@@ -524,7 +524,6 @@ function ListingDetail({
                     <h3><span>User</span> Reviews</h3>
                   </div>
                   <div className="list-pg-inn-sp">
-                    <RatingSummary rating={displayRating} reviews={reviews} totalReviews={listing.totalReviews || 0} />
                     {reviews.length ? (
                       <div className="public-user-review-list">
                         {reviews.map((review) => (
@@ -737,45 +736,6 @@ function PostedDetailsSection({ sections }: { sections: PostedDetailSection[] })
         })}
       </div>
     </TemplateSection>
-  );
-}
-
-function RatingSummary({
-  rating,
-  reviews,
-  totalReviews,
-}: {
-  rating: number;
-  reviews: NonNullable<ListingSummary["reviews"]>;
-  totalReviews: number;
-}) {
-  const counts = getRatingCounts(reviews);
-  const reviewTotal = Math.max(totalReviews, reviews.length);
-  const displayRating = rating > 0 ? rating : getAverageRatingFromReviews(reviews);
-
-  return (
-    <div className="public-rating-summary">
-      <div className="public-rating-score-card">
-        <strong>{displayRating ? displayRating.toFixed(1) : "0.0"}</strong>
-        <RatingStars rating={displayRating} />
-      </div>
-      <div className="public-rating-bars">
-        {[5, 4, 3, 2, 1].map((value) => {
-          const count = counts[value] || 0;
-          const percentage = reviewTotal ? Math.min(100, (count / reviewTotal) * 100) : 0;
-
-          return (
-            <div className={`public-rating-bar public-rating-bar-${value}`} key={value}>
-              <span>{value}+</span>
-              <div>
-                <b style={{ width: `${percentage}%` }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <p>{displayRating ? displayRating.toFixed(1) : "0.0"} average based on {reviewTotal} Reviews</p>
-    </div>
   );
 }
 
@@ -1036,7 +996,6 @@ function getPostedDetailSections(listing: ListingSummary): PostedDetailSection[]
   if (isRestaurant && !isClassified) {
     addPostedRecordSection(sections, "Restaurant Details", listing.restaurantFoodDetails);
     addPostedListSection(sections, "Restaurant Menu", listing.restaurantMenuItems);
-    addPostedListSection(sections, "Operating Hours", listing.restaurantOperatingHours);
   }
 
   if (isVehicle && !isClassified) {

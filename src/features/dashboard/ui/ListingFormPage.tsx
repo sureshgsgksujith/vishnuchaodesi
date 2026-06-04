@@ -40,6 +40,7 @@ type RestaurantInfo = {
   restaurantName: string;
   tagline: string;
   cuisine: string;
+  foodTypes: string[];
   foodType: string;
   businessType: string;
   yearEstablished: string;
@@ -50,19 +51,31 @@ type RestaurantInfo = {
   discountsOffers: string;
   couponCodes: string;
   happyHours: string;
+  priceRange: string;
   deliveryAvailable: boolean;
   deliveryFee: string;
   minimumOrderValue: string;
+  estimatedDeliveryTime: string;
   onlineOrdering: boolean;
   thirdPartyIntegrations: string[];
   amenities: string[];
   foodLicenseNumber: string;
   healthInspectionRating: string;
   alcoholLicenseNumber: string;
+  businessRegistrationNumber: string;
   tableBooking: boolean;
+  reservationCapacity: string;
+  onlineBookingUrl: string;
   orderNow: boolean;
   enableChat: boolean;
   enableCall: boolean;
+  cateringType: string;
+  minimumGuests: string;
+  maximumGuests: string;
+  perPlatePricing: string;
+  eventTypes: string[];
+  mobileLocations: string;
+  operatingZones: string;
   bulkOrderNotes: string;
   customOrderOptions: string;
   eventLocationNotes: string;
@@ -86,7 +99,7 @@ type CategoryAttributeField = {
   isRequired?: boolean;
   sectionName?: string;
   sectionOrder?: number;
-  type?: "text" | "number" | "date" | "checkbox" | "textarea";
+  type?: "text" | "number" | "date" | "checkbox" | "textarea" | "file";
   options?: string[];
 };
 type CategoryAttributeFieldSet = {
@@ -341,6 +354,7 @@ const initialRestaurantInfo: RestaurantInfo = {
   restaurantName: "",
   tagline: "",
   cuisine: "",
+  foodTypes: [],
   foodType: "",
   businessType: "",
   yearEstablished: "",
@@ -351,19 +365,31 @@ const initialRestaurantInfo: RestaurantInfo = {
   discountsOffers: "",
   couponCodes: "",
   happyHours: "",
+  priceRange: "",
   deliveryAvailable: false,
   deliveryFee: "",
   minimumOrderValue: "",
+  estimatedDeliveryTime: "",
   onlineOrdering: false,
   thirdPartyIntegrations: [],
   amenities: [],
   foodLicenseNumber: "",
   healthInspectionRating: "",
   alcoholLicenseNumber: "",
+  businessRegistrationNumber: "",
   tableBooking: false,
+  reservationCapacity: "",
+  onlineBookingUrl: "",
   orderNow: false,
   enableChat: true,
   enableCall: true,
+  cateringType: "",
+  minimumGuests: "",
+  maximumGuests: "",
+  perPlatePricing: "",
+  eventTypes: [],
+  mobileLocations: "",
+  operatingZones: "",
   bulkOrderNotes: "",
   customOrderOptions: "",
   eventLocationNotes: "",
@@ -581,32 +607,72 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     ...vehiclePostingCommonFields,
   ],
   "Restaurants & Food": [
-    { key: "businessType", label: "Business Type", options: ["Individual", "Company", "Franchise"] },
-    { key: "yearEstablished", label: "Year Established", type: "number" },
-    { key: "staffCount", label: "Number of Staff", type: "number" },
-    { key: "serviceType", label: "Service Type", options: ["Dine-in", "Takeaway", "Delivery", "Catering"] },
-    { key: "serviceRadius", label: "Service Radius (miles)" },
-    { key: "contactPerson", label: "Contact Person" },
-    { key: "specialHours", label: "Special Hours", type: "textarea" },
-    { key: "open24x7", label: "Open 24/7", options: yesNoOptions },
-    { key: "menuItems", label: "Menu Items", type: "textarea" },
-    { key: "averageCostForTwo", label: "Average Cost for Two", type: "number" },
-    { key: "discountsOffers", label: "Discounts / Offers", type: "textarea" },
-    { key: "couponCodes", label: "Coupon Codes" },
-    { key: "happyHours", label: "Happy Hours" },
-    { key: "deliveryAvailable", label: "Delivery Available", options: yesNoOptions },
-    { key: "deliveryFee", label: "Delivery Fee", type: "number" },
-    { key: "minimumOrderValue", label: "Minimum Order Value", type: "number" },
-    { key: "onlineOrdering", label: "Online Ordering", options: yesNoOptions },
-    { key: "thirdPartyIntegration", label: "Third-party Integration" },
-    { key: "foodLicenseNumber", label: "Food License Number" },
-    { key: "healthInspectionRating", label: "Health Inspection Rating" },
-    { key: "alcoholLicense", label: "Alcohol License", options: ["Not Applicable", "Active", "Expired"] },
-    { key: "taxId", label: "Tax ID" },
-    { key: "enableChat", label: "Enable Chat", options: yesNoOptions },
-    { key: "enableCall", label: "Enable Call", options: yesNoOptions },
-    { key: "tableBooking", label: "Table Booking", options: yesNoOptions },
-    { key: "orderNowButton", label: "Order Now Button", options: yesNoOptions },
+    { key: "business_name", label: "Restaurant / Business Name", isRequired: true, sectionName: "Business Information", sectionOrder: 1 },
+    { key: "business_legal_name", label: "Business Name", sectionName: "Business Information", sectionOrder: 1 },
+    { key: "tagline", label: "Tagline", sectionName: "Business Information", sectionOrder: 1 },
+    { key: "cuisine_type", label: "Cuisine Type", options: ["Indian", "Chinese", "Italian", "Mexican", "Thai", "Mediterranean", "American", "Vegan", "Korean", "Japanese", "Middle Eastern"], isRequired: true, sectionName: "Cuisine Information", sectionOrder: 2 },
+    { key: "food_type", label: "Food Type", options: ["Veg", "Non-Veg", "Vegan", "Halal", "Kosher", "Gluten-Free"], sectionName: "Cuisine Information", sectionOrder: 2 },
+    { key: "business_type", label: "Business Type", options: ["Individual", "Company", "Franchise"], isRequired: true, sectionName: "Business Information", sectionOrder: 1 },
+    { key: "year_established", label: "Year Established", type: "number", isRequired: true, sectionName: "Business Information", sectionOrder: 1 },
+    { key: "staff_count", label: "Number of Staff", type: "number", sectionName: "Business Information", sectionOrder: 1 },
+    { key: "service_type", label: "Service Type", options: ["Dine-In", "Takeaway", "Delivery", "Catering", "Reservations Accepted"], isRequired: true, sectionName: "Service Type", sectionOrder: 6 },
+    { key: "delivery_radius", label: "Delivery Radius (miles)", type: "number", sectionName: "Location", sectionOrder: 4 },
+    { key: "service_radius", label: "Service Radius (miles)", type: "number", sectionName: "Location", sectionOrder: 4 },
+    { key: "contact_person", label: "Contact Person", sectionName: "Contact Information", sectionOrder: 5 },
+    { key: "instagram_url", label: "Instagram", sectionName: "Contact Information", sectionOrder: 5 },
+    { key: "facebook_url", label: "Facebook", sectionName: "Contact Information", sectionOrder: 5 },
+    { key: "tiktok_url", label: "TikTok", sectionName: "Contact Information", sectionOrder: 5 },
+    { key: "working_days", label: "Working Days", sectionName: "Working Hours", sectionOrder: 6 },
+    { key: "opening_time", label: "Opening Time", sectionName: "Working Hours", sectionOrder: 6 },
+    { key: "closing_time", label: "Closing Time", sectionName: "Working Hours", sectionOrder: 6 },
+    { key: "open_24x7", label: "24/7 Service", options: yesNoOptions, sectionName: "Working Hours", sectionOrder: 6 },
+    { key: "holiday_hours", label: "Holiday Hours", type: "textarea", sectionName: "Working Hours", sectionOrder: 6 },
+    { key: "dine_in", label: "Dine-In", options: yesNoOptions, sectionName: "Service Type", sectionOrder: 7 },
+    { key: "takeaway", label: "Takeaway", options: yesNoOptions, sectionName: "Service Type", sectionOrder: 7 },
+    { key: "delivery_available", label: "Delivery", options: yesNoOptions, sectionName: "Service Type", sectionOrder: 7 },
+    { key: "catering_available", label: "Catering", options: yesNoOptions, sectionName: "Service Type", sectionOrder: 7 },
+    { key: "reservations_accepted", label: "Reservations Accepted", options: yesNoOptions, sectionName: "Service Type", sectionOrder: 7 },
+    { key: "menu_items", label: "Menu Items", type: "textarea", sectionName: "Menu Management", sectionOrder: 8 },
+    { key: "average_cost_for_two", label: "Average Cost for Two (USD)", type: "number", sectionName: "Pricing & Offers", sectionOrder: 9 },
+    { key: "price_range", label: "Price Range", options: ["Budget", "Moderate", "Premium"], sectionName: "Pricing & Offers", sectionOrder: 9 },
+    { key: "discounts_offers", label: "Offers / Discounts", type: "textarea", sectionName: "Pricing & Offers", sectionOrder: 9 },
+    { key: "coupon_codes", label: "Coupon Codes", sectionName: "Pricing & Offers", sectionOrder: 9 },
+    { key: "happy_hours", label: "Happy Hours", sectionName: "Pricing & Offers", sectionOrder: 9 },
+    { key: "delivery_fee", label: "Delivery Fee", type: "number", sectionName: "Delivery Details", sectionOrder: 10 },
+    { key: "minimum_order_value", label: "Minimum Order Amount", type: "number", sectionName: "Delivery Details", sectionOrder: 10 },
+    { key: "estimated_delivery_time", label: "Estimated Delivery Time", sectionName: "Delivery Details", sectionOrder: 10 },
+    { key: "third_party_integration", label: "Third-party Delivery", options: ["DoorDash", "Uber Eats", "Grubhub"], sectionName: "Delivery Details", sectionOrder: 10 },
+    { key: "catering_type", label: "Catering Type", sectionName: "Catering Details", sectionOrder: 11 },
+    { key: "minimum_guests", label: "Minimum Guests", type: "number", sectionName: "Catering Details", sectionOrder: 11 },
+    { key: "maximum_guests", label: "Maximum Guests", type: "number", sectionName: "Catering Details", sectionOrder: 11 },
+    { key: "per_plate_pricing", label: "Per Plate Pricing", type: "number", sectionName: "Catering Details", sectionOrder: 11 },
+    { key: "event_types", label: "Event Types", options: ["Wedding", "Corporate", "Birthday", "Festival"], sectionName: "Catering Details", sectionOrder: 11 },
+    { key: "parking", label: "Parking", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "wifi", label: "WiFi", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "outdoor_seating", label: "Outdoor Seating", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "live_music", label: "Live Music", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "pet_friendly", label: "Pet Friendly", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "family_friendly", label: "Family Friendly", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "wheelchair_accessible", label: "Wheelchair Accessible (ADA)", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "private_dining", label: "Private Dining", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "bar_available", label: "Bar Available", type: "checkbox", sectionName: "Amenities", sectionOrder: 12 },
+    { key: "mobile_locations", label: "Mobile Locations", type: "textarea", sectionName: "Food Truck Details", sectionOrder: 13 },
+    { key: "operating_zones", label: "Operating Zones", type: "textarea", sectionName: "Food Truck Details", sectionOrder: 13 },
+    { key: "food_license_number", label: "Food License Number", sectionName: "Compliance & Licensing", sectionOrder: 15 },
+    { key: "health_inspection_rating", label: "Health Inspection Rating", sectionName: "Compliance & Licensing", sectionOrder: 15 },
+    { key: "alcohol_license", label: "Alcohol License", sectionName: "Compliance & Licensing", sectionOrder: 15 },
+    { key: "business_registration_number", label: "Business Registration Number", sectionName: "Compliance & Licensing", sectionOrder: 15 },
+    { key: "age_restriction", label: "Age Restriction", sectionName: "Compliance & Licensing", sectionOrder: 15 },
+    { key: "table_booking", label: "Table Reservation Enabled", options: yesNoOptions, sectionName: "Reservation & Booking", sectionOrder: 16 },
+    { key: "reservation_capacity", label: "Reservation Capacity", type: "number", sectionName: "Reservation & Booking", sectionOrder: 16 },
+    { key: "online_booking_url", label: "Online Booking URL", sectionName: "Reservation & Booking", sectionOrder: 16 },
+    { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 17 },
+    { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 17 },
+    { key: "boost_listing", label: "Boost Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 17 },
+    { key: "ad_duration_days", label: "Ad Duration", options: ["30", "60", "90"], sectionName: "Listing Visibility & Promotions", sectionOrder: 17 },
+    { key: "enable_chat", label: "Enable Chat", options: yesNoOptions, sectionName: "Lead & Interaction", sectionOrder: 18 },
+    { key: "enable_call", label: "Enable Call", options: yesNoOptions, sectionName: "Lead & Interaction", sectionOrder: 18 },
+    { key: "order_now_button", label: "Order Now Button", options: yesNoOptions, sectionName: "Lead & Interaction", sectionOrder: 18 },
   ],
   "Electronics & Appliances": [
     ...electronicsPostingCommonFields,
@@ -792,21 +858,29 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Restaurants & Food": {
     default: categoryAttributeFieldsByCategory["Restaurants & Food"],
     subCategories: {
+      "Restaurants (Dine-In)": categoryAttributeFieldsByCategory["Restaurants & Food"],
       Restaurant: categoryAttributeFieldsByCategory["Restaurants & Food"],
-      Cafe: categoryAttributeFieldsByCategory["Restaurants & Food"],
-      Bakery: [
+      "Fast Food & Takeaway": categoryAttributeFieldsByCategory["Restaurants & Food"],
+      "Cafes & Bakeries": [
         ...categoryAttributeFieldsByCategory["Restaurants & Food"],
         { key: "bakerySpecialties", label: "Bakery Specialties", type: "textarea" },
       ],
-      "Cloud Kitchen": [
+      Cafe: categoryAttributeFieldsByCategory["Restaurants & Food"],
+      Bakery: categoryAttributeFieldsByCategory["Restaurants & Food"],
+      "Cloud Kitchen / Delivery Only": [
         ...categoryAttributeFieldsByCategory["Restaurants & Food"],
         { key: "deliveryOnly", label: "Delivery Only", options: yesNoOptions },
       ],
-      Catering: [
+      "Cloud Kitchen": categoryAttributeFieldsByCategory["Restaurants & Food"],
+      "Catering Services": [
         ...categoryAttributeFieldsByCategory["Restaurants & Food"],
         { key: "eventCapacity", label: "Event Capacity", type: "number" },
         { key: "cateringPackages", label: "Catering Packages", type: "textarea" },
       ],
+      Catering: categoryAttributeFieldsByCategory["Restaurants & Food"],
+      "Bars & Beverages": categoryAttributeFieldsByCategory["Restaurants & Food"],
+      "Food Trucks & Pop-ups": categoryAttributeFieldsByCategory["Restaurants & Food"],
+      "Grocery & Specialty Food Stores": categoryAttributeFieldsByCategory["Restaurants & Food"],
     },
   },
   "Electronics & Appliances": {
@@ -2048,7 +2122,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
     };
 
-    if (!isClassifiedMode && !hasDynamicCategoryFields && form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
+    if (!isClassifiedMode && form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
       setFieldErrors({});
       return false;
     }
@@ -2144,6 +2218,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function validateRestaurantFields() {
     const year = numberOrNull(restaurantInfo.yearEstablished);
+    const isCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
+    const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
+    const isDeliveryListing = restaurantInfo.deliveryAvailable || isCloudKitchen;
 
     if (!restaurantInfo.restaurantName.trim()) {
       setErrorMessage("Restaurant / Business Name is required.");
@@ -2175,12 +2252,12 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return false;
     }
 
-    if ((restaurantInfo.serviceTypes.includes("Delivery") || restaurantInfo.serviceTypes.includes("Catering") || form.subCategory === "Cloud Kitchen") && !restaurantInfo.serviceRadiusMiles.trim()) {
+    if ((restaurantInfo.serviceTypes.includes("Delivery") || restaurantInfo.serviceTypes.includes("Catering") || isCloudKitchen || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
       setErrorMessage("Service Radius is required for delivery, catering, and cloud kitchen listings.");
       return false;
     }
 
-    if (restaurantInfo.deliveryAvailable && (!restaurantInfo.deliveryFee.trim() || !restaurantInfo.minimumOrderValue.trim())) {
+    if (isDeliveryListing && (!restaurantInfo.deliveryFee.trim() || !restaurantInfo.minimumOrderValue.trim())) {
       setErrorMessage("Delivery Fee and Minimum Order Value are required when delivery is available.");
       return false;
     }
@@ -2605,6 +2682,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           galleryMarkers.add(value);
         }
       });
+      draft.restaurantMenuItems.forEach((item) => {
+        if (item.imageUrl.startsWith(galleryImageUploadMarkerPrefix)) {
+          galleryMarkers.add(item.imageUrl);
+        }
+      });
       const uploadFiles = {
         profileImageFile: draft.profileImageFile,
         coverImageFile: draft.coverImageFile,
@@ -2698,14 +2780,16 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     return (
       <>
-        {form.categoryName === "Restaurants & Food" && !hasDynamicCategoryFields ? (
+        {!isClassifiedMode && form.categoryName === "Restaurants & Food" ? (
           <RestaurantInfoFields
             form={form}
             currencyCountry={currencyCountry}
             restaurantInfo={restaurantInfo}
             menuItems={restaurantMenuItems}
+            uploadFiles={galleryFiles}
             onChange={setRestaurantInfo}
             onMenuItemsChange={setRestaurantMenuItems}
+            onUploadFilesChange={setGalleryFiles}
           />
         ) : null}
         {!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && form.subCategory === "Rentals") ? (
@@ -2717,10 +2801,12 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           detailCategory={form.detailCategory}
           form={form}
           currencyCountry={currencyCountry}
-          dynamicFields={effectiveDynamicCategoryFields}
+          dynamicFields={!isClassifiedMode && form.categoryName === "Restaurants & Food" ? [] : effectiveDynamicCategoryFields}
           values={categoryAttributes}
           fieldErrors={fieldErrors}
+          uploadFiles={galleryFiles}
           onChange={updateCategoryAttributes}
+          onUploadFilesChange={setGalleryFiles}
         />
       </>
     );
@@ -3488,7 +3574,9 @@ function CategoryAttributesFields({
   dynamicFields,
   values,
   fieldErrors,
+  uploadFiles,
   onChange,
+  onUploadFilesChange,
 }: {
   categoryName: string;
   subCategory: string;
@@ -3498,7 +3586,9 @@ function CategoryAttributesFields({
   dynamicFields: CategoryAttributeField[];
   values: CategoryAttributes;
   fieldErrors: FieldErrors;
+  uploadFiles: GalleryUploadFile[];
   onChange: (value: CategoryAttributes) => void;
+  onUploadFilesChange: (files: GalleryUploadFile[]) => void;
 }) {
   const baseFields = dynamicFields.length
     ? dynamicFields
@@ -3523,6 +3613,21 @@ function CategoryAttributesFields({
             {section.fields.map((field) => {
               const displayLabel = labelWithCountryCurrency(field.isRequired ? `${field.label}*` : field.label, currencyCountry);
               const error = fieldErrors[categoryFieldErrorKey(field.key)];
+
+              if (isUploadCategoryField(field)) {
+                return (
+                  <FileUploadColumn
+                    key={field.key}
+                    label={fieldLabelFromPlaceholder(displayLabel)}
+                    accept={getUploadAcceptForField(field)}
+                    value={values[field.key] || ""}
+                    error={error}
+                    files={uploadFiles}
+                    onFilesChange={onUploadFilesChange}
+                    onChange={(value) => updateAttribute(field.key, value)}
+                  />
+                );
+              }
 
               return field.options?.length ? (
                 <SelectColumn
@@ -4397,6 +4502,7 @@ type FileUploadProps = {
   label: string;
   accept: string;
   value: string;
+  error?: string;
   files: GalleryUploadFile[];
   onFilesChange: (files: GalleryUploadFile[]) => void;
   onChange: (value: string) => void;
@@ -4406,6 +4512,7 @@ function FileUpload({
   label,
   accept,
   value,
+  error,
   files,
   onFilesChange,
   onChange,
@@ -4447,7 +4554,7 @@ function FileUpload({
       <input
         type="file"
         accept={accept}
-        className="form-control file-input"
+        className={`form-control file-input${error ? " is-invalid" : ""}`}
         onChange={(event) => handleFileChange(event.target.files)}
       />
       {selectedFile || savedFileName ? (
@@ -4457,6 +4564,7 @@ function FileUpload({
           <button type="button" className="btn btn-link" onClick={clearFile}>Remove</button>
         </div>
       ) : null}
+      <FieldError message={error} />
     </div>
   );
 }
@@ -4464,6 +4572,50 @@ function FileUpload({
 function getFileNameFromPath(value: string) {
   const cleanValue = value.split("?")[0].split("#")[0];
   return cleanValue.split(/[\\/]/).filter(Boolean).pop() || "Uploaded file";
+}
+
+function isUploadCategoryField(field: CategoryAttributeField) {
+  if (field.type === "file") {
+    return true;
+  }
+
+  const normalizedKey = normalizeFieldKey(field.key);
+  const normalizedLabel = field.label.toLowerCase();
+  const uploadKeyTokens = [
+    "image",
+    "photo",
+    "picture",
+    "logo",
+    "banner",
+    "menu_pdf",
+    "brochure",
+    "document",
+    "certificate",
+    "floor_plan",
+  ];
+
+  if (uploadKeyTokens.some((token) => normalizedKey.includes(token))) {
+    return true;
+  }
+
+  return (
+    /\b(image|photo|picture|logo|banner)\b/i.test(field.label) ||
+    /\b(upload|pdf|document|certificate|brochure|floor plan)\b/i.test(normalizedLabel)
+  );
+}
+
+function getUploadAcceptForField(field: CategoryAttributeField) {
+  const searchable = `${field.key} ${field.label}`.toLowerCase();
+
+  if (/\bpdf\b|brochure|menu_pdf/.test(searchable)) {
+    return ".pdf,application/pdf";
+  }
+
+  if (/document|certificate/.test(searchable)) {
+    return ".pdf,.doc,.docx,image/*,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  }
+
+  return "image/*,.jpg,.jpeg,.png,.webp";
 }
 
 function GalleryMediaEditor({
@@ -4599,22 +4751,45 @@ function RestaurantInfoFields({
   currencyCountry,
   restaurantInfo,
   menuItems,
+  uploadFiles,
   onChange,
   onMenuItemsChange,
+  onUploadFilesChange,
 }: {
   form: FormState;
   currencyCountry: string;
   restaurantInfo: RestaurantInfo;
   menuItems: RestaurantMenuItem[];
+  uploadFiles: GalleryUploadFile[];
   onChange: (value: RestaurantInfo) => void;
   onMenuItemsChange: (value: RestaurantMenuItem[]) => void;
+  onUploadFilesChange: (files: GalleryUploadFile[]) => void;
 }) {
-  const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || form.subCategory === "Cloud Kitchen";
+  const isCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
+  const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
+  const isCafeBakery = ["Cafe", "Bakery", "Cafes & Bakeries"].includes(form.subCategory);
+  const isFoodTruck = form.subCategory === "Food Trucks & Pop-ups";
+  const isGrocery = form.subCategory === "Grocery & Specialty Food Stores";
+  const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || isCloudKitchen;
   const showAlcohol = form.subCategory === "Bars & Beverages";
-  const showDineIn = restaurantInfo.serviceTypes.includes("Dine-in") && form.subCategory !== "Cloud Kitchen";
-  const showCatering = restaurantInfo.serviceTypes.includes("Catering") || form.subCategory === "Catering";
+  const showDineIn = (restaurantInfo.serviceTypes.includes("Dine-In") || restaurantInfo.serviceTypes.includes("Dine-in")) && !isCloudKitchen;
+  const showCatering = restaurantInfo.serviceTypes.includes("Catering") || isCatering;
+  const serviceTypeOptions = isCloudKitchen
+    ? ["Delivery", "Takeaway"]
+    : isCatering
+      ? ["Catering", "Delivery", "Takeaway"]
+      : ["Dine-In", "Takeaway", "Delivery", "Catering", "Reservations Accepted"];
+  const amenityOptions = [
+    ...(isCloudKitchen ? [] : ["Parking", "Outdoor Seating", "Private Dining"]),
+    "WiFi",
+    "Live Music",
+    "Pet Friendly",
+    "Family Friendly",
+    "Wheelchair Accessible (ADA)",
+    "Bar Available",
+  ];
 
-  function toggleRestaurantList(key: "serviceTypes" | "thirdPartyIntegrations" | "amenities", value: string, checked: boolean) {
+  function toggleRestaurantList(key: "foodTypes" | "serviceTypes" | "thirdPartyIntegrations" | "amenities" | "eventTypes", value: string, checked: boolean) {
     const currentValues = restaurantInfo[key];
     onChange({ ...restaurantInfo, [key]: checked ? [...currentValues, value] : currentValues.filter((item) => item !== value) });
   }
@@ -4631,14 +4806,15 @@ function RestaurantInfoFields({
         <InputColumn placeholder="Tagline" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
       </div>
       <div className="row">
-        <SelectColumn placeholder="Cuisine Type*" value={restaurantInfo.cuisine} options={["Indian", "Chinese", "Italian", "Mexican", "American", "Thai", "Mediterranean", "Bakery", "Desserts", "Beverages", "Multi-cuisine", "Other"]} onChange={(value) => onChange({ ...restaurantInfo, cuisine: value })} />
+        <SelectColumn placeholder="Cuisine Type*" value={restaurantInfo.cuisine} options={["Indian", "Chinese", "Italian", "Mexican", "Thai", "Mediterranean", "American", "Vegan", "Korean", "Japanese", "Middle Eastern", "Multi-cuisine", "Other"]} onChange={(value) => onChange({ ...restaurantInfo, cuisine: value })} />
         <SelectColumn placeholder="Business Type*" value={restaurantInfo.businessType} options={["Individual", "Company", "Franchise"]} onChange={(value) => onChange({ ...restaurantInfo, businessType: value })} />
       </div>
+      <MultiSelectCheckboxes title="Food Type" options={["Veg", "Non-Veg", "Vegan", "Halal", "Kosher", "Gluten-Free"]} selected={restaurantInfo.foodTypes} onChange={(value, checked) => toggleRestaurantList("foodTypes", value, checked)} />
       <div className="row">
         <InputColumn placeholder="Year Established*" type="number" value={restaurantInfo.yearEstablished} onChange={(value) => onChange({ ...restaurantInfo, yearEstablished: value })} />
         <InputColumn placeholder="Number of Staff" type="number" value={restaurantInfo.staffCount} onChange={(value) => onChange({ ...restaurantInfo, staffCount: value })} />
       </div>
-      <MultiSelectCheckboxes title="Service Types" options={["Dine-in", "Takeaway", "Delivery", "Catering"]} selected={restaurantInfo.serviceTypes} onChange={(value, checked) => toggleRestaurantList("serviceTypes", value, checked)} />
+      <MultiSelectCheckboxes title="Service Types" options={serviceTypeOptions} selected={restaurantInfo.serviceTypes} onChange={(value, checked) => toggleRestaurantList("serviceTypes", value, checked)} />
       {(showDeliveryFields || showCatering) ? (
         <Input placeholder="Service Radius in miles*" type="number" value={restaurantInfo.serviceRadiusMiles} onChange={(value) => onChange({ ...restaurantInfo, serviceRadiusMiles: value })} />
       ) : null}
@@ -4657,7 +4833,14 @@ function RestaurantInfoFields({
           </div>
           <div className="row">
             <InputColumn placeholder="Calories" type="number" value={item.calories} onChange={(value) => updateMenuItem(index, { ...item, calories: value })} />
-            <InputColumn placeholder="Image URL" value={item.imageUrl} onChange={(value) => updateMenuItem(index, { ...item, imageUrl: value })} />
+            <FileUploadColumn
+              label="Item Image"
+              accept="image/*,.jpg,.jpeg,.png,.webp"
+              value={item.imageUrl}
+              files={uploadFiles}
+              onFilesChange={onUploadFilesChange}
+              onChange={(value) => updateMenuItem(index, { ...item, imageUrl: value })}
+            />
           </div>
           <CheckboxField label="Available" checked={item.isAvailable} onChange={(value) => updateMenuItem(index, { ...item, isAvailable: value })} />
           {menuItems.length > 1 ? (
@@ -4670,36 +4853,41 @@ function RestaurantInfoFields({
       <h5 className="mt-3 mb-3">Pricing & Offers</h5>
       <div className="row">
         <InputColumn placeholder={labelWithCountryCurrency("Average Cost for Two", currencyCountry)} type="number" value={restaurantInfo.averageCostForTwo} onChange={(value) => onChange({ ...restaurantInfo, averageCostForTwo: value })} />
+        <SelectColumn placeholder="Price Range" value={restaurantInfo.priceRange} options={["Budget", "Moderate", "Premium"]} onChange={(value) => onChange({ ...restaurantInfo, priceRange: value })} />
+      </div>
+      <div className="row">
         <InputColumn placeholder="Coupon Codes" value={restaurantInfo.couponCodes} onChange={(value) => onChange({ ...restaurantInfo, couponCodes: value })} />
+        {showAlcohol ? <InputColumn placeholder="Happy Hours" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} /> : null}
       </div>
       <Textarea placeholder="Discounts / Offers" value={restaurantInfo.discountsOffers} onChange={(value) => onChange({ ...restaurantInfo, discountsOffers: value })} />
       {showAlcohol ? (
-        <>
-          <Input placeholder="Happy Hours" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} />
-          <Input placeholder="Age-restricted notice" value={restaurantInfo.ageRestrictedNotice} onChange={(value) => onChange({ ...restaurantInfo, ageRestrictedNotice: value })} />
-        </>
+        <Input placeholder="Age-restricted notice" value={restaurantInfo.ageRestrictedNotice} onChange={(value) => onChange({ ...restaurantInfo, ageRestrictedNotice: value })} />
       ) : null}
 
       <h5 className="mt-3 mb-3">Delivery & Ordering</h5>
-      <CheckboxField label="Delivery Available" checked={restaurantInfo.deliveryAvailable} onChange={(value) => onChange({ ...restaurantInfo, deliveryAvailable: value })} />
+      <CheckboxField label="Delivery Available" checked={restaurantInfo.deliveryAvailable || isCloudKitchen} onChange={(value) => onChange({ ...restaurantInfo, deliveryAvailable: value })} />
       {showDeliveryFields ? (
         <div className="row">
           <InputColumn placeholder={labelWithCountryCurrency("Delivery Fee", currencyCountry)} type="number" value={restaurantInfo.deliveryFee} onChange={(value) => onChange({ ...restaurantInfo, deliveryFee: value })} />
           <InputColumn placeholder={labelWithCountryCurrency("Minimum Order Value", currencyCountry)} type="number" value={restaurantInfo.minimumOrderValue} onChange={(value) => onChange({ ...restaurantInfo, minimumOrderValue: value })} />
+          <InputColumn placeholder="Estimated Delivery Time" value={restaurantInfo.estimatedDeliveryTime} onChange={(value) => onChange({ ...restaurantInfo, estimatedDeliveryTime: value })} />
         </div>
       ) : null}
       <CheckboxField label="Online Ordering" checked={restaurantInfo.onlineOrdering} onChange={(value) => onChange({ ...restaurantInfo, onlineOrdering: value })} />
       {restaurantInfo.onlineOrdering ? (
-        <MultiSelectCheckboxes title="Third-party Integrations" options={["Uber Eats", "DoorDash", "Grubhub", "Postmates", "Other"]} selected={restaurantInfo.thirdPartyIntegrations} onChange={(value, checked) => toggleRestaurantList("thirdPartyIntegrations", value, checked)} />
+        <MultiSelectCheckboxes title="Third-party Delivery" options={["DoorDash", "Uber Eats", "Grubhub"]} selected={restaurantInfo.thirdPartyIntegrations} onChange={(value, checked) => toggleRestaurantList("thirdPartyIntegrations", value, checked)} />
       ) : null}
 
-      <MultiSelectCheckboxes title="Amenities & Features" options={["WiFi", "Parking", ...(form.subCategory === "Cloud Kitchen" ? [] : ["Outdoor Seating"]), "Live Music", "Family Friendly", "Pet Friendly", "Wheelchair Accessible / ADA Compliance"]} selected={restaurantInfo.amenities} onChange={(value, checked) => toggleRestaurantList("amenities", value, checked)} />
+      {!isCloudKitchen ? (
+        <MultiSelectCheckboxes title="Amenities & Features" options={amenityOptions} selected={restaurantInfo.amenities} onChange={(value, checked) => toggleRestaurantList("amenities", value, checked)} />
+      ) : null}
 
       <h5 className="mt-3 mb-3">Compliance</h5>
       <Input placeholder="Food License Number" value={restaurantInfo.foodLicenseNumber} onChange={(value) => onChange({ ...restaurantInfo, foodLicenseNumber: value })} />
       <div className="row">
         <InputColumn placeholder="Health Inspection Rating" value={restaurantInfo.healthInspectionRating} onChange={(value) => onChange({ ...restaurantInfo, healthInspectionRating: value })} />
         {showAlcohol ? <InputColumn placeholder="Alcohol License Number*" value={restaurantInfo.alcoholLicenseNumber} onChange={(value) => onChange({ ...restaurantInfo, alcoholLicenseNumber: value })} /> : null}
+        <InputColumn placeholder="Business Registration Number" value={restaurantInfo.businessRegistrationNumber} onChange={(value) => onChange({ ...restaurantInfo, businessRegistrationNumber: value })} />
       </div>
 
       <h5 className="mt-3 mb-3">Lead & Interaction</h5>
@@ -4713,9 +4901,35 @@ function RestaurantInfoFields({
           <CheckboxField label="Order Now Button" checked={restaurantInfo.orderNow} onChange={(value) => onChange({ ...restaurantInfo, orderNow: value })} />
         </div>
       </div>
-      {showCatering ? <Textarea placeholder="Bulk order notes" value={restaurantInfo.bulkOrderNotes} onChange={(value) => onChange({ ...restaurantInfo, bulkOrderNotes: value })} /> : null}
-      {form.subCategory === "Bakery" ? <Textarea placeholder="Custom cake / order options" value={restaurantInfo.customOrderOptions} onChange={(value) => onChange({ ...restaurantInfo, customOrderOptions: value })} /> : null}
-      {form.subCategory === "Food Trucks & Pop-ups" ? <Textarea placeholder="Event / pop-up location notes" value={restaurantInfo.eventLocationNotes} onChange={(value) => onChange({ ...restaurantInfo, eventLocationNotes: value })} /> : null}
+      {restaurantInfo.tableBooking ? (
+        <div className="row">
+          <InputColumn placeholder="Reservation Capacity" type="number" value={restaurantInfo.reservationCapacity} onChange={(value) => onChange({ ...restaurantInfo, reservationCapacity: value })} />
+          <InputColumn placeholder="Online Booking URL" value={restaurantInfo.onlineBookingUrl} onChange={(value) => onChange({ ...restaurantInfo, onlineBookingUrl: value })} />
+        </div>
+      ) : null}
+      {showCatering ? (
+        <>
+          <h5 className="mt-3 mb-3">Catering Details</h5>
+          <div className="row">
+            <InputColumn placeholder="Catering Type" value={restaurantInfo.cateringType} onChange={(value) => onChange({ ...restaurantInfo, cateringType: value })} />
+            <InputColumn placeholder="Minimum Guests" type="number" value={restaurantInfo.minimumGuests} onChange={(value) => onChange({ ...restaurantInfo, minimumGuests: value })} />
+            <InputColumn placeholder="Maximum Guests" type="number" value={restaurantInfo.maximumGuests} onChange={(value) => onChange({ ...restaurantInfo, maximumGuests: value })} />
+            <InputColumn placeholder={labelWithCountryCurrency("Per Plate Pricing", currencyCountry)} type="number" value={restaurantInfo.perPlatePricing} onChange={(value) => onChange({ ...restaurantInfo, perPlatePricing: value })} />
+          </div>
+          <MultiSelectCheckboxes title="Event Types" options={["Wedding", "Corporate", "Birthday", "Festival"]} selected={restaurantInfo.eventTypes} onChange={(value, checked) => toggleRestaurantList("eventTypes", value, checked)} />
+          <Textarea placeholder="Bulk order notes" value={restaurantInfo.bulkOrderNotes} onChange={(value) => onChange({ ...restaurantInfo, bulkOrderNotes: value })} />
+        </>
+      ) : null}
+      {isCafeBakery ? <Textarea placeholder="Custom cake / order options" value={restaurantInfo.customOrderOptions} onChange={(value) => onChange({ ...restaurantInfo, customOrderOptions: value })} /> : null}
+      {isFoodTruck ? (
+        <>
+          <h5 className="mt-3 mb-3">Mobile Locations</h5>
+          <Textarea placeholder="Mobile Locations" value={restaurantInfo.mobileLocations} onChange={(value) => onChange({ ...restaurantInfo, mobileLocations: value })} />
+          <Textarea placeholder="Operating Zones" value={restaurantInfo.operatingZones} onChange={(value) => onChange({ ...restaurantInfo, operatingZones: value })} />
+          <Textarea placeholder="Event / pop-up location notes" value={restaurantInfo.eventLocationNotes} onChange={(value) => onChange({ ...restaurantInfo, eventLocationNotes: value })} />
+        </>
+      ) : null}
+      {isGrocery ? <Textarea placeholder="Specialty products / departments" value={restaurantInfo.customOrderOptions} onChange={(value) => onChange({ ...restaurantInfo, customOrderOptions: value })} /> : null}
     </>
   );
 }
@@ -5235,6 +5449,7 @@ function buildListingPayload(
     30;
   const sellerType = getAttributeValue(categoryAttributes, "seller_type", "sellerType").trim() || form.sellerType.trim();
   const restaurantServiceTypes = splitAttributeList(categoryAttributes, "service_type", "service_types", "serviceTypes");
+  const isRestaurantCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
   const restaurantAmenities = [
     ["WiFi", "wifi"],
     ["Parking", "parking"],
@@ -5372,16 +5587,17 @@ function buildListingPayload(
       yearEstablished: numberOrNull(restaurantInfo.yearEstablished) ?? numberAttribute(categoryAttributes, "year_established", "yearEstablished"),
       numberOfStaff: numberOrNull(restaurantInfo.staffCount) ?? numberAttribute(categoryAttributes, "staff_count", "staffCount"),
       serviceTypes: restaurantInfo.serviceTypes.length ? restaurantInfo.serviceTypes : restaurantServiceTypes,
-      serviceRadiusMiles: numberOrNull(restaurantInfo.serviceRadiusMiles) ?? numberAttribute(categoryAttributes, "service_radius", "service_radius_miles", "serviceRadiusMiles"),
-      instagramUrl: socialLinks.instagram.trim(),
-      facebookUrl: socialLinks.facebook.trim(),
+      serviceRadiusMiles: numberOrNull(restaurantInfo.serviceRadiusMiles) ?? numberAttribute(categoryAttributes, "delivery_radius", "service_radius", "service_radius_miles", "serviceRadiusMiles"),
+      instagramUrl: socialLinks.instagram.trim() || getAttributeValue(categoryAttributes, "instagram_url", "instagram").trim(),
+      facebookUrl: socialLinks.facebook.trim() || getAttributeValue(categoryAttributes, "facebook_url", "facebook").trim(),
+      tikTokUrl: getAttributeValue(categoryAttributes, "tiktok_url", "tikTokUrl", "tiktok").trim(),
       twitterUrl: socialLinks.twitter.trim(),
       youTubeUrl: socialLinks.youtube.trim(),
       averageCostForTwo: numberOrNull(restaurantInfo.averageCostForTwo) ?? numberAttribute(categoryAttributes, "average_cost_for_two", "averageCostForTwo"),
       discountsOffers: restaurantInfo.discountsOffers.trim() || getAttributeValue(categoryAttributes, "discounts_offers", "discountsOffers").trim(),
       couponCodes: restaurantInfo.couponCodes.trim() || getAttributeValue(categoryAttributes, "coupon_codes", "couponCodes").trim(),
       happyHours: restaurantInfo.happyHours.trim() || getAttributeValue(categoryAttributes, "happy_hours", "happyHours").trim(),
-      deliveryAvailable: restaurantInfo.deliveryAvailable || boolAttribute(categoryAttributes, "delivery_available", "deliveryAvailable") === true,
+      deliveryAvailable: restaurantInfo.deliveryAvailable || isRestaurantCloudKitchen || boolAttribute(categoryAttributes, "delivery_available", "deliveryAvailable") === true,
       deliveryFee: numberOrNull(restaurantInfo.deliveryFee) ?? numberAttribute(categoryAttributes, "delivery_fee", "deliveryFee"),
       minimumOrderValue: numberOrNull(restaurantInfo.minimumOrderValue) ?? numberAttribute(categoryAttributes, "minimum_order_value", "minimumOrderValue"),
       onlineOrderingAvailable: restaurantInfo.onlineOrdering || boolAttribute(categoryAttributes, "online_ordering", "onlineOrdering") === true,
@@ -5390,6 +5606,7 @@ function buildListingPayload(
       foodLicenseNumber: restaurantInfo.foodLicenseNumber.trim() || getAttributeValue(categoryAttributes, "food_license_number", "foodLicenseNumber").trim(),
       healthInspectionRating: restaurantInfo.healthInspectionRating.trim() || getAttributeValue(categoryAttributes, "health_inspection_rating", "healthInspectionRating").trim(),
       alcoholLicenseNumber: restaurantInfo.alcoholLicenseNumber.trim() || getAttributeValue(categoryAttributes, "alcohol_license_number", "alcohol_license", "alcoholLicenseNumber").trim(),
+      taxIdInternal: restaurantInfo.businessRegistrationNumber.trim() || getAttributeValue(categoryAttributes, "business_registration_number", "tax_id", "taxId").trim(),
       tableBookingEnabled: restaurantInfo.tableBooking || boolAttribute(categoryAttributes, "table_booking", "tableBooking") === true,
       orderNowEnabled: restaurantInfo.orderNow || boolAttribute(categoryAttributes, "order_now_button", "orderNow") === true,
       enableChat: restaurantInfo.enableChat && boolAttribute(categoryAttributes, "enable_chat", "enableChat") !== false,
@@ -5397,7 +5614,7 @@ function buildListingPayload(
       bulkOrderNotes: restaurantInfo.bulkOrderNotes.trim() || getAttributeValue(categoryAttributes, "bulk_order_notes", "bulkOrderNotes").trim(),
       customOrderOptions: restaurantInfo.customOrderOptions.trim() || getAttributeValue(categoryAttributes, "custom_order_options", "customOrderOptions").trim(),
       eventLocationNotes: restaurantInfo.eventLocationNotes.trim() || getAttributeValue(categoryAttributes, "event_location_notes", "eventLocationNotes").trim(),
-      ageRestrictedNotice: restaurantInfo.ageRestrictedNotice.trim() || getAttributeValue(categoryAttributes, "age_restricted_notice", "ageRestrictedNotice").trim(),
+      ageRestrictedNotice: restaurantInfo.ageRestrictedNotice.trim() || getAttributeValue(categoryAttributes, "age_restricted_notice", "age_restriction", "ageRestrictedNotice").trim(),
     },
     vehicleDetails: {
       brand: getAttributeValue(categoryAttributes, "brand").trim(),
@@ -5631,6 +5848,8 @@ function mapRestaurantInfoFromListing(listing: ListingSummary, propertyDetails: 
     restaurantName: stringValue(restaurantDetails.businessName) || legacyInfo.restaurantName,
     tagline: stringValue(restaurantDetails.tagline) || legacyInfo.tagline,
     cuisine: stringValue(restaurantDetails.cuisineType) || legacyInfo.cuisine,
+    foodTypes: Array.isArray(legacyInfo.foodTypes) ? legacyInfo.foodTypes.map(String) : [],
+    foodType: legacyInfo.foodType || "",
     businessType: stringValue(restaurantDetails.businessType),
     yearEstablished: stringValue(restaurantDetails.yearEstablished),
     staffCount: stringValue(restaurantDetails.numberOfStaff),
@@ -5640,19 +5859,31 @@ function mapRestaurantInfoFromListing(listing: ListingSummary, propertyDetails: 
     discountsOffers: stringValue(restaurantDetails.discountsOffers),
     couponCodes: stringValue(restaurantDetails.couponCodes),
     happyHours: stringValue(restaurantDetails.happyHours),
+    priceRange: legacyInfo.priceRange || "",
     deliveryAvailable: restaurantDetails.deliveryAvailable === true,
     deliveryFee: stringValue(restaurantDetails.deliveryFee),
     minimumOrderValue: stringValue(restaurantDetails.minimumOrderValue),
+    estimatedDeliveryTime: legacyInfo.estimatedDeliveryTime || "",
     onlineOrdering: restaurantDetails.onlineOrderingAvailable === true,
     thirdPartyIntegrations: Array.isArray(restaurantDetails.thirdPartyIntegrations) ? restaurantDetails.thirdPartyIntegrations.map(String) : [],
     amenities: Array.isArray(restaurantDetails.amenities) ? restaurantDetails.amenities.map(String) : [],
     foodLicenseNumber: stringValue(restaurantDetails.foodLicenseNumber),
     healthInspectionRating: stringValue(restaurantDetails.healthInspectionRating),
     alcoholLicenseNumber: stringValue(restaurantDetails.alcoholLicenseNumber),
+    businessRegistrationNumber: legacyInfo.businessRegistrationNumber || "",
     tableBooking: restaurantDetails.tableBookingEnabled === true,
+    reservationCapacity: legacyInfo.reservationCapacity || "",
+    onlineBookingUrl: legacyInfo.onlineBookingUrl || "",
     orderNow: restaurantDetails.orderNowEnabled === true,
     enableChat: restaurantDetails.enableChat !== false,
     enableCall: restaurantDetails.enableCall !== false,
+    cateringType: legacyInfo.cateringType || "",
+    minimumGuests: legacyInfo.minimumGuests || "",
+    maximumGuests: legacyInfo.maximumGuests || "",
+    perPlatePricing: legacyInfo.perPlatePricing || "",
+    eventTypes: Array.isArray(legacyInfo.eventTypes) ? legacyInfo.eventTypes.map(String) : [],
+    mobileLocations: legacyInfo.mobileLocations || "",
+    operatingZones: legacyInfo.operatingZones || "",
     bulkOrderNotes: stringValue(restaurantDetails.bulkOrderNotes),
     customOrderOptions: stringValue(restaurantDetails.customOrderOptions),
     eventLocationNotes: stringValue(restaurantDetails.eventLocationNotes),
@@ -6503,6 +6734,13 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const furnitureDeliveryAvailable = getAttributeValue(values, "delivery_available", "deliveryAvailable");
   const furnitureSubCategory = form.subCategory.toLowerCase();
   const furnitureDetailCategory = form.detailCategory.toLowerCase();
+  const restaurantSubCategory = form.subCategory.toLowerCase();
+  const restaurantDeliveryAvailable = getAttributeValue(values, "delivery_available", "deliveryAvailable", "delivery").trim();
+  const restaurantServiceType = getAttributeValue(values, "service_type", "serviceType", "service_types").toLowerCase();
+  const isCloudKitchenRestaurant = restaurantSubCategory === "cloud kitchen" || restaurantSubCategory === "cloud kitchen / delivery only";
+  const isBarsRestaurant = restaurantSubCategory === "bars & beverages";
+  const isCateringRestaurant = restaurantSubCategory === "catering" || restaurantSubCategory === "catering services";
+  const isFoodTruckRestaurant = restaurantSubCategory === "food trucks & pop-ups";
 
   if (form.categoryName === "Vehicles" && isNewVehicle && ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
     return false;
@@ -6546,6 +6784,32 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
 
   if (form.categoryName === "Real Estate" && !isSaleRealEstateSubCategory(form.subCategory) && ["loaneligibledetail", "loan_eligible_detail", "salepricelabel", "sale_price_label"].includes(key)) {
     return false;
+  }
+
+  if (form.categoryName === "Restaurants & Food") {
+    if (isCloudKitchenRestaurant && ["dinein", "dine_in", "tablebooking", "table_booking", "reservationsaccepted", "reservations_accepted", "reservationcapacity", "reservation_capacity", "onlinebookingurl", "online_booking_url", "parking", "outdoorseating", "outdoor_seating", "privatedining", "private_dining", "baravailable", "bar_available"].includes(key)) {
+      return false;
+    }
+
+    if (!isCloudKitchenRestaurant && restaurantDeliveryAvailable !== "Yes" && restaurantServiceType !== "delivery" && ["deliveryradius", "delivery_radius", "deliveryfee", "delivery_fee", "minimumordervalue", "minimum_order_value", "estimateddeliverytime", "estimated_delivery_time", "thirdpartyintegration", "third_party_integration"].includes(key)) {
+      return false;
+    }
+
+    if (!isBarsRestaurant && ["alcohollicense", "alcohol_license", "agerestriction", "age_restriction"].includes(key)) {
+      return false;
+    }
+
+    if (!isBarsRestaurant && ["happyhours", "happy_hours"].includes(key) && restaurantSubCategory !== "cafe" && restaurantSubCategory !== "cafes & bakeries") {
+      return false;
+    }
+
+    if (!isCateringRestaurant && restaurantServiceType !== "catering" && ["cateringtype", "catering_type", "minimumguests", "minimum_guests", "maximumguests", "maximum_guests", "perplatepricing", "per_plate_pricing", "eventtypes", "event_types", "eventcapacity", "event_capacity", "cateringpackages", "catering_packages"].includes(key)) {
+      return false;
+    }
+
+    if (!isFoodTruckRestaurant && ["mobilelocations", "mobile_locations", "operatingzones", "operating_zones"].includes(key)) {
+      return false;
+    }
   }
 
   if (isFurnitureCategory(form.categoryName)) {
@@ -6683,7 +6947,7 @@ function getListingKind(subCategory: string, detailCategory: string) {
   if (isPlotRealEstateCategory(subCategory, detailCategory)) return "Plot";
   if (isCommercialRealEstateSubCategory(subCategory)) return "Commercial";
   if (["PG", "PG / Co-living"].includes(subCategory)) return "PG";
-  if (["Restaurants", "Restaurant", "Fast Food", "Cafes", "Cafe", "Bakery", "Cloud Kitchen", "Catering", "Bars & Beverages", "Food Trucks & Pop-ups"].includes(subCategory)) return "Restaurant";
+  if (["Restaurants", "Restaurant", "Restaurants (Dine-In)", "Fast Food", "Fast Food & Takeaway", "Cafes", "Cafe", "Cafes & Bakeries", "Bakery", "Cloud Kitchen", "Cloud Kitchen / Delivery Only", "Catering", "Catering Services", "Bars & Beverages", "Food Trucks & Pop-ups", "Grocery & Specialty Food Stores"].includes(subCategory)) return "Restaurant";
   if (subCategory === "Job Listings") return "Job";
   if (subCategory === "Freelance Services") return "Service";
   return "Classified";
