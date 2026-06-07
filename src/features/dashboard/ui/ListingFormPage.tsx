@@ -410,10 +410,11 @@ const initialRestaurantMenuItem: RestaurantMenuItem = {
 
 const commonConditionOptions = ["New", "Like New", "Good", "Fair", "Needs Repair"];
 const yesNoOptions = ["Yes", "No"];
-const vehicleConditionOptions = ["New", "Used"];
-const vehicleFuelOptions = ["Petrol", "Diesel", "Electric", "CNG", "Hybrid", "Other"];
-const vehicleBrandOptions = ["Maruti Suzuki", "Hyundai", "Honda", "Toyota", "Tata", "Mahindra", "Kia", "MG", "Skoda", "Volkswagen", "Ford", "Renault", "Nissan", "BMW", "Mercedes-Benz", "Audi", "Royal Enfield", "Hero", "Honda Two Wheelers", "Bajaj", "TVS", "Yamaha", "KTM", "Ather", "Ola Electric", "Other"];
-const transmissionOptions = ["Manual", "Automatic", "Not Applicable"];
+const vehicleConditionOptions = ["New", "Used", "Certified Pre-Owned"];
+const vehicleFuelOptions = ["Gasoline", "Diesel", "Hybrid", "Electric"];
+const vehicleBrandOptions = ["Acura", "Audi", "BMW", "Chevrolet", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Jeep", "Kia", "Lexus", "Mercedes-Benz", "Nissan", "Subaru", "Tesla", "Toyota", "Volkswagen", "Yamaha", "Harley-Davidson", "Royal Enfield", "Other"];
+const transmissionOptions = ["Automatic", "Manual", "Not Applicable"];
+const vehicleDriveTypeOptions = ["FWD", "AWD", "4WD", "RWD", "Not Applicable"];
 const listingTypeOptions = ["Free", "Featured", "Premium"];
 const vehiclePriceNegotiableOptions = ["Yes", "No"];
 const nearbyServiceTypes = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
@@ -459,46 +460,79 @@ const furniturePostingCommonFields: CategoryAttributeField[] = [
 ];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
-  { key: "brand", label: "Brand", options: vehicleBrandOptions },
-  { key: "model", label: "Model" },
-  { key: "variant", label: "Variant" },
-  { key: "yearOfManufacture", label: "Year of Manufacture", type: "number" },
-  { key: "registrationYear", label: "Registration Year", type: "number" },
-  { key: "vehicleCondition", label: "Vehicle Condition", options: vehicleConditionOptions },
-  { key: "fuelType", label: "Fuel Type", options: vehicleFuelOptions },
-  { key: "transmission", label: "Transmission", options: transmissionOptions },
-  { key: "kilometersDriven", label: "KM Driven", type: "number" },
-  { key: "ownerCount", label: "Number of Owners", type: "number" },
-  { key: "insurance", label: "Insurance", options: ["Active", "Expired"] },
-  { key: "insuranceValidTill", label: "Insurance Valid Till", type: "date" },
-  { key: "registrationState", label: "Registration State (RTO)" },
-  { key: "color", label: "Color" },
+  { key: "brand", label: "Vehicle Brand / Make", options: vehicleBrandOptions, isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "model", label: "Model", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "variant", label: "Variant / Trim", sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "yearOfManufacture", label: "Year", type: "number", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "vin", label: "VIN Number (optional/private)", sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "vehicleCondition", label: "Condition", options: vehicleConditionOptions, isRequired: true, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
+  { key: "ownershipTypeVehicle", label: "Ownership Type", options: ["Owner", "Dealer"], sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
+  { key: "ownerCount", label: "Number of Owners", type: "number", sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
+  { key: "accidentHistory", label: "Accident History", options: yesNoOptions, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
+  { key: "cleanTitle", label: "Clean Title", options: yesNoOptions, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
+  { key: "titleStatus", label: "Title Status", options: ["Clean", "Salvage", "Rebuilt"], sectionName: "Legal & Compliance", sectionOrder: 12 },
+  { key: "registrationStatus", label: "Registration Status", sectionName: "Legal & Compliance", sectionOrder: 12 },
+  { key: "emissionsTestPassed", label: "Emissions Test Passed", options: yesNoOptions, sectionName: "Legal & Compliance", sectionOrder: 12 },
+  { key: "dealerLicenseNumber", label: "Dealer License Number", sectionName: "Legal & Compliance", sectionOrder: 12 },
+  { key: "fuelType", label: "Fuel Type", options: vehicleFuelOptions, isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "transmission", label: "Transmission", options: transmissionOptions, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "driveType", label: "Drive Type", options: vehicleDriveTypeOptions, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "kilometersDriven", label: "Mileage (miles)", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "engineCapacity", label: "Engine Capacity", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "horsepower", label: "Horsepower", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "color", label: "Exterior Color", isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "interiorColor", label: "Interior Color", sectionName: "Vehicle Specifications", sectionOrder: 2 },
 ];
 
 const vehiclePriceFields: CategoryAttributeField[] = [
-  { key: "price", label: "Price", type: "number", sectionName: "Price Details", sectionOrder: 3 },
-  { key: "price_negotiable", label: "Price Negotiable", options: vehiclePriceNegotiableOptions, sectionName: "Price Details", sectionOrder: 3 },
+  { key: "price", label: "Price (USD)", type: "number", sectionName: "Pricing", sectionOrder: 4 },
+  { key: "price_negotiable", label: "Negotiable", options: vehiclePriceNegotiableOptions, sectionName: "Pricing", sectionOrder: 4 },
+  { key: "financing_available", label: "Financing Available", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 4 },
+  { key: "lease_option", label: "Lease Option", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 4 },
 ];
 
 const vehicleLocationFields: CategoryAttributeField[] = [
-  { key: "area_locality", label: "Area / Locality", sectionName: "Location Details", sectionOrder: 4 },
-  { key: "map_lat_long", label: "Map Location (lat/long)", sectionName: "Location Details", sectionOrder: 4 },
+  { key: "area_locality", label: "Street Address / Locality", sectionName: "Location", sectionOrder: 3 },
+  { key: "map_lat_long", label: "Latitude / Longitude", sectionName: "Location", sectionOrder: 3 },
 ];
 
 const vehicleDocumentFields: CategoryAttributeField[] = [
-  { key: "rcAvailable", label: "RC Available", options: yesNoOptions, sectionName: "Documents & Compliance", sectionOrder: 6 },
-  { key: "pucAvailable", label: "Pollution Certificate (PUC)", options: yesNoOptions, sectionName: "Documents & Compliance", sectionOrder: 6 },
-  { key: "serviceHistory", label: "Service History", options: ["Available", "Not Available"], sectionName: "Documents & Compliance", sectionOrder: 6 },
-  { key: "loanStatus", label: "Loan Status", options: ["Clear", "Active Loan"], sectionName: "Documents & Compliance", sectionOrder: 6 },
+  { key: "warrantyAvailable", label: "Warranty Available", options: yesNoOptions, sectionName: "Insurance & Warranty", sectionOrder: 6 },
+  { key: "insuranceIncluded", label: "Insurance Included", options: yesNoOptions, sectionName: "Insurance & Warranty", sectionOrder: 6 },
+  { key: "extendedWarranty", label: "Extended Warranty", sectionName: "Insurance & Warranty", sectionOrder: 6 },
+  { key: "insurance", label: "Insurance Status", options: ["Active", "Expired", "Not Included"], sectionName: "Insurance & Warranty", sectionOrder: 6 },
+  { key: "insuranceValidTill", label: "Insurance Valid Till", type: "date", sectionName: "Insurance & Warranty", sectionOrder: 6 },
+  { key: "rcAvailable", label: "Registration Available", options: yesNoOptions, sectionName: "Legal & Compliance", sectionOrder: 12 },
+  { key: "pucAvailable", label: "Emissions / Inspection Certificate", options: yesNoOptions, sectionName: "Legal & Compliance", sectionOrder: 12 },
+  { key: "serviceHistory", label: "Service History", options: ["Available", "Not Available"], sectionName: "Legal & Compliance", sectionOrder: 12 },
+  { key: "loanStatus", label: "Loan Status", options: ["Clear", "Active Loan"], sectionName: "Legal & Compliance", sectionOrder: 12 },
 ];
 
 const vehicleSellerFields: CategoryAttributeField[] = [
-  { key: "seller_type", label: "Seller Type", options: ["Owner", "Dealer"], sectionName: "Seller Information", sectionOrder: 7 },
+  { key: "seller_type", label: "Seller Type", options: ["Owner", "Dealer"], sectionName: "Contact Information", sectionOrder: 9 },
+  { key: "dealer_name", label: "Dealer Name", sectionName: "Contact Information", sectionOrder: 9 },
+  { key: "preferred_contact_time", label: "Preferred Contact Time", sectionName: "Availability & Scheduling", sectionOrder: 10 },
+  { key: "availability_status", label: "Availability Status", options: ["Available", "Sold", "Reserved"], sectionName: "Availability & Scheduling", sectionOrder: 10 },
+  { key: "schedule_test_drive", label: "Schedule Test Drive", options: yesNoOptions, sectionName: "Availability & Scheduling", sectionOrder: 10 },
 ];
 
 const vehicleListingSettingsFields: CategoryAttributeField[] = [
-  { key: "ad_type", label: "Ad Type", options: listingTypeOptions, sectionName: "Listing Settings", sectionOrder: 8 },
-  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Settings", sectionOrder: 8 },
+  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 11 },
+  { key: "boost_listing", label: "Boost Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 11 },
+  { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 11 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Visibility & Promotions", sectionOrder: 11 },
+];
+
+const vehicleFeatureFields: CategoryAttributeField[] = [
+  { key: "sunroof", label: "Sunroof", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "leatherSeats", label: "Leather Seats", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "navigationSystem", label: "Navigation System", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "bluetooth", label: "Bluetooth", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "backupCamera", label: "Backup Camera", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "heatedSeats", label: "Heated Seats", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "appleCarplayAndroidAuto", label: "Apple CarPlay / Android Auto", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "parkingSensors", label: "Parking Sensors", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "remoteStart", label: "Remote Start", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
 ];
 
 const vehiclePostingCommonFields: CategoryAttributeField[] = [
@@ -506,6 +540,7 @@ const vehiclePostingCommonFields: CategoryAttributeField[] = [
   ...vehiclePriceFields,
   ...vehicleLocationFields,
   ...vehicleDocumentFields,
+  ...vehicleFeatureFields,
   ...vehicleSellerFields,
   ...vehicleListingSettingsFields,
 ];
@@ -794,63 +829,160 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
     subCategories: {
       Cars: [
         ...vehicleCoreFields,
-        { key: "bodyType", label: "Body Type", isRequired: true, options: ["Hatchback", "Sedan", "SUV", "MUV", "Coupe", "Convertible", "Other"] },
+        { key: "bodyType", label: "Body Type", isRequired: true, options: ["Sedan", "SUV", "Hatchback", "Coupe", "Convertible", "Luxury Car", "Sports Car", "Hybrid Car", "Electric Car", "Other"] },
         { key: "seatingCapacity", label: "Seating Capacity", isRequired: true, type: "number" },
         { key: "bootSpace", label: "Boot Space" },
-        { key: "mileage", label: "Mileage (km/l)" },
+        { key: "mileage", label: "Fuel Economy / Mileage" },
         { key: "airConditioning", label: "Air Conditioning", type: "checkbox" },
         { key: "powerSteering", label: "Power Steering", type: "checkbox" },
         { key: "abs", label: "ABS", type: "checkbox" },
         { key: "airbags", label: "Airbags", type: "checkbox" },
-        { key: "sunroof", label: "Sunroof", type: "checkbox" },
         { key: "alloyWheels", label: "Alloy Wheels", type: "checkbox" },
         { key: "bluetoothGps", label: "Bluetooth / GPS", type: "checkbox" },
         { key: "reverseCamera", label: "Reverse Camera", type: "checkbox" },
         { key: "cruiseControl", label: "Cruise Control", type: "checkbox" },
       ],
+      "Motorcycles & Scooters": [
+        ...vehicleCoreFields,
+        { key: "engineCapacity", label: "Engine Capacity (cc)", isRequired: true, type: "number" },
+        { key: "mileage", label: "Mileage" },
+        { key: "bikeType", label: "Bike Type", isRequired: true, options: ["Sport Bike", "Cruiser", "Scooter", "Touring Bike", "Dirt Bike", "Electric Bike", "Other"] },
+      ],
       Bikes: [
         ...vehicleCoreFields,
         { key: "engineCapacity", label: "Engine Capacity (cc)", isRequired: true, type: "number" },
         { key: "mileage", label: "Mileage" },
-        { key: "bikeType", label: "Bike Type", isRequired: true, options: ["Sports", "Cruiser", "Scooter", "Commuter", "Electric Bike", "Other"] },
+        { key: "bikeType", label: "Bike Type", isRequired: true, options: ["Sport Bike", "Cruiser", "Scooter", "Touring Bike", "Dirt Bike", "Electric Bike", "Other"] },
       ],
-      "Commercial Vehicles": [
+      "Trucks & Commercial Vehicles": [
         ...vehicleCoreFields,
-        { key: "vehicleType", label: "Vehicle Type", isRequired: true, options: ["Truck", "Bus", "Pickup", "Van", "Tempo", "Tractor", "Other"] },
+        { key: "vehicleType", label: "Vehicle Type", isRequired: true, options: ["Pickup Truck", "Box Truck", "Cargo Van", "Semi Truck", "Dump Truck", "Delivery Van", "Other"] },
         { key: "loadCapacity", label: "Load Capacity", isRequired: true, type: "number" },
+        { key: "cargoDimensions", label: "Cargo Dimensions" },
+        { key: "dotCompliance", label: "DOT Compliance", options: yesNoOptions },
+        { key: "fleetVehicle", label: "Fleet Vehicle", options: yesNoOptions },
         { key: "numberOfWheels", label: "Number of Wheels", isRequired: true, type: "number" },
         { key: "permitType", label: "Permit Type", isRequired: true, options: ["National", "State", "Local", "None"] },
       ],
+      "Commercial Vehicles": [
+        ...vehicleCoreFields,
+        { key: "vehicleType", label: "Vehicle Type", isRequired: true, options: ["Pickup Truck", "Box Truck", "Cargo Van", "Semi Truck", "Dump Truck", "Delivery Van", "Other"] },
+        { key: "loadCapacity", label: "Load Capacity", isRequired: true, type: "number" },
+        { key: "cargoDimensions", label: "Cargo Dimensions" },
+        { key: "dotCompliance", label: "DOT Compliance", options: yesNoOptions },
+        { key: "fleetVehicle", label: "Fleet Vehicle", options: yesNoOptions },
+        { key: "numberOfWheels", label: "Number of Wheels", isRequired: true, type: "number" },
+        { key: "permitType", label: "Permit Type", isRequired: true, options: ["National", "State", "Local", "None"] },
+      ],
+      "RVs & Campers": [
+        ...vehicleCoreFields,
+        { key: "rvType", label: "RV Type", options: ["Motorhome", "Travel Trailer", "Camper Van", "Fifth Wheel RV"], isRequired: true },
+        { key: "sleepingCapacity", label: "Sleeping Capacity", type: "number" },
+        { key: "lengthFeet", label: "Length (ft)", type: "number" },
+      ],
+      "Boats & Watercraft": [
+        ...vehicleCoreFields,
+        { key: "watercraftType", label: "Watercraft Type", options: ["Fishing Boat", "Yacht", "Jet Ski", "Sailboat", "Pontoon Boat"], isRequired: true },
+        { key: "lengthFeet", label: "Length (ft)", type: "number" },
+        { key: "engineHours", label: "Engine Hours", type: "number" },
+      ],
       Rentals: [
         ...vehicleCoreFields,
-        { key: "rentalType", label: "Rental Type", isRequired: true, options: ["Self-drive", "With Driver"] },
+        { key: "rentalType", label: "Rental Type", isRequired: true, options: ["Car Rental", "Luxury Rental", "Party Bus Rental", "Truck Rental", "RV Rental", "Self-drive", "With Driver"] },
+        { key: "rentalDuration", label: "Rental Duration" },
         { key: "pricePerHour", label: "Price Per Hour", type: "number" },
-        { key: "pricePerDay", label: "Price Per Day", type: "number" },
-        { key: "securityDepositVehicle", label: "Security Deposit", type: "number" },
+        { key: "pricePerDay", label: "Daily Price", type: "number" },
+        { key: "securityDepositVehicle", label: "Deposit Amount", type: "number" },
+      ],
+      "Vehicle Rentals": [
+        ...vehicleCoreFields,
+        { key: "rentalType", label: "Rental Type", isRequired: true, options: ["Car Rental", "Luxury Rental", "Party Bus Rental", "Truck Rental", "RV Rental", "Self-drive", "With Driver"] },
+        { key: "rentalDuration", label: "Rental Duration" },
+        { key: "pricePerHour", label: "Price Per Hour", type: "number" },
+        { key: "pricePerDay", label: "Daily Price", type: "number" },
+        { key: "securityDepositVehicle", label: "Deposit Amount", type: "number" },
+      ],
+      "Auto Parts & Accessories": [
+        { key: "partType", label: "Part Type", isRequired: true, options: ["Tires & Wheels", "Batteries", "Car Audio Systems", "Seat Covers", "GPS & Electronics", "Performance Parts", "Other"] },
+        { key: "compatibleModels", label: "Compatible Brands / Models" },
+        { key: "brand", label: "Brand" },
+        { key: "oemAftermarket", label: "OEM / Aftermarket", options: ["OEM", "Aftermarket"] },
+        { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"] },
+        { key: "warranty", label: "Warranty", options: ["No Warranty", "Seller Warranty", "Manufacturer Warranty"] },
       ],
       "Spare Parts & Accessories": [
-        { key: "partType", label: "Part Type", isRequired: true, options: ["Tyres", "Battery", "Music System", "Lights", "Engine Parts", "Interior Accessories", "Exterior Accessories", "Other"] },
-        { key: "compatibleModels", label: "Compatible Models" },
+        { key: "partType", label: "Part Type", isRequired: true, options: ["Tires & Wheels", "Batteries", "Car Audio Systems", "Seat Covers", "GPS & Electronics", "Performance Parts", "Other"] },
+        { key: "compatibleModels", label: "Compatible Brands / Models" },
         { key: "brand", label: "Brand" },
-        { key: "condition", label: "Condition", options: vehicleConditionOptions },
+        { key: "oemAftermarket", label: "OEM / Aftermarket", options: ["OEM", "Aftermarket"] },
+        { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"] },
         { key: "warranty", label: "Warranty", options: ["No Warranty", "Seller Warranty", "Manufacturer Warranty"] },
+      ],
+      "Electric Vehicles (EV)": [
+        ...vehicleCoreFields,
+        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true },
+        { key: "chargingTime", label: "Charging Time", isRequired: true },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
+        { key: "chargingPortType", label: "Charging Port Type" },
+      ],
+      "Services & Repairs": [
+        { key: "serviceType", label: "Service Type", options: ["Auto Repair Shop", "Car Wash & Detailing", "Oil Change Service", "Tire Service", "Body Shop", "Towing Service"], isRequired: true },
+        { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number" },
+        { key: "appointmentRequired", label: "Appointment Required", options: yesNoOptions },
+        { key: "emergencyService", label: "Emergency Service", options: yesNoOptions },
       ],
     },
     detailedCategories: {
-      "Electric Vehicles": [
+      "Electric Cars": [
         ...vehicleCoreFields,
-        { key: "batteryCapacity", label: "Battery Capacity" },
-        { key: "rangePerCharge", label: "Range Per Charge" },
-        { key: "chargingTime", label: "Charging Time" },
+        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true },
+        { key: "chargingTime", label: "Charging Time", isRequired: true },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
+        { key: "chargingPortType", label: "Charging Port Type" },
         { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
         { key: "ownerCount", label: "Owner Count", type: "number" },
       ],
-      "Tyres / Batteries": [
-        { key: "itemType", label: "Item Type", options: ["Tyre", "Battery"] },
+      "Electric Bikes": [
+        ...vehicleCoreFields,
+        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true },
+        { key: "chargingTime", label: "Charging Time", isRequired: true },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
+        { key: "chargingPortType", label: "Charging Port Type" },
+      ],
+      "Charging Stations": [
+        { key: "chargingStationType", label: "Charging Station Type" },
+        { key: "chargingPortType", label: "Charging Port Type" },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
+        { key: "price", label: "Price (USD)", type: "number" },
+      ],
+      "EV Accessories": [
+        { key: "partType", label: "Part Type", isRequired: true },
+        { key: "compatibleModels", label: "Compatible Brands / Models" },
+        { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"] },
+      ],
+      "Electric Vehicles": [
+        ...vehicleCoreFields,
+        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true },
+        { key: "chargingTime", label: "Charging Time", isRequired: true },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
+        { key: "chargingPortType", label: "Charging Port Type" },
+        { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
+        { key: "ownerCount", label: "Owner Count", type: "number" },
+      ],
+      "Tires & Wheels": [
+        { key: "itemType", label: "Item Type", options: ["Tire", "Wheel"] },
         { key: "sizeOrCapacity", label: "Size / Capacity" },
         { key: "brand", label: "Brand" },
         { key: "manufacturingDate", label: "Manufacturing Date" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
+        { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"] },
+        { key: "warranty", label: "Warranty", options: ["No Warranty", "Seller Warranty", "Manufacturer Warranty"] },
+      ],
+      "Tyres / Batteries": [
+        { key: "itemType", label: "Item Type", options: ["Tire", "Battery"] },
+        { key: "sizeOrCapacity", label: "Size / Capacity" },
+        { key: "brand", label: "Brand" },
+        { key: "manufacturingDate", label: "Manufacturing Date" },
+        { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"] },
         { key: "warranty", label: "Warranty", options: ["No Warranty", "Seller Warranty", "Manufacturer Warranty"] },
       ],
     },
@@ -1683,8 +1815,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   );
 
   const detailCategoryOptions = useMemo(
-    () => isClassifiedMode ? [] : includeCurrentValue(selectedListingSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [], form.detailCategory),
-    [isClassifiedMode, selectedListingSubCategory, form.detailCategory],
+    () => includeCurrentValue(selectedListingSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [], form.detailCategory),
+    [selectedListingSubCategory, form.detailCategory],
   );
   const effectiveDynamicCategoryFields = useMemo(
     () => mergeCategoryPostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
@@ -1705,7 +1837,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     const fieldsRequest = isClassifiedMode
-      ? getClassifiedSpecificationFields(selectedListingCategory.id, selectedListingSubCategory?.id)
+      ? getClassifiedSpecificationFields(selectedListingCategory.id, selectedListingSubCategory?.id, selectedListingDetailedCategory?.id)
       : getListingCategoryFields(
           selectedListingCategory.id,
           selectedListingSubCategory?.id,
@@ -2284,10 +2416,31 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }
 
   function validateVehicleFields() {
-    const isAccessories = form.subCategory === "Spare Parts & Accessories";
-    const isRental = form.subCategory === "Rentals";
+    const isAccessories = isVehiclePartsSubCategory(form.subCategory) || form.detailCategory === "EV Accessories";
+    const isRental = isVehicleRentalSubCategory(form.subCategory);
+    const isServices = isVehicleServicesSubCategory(form.subCategory);
+    const isEv = isVehicleEvSelection(form.subCategory, form.detailCategory);
+    const isChargingStation = form.detailCategory === "Charging Stations";
     const condition = getAttributeValue(categoryAttributes, "vehicleCondition", "vehicle_condition", "condition");
     const fuelType = getAttributeValue(categoryAttributes, "fuelType", "fuel_type");
+
+    if (isChargingStation) {
+      if (!getAttributeValue(categoryAttributes, "chargingStationType", "charging_station_type", "chargingPortType", "charging_port_type").trim()) {
+        setErrorMessage("Charging Station Type or Charging Port Type is required for Charging Stations.");
+        return false;
+      }
+
+      return true;
+    }
+
+    if (isServices) {
+      if (!getAttributeValue(categoryAttributes, "serviceType", "service_type").trim()) {
+        setErrorMessage("Service Type is required for Services & Repairs.");
+        return false;
+      }
+
+      return true;
+    }
 
     const requiredFields = isAccessories
       ? [
@@ -2300,7 +2453,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           ["model", "Model"],
           ["yearOfManufacture", "year_of_manufacture", "Year of Manufacture"],
           ["vehicleCondition", "vehicle_condition", "Vehicle Condition"],
-          ["fuelType", "fuel_type", "Fuel Type"],
+          ...(isEv ? [] : [["fuelType", "fuel_type", "Fuel Type"]]),
           ["color", "Color"],
         ];
 
@@ -2310,7 +2463,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return false;
     }
 
-    if (!isAccessories && condition === "Used") {
+    if (!isAccessories && isUsedVehicleCondition(condition)) {
       const usedMissing = [
         ["registrationYear", "registration_year", "Registration Year"],
         ["kilometersDriven", "kilometers_driven", "kmDriven", "km_driven", "KM Driven"],
@@ -2343,14 +2496,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
     }
 
-    if (form.subCategory === "Bikes") {
+    if (isVehicleMotorcycleSubCategory(form.subCategory)) {
       if (!getAttributeValue(categoryAttributes, "engineCapacity", "engine_capacity").trim() || !getAttributeValue(categoryAttributes, "bikeType", "bike_type").trim()) {
-        setErrorMessage("Engine Capacity and Bike Type are required for Bikes.");
+        setErrorMessage("Engine Capacity and Bike Type are required for Motorcycles & Scooters.");
         return false;
       }
     }
 
-    if (form.subCategory === "Commercial Vehicles") {
+    if (isVehicleCommercialSubCategory(form.subCategory)) {
       const commercialMissing = [
         ["vehicleType", "vehicle_type", "Vehicle Type"],
         ["loadCapacity", "load_capacity", "Load Capacity"],
@@ -2359,7 +2512,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (commercialMissing) {
-        setErrorMessage(`${commercialMissing[commercialMissing.length - 1]} is required for Commercial Vehicles.`);
+        setErrorMessage(`${commercialMissing[commercialMissing.length - 1]} is required for Trucks & Commercial Vehicles.`);
         return false;
       }
     }
@@ -2370,8 +2523,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         return false;
       }
 
-      if (!getAttributeValue(categoryAttributes, "pricePerHour", "price_per_hour").trim() && !getAttributeValue(categoryAttributes, "pricePerDay", "price_per_day").trim()) {
-        setErrorMessage("At least one of Price Per Hour or Price Per Day is required.");
+      if (!getAttributeValue(categoryAttributes, "pricePerHour", "price_per_hour").trim() && !getAttributeValue(categoryAttributes, "pricePerDay", "price_per_day", "daily_price").trim()) {
+        setErrorMessage("At least one of Price Per Hour or Daily Price is required.");
         return false;
       }
     } else if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price", "sale_price", "vehicle_price").trim() && !form.price.trim()) {
@@ -2792,7 +2945,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
             onUploadFilesChange={setGalleryFiles}
           />
         ) : null}
-        {!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && form.subCategory === "Rentals") ? (
+        {!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && isVehicleRentalSubCategory(form.subCategory)) ? (
           <ListingPriceFields form={form} currencyCountry={currencyCountry} updateField={updateField} />
         ) : null}
         <CategoryAttributesFields
@@ -5443,6 +5596,8 @@ function buildListingPayload(
   const priceNegotiableValue = getAttributeValue(categoryAttributes, "price_negotiable", "priceNegotiable", "negotiable").trim();
   const vehicleMapLocation = parseLatLong(getAttributeValue(categoryAttributes, "map_lat_long", "mapLatLong", "google_map_lat_long").trim());
   const vehicleAreaLocality = getAttributeValue(categoryAttributes, "area_locality", "areaLocality").trim();
+  const isEvVehiclePayload = isVehicleEvSelection(form.subCategory, form.detailCategory);
+  const isChargingStationPayload = form.detailCategory === "Charging Stations";
   const adDurationDays =
     numberAttribute(categoryAttributes, "ad_duration_days", "adDurationDays", "ad_duration") ??
     numberOrNull(form.adDurationDays) ??
@@ -5467,7 +5622,7 @@ function buildListingPayload(
     description: listingDescription,
     categoryName: isClassifiedMode ? "Classifieds" : form.categoryName.trim(),
     subCategory: isClassifiedMode ? form.categoryName.trim() : form.subCategory.trim(),
-    detailCategory: isClassifiedMode ? "" : form.detailCategory.trim() || form.subCategory.trim(),
+    detailCategory: isClassifiedMode ? form.detailCategory.trim() : form.detailCategory.trim() || form.subCategory.trim(),
     propertyDetails: {
       listingKind: isClassifiedMode ? "Classified" : getListingKind(form.subCategory, form.detailCategory),
       propertyType: isClassifiedMode ? form.categoryName.trim() : form.propertyType.trim() || getAttributeValue(categoryAttributes, "property_type", "propertyType", "commercial_property_type", "commercialPropertyType").trim() || form.detailCategory.trim(),
@@ -5503,6 +5658,7 @@ function buildListingPayload(
         items: infoItems.filter((item) => item.question.trim() || item.answer.trim()),
         classifiedCategory: isClassifiedMode ? form.categoryName.trim() : undefined,
         classifiedSubCategory: isClassifiedMode ? form.subCategory.trim() : undefined,
+        classifiedDetailCategory: isClassifiedMode ? form.detailCategory.trim() : undefined,
         categoryAttributes: trimCategoryAttributes(categoryAttributes),
         customFields: isClassifiedMode ? trimCategoryAttributes(categoryAttributes) : undefined,
       }),
@@ -5617,13 +5773,13 @@ function buildListingPayload(
       ageRestrictedNotice: restaurantInfo.ageRestrictedNotice.trim() || getAttributeValue(categoryAttributes, "age_restricted_notice", "age_restriction", "ageRestrictedNotice").trim(),
     },
     vehicleDetails: {
-      brand: getAttributeValue(categoryAttributes, "brand").trim(),
-      model: getAttributeValue(categoryAttributes, "model").trim(),
+      brand: getAttributeValue(categoryAttributes, "brand").trim() || (isChargingStationPayload ? "Charging Station" : ""),
+      model: getAttributeValue(categoryAttributes, "model").trim() || getAttributeValue(categoryAttributes, "chargingStationType", "charging_station_type").trim(),
       variant: getAttributeValue(categoryAttributes, "variant").trim(),
-      yearOfManufacture: numberAttribute(categoryAttributes, "yearOfManufacture", "year_of_manufacture"),
+      yearOfManufacture: numberAttribute(categoryAttributes, "yearOfManufacture", "year_of_manufacture") ?? (isChargingStationPayload ? new Date().getFullYear() : null),
       registrationYear: numberAttribute(categoryAttributes, "registrationYear", "registration_year"),
-      vehicleCondition: getAttributeValue(categoryAttributes, "vehicleCondition", "vehicle_condition", "condition").trim(),
-      fuelType: getAttributeValue(categoryAttributes, "fuelType", "fuel_type").trim(),
+      vehicleCondition: getAttributeValue(categoryAttributes, "vehicleCondition", "vehicle_condition", "condition").trim() || (isChargingStationPayload ? "New" : ""),
+      fuelType: getAttributeValue(categoryAttributes, "fuelType", "fuel_type").trim() || (isEvVehiclePayload ? "Electric" : ""),
       transmission: getAttributeValue(categoryAttributes, "transmission").trim(),
       kmDriven: numberAttribute(categoryAttributes, "kilometersDriven", "kilometers_driven", "kmDriven", "km_driven"),
       numberOfOwners: numberAttribute(categoryAttributes, "ownerCount", "owner_count", "numberOfOwners", "number_of_owners"),
@@ -5631,7 +5787,7 @@ function buildListingPayload(
       insuranceValidTill: getAttributeValue(categoryAttributes, "insuranceValidTill", "insurance_valid_till").trim() || null,
       registrationState: getAttributeValue(categoryAttributes, "registrationState", "registration_state").trim(),
       rto: getAttributeValue(categoryAttributes, "rto").trim(),
-      color: getAttributeValue(categoryAttributes, "color").trim(),
+      color: getAttributeValue(categoryAttributes, "color").trim() || (isChargingStationPayload ? "N/A" : ""),
       bodyType: getAttributeValue(categoryAttributes, "bodyType", "body_type").trim(),
       seatingCapacity: numberAttribute(categoryAttributes, "seatingCapacity", "seating_capacity"),
       bootSpace: getAttributeValue(categoryAttributes, "bootSpace", "boot_space").trim(),
@@ -5644,10 +5800,10 @@ function buildListingPayload(
       permitType: getAttributeValue(categoryAttributes, "permitType", "permit_type").trim(),
       rentalType: getAttributeValue(categoryAttributes, "rentalType", "rental_type").trim(),
       pricePerHour: numberAttribute(categoryAttributes, "pricePerHour", "price_per_hour"),
-      pricePerDay: numberAttribute(categoryAttributes, "pricePerDay", "price_per_day"),
+      pricePerDay: numberAttribute(categoryAttributes, "pricePerDay", "price_per_day", "daily_price"),
       securityDeposit: numberAttribute(categoryAttributes, "securityDepositVehicle", "security_deposit_vehicle"),
       partType: getAttributeValue(categoryAttributes, "partType", "part_type", "itemType", "item_type").trim(),
-      compatibleModels: getAttributeValue(categoryAttributes, "compatibleModels", "compatible_models").trim(),
+      compatibleModels: getAttributeValue(categoryAttributes, "compatibleModels", "compatible_models", "compatible_brands_models").trim(),
       partCondition: getAttributeValue(categoryAttributes, "partCondition", "part_condition", "condition").trim(),
       rcAvailable: boolAttribute(categoryAttributes, "rcAvailable", "rc_available"),
       pucAvailable: boolAttribute(categoryAttributes, "pucAvailable", "puc_available"),
@@ -5758,6 +5914,7 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
   const isClassifiedMode = mode === "classified";
   const classifiedCategory = stringValue(otherInformation.classifiedCategory) || listing.subCategory || stringValue(propertyDetails.propertyType);
   const classifiedSubCategory = stringValue(otherInformation.classifiedSubCategory) || listing.detailCategory || "";
+  const classifiedDetailCategory = stringValue(otherInformation.classifiedDetailCategory) || listing.detailCategory || "";
 
   return {
     ...currentForm,
@@ -5776,7 +5933,7 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
     pincode: stringValue(locationDetails.pincode),
     categoryName: isClassifiedMode ? classifiedCategory : listing.categoryName || "",
     subCategory: isClassifiedMode ? classifiedSubCategory : listing.subCategory || "",
-    detailCategory: isClassifiedMode ? "" : listing.detailCategory || "",
+    detailCategory: isClassifiedMode ? classifiedDetailCategory : listing.detailCategory || "",
     description: listing.description || "",
     businessDescription: stringValue(propertyDetails.businessDescription) || listing.description || "",
     profileImageName,
@@ -6070,6 +6227,14 @@ function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttri
     ["Bluetooth / GPS", ["bluetoothGps"]],
     ["Reverse Camera", ["reverseCamera"]],
     ["Cruise Control", ["cruiseControl"]],
+    ["Leather Seats", ["leatherSeats"]],
+    ["Navigation System", ["navigationSystem"]],
+    ["Bluetooth", ["bluetooth"]],
+    ["Backup Camera", ["backupCamera"]],
+    ["Heated Seats", ["heatedSeats"]],
+    ["Apple CarPlay / Android Auto", ["appleCarplayAndroidAuto"]],
+    ["Parking Sensors", ["parkingSensors"]],
+    ["Remote Start", ["remoteStart"]],
   ] as Array<[string, string[]]>) {
     if (features.includes(feature)) {
       values[keys[0]] = "true";
@@ -6557,6 +6722,14 @@ function vehicleFeatureValues(values: CategoryAttributes) {
     ["Bluetooth / GPS", ["bluetoothGps", "bluetooth_gps"]],
     ["Reverse Camera", ["reverseCamera", "reverse_camera"]],
     ["Cruise Control", ["cruiseControl", "cruise_control"]],
+    ["Leather Seats", ["leatherSeats", "leather_seats"]],
+    ["Navigation System", ["navigationSystem", "navigation_system"]],
+    ["Bluetooth", ["bluetooth"]],
+    ["Backup Camera", ["backupCamera", "backup_camera"]],
+    ["Heated Seats", ["heatedSeats", "heated_seats"]],
+    ["Apple CarPlay / Android Auto", ["appleCarplayAndroidAuto", "apple_carplay_android_auto"]],
+    ["Parking Sensors", ["parkingSensors", "parking_sensors"]],
+    ["Remote Start", ["remoteStart", "remote_start"]],
   ];
 
   return featureMap
@@ -6654,7 +6827,34 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
 
   const aliases = [
     ["pricenegotiablevehicle", "pricenegotiable", "price_negotiable"],
+    ["yearofmanufacture", "year_of_manufacture"],
+    ["registrationyear", "registration_year"],
+    ["vehiclecondition", "vehicle_condition", "condition"],
+    ["fueltype", "fuel_type"],
+    ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven"],
+    ["ownercount", "owner_count", "numberofowners", "number_of_owners"],
+    ["insurancevalidtill", "insurance_valid_till"],
+    ["registrationstate", "registration_state"],
+    ["drivetype", "drive_type"],
+    ["interiorcolor", "interior_color"],
+    ["ownershiptypevehicle", "ownership_type_vehicle"],
+    ["accidenthistory", "accident_history"],
+    ["cleantitle", "clean_title"],
+    ["titlestatus", "title_status"],
+    ["registrationstatus", "registration_status"],
+    ["emissionstestpassed", "emissions_test_passed"],
+    ["financingavailable", "financing_available"],
+    ["leaseoption", "lease_option"],
+    ["warrantyavailable", "warranty_available"],
+    ["insuranceincluded", "insurance_included"],
+    ["extendedwarranty", "extended_warranty"],
     ["seller_type", "sellertype"],
+    ["dealername", "dealer_name"],
+    ["preferredcontacttime", "preferred_contact_time"],
+    ["availabilitystatus", "availability_status"],
+    ["scheduletestdrive", "schedule_test_drive"],
+    ["boostlisting", "boost_listing"],
+    ["sponsoredlisting", "sponsored_listing"],
     ["ad_type", "adtype"],
     ["ad_duration_days", "adduration", "addurationdays"],
     ["area_locality", "arealocality"],
@@ -6663,6 +6863,42 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["pucavailable", "puc_available"],
     ["servicehistory", "service_history"],
     ["loanstatus", "loan_status"],
+    ["bodytype", "body_type"],
+    ["seatingcapacity", "seating_capacity"],
+    ["bootspace", "boot_space"],
+    ["enginecapacity", "engine_capacity", "enginecapacitycc", "engine_capacity_cc"],
+    ["biketype", "bike_type"],
+    ["vehicletype", "vehicle_type", "commercialvehicletype", "commercial_vehicle_type"],
+    ["loadcapacity", "load_capacity"],
+    ["cargodimensions", "cargo_dimensions"],
+    ["dotcompliance", "dot_compliance"],
+    ["fleetvehicle", "fleet_vehicle"],
+    ["numberofwheels", "number_of_wheels"],
+    ["permittype", "permit_type"],
+    ["rvtype", "rv_type"],
+    ["watercrafttype", "watercraft_type"],
+    ["sleepingcapacity", "sleeping_capacity"],
+    ["lengthfeet", "length_feet"],
+    ["enginehours", "engine_hours"],
+    ["rentaltype", "rental_type"],
+    ["rentalduration", "rental_duration"],
+    ["priceperhour", "price_per_hour"],
+    ["priceperday", "price_per_day", "dailyprice", "daily_price"],
+    ["securitydepositvehicle", "security_deposit_vehicle", "depositamount", "deposit_amount"],
+    ["parttype", "part_type"],
+    ["compatiblemodels", "compatible_models", "compatiblebrandsmodels", "compatible_brands_models"],
+    ["oemaftermarket", "oem_aftermarket"],
+    ["partcondition", "part_condition"],
+    ["batteryrange", "battery_range", "rangepercharge", "range_per_charge"],
+    ["batterycapacity", "battery_capacity"],
+    ["chargingtime", "charging_time"],
+    ["fastchargingsupport", "fast_charging_support"],
+    ["chargingporttype", "charging_port_type"],
+    ["chargingstationtype", "charging_station_type"],
+    ["servicetype", "service_type"],
+    ["serviceradiusmiles", "service_radius_miles"],
+    ["appointmentrequired", "appointment_required"],
+    ["emergencyservice", "emergency_service"],
     ["modelnamenumber", "model_name_number", "model"],
     ["purchaseyear", "purchase_year"],
     ["billavailable", "bill_available"],
@@ -6726,8 +6962,11 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isNewVehicle = form.detailCategory.toLowerCase().includes("new") || vehicleCondition === "New";
   const electronicsCondition = getAttributeValue(values, "condition");
   const electronicsWarranty = getAttributeValue(values, "warranty");
-  const isAccessories = form.subCategory === "Spare Parts & Accessories";
-  const isRental = form.subCategory === "Rentals";
+  const isAccessories = isVehiclePartsSubCategory(form.subCategory) || form.detailCategory === "EV Accessories";
+  const isRental = isVehicleRentalSubCategory(form.subCategory);
+  const isVehicleService = isVehicleServicesSubCategory(form.subCategory);
+  const isEvVehicle = isVehicleEvSelection(form.subCategory, form.detailCategory);
+  const isChargingStation = form.detailCategory === "Charging Stations";
   const insurance = getAttributeValue(values, "insurance", "insuranceStatus", "insurance_status");
   const furnitureCondition = getAttributeValue(values, "condition", "item_condition");
   const pickupOnly = getAttributeValue(values, "pickup_only", "pickupOnly");
@@ -6742,15 +6981,46 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isCateringRestaurant = restaurantSubCategory === "catering" || restaurantSubCategory === "catering services";
   const isFoodTruckRestaurant = restaurantSubCategory === "food trucks & pop-ups";
 
+  if (form.categoryName === "Vehicles" && isVehicleService && [
+    "brand", "model", "variant", "yearofmanufacture", "year_of_manufacture", "vin", "vehiclecondition", "vehicle_condition",
+    "ownershiptypevehicle", "ownership_type_vehicle", "ownercount", "owner_count", "accidenthistory", "accident_history",
+    "cleantitle", "clean_title", "fueltype", "fuel_type", "transmission", "drivetype", "drive_type", "kilometersdriven",
+    "kilometers_driven", "enginecapacity", "engine_capacity", "horsepower", "color", "interiorcolor", "interior_color",
+    "warrantyavailable", "warranty_available", "insuranceincluded", "insurance_included", "extendedwarranty", "extended_warranty",
+    "insurance", "insurancevalidtill", "insurance_valid_till", "rcavailable", "rc_available", "pucavailable", "puc_available",
+    "servicehistory", "service_history", "loanstatus", "loan_status", "titlestatus", "title_status", "registrationstatus",
+    "registration_status", "emissionstestpassed", "emissions_test_passed", "bodytype", "body_type", "seatingcapacity",
+    "seating_capacity", "bootspace", "boot_space", "mileage", "bike_type", "biketype", "vehicletype", "vehicle_type",
+    "loadcapacity", "load_capacity", "numberofwheels", "number_of_wheels", "permittype", "permit_type", "rentaltype",
+    "rental_type", "priceperhour", "price_per_hour", "priceperday", "price_per_day", "securitydepositvehicle",
+    "security_deposit_vehicle", "parttype", "part_type", "compatiblemodels", "compatible_models"
+  ].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && isEvVehicle && ["fueltype", "fuel_type"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && isChargingStation && [
+    "brand", "model", "variant", "yearofmanufacture", "year_of_manufacture", "vin", "vehiclecondition", "vehicle_condition",
+    "ownershiptypevehicle", "ownership_type_vehicle", "ownercount", "owner_count", "accidenthistory", "accident_history",
+    "cleantitle", "clean_title", "transmission", "drivetype", "drive_type", "kilometersdriven", "kilometers_driven",
+    "enginecapacity", "engine_capacity", "horsepower", "color", "interiorcolor", "interior_color", "bodytype", "body_type",
+    "seatingcapacity", "seating_capacity", "mileage"
+  ].includes(key)) {
+    return false;
+  }
+
   if (form.categoryName === "Vehicles" && isNewVehicle && ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && !isRental && ["rentaltype", "rental_type", "priceperhour", "price_per_hour", "priceperday", "price_per_day", "priceperhourday", "price_per_hour_day", "securitydepositvehicle", "security_deposit_vehicle"].includes(key)) {
+  if (form.categoryName === "Vehicles" && !isRental && ["rentaltype", "rental_type", "rentalduration", "rental_duration", "priceperhour", "price_per_hour", "priceperday", "price_per_day", "dailyprice", "daily_price", "priceperhourday", "price_per_hour_day", "securitydepositvehicle", "security_deposit_vehicle"].includes(key)) {
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && isRental && ["price", "listing_price", "totalprice", "total_price", "saleprice", "sale_price", "vehicleprice", "vehicle_price", "pricenegotiable", "price_negotiable", "pricetype", "price_type"].includes(key)) {
+  if (form.categoryName === "Vehicles" && isRental && ["price", "listing_price", "totalprice", "total_price", "saleprice", "sale_price", "vehicleprice", "vehicle_price", "pricenegotiable", "price_negotiable", "pricetype", "price_type", "financingavailable", "financing_available", "leaseoption", "lease_option"].includes(key)) {
     return false;
   }
 
@@ -6758,7 +7028,7 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && isAccessories && ["brand", "model", "variant", "yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vehiclecondition", "vehicle_condition", "fueltype", "fuel_type", "transmission", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "color", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
+  if (form.categoryName === "Vehicles" && isAccessories && ["model", "variant", "yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vin", "vehiclecondition", "vehicle_condition", "ownershiptypevehicle", "ownership_type_vehicle", "fueltype", "fuel_type", "transmission", "drivetype", "drive_type", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "mileage", "ownercount", "owner_count", "numberofowners", "number_of_owners", "accidenthistory", "accident_history", "cleantitle", "clean_title", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "color", "interiorcolor", "interior_color", "enginecapacity", "engine_capacity", "horsepower", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status", "titlestatus", "title_status", "registrationstatus", "registration_status", "emissionstestpassed", "emissions_test_passed"].includes(key)) {
     return false;
   }
 
@@ -6921,6 +7191,40 @@ function isRealEstateCategory(categoryName: string) {
 
 function isFurnitureCategory(categoryName: string) {
   return furnitureCategoryNames.includes(categoryName);
+}
+
+function isVehiclePartsSubCategory(subCategory: string) {
+  return ["Auto Parts & Accessories", "Spare Parts & Accessories"].includes(subCategory);
+}
+
+function isVehicleRentalSubCategory(subCategory: string) {
+  return ["Vehicle Rentals", "Rentals"].includes(subCategory);
+}
+
+function isVehicleMotorcycleSubCategory(subCategory: string) {
+  return ["Motorcycles & Scooters", "Bikes"].includes(subCategory);
+}
+
+function isVehicleCommercialSubCategory(subCategory: string) {
+  return ["Trucks & Commercial Vehicles", "Commercial Vehicles"].includes(subCategory);
+}
+
+function isVehicleServicesSubCategory(subCategory: string) {
+  return subCategory === "Services & Repairs";
+}
+
+function isVehicleEvSelection(subCategory: string, detailCategory: string) {
+  const subCategoryLower = subCategory.toLowerCase();
+  const detailCategoryLower = detailCategory.toLowerCase();
+
+  return subCategoryLower.includes("electric vehicles") ||
+    detailCategoryLower.includes("electric") ||
+    detailCategoryLower.includes("charging station") ||
+    detailCategoryLower.includes("ev accessories");
+}
+
+function isUsedVehicleCondition(condition: string) {
+  return condition === "Used" || condition === "Certified Pre-Owned";
 }
 
 function isResidentialRealEstateSubCategory(subCategory: string) {
