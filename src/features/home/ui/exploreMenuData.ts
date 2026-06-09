@@ -37,9 +37,11 @@ export const categoryLinks: ExploreMenuLink[] = [
 export function useExploreCategories(): ExploreCategoryLink[] {
   const [categoryTree, setCategoryTree] = useState<ListingCategoryOption[]>(fallbackListingCategoryTree);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [countsLoaded, setCountsLoaded] = useState(false);
 
   useEffect(() => {
     let isActive = true;
+    setCountsLoaded(false);
 
     async function loadCategories() {
       const nextTree = await getListingCategoryTree()
@@ -65,6 +67,7 @@ export function useExploreCategories(): ExploreCategoryLink[] {
 
       if (isActive) {
         setCategoryCounts(Object.fromEntries(counts));
+        setCountsLoaded(true);
       }
     }
 
@@ -77,12 +80,14 @@ export function useExploreCategories(): ExploreCategoryLink[] {
 
   return useMemo(
     () =>
-      categoryTree.map((category) => ({
-        label: category.name,
-        href: buildCategoryHref(category.name),
-        count: formatCategoryCount(categoryCounts[category.name] || 0),
-      })),
-    [categoryCounts, categoryTree],
+      categoryTree
+        .filter((category) => !countsLoaded || (categoryCounts[category.name] || 0) > 0)
+        .map((category) => ({
+          label: category.name,
+          href: buildCategoryHref(category.name),
+          count: formatCategoryCount(categoryCounts[category.name] || 0),
+        })),
+    [categoryCounts, categoryTree, countsLoaded],
   );
 }
 

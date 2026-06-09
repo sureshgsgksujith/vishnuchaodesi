@@ -68,6 +68,19 @@ export default function UserHomeHeader() {
     setShowMobileMenu(false);
   };
 
+  function submitHeaderSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const keyword = searchText.trim();
+    const params = new URLSearchParams();
+
+    if (keyword) {
+      params.set("search", keyword);
+    }
+
+    closeAllPopups();
+    navigate(`/all-listing${params.toString() ? `?${params.toString()}` : ""}`);
+  }
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("customer_token");
@@ -266,7 +279,7 @@ export default function UserHomeHeader() {
             </div>
 
             <div className="top-ser">
-              <form className="filter_form" onSubmit={(e) => e.preventDefault()}>
+              <form className="filter_form" onSubmit={submitHeaderSearch}>
                 <ul>
                   <li className="sr-sea">
                     <input
@@ -307,7 +320,7 @@ export default function UserHomeHeader() {
                   </li>
                   <li className="sbtn">
                     <button
-                      type="button"
+                      type="submit"
                       className="btn btn-success"
                       id="top_filter_submit"
                     >

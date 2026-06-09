@@ -1,15 +1,29 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 import { categoryLinks, useExploreCategories } from "./exploreMenuData";
 import "../styles/customerHeader.css";
 
 export default function HomeHeader() {
+  const navigate = useNavigate();
   const logoTarget = useLogoNavigationTarget();
   const [showExplore, setShowExplore] = useState(false);
+  const [searchText, setSearchText] = useState("");
   const exploreCategories = useExploreCategories();
 
   const closeExplore = () => setShowExplore(false);
+
+  function submitHeaderSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const keyword = searchText.trim();
+    const params = new URLSearchParams();
+
+    if (keyword) {
+      params.set("search", keyword);
+    }
+
+    navigate(`/all-listing${params.toString() ? `?${params.toString()}` : ""}`);
+  }
 
   return (
     <div className="hom-top chaodesi-customer-header">
@@ -93,7 +107,7 @@ export default function HomeHeader() {
             </div>
 
             <div className="top-ser">
-              <form name="filter_form" id="filter_form_top" className="filter_form">
+              <form name="filter_form" id="filter_form_top" className="filter_form" onSubmit={submitHeaderSearch}>
                 <ul>
                   <li className="sr-sea">
                     <input
@@ -101,11 +115,13 @@ export default function HomeHeader() {
                       autoComplete="off"
                       id="top-select-search"
                       placeholder="What are you looking for?"
+                      value={searchText}
+                      onChange={(event) => setSearchText(event.target.value)}
                     />
                     <ul id="tser-res1" className="tser-res tser-res2"></ul>
                   </li>
                   <li className="sbtn">
-                    <button type="button" className="btn btn-success" id="top_filter_submit">
+                    <button type="submit" className="btn btn-success" id="top_filter_submit">
                       <i className="material-icons">&nbsp;</i>
                     </button>
                   </li>

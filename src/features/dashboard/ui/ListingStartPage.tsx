@@ -49,10 +49,10 @@ export default function ListingStartPage() {
                   ) : null}
                   <div className="row cre-dup">
                     <div className="col-md-6">
-                      <Link to="/dashboard/classifieds/step-1">Choose a Ad Post(Classifieds)</Link>
+                      <Link to="/dashboard/listings/new">Choose a Business Listing(Yellow Pages)</Link>
                     </div>
                     <div className="col-md-6">
-                      <Link to="/dashboard/listings/new">Choose a Business Listing(Yellow Pages)</Link>
+                      <Link to="/dashboard/classifieds/step-1">Choose an Ad Post(Classifieds)</Link>
                     </div>
                   </div>
                   <div className="col-md-12">

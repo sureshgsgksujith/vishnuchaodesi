@@ -894,15 +894,7 @@ function categoryLabel(category: PublicCategory, options?: Array<{ value: Public
 }
 
 function buildCategoryOptions(items: ListingSummary[], currentCategory?: PublicCategory) {
-  const defaultOptions: Array<{ value: PublicCategory; label: string }> = [
-    { value: "real-estate", label: "Real Estate" },
-    { value: "restaurants-food", label: "Restaurants & Food" },
-    { value: "vehicles", label: "Vehicles" },
-    { value: "electronics-appliances", label: "Electronics & Appliances" },
-    { value: "care-services", label: "Care Services" },
-    { value: "furniture-home-decor", label: "Furniture & Home" },
-  ];
-  const options = [...defaultOptions];
+  const options: Array<{ value: PublicCategory; label: string }> = [];
 
   uniqueValues(items.map((item) => item.categoryName))
     .map((label) => ({ label, value: categorySlugFromLabel(label) }))

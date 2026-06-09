@@ -1,4 +1,12 @@
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  getPublicListings,
+  type PublicListingQuery,
+} from "../../dashboard/api/listingsApi";
 import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
+
+type HomeCategorySlug = NonNullable<PublicListingQuery["category"]>;
 
 const quickLinks = [
   { title: "All Services", image: "/template-17/images/icon/shop.png", href: "/all-category" },
@@ -13,16 +21,47 @@ const quickLinks = [
   { title: "Care Services", image: "/template-17/images/icon/public-service.png", category: "care-services" },
 ];
 
-const topCounts = [
-  { title: "All Services", count: "120+", image: "/template-17/images/icon/listing.png" },
-  { title: "Service Experts", count: "85+", image: "/template-17/images/icon/expert.png" },
-  { title: "Jobs", count: "60+", image: "/template-17/images/icon/employee.png" },
-  { title: "Products", count: "45+", image: "/template-17/images/icon/shop.png" },
-  { title: "Events", count: "25+", image: "/template-17/images/icon/event.png" },
-  { title: "Coupons", count: "30+", image: "/template-17/images/icon/coupons.png" },
-  { title: "Blogs", count: "75+", image: "/template-17/images/icon/blog.png" },
-  { title: "Community", count: "15+", image: "/template-17/images/icon/general.png" },
+const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> = [
+  { label: "Real Estate", value: "real-estate" },
+  { label: "Restaurants & Food", value: "restaurants-food" },
+  { label: "Vehicles", value: "vehicles" },
+  { label: "Electronics & Appliances", value: "electronics-appliances" },
+  { label: "Furniture & Home", value: "furniture-home-decor" },
+  { label: "Care Services", value: "care-services" },
 ];
+
+const defaultCityOptions = [
+  "Chicago",
+  "Houston",
+  "Phoenix",
+  "Philadelphia",
+  "San Antonio",
+  "San Diego",
+  "Dallas",
+];
+
+const searchKeywordOptions = [
+  "Restaurants",
+  "Roommates & Rentals",
+  "Care Services",
+  "Furniture & Home",
+  "Technology",
+  "Real Estate",
+  "Vehicles",
+  "Electronics",
+];
+
+type HomeListingSummary = {
+  totalCount: number;
+  categoryCounts: Partial<Record<HomeCategorySlug, number>>;
+  cities: string[];
+};
+
+const emptySummary: HomeListingSummary = {
+  totalCount: 0,
+  categoryCounts: {},
+  cities: [],
+};
 
 function getCityFromLocationLabel(label?: string | null) {
   return label?.split(",")[0]?.trim() || "";
@@ -46,9 +85,64 @@ function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
   return `/all-listing?${params.toString()}`;
 }
 
+function getListingCity(item: { city?: string | null; locationDetails?: Record<string, string | number | null> }) {
+  const detailCity = item.locationDetails?.city;
+  return (typeof detailCity === "string" ? detailCity : item.city || "")?.trim();
+}
+
+function uniqueSorted(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.map((value) => value?.trim()).filter(Boolean) as string[]))
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function formatCount(count: number) {
+  return count > 99 ? "99+" : String(count).padStart(2, "0");
+}
+
+function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
+  const value = keyword.trim().toLowerCase();
+  if (value.includes("restaurant")) return "restaurants-food";
+  if (value.includes("roommate") || value.includes("rental") || value.includes("real estate")) return "real-estate";
+  if (value.includes("care")) return "care-services";
+  if (value.includes("furniture") || value.includes("home")) return "furniture-home-decor";
+  if (value.includes("vehicle") || value.includes("automobile")) return "vehicles";
+  if (value.includes("electronic")) return "electronics-appliances";
+  return "";
+}
+
 export default function HomeHeroSection() {
+  const navigate = useNavigate();
   const currentLocation = useCurrentLocationLabel();
-  const currentCity = getCityFromLocationLabel(currentLocation.label);
+  const [selectedCategory, setSelectedCategory] = useState<HomeCategorySlug | "">("");
+  const [selectedCity, setSelectedCity] = useState("current-location");
+  const [selectedKeyword, setSelectedKeyword] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [listingSummary, setListingSummary] = useState<HomeListingSummary>(emptySummary);
+  const currentCity = currentLocation.city || getCityFromLocationLabel(currentLocation.label);
+  const availableCategoryOptions = useMemo(
+    () => listingCategoryOptions.filter((item) => (listingSummary.categoryCounts[item.value] || 0) > 0),
+    [listingSummary.categoryCounts],
+  );
+  const availableQuickLinks = useMemo(
+    () => quickLinks.filter((item) => !item.category || (listingSummary.categoryCounts[item.category as HomeCategorySlug] || 0) > 0),
+    [listingSummary.categoryCounts],
+  );
+  const cityOptions = useMemo(
+    () => uniqueSorted([...listingSummary.cities, ...defaultCityOptions, currentCity]),
+    [currentCity, listingSummary.cities],
+  );
+  const topCounts = useMemo(
+    () => [
+      { title: "All Listings", count: formatCount(listingSummary.totalCount), image: "/template-17/images/icon/listing.png", href: "/all-listing" },
+      ...availableCategoryOptions.slice(0, 7).map((category) => ({
+        title: category.label,
+        count: formatCount(listingSummary.categoryCounts[category.value] || 0),
+        image: quickLinks.find((item) => item.category === category.value)?.image || "/template-17/images/icon/listing.png",
+        href: `/all-listing?category=${category.value}`,
+      })),
+    ],
+    [availableCategoryOptions, listingSummary.categoryCounts, listingSummary.totalCount],
+  );
   const heroLocationText =
     currentLocation.status === "ready" && currentLocation.label
       ? currentLocation.label
@@ -57,6 +151,68 @@ export default function HomeHeroSection() {
     currentLocation.status === "loading"
       ? "Detecting location"
       : currentLocation.label || "Use current location";
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadHomeListings() {
+      const [allListingsResult, ...categoryResults] = await Promise.allSettled([
+        getPublicListings({ page: 1, pageSize: 200 }),
+        ...listingCategoryOptions.map((category) =>
+          getPublicListings({ category: category.value, page: 1, pageSize: 1 }),
+        ),
+      ]);
+
+      if (!isActive) {
+        return;
+      }
+
+      const items = allListingsResult.status === "fulfilled" ? allListingsResult.value.items || [] : [];
+      const totalCount = allListingsResult.status === "fulfilled" ? allListingsResult.value.totalCount || 0 : 0;
+      const categoryCounts = Object.fromEntries(
+        listingCategoryOptions.map((category, index) => [
+          category.value,
+          categoryResults[index]?.status === "fulfilled" ? categoryResults[index].value.totalCount || 0 : 0,
+        ]),
+      ) as Partial<Record<HomeCategorySlug, number>>;
+
+      setListingSummary({
+        totalCount,
+        categoryCounts,
+        cities: uniqueSorted(items.map(getListingCity)),
+      });
+    }
+
+    void loadHomeListings();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const params = new URLSearchParams();
+    const keyword = searchText.trim() || selectedKeyword.trim();
+    const keywordCategory = getCategoryForSearchKeyword(keyword);
+    const category = selectedCategory || keywordCategory;
+    const city = selectedCity === "current-location" ? currentCity : selectedCity;
+
+    if (category) {
+      params.set("category", category);
+    }
+
+    if (city) {
+      params.set("city", city);
+    }
+
+    if (keyword) {
+      params.set("search", keyword);
+    }
+
+    navigate(`/all-listing${params.toString() ? `?${params.toString()}` : ""}`);
+  }
 
   return (
     <div className="hom-head">
@@ -81,57 +237,50 @@ export default function HomeHeroSection() {
           </div>
 
           <div className="ban-search ban-sear-all">
-            <form name="filter_form" id="filter_form" className="filter_form">
+            <form name="filter_form" id="filter_form" className="filter_form" onSubmit={handleSearchSubmit}>
               <ul>
                 <li className="sr-cate">
-                  <select name="explor_select" id="explor_select" className="chosen-select">
-                    <option value="1">All Services</option>
-                    <option value="2">Service Experts</option>
-                    <option value="3">Jobs</option>
-                    <option value="4">Roommates & Rentals</option>
-                    <option value="5">Care Services</option>
-                    <option value="12">Furniture & Home</option>
-                    <option value="6">Explore Travel</option>
-                    <option value="7">News & Magazines</option>
-                    <option value="8">Events</option>
-                    <option value="9">Products</option>
-                    <option value="10">Coupon & deals</option>
-                    <option value="11">Blogs</option>
+                  <select
+                    name="explor_select"
+                    id="explor_select"
+                    className="chosen-select"
+                    value={selectedCategory}
+                    onChange={(event) => setSelectedCategory(event.target.value as HomeCategorySlug | "")}
+                  >
+                    <option value="">All Listings</option>
+                    {availableCategoryOptions.map((category) => (
+                      <option value={category.value} key={category.value}>{category.label}</option>
+                    ))}
                   </select>
                 </li>
 
                 <li className="sr-cit">
-                  <select id="city_check" name="city_check" className="chosen-select">
+                  <select
+                    id="city_check"
+                    name="city_check"
+                    className="chosen-select"
+                    value={selectedCity}
+                    onChange={(event) => setSelectedCity(event.target.value)}
+                  >
                     <option value="current-location">{citySelectText}</option>
-                    <option value="48026">Chicago</option>
-                    <option value="48027">Houston</option>
-                    <option value="48028">Phoenix</option>
-                    <option value="48029">Philadelphia</option>
-                    <option value="48030">San Antonio</option>
-                    <option value="48031">San Diego</option>
-                    <option value="48032">Dallas</option>
-                    <option value="48035">Illunois city</option>
+                    {cityOptions.map((city) => (
+                      <option value={city} key={city}>{city}</option>
+                    ))}
                   </select>
                 </li>
 
                 <li className="sr-nor">
-                  <select id="expert-select-search" name="expert-select-search" className="chosen-select">
+                  <select
+                    id="expert-select-search"
+                    name="expert-select-search"
+                    className="chosen-select"
+                    value={selectedKeyword}
+                    onChange={(event) => setSelectedKeyword(event.target.value)}
+                  >
                     <option value="">What are you looking for?</option>
-                    <option value="Spa and Facial">Spa and Facial</option>
-                    <option value="Wedding halls">Wedding halls</option>
-                    <option value="Automobiles">Automobiles</option>
-                    <option value="Restaurants">Restaurants</option>
-                    <option value="Roommates & Rentals">Roommates & Rentals</option>
-                    <option value="Care Services">Care Services</option>
-                    <option value="Furniture & Home">Furniture & Home</option>
-                    <option value="Technology">Technology</option>
-                    <option value="Pet shop">Pet shop</option>
-                    <option value="Real Estate">Real Estate</option>
-                    <option value="Sports">Sports</option>
-                    <option value="Hospitals">Hospitals</option>
-                    <option value="Education">Education</option>
-                    <option value="Transportation">Transportation</option>
-                    <option value="Electricals">Electricals</option>
+                    {searchKeywordOptions.map((keyword) => (
+                      <option value={keyword} key={keyword}>{keyword}</option>
+                    ))}
                   </select>
                 </li>
 
@@ -142,6 +291,8 @@ export default function HomeHeroSection() {
                     id="select-search"
                     placeholder="What are you looking for?"
                     className="search-field"
+                    value={searchText}
+                    onChange={(event) => setSearchText(event.target.value)}
                   />
                   <ul id="tser-res" className="tser-res tser-res1"></ul>
                 </li>
@@ -161,7 +312,7 @@ export default function HomeHeroSection() {
 
           <div className="ban-short-links ani">
             <ul>
-              {quickLinks.map((item) => (
+              {availableQuickLinks.map((item) => (
                 <li key={item.title}>
                   <div>
                     <img src={item.image} alt={item.title} />
@@ -183,7 +334,7 @@ export default function HomeHeroSection() {
                       <span className="count1">{item.count}</span>
                       {item.title}
                     </h5>
-                    <a href="#"></a>
+                    <a href={item.href}></a>
                   </div>
                 </li>
               ))}

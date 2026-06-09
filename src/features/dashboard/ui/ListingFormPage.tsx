@@ -576,50 +576,75 @@ const electronicsPostingCommonFields: CategoryAttributeField[] = [
   { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Settings", sectionOrder: 8 },
 ];
 
-const careServiceOptions = ["Childcare", "Elder care", "Medical assistance", "Housekeeping", "Transportation", "Pet care"];
+const careServiceOptions = [
+  "Meal Preparation",
+  "Medication Reminder",
+  "Bathing Assistance",
+  "Transportation Assistance",
+  "Housekeeping",
+  "Pet Assistance",
+  "Mobility Support",
+  "Therapy Assistance",
+];
 const careServiceFields: CategoryAttributeField[] = [
-  { key: "providerType", label: "Provider Type", options: ["Individual Caregiver", "Agency / Company"], isRequired: true, sectionName: "Service Provider", sectionOrder: 2 },
-  { key: "experienceYears", label: "Experience (years)", type: "number", isRequired: true, sectionName: "Service Provider", sectionOrder: 2 },
-  { key: "languagesSpoken", label: "Languages Spoken", isRequired: true, sectionName: "Service Provider", sectionOrder: 2 },
-  { key: "childcare", label: "Childcare", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
-  { key: "elderCare", label: "Elder Care", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
-  { key: "medicalAssistance", label: "Medical Assistance", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
-  { key: "housekeeping", label: "Housekeeping", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
-  { key: "transportation", label: "Transportation", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
-  { key: "petCare", label: "Pet Care", type: "checkbox", sectionName: "Services Offered", sectionOrder: 3 },
-  { key: "availabilityType", label: "Availability Type", options: ["Full-time", "Part-time", "Hourly", "Live-in"], isRequired: true, sectionName: "Availability & Schedule", sectionOrder: 4 },
-  { key: "availableDays", label: "Available Days", isRequired: true, sectionName: "Availability & Schedule", sectionOrder: 4 },
-  { key: "availableTimeSlots", label: "Available Time Slots", isRequired: true, sectionName: "Availability & Schedule", sectionOrder: 4 },
-  { key: "startDate", label: "Start Date", type: "date", isRequired: true, sectionName: "Availability & Schedule", sectionOrder: 4 },
-  { key: "rateType", label: "Rate Type", options: ["Hourly", "Daily", "Weekly", "Monthly"], isRequired: true, sectionName: "Pricing", sectionOrder: 5 },
-  { key: "price", label: "Price (USD)", type: "number", isRequired: true, sectionName: "Pricing", sectionOrder: 5 },
-  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 5 },
-  { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number", sectionName: "Location & Travel", sectionOrder: 6 },
-  { key: "willingToTravel", label: "Willing to Travel", options: yesNoOptions, isRequired: true, sectionName: "Location & Travel", sectionOrder: 6 },
-  { key: "cprCertified", label: "CPR Certified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-  { key: "firstAidCertified", label: "First Aid Certified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-  { key: "cnaCertified", label: "CNA", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-  { key: "rnLpn", label: "RN / LPN", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-  { key: "licenseNumber", label: "License Number", sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-  { key: "backgroundCheck", label: "Background Check", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-  { key: "referencesAvailable", label: "References Available", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-  { key: "specialSkills", label: "Special Skills", type: "textarea", sectionName: "Experience Details", sectionOrder: 8 },
-  { key: "previousEmployer", label: "Previous Employer", sectionName: "Experience Details", sectionOrder: 8 },
-  { key: "education", label: "Education", sectionName: "Experience Details", sectionOrder: 8 },
-  { key: "ageGroups", label: "Age Group", isRequired: true, sectionName: "Matching Preferences", sectionOrder: 9 },
-  { key: "genderPreference", label: "Gender Preference", options: ["No Preference", "Female", "Male"], sectionName: "Matching Preferences", sectionOrder: 9 },
-  { key: "specialNeedsExperience", label: "Special Needs Experience", options: yesNoOptions, isRequired: true, sectionName: "Matching Preferences", sectionOrder: 9 },
-  { key: "certificationDocuments", label: "Certification Documents", sectionName: "Media Upload", sectionOrder: 10 },
-  { key: "videoIntroductionUrl", label: "Video Introduction", sectionName: "Media Upload", sectionOrder: 10 },
-  { key: "chatEnabled", label: "Chat Enabled", options: yesNoOptions, sectionName: "Contact & Interaction", sectionOrder: 11 },
-  { key: "callEnabled", label: "Call Enabled", options: yesNoOptions, sectionName: "Contact & Interaction", sectionOrder: 11 },
-  { key: "scheduleInterview", label: "Schedule Interview", options: yesNoOptions, sectionName: "Contact & Interaction", sectionOrder: 11 },
-  { key: "identityVerification", label: "Identity Verification", options: yesNoOptions, sectionName: "Safety & Compliance", sectionOrder: 12 },
-  { key: "backgroundVerification", label: "Background Verification", options: yesNoOptions, sectionName: "Safety & Compliance", sectionOrder: 12 },
-  { key: "serviceDisclaimer", label: "Disclaimer", type: "textarea", sectionName: "Safety & Compliance", sectionOrder: 12 },
-  { key: "insurance", label: "Insurance", sectionName: "Safety & Compliance", sectionOrder: 12 },
-  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Settings", sectionOrder: 13 },
-  { key: "ad_duration_days", label: "Ad Duration", options: ["15", "30", "60"], sectionName: "Listing Settings", sectionOrder: 13 },
+  { key: "businessCaregiverName", label: "Business / Caregiver Name", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
+  { key: "tagline", label: "Tagline", sectionName: "Service Information", sectionOrder: 2 },
+  { key: "providerType", label: "Provider Type", options: ["Individual Caregiver", "Agency / Company"], isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
+  { key: "experienceYears", label: "Years of Experience", type: "number", isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
+  { key: "languagesSpoken", label: "Languages Spoken", isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
+  { key: "genderPreference", label: "Gender", options: ["No Preference", "Female", "Male"], sectionName: "Provider Information", sectionOrder: 3 },
+  { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number", sectionName: "Service Location", sectionOrder: 4 },
+  { key: "willingToTravel", label: "Willing to Travel", options: yesNoOptions, isRequired: true, sectionName: "Service Location", sectionOrder: 4 },
+  { key: "availabilityType", label: "Availability Type", options: ["Full-time", "Part-time", "Hourly", "Live-in"], isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
+  { key: "availableDays", label: "Available Days", isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
+  { key: "availableTimeSlots", label: "Available Time Slots", isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
+  { key: "startDate", label: "Start Date", type: "date", isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
+  { key: "rateType", label: "Pricing Type", options: ["Hourly", "Daily", "Weekly", "Monthly"], isRequired: true, sectionName: "Pricing", sectionOrder: 6 },
+  { key: "price", label: "Rate (USD)", type: "number", isRequired: true, sectionName: "Pricing", sectionOrder: 6 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 6 },
+  { key: "minimumHoursRequired", label: "Minimum Hours Required", type: "number", sectionName: "Pricing", sectionOrder: 6 },
+  { key: "mealPreparation", label: "Meal Preparation", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
+  { key: "medicationReminder", label: "Medication Reminder", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
+  { key: "bathingAssistance", label: "Bathing Assistance", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
+  { key: "transportationAssistance", label: "Transportation Assistance", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
+  { key: "housekeeping", label: "Housekeeping", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
+  { key: "petAssistance", label: "Pet Assistance", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
+  { key: "mobilitySupport", label: "Mobility Support", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
+  { key: "therapyAssistance", label: "Therapy Assistance", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
+  { key: "cprCertified", label: "CPR Certified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "firstAidCertified", label: "First Aid Certified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "cnaCertified", label: "CNA Certified", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "rnLpn", label: "RN / LPN License", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "licenseNumber", label: "License Number", sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "certificationDocuments", label: "Certifications Upload", sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "backgroundCheck", label: "Background Verified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "referencesAvailable", label: "References Available", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "ageGroups", label: "Age Group", options: ["Infants", "Children", "Adults", "Seniors"], isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
+  { key: "specialNeedsExperience", label: "Special Needs Experience", options: yesNoOptions, isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
+  { key: "smokingAllowed", label: "Smoking Allowed", options: yesNoOptions, sectionName: "Care Preferences", sectionOrder: 9 },
+  { key: "petFriendly", label: "Pet Friendly", options: yesNoOptions, sectionName: "Care Preferences", sectionOrder: 9 },
+  { key: "videoIntroductionUrl", label: "Intro Video", sectionName: "Media Upload", sectionOrder: 10 },
+  { key: "businessLogo", label: "Business Logo", sectionName: "Media Upload", sectionOrder: 10 },
+  { key: "chatEnabled", label: "Chat Enabled", options: yesNoOptions, sectionName: "Contact Information", sectionOrder: 11 },
+  { key: "callEnabled", label: "Call Enabled", options: yesNoOptions, sectionName: "Contact Information", sectionOrder: 11 },
+  { key: "identityVerification", label: "Identity Verification", options: yesNoOptions, sectionName: "Compliance & Safety", sectionOrder: 12 },
+  { key: "backgroundVerification", label: "Background Check Status", options: yesNoOptions, sectionName: "Compliance & Safety", sectionOrder: 12 },
+  { key: "insurance", label: "Insurance Coverage", sectionName: "Compliance & Safety", sectionOrder: 12 },
+  { key: "serviceDisclaimer", label: "Medical Disclaimer", type: "textarea", sectionName: "Compliance & Safety", sectionOrder: 12 },
+  { key: "hipaaCompliance", label: "HIPAA Compliance", options: yesNoOptions, sectionName: "Compliance & Safety", sectionOrder: 12 },
+  { key: "scheduleInterview", label: "Appointment Booking Enabled", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 13 },
+  { key: "onlineConsultation", label: "Online Consultation", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 13 },
+  { key: "emergencyAvailability", label: "Emergency Availability", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 13 },
+  { key: "childAgeGroup", label: "Child Age Group", options: ["Infants", "Toddlers", "Preschool", "School Age"], sectionName: "Child Care Details", sectionOrder: 14 },
+  { key: "schoolPickupOption", label: "School Pickup Option", options: yesNoOptions, sectionName: "Child Care Details", sectionOrder: 14 },
+  { key: "mobilityAssistance", label: "Mobility Assistance", options: yesNoOptions, sectionName: "Elder Care Details", sectionOrder: 15 },
+  { key: "dementiaCareExperience", label: "Dementia Care Experience", options: yesNoOptions, sectionName: "Elder Care Details", sectionOrder: 15 },
+  { key: "petTypeExperience", label: "Pet Type Experience", sectionName: "Pet Care Details", sectionOrder: 16 },
+  { key: "staffCount", label: "Staff Count", type: "number", sectionName: "Agency Details", sectionOrder: 17 },
+  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["15", "30", "60"], sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
+  { key: "sponsoredListing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
+  { key: "boostListing", label: "Boost Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
 ];
 
 const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]> = {
@@ -766,16 +791,65 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "minimumOrderQuantity", label: "Minimum Order Quantity" },
     { key: "warrantyOrService", label: "Warranty / Service" },
   ],
-  "Tickets & Events": [
-    { key: "eventOrTravelDate", label: "Event / Travel Date", type: "date" },
-    { key: "venueOrFrom", label: "Venue / From" },
-    { key: "seatOrRoute", label: "Seat / Route" },
-    { key: "quantity", label: "Quantity", type: "number" },
-    { key: "ticketType", label: "Ticket Type", options: ["Movie", "Concert", "Flight", "Bus", "Train", "Other"] },
-    { key: "transferMode", label: "Transfer Mode" },
-    { key: "validUntil", label: "Valid Until", type: "date" },
+  "Events & Tickets": [
+    { key: "organizer_name", label: "Organizer Name", isRequired: true, sectionName: "Event Information", sectionOrder: 2 },
+    { key: "tagline", label: "Tagline", sectionName: "Event Information", sectionOrder: 2 },
+    { key: "event_start_date", label: "Event Start Date", type: "date", isRequired: true, sectionName: "Event Date & Time", sectionOrder: 3 },
+    { key: "event_end_date", label: "Event End Date", type: "date", sectionName: "Event Date & Time", sectionOrder: 3 },
+    { key: "start_time", label: "Start Time", sectionName: "Event Date & Time", sectionOrder: 3 },
+    { key: "end_time", label: "End Time", sectionName: "Event Date & Time", sectionOrder: 3 },
+    { key: "time_zone", label: "Time Zone", options: ["Eastern Time", "Central Time", "Mountain Time", "Pacific Time", "Alaska Time", "Hawaii Time"], isRequired: true, sectionName: "Event Date & Time", sectionOrder: 3 },
+    { key: "recurring_event", label: "Recurring Event", options: yesNoOptions, sectionName: "Event Date & Time", sectionOrder: 3 },
+    { key: "venue_name", label: "Venue Name", sectionName: "Event Location", sectionOrder: 4 },
+    { key: "full_address", label: "Full Address", sectionName: "Event Location", sectionOrder: 4 },
+    { key: "map_lat_long", label: "Latitude / Longitude", sectionName: "Event Location", sectionOrder: 4 },
+    { key: "online_meeting_url", label: "Online Meeting URL", sectionName: "Virtual Event", sectionOrder: 5 },
+    { key: "streaming_platform", label: "Platform", options: ["Zoom", "Google Meet", "Microsoft Teams", "YouTube Live"], sectionName: "Virtual Event", sectionOrder: 5 },
+    { key: "ticket_type", label: "Ticket Type", options: ["Free", "Paid", "Donation-based"], isRequired: true, sectionName: "Ticket Information", sectionOrder: 6 },
+    { key: "ticket_categories", label: "Ticket Categories", options: ["General Admission", "VIP", "Early Bird", "Premium Seating"], sectionName: "Ticket Information", sectionOrder: 6 },
+    { key: "ticket_price", label: "Ticket Price (USD)", type: "number", sectionName: "Ticket Information", sectionOrder: 6 },
+    { key: "quantity_available", label: "Quantity Available", type: "number", sectionName: "Ticket Information", sectionOrder: 6 },
+    { key: "max_tickets_per_user", label: "Max Tickets Per User", type: "number", sectionName: "Ticket Information", sectionOrder: 6 },
+    { key: "registration_required", label: "Registration Required", options: yesNoOptions, sectionName: "Payment & Registration", sectionOrder: 7 },
+    { key: "payment_gateway", label: "Payment Gateway Integration", sectionName: "Payment & Registration", sectionOrder: 7 },
+    { key: "refund_policy", label: "Refund Policy", type: "textarea", sectionName: "Payment & Registration", sectionOrder: 7 },
+    { key: "cancellation_policy", label: "Cancellation Policy", type: "textarea", sectionName: "Payment & Registration", sectionOrder: 7 },
+    { key: "event_capacity", label: "Event Capacity", type: "number", sectionName: "Audience & Capacity", sectionOrder: 8 },
+    { key: "age_restriction", label: "Age Restriction", options: ["All Ages", "18+", "21+"], isRequired: true, sectionName: "Audience & Capacity", sectionOrder: 8 },
+    { key: "age_verification", label: "Age Verification", options: yesNoOptions, sectionName: "Audience & Capacity", sectionOrder: 8 },
+    { key: "audience_type", label: "Audience Type", options: ["Public", "Invite Only"], sectionName: "Audience & Capacity", sectionOrder: 8 },
+    { key: "organizer_type", label: "Organizer Type", options: ["Individual", "Company", "Nonprofit Organization"], sectionName: "Organizer Information", sectionOrder: 9 },
+    { key: "social_media_links", label: "Social Media Links", sectionName: "Organizer Information", sectionOrder: 9 },
+    { key: "promo_video_url", label: "Promo Videos", sectionName: "Media Upload", sectionOrder: 10 },
+    { key: "brochure_flyer_pdf", label: "Brochure / Flyer PDF", sectionName: "Media Upload", sectionOrder: 10 },
+    { key: "parking_available", label: "Parking Available", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
+    { key: "food_drinks_available", label: "Food & Drinks Available", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
+    { key: "wheelchair_accessible", label: "Wheelchair Accessible", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
+    { key: "live_streaming", label: "Live Streaming", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
+    { key: "networking_sessions", label: "Networking Sessions", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
+    { key: "merchandise_available", label: "Merchandise Available", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
+    { key: "event_permit", label: "Event Permit", sectionName: "Compliance & Permissions", sectionOrder: 12 },
+    { key: "alcohol_permit", label: "Alcohol Permit", sectionName: "Compliance & Permissions", sectionOrder: 12 },
+    { key: "terms_conditions", label: "Terms & Conditions", type: "textarea", sectionName: "Compliance & Permissions", sectionOrder: 12 },
+    { key: "liability_waiver", label: "Liability Waiver", type: "textarea", sectionName: "Compliance & Permissions", sectionOrder: 12 },
+    { key: "featured_event", label: "Featured Event", options: yesNoOptions, sectionName: "Promotions & Marketing", sectionOrder: 13 },
+    { key: "sponsored_placement", label: "Sponsored Placement", options: yesNoOptions, sectionName: "Promotions & Marketing", sectionOrder: 13 },
+    { key: "promo_codes_coupons", label: "Promo Codes / Coupons", sectionName: "Promotions & Marketing", sectionOrder: 13 },
+    { key: "email_campaign_integration", label: "Email Campaign Integration", options: yesNoOptions, sectionName: "Promotions & Marketing", sectionOrder: 13 },
+    { key: "tickets_sold", label: "Tickets Sold", type: "number", sectionName: "Analytics & Tracking", sectionOrder: 14 },
+    { key: "rsvps", label: "RSVPs", type: "number", sectionName: "Analytics & Tracking", sectionOrder: 14 },
+    { key: "attendance_tracking", label: "Attendance Tracking", options: yesNoOptions, sectionName: "Analytics & Tracking", sectionOrder: 14 },
+    { key: "revenue_generated", label: "Revenue Generated", type: "number", sectionName: "Analytics & Tracking", sectionOrder: 14 },
+    { key: "original_ticket_proof", label: "Original Ticket Proof", sectionName: "Ticket Resale", sectionOrder: 15 },
+    { key: "transfer_policy", label: "Transfer Policy", type: "textarea", sectionName: "Ticket Resale", sectionOrder: 15 },
+    { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 16 },
+    { key: "boost_event", label: "Boost Event", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 16 },
+    { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 16 },
   ],
+  "Tickets & Events": [],
 };
+
+categoryAttributeFieldsByCategory["Tickets & Events"] = categoryAttributeFieldsByCategory["Events & Tickets"];
 
 const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFieldSet> = {
   "Real Estate": {
@@ -1343,44 +1417,11 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
       ],
     },
   },
+  "Events & Tickets": {
+    default: categoryAttributeFieldsByCategory["Events & Tickets"],
+  },
   "Tickets & Events": {
-    default: categoryAttributeFieldsByCategory["Tickets & Events"],
-    subCategories: {
-      "Event Tickets": [
-        { key: "eventName", label: "Event Name" },
-        { key: "eventDate", label: "Event Date", type: "date" },
-        { key: "venue", label: "Venue" },
-        { key: "ticketClass", label: "Ticket Class" },
-        { key: "quantity", label: "Quantity", type: "number" },
-        { key: "seatNumbers", label: "Seat Numbers" },
-      ],
-      "Travel Tickets": [
-        { key: "travelDate", label: "Travel Date", type: "date" },
-        { key: "fromLocation", label: "From" },
-        { key: "toLocation", label: "To" },
-        { key: "operatorOrAirline", label: "Operator / Airline" },
-        { key: "pnrAvailable", label: "PNR Available", options: ["Yes", "No"] },
-        { key: "quantity", label: "Quantity", type: "number" },
-      ],
-    },
-    detailedCategories: {
-      "Flight Tickets": [
-        { key: "travelDate", label: "Travel Date", type: "date" },
-        { key: "fromAirport", label: "From Airport" },
-        { key: "toAirport", label: "To Airport" },
-        { key: "airline", label: "Airline" },
-        { key: "ticketClass", label: "Ticket Class", options: ["Economy", "Premium Economy", "Business", "First"] },
-        { key: "passengerCount", label: "Passenger Count", type: "number" },
-      ],
-      "Bus / Train Tickets": [
-        { key: "travelDate", label: "Travel Date", type: "date" },
-        { key: "fromLocation", label: "From" },
-        { key: "toLocation", label: "To" },
-        { key: "operatorOrTrain", label: "Operator / Train" },
-        { key: "seatOrCoach", label: "Seat / Coach" },
-        { key: "passengerCount", label: "Passenger Count", type: "number" },
-      ],
-    },
+    default: categoryAttributeFieldsByCategory["Events & Tickets"],
   },
 };
 
@@ -2693,6 +2734,23 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (form.subCategory === "Nursing Services" && !getAttributeValue(categoryAttributes, "licenseNumber", "license_number").trim()) {
       setErrorMessage("License Number is required for Nursing Services.");
       return false;
+    }
+
+    if (form.subCategory === "Nursing Services" && !getAttributeValue(categoryAttributes, "certificationDocuments", "certification_documents").trim()) {
+      setErrorMessage("Certifications are required for Nursing Services.");
+      return false;
+    }
+
+    if (getAttributeValue(categoryAttributes, "providerType", "provider_type").trim() === "Agency / Company") {
+      if (!getAttributeValue(categoryAttributes, "insurance", "insurance_coverage").trim()) {
+        setErrorMessage("Insurance Coverage is required for agency listings.");
+        return false;
+      }
+
+      if (!getAttributeValue(categoryAttributes, "staffCount", "staff_count").trim()) {
+        setErrorMessage("Staff Count is required for agency listings.");
+        return false;
+      }
     }
 
     return true;
@@ -6401,6 +6459,13 @@ function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryA
 
   const services = Array.isArray(details.servicesOffered) ? details.servicesOffered.map(String) : [];
   for (const [service, keys] of [
+    ["Meal Preparation", ["mealPreparation", "meal_preparation"]],
+    ["Medication Reminder", ["medicationReminder", "medication_reminder"]],
+    ["Bathing Assistance", ["bathingAssistance", "bathing_assistance"]],
+    ["Transportation Assistance", ["transportationAssistance", "transportation_assistance"]],
+    ["Pet Assistance", ["petAssistance", "pet_assistance"]],
+    ["Mobility Support", ["mobilitySupport", "mobility_support"]],
+    ["Therapy Assistance", ["therapyAssistance", "therapy_assistance"]],
     ["Childcare", ["childcare"]],
     ["Elder care", ["elderCare", "elder_care"]],
     ["Medical assistance", ["medicalAssistance", "medical_assistance"]],
@@ -6754,10 +6819,17 @@ function electronicsFeatureValues(values: CategoryAttributes) {
 
 function careServiceValues(values: CategoryAttributes) {
   const serviceMap: Array<[string, string[]]> = [
+    ["Meal Preparation", ["mealPreparation", "meal_preparation"]],
+    ["Medication Reminder", ["medicationReminder", "medication_reminder"]],
+    ["Bathing Assistance", ["bathingAssistance", "bathing_assistance"]],
+    ["Transportation Assistance", ["transportationAssistance", "transportation_assistance"]],
+    ["Housekeeping", ["housekeeping"]],
+    ["Pet Assistance", ["petAssistance", "pet_assistance"]],
+    ["Mobility Support", ["mobilitySupport", "mobility_support"]],
+    ["Therapy Assistance", ["therapyAssistance", "therapy_assistance"]],
     ["Childcare", ["childcare", "child_care"]],
     ["Elder care", ["elderCare", "elder_care"]],
     ["Medical assistance", ["medicalAssistance", "medical_assistance"]],
-    ["Housekeeping", ["housekeeping"]],
     ["Transportation", ["transportation"]],
     ["Pet care", ["petCare", "pet_care"]],
   ];
@@ -6919,11 +6991,19 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["smartfeatures", "smart_features"],
     ["remotecontrol", "remote_control"],
     ["providertype", "provider_type"],
+    ["businesscaregivername", "business_caregiver_name"],
     ["experienceyears", "experience_years"],
     ["languagesspoken", "languages_spoken"],
     ["eldercare", "elder_care"],
     ["medicalassistance", "medical_assistance"],
     ["petcare", "pet_care"],
+    ["mealpreparation", "meal_preparation"],
+    ["medicationreminder", "medication_reminder"],
+    ["bathingassistance", "bathing_assistance"],
+    ["transportationassistance", "transportation_assistance"],
+    ["petassistance", "pet_assistance"],
+    ["mobilitysupport", "mobility_support"],
+    ["therapyassistance", "therapy_assistance"],
     ["availabilitytype", "availability_type"],
     ["availabledays", "available_days"],
     ["availabletimeslots", "available_time_slots"],
@@ -6980,6 +7060,66 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isBarsRestaurant = restaurantSubCategory === "bars & beverages";
   const isCateringRestaurant = restaurantSubCategory === "catering" || restaurantSubCategory === "catering services";
   const isFoodTruckRestaurant = restaurantSubCategory === "food trucks & pop-ups";
+  const careSubCategory = form.subCategory.toLowerCase();
+  const isChildCare = careSubCategory === "child care services" || careSubCategory === "babysitting & nanny services";
+  const isElderCare = careSubCategory === "elder care services";
+  const isNursingCare = careSubCategory === "nursing services";
+  const isPetCare = careSubCategory === "pet care services";
+  const isAgencyCare = getAttributeValue(values, "providerType", "provider_type").trim() === "Agency / Company";
+  const eventSubCategory = form.subCategory.toLowerCase();
+  const isEventsCategory = form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events";
+  const isVirtualEvent = eventSubCategory === "virtual / online events";
+  const isPaidEvent = getAttributeValue(values, "ticket_type", "ticketType").trim() === "Paid";
+  const isTwentyOnePlusEvent = getAttributeValue(values, "age_restriction", "ageRestriction").trim() === "21+";
+  const isTicketResale = eventSubCategory === "ticket resale & exchange";
+
+  if (form.categoryName === "Care Services") {
+    if (!isChildCare && ["childagegroup", "child_age_group", "schoolpickupoption", "school_pickup_option"].includes(key)) {
+      return false;
+    }
+
+    if (!isElderCare && ["mobilityassistance", "mobility_assistance", "dementiacareexperience", "dementia_care_experience"].includes(key)) {
+      return false;
+    }
+
+    if (!isPetCare && ["pettypeexperience", "pet_type_experience"].includes(key)) {
+      return false;
+    }
+
+    if (!isAgencyCare && ["staffcount", "staff_count"].includes(key)) {
+      return false;
+    }
+
+    if (isPetCare && ["cnacertified", "cna_certified", "rnlpn", "rn_lpn", "licensenumber", "license_number", "certificationdocuments", "certification_documents", "hipaacompliance", "hipaa_compliance", "servicedisclaimer", "service_disclaimer"].includes(key)) {
+      return false;
+    }
+
+    if (!isNursingCare && ["certificationdocuments", "certification_documents"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (isEventsCategory) {
+    if (isVirtualEvent && ["venuename", "venue_name", "fulladdress", "full_address", "maplatlong", "map_lat_long"].includes(key)) {
+      return false;
+    }
+
+    if (!isVirtualEvent && ["onlinemeetingurl", "online_meeting_url", "streamingplatform", "streaming_platform"].includes(key)) {
+      return false;
+    }
+
+    if (!isPaidEvent && ["ticketprice", "ticket_price", "paymentgateway", "payment_gateway"].includes(key)) {
+      return false;
+    }
+
+    if (!isTwentyOnePlusEvent && ["ageverification", "age_verification"].includes(key)) {
+      return false;
+    }
+
+    if (!isTicketResale && ["originalticketproof", "original_ticket_proof", "transferpolicy", "transfer_policy"].includes(key)) {
+      return false;
+    }
+  }
 
   if (form.categoryName === "Vehicles" && isVehicleService && [
     "brand", "model", "variant", "yearofmanufacture", "year_of_manufacture", "vin", "vehiclecondition", "vehicle_condition",
