@@ -686,9 +686,8 @@ function isValidLongitude(value: number | null) {
 
 function isClassifiedListing(listing: ListingSummary) {
   const categoryName = listing.categoryName?.trim().toLowerCase();
-  const listingKind = String(listing.propertyDetails?.listingKind || "").trim().toLowerCase();
 
-  return categoryName === "classifieds" || listingKind === "classified";
+  return categoryName === "classifieds";
 }
 
 function isRealEstateListing(listing: ListingSummary) {

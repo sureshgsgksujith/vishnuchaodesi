@@ -12,22 +12,22 @@ const quickLinks = [
   { title: "All Services", image: "/template-17/images/icon/shop.png", href: "/all-category" },
   { title: "Classified Listings", image: "/template-17/images/icon/ads.png", href: "/classifieds/index" },
   { title: "Real Estate", image: "/template-17/images/icon/real-estate.png", category: "real-estate" },
-  { title: "Restaurants", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
-  { title: "Events & Activities", image: "/template-17/images/icon/calendar.png", href: "/events" },
-  { title: "Products & Deals", image: "/template-17/images/icon/cart.png", href: "/products" },
-  { title: "Electronics & Appliances", image: "/template-17/images/icon/electronics.png", category: "electronics-appliances" },
-  { title: "Furniture & Home", image: "/template-17/images/icon/home.png", category: "furniture-home-decor" },
+  { title: "Restaurants & Food", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
   { title: "Vehicles", image: "/template-17/images/icon/vehicles.png", category: "vehicles" },
   { title: "Care Services", image: "/template-17/images/icon/public-service.png", category: "care-services" },
+  { title: "Events & Tickets", image: "/template-17/images/icon/calendar.png", category: "events-tickets" },
+  { title: "Roommates & Rentals", image: "/template-17/images/icon/home.png", category: "roommates-rentals" },
+  { title: "Jobs", image: "/template-17/images/icon/employee.png", category: "jobs" },
 ];
 
 const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> = [
   { label: "Real Estate", value: "real-estate" },
   { label: "Restaurants & Food", value: "restaurants-food" },
   { label: "Vehicles", value: "vehicles" },
-  { label: "Electronics & Appliances", value: "electronics-appliances" },
-  { label: "Furniture & Home", value: "furniture-home-decor" },
   { label: "Care Services", value: "care-services" },
+  { label: "Events & Tickets", value: "events-tickets" },
+  { label: "Roommates & Rentals", value: "roommates-rentals" },
+  { label: "Jobs", value: "jobs" },
 ];
 
 const defaultCityOptions = [
@@ -43,12 +43,11 @@ const defaultCityOptions = [
 const searchKeywordOptions = [
   "Restaurants",
   "Roommates & Rentals",
+  "Jobs",
+  "Events & Tickets",
   "Care Services",
-  "Furniture & Home",
-  "Technology",
   "Real Estate",
   "Vehicles",
-  "Electronics",
 ];
 
 type HomeListingSummary = {
@@ -85,11 +84,6 @@ function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
   return `/all-listing?${params.toString()}`;
 }
 
-function getListingCity(item: { city?: string | null; locationDetails?: Record<string, string | number | null> }) {
-  const detailCity = item.locationDetails?.city;
-  return (typeof detailCity === "string" ? detailCity : item.city || "")?.trim();
-}
-
 function uniqueSorted(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.map((value) => value?.trim()).filter(Boolean) as string[]))
     .sort((a, b) => a.localeCompare(b));
@@ -102,7 +96,10 @@ function formatCount(count: number) {
 function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
   const value = keyword.trim().toLowerCase();
   if (value.includes("restaurant")) return "restaurants-food";
-  if (value.includes("roommate") || value.includes("rental") || value.includes("real estate")) return "real-estate";
+  if (value.includes("roommate") || value.includes("rental")) return "roommates-rentals";
+  if (value.includes("job") || value.includes("career") || value.includes("hiring")) return "jobs";
+  if (value.includes("event") || value.includes("ticket")) return "events-tickets";
+  if (value.includes("real estate")) return "real-estate";
   if (value.includes("care")) return "care-services";
   if (value.includes("furniture") || value.includes("home")) return "furniture-home-decor";
   if (value.includes("vehicle") || value.includes("automobile")) return "vehicles";
@@ -119,14 +116,6 @@ export default function HomeHeroSection() {
   const [searchText, setSearchText] = useState("");
   const [listingSummary, setListingSummary] = useState<HomeListingSummary>(emptySummary);
   const currentCity = currentLocation.city || getCityFromLocationLabel(currentLocation.label);
-  const availableCategoryOptions = useMemo(
-    () => listingCategoryOptions.filter((item) => (listingSummary.categoryCounts[item.value] || 0) > 0),
-    [listingSummary.categoryCounts],
-  );
-  const availableQuickLinks = useMemo(
-    () => quickLinks.filter((item) => !item.category || (listingSummary.categoryCounts[item.category as HomeCategorySlug] || 0) > 0),
-    [listingSummary.categoryCounts],
-  );
   const cityOptions = useMemo(
     () => uniqueSorted([...listingSummary.cities, ...defaultCityOptions, currentCity]),
     [currentCity, listingSummary.cities],
@@ -134,14 +123,14 @@ export default function HomeHeroSection() {
   const topCounts = useMemo(
     () => [
       { title: "All Listings", count: formatCount(listingSummary.totalCount), image: "/template-17/images/icon/listing.png", href: "/all-listing" },
-      ...availableCategoryOptions.slice(0, 7).map((category) => ({
+      ...listingCategoryOptions.map((category) => ({
         title: category.label,
         count: formatCount(listingSummary.categoryCounts[category.value] || 0),
         image: quickLinks.find((item) => item.category === category.value)?.image || "/template-17/images/icon/listing.png",
         href: `/all-listing?category=${category.value}`,
       })),
     ],
-    [availableCategoryOptions, listingSummary.categoryCounts, listingSummary.totalCount],
+    [listingSummary.categoryCounts, listingSummary.totalCount],
   );
   const heroLocationText =
     currentLocation.status === "ready" && currentLocation.label
@@ -157,7 +146,7 @@ export default function HomeHeroSection() {
 
     async function loadHomeListings() {
       const [allListingsResult, ...categoryResults] = await Promise.allSettled([
-        getPublicListings({ page: 1, pageSize: 200 }),
+        getPublicListings({ page: 1, pageSize: 1 }),
         ...listingCategoryOptions.map((category) =>
           getPublicListings({ category: category.value, page: 1, pageSize: 1 }),
         ),
@@ -167,7 +156,6 @@ export default function HomeHeroSection() {
         return;
       }
 
-      const items = allListingsResult.status === "fulfilled" ? allListingsResult.value.items || [] : [];
       const totalCount = allListingsResult.status === "fulfilled" ? allListingsResult.value.totalCount || 0 : 0;
       const categoryCounts = Object.fromEntries(
         listingCategoryOptions.map((category, index) => [
@@ -179,7 +167,7 @@ export default function HomeHeroSection() {
       setListingSummary({
         totalCount,
         categoryCounts,
-        cities: uniqueSorted(items.map(getListingCity)),
+        cities: [],
       });
     }
 
@@ -248,7 +236,7 @@ export default function HomeHeroSection() {
                     onChange={(event) => setSelectedCategory(event.target.value as HomeCategorySlug | "")}
                   >
                     <option value="">All Listings</option>
-                    {availableCategoryOptions.map((category) => (
+                    {listingCategoryOptions.map((category) => (
                       <option value={category.value} key={category.value}>{category.label}</option>
                     ))}
                   </select>
@@ -312,7 +300,7 @@ export default function HomeHeroSection() {
 
           <div className="ban-short-links ani">
             <ul>
-              {availableQuickLinks.map((item) => (
+              {quickLinks.map((item) => (
                 <li key={item.title}>
                   <div>
                     <img src={item.image} alt={item.title} />

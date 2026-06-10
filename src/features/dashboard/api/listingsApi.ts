@@ -190,10 +190,35 @@ export async function getFurnitureHomeListings(page = 1, pageSize = 4) {
   return response.data;
 }
 
+export async function getRoommatesRentalsListings(page = 1, pageSize = 4) {
+  const response = await apiClient.get<ListingListResponse>("/Listings/roommates-rentals", {
+    params: {
+      page,
+      pageSize,
+    },
+    timeout: 8000,
+  });
+
+  return response.data;
+}
+
+export async function getJobListings(page = 1, pageSize = 4) {
+  const response = await apiClient.get<ListingListResponse>("/Listings/jobs", {
+    params: {
+      page,
+      pageSize,
+    },
+    timeout: 8000,
+  });
+
+  return response.data;
+}
+
 export type PublicListingQuery = {
-  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services" | "furniture-home-decor";
+  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services" | "furniture-home-decor" | "roommates-rentals" | "jobs" | "events-tickets";
   categoryName?: string;
   subCategory?: string;
+  detailCategory?: string;
   city?: string;
   locality?: string;
   search?: string;
@@ -201,20 +226,46 @@ export type PublicListingQuery = {
   pageSize?: number;
 };
 
+const publicListingCache = new Map<string, { value: ListingListResponse; expiresAt: number }>();
+const publicListingCacheTtlMs = 60_000;
+
 export async function getPublicListings(query: PublicListingQuery = {}) {
+  const cacheKey = JSON.stringify({
+    category: query.category || "",
+    categoryName: query.categoryName || "",
+    subCategory: query.subCategory || "",
+    detailCategory: query.detailCategory || "",
+    city: query.city || "",
+    locality: query.locality || "",
+    search: query.search || "",
+    page: query.page || 1,
+    pageSize: query.pageSize || 10,
+  });
+  const cached = publicListingCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
   const isFurnitureHome = query.category === "furniture-home-decor";
-  const categoryPath = query.category && !isFurnitureHome ? `/${query.category}` : "";
+  const isEventsTickets = query.category === "events-tickets";
+  const categoryPath = query.category && !isFurnitureHome && !isEventsTickets ? `/${query.category}` : "";
   const response = await apiClient.get<ListingListResponse>(`/Listings${categoryPath}`, {
     params: {
       page: query.page || 1,
       pageSize: query.pageSize || 10,
       search: query.search || undefined,
-      categoryName: isFurnitureHome ? "Furniture & Home" : query.categoryName || undefined,
+      categoryName: isFurnitureHome ? "Furniture & Home" : isEventsTickets ? "Events & Tickets" : query.categoryName || undefined,
       subCategory: query.subCategory || undefined,
+      detailCategory: query.detailCategory || undefined,
       city: query.city || undefined,
       locality: query.locality || undefined,
     },
     timeout: 20000,
+  });
+
+  publicListingCache.set(cacheKey, {
+    value: response.data,
+    expiresAt: Date.now() + publicListingCacheTtlMs,
   });
 
   return response.data;

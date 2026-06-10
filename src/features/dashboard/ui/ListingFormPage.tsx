@@ -23,6 +23,8 @@ const wizardSteps = [
 ];
 
 const doneStepIndex = wizardSteps.length;
+const defaultRealEstatePriceTypeOptions = ["Total Price", "Monthly Rent", "Lease", "Per Sq Ft"];
+const saleRealEstatePriceTypeOptions = ["Total Price", "Per Sq Ft"];
 
 const profileImageUploadMarker = "__profileImageFile__";
 const coverImageUploadMarker = "__coverImageFile__";
@@ -545,35 +547,210 @@ const vehiclePostingCommonFields: CategoryAttributeField[] = [
   ...vehicleListingSettingsFields,
 ];
 
-const electronicsConditionOptions = ["New", "Like New", "Used", "Refurbished"];
-const electronicsBrandOptions = ["Apple", "Samsung", "LG", "Sony", "Dell", "HP", "Lenovo", "Asus", "Acer", "Whirlpool", "Godrej", "Voltas", "Blue Star", "Bose", "JBL", "OnePlus", "Xiaomi", "Other"];
-const electronicsFeatures: CategoryAttributeField[] = [
-  { key: "bluetooth", label: "Bluetooth", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
-  { key: "wifi", label: "WiFi", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
-  { key: "touchscreen", label: "Touchscreen", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
-  { key: "fastCharging", label: "Fast Charging", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
-  { key: "smartFeatures", label: "Smart Features", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
-  { key: "remoteControl", label: "Remote Control", type: "checkbox", sectionName: "Features / Specifications", sectionOrder: 5 },
-];
+const electronicsConditionOptions = ["New", "Open Box", "Refurbished", "Used"];
+const electronicsBrandOptions = ["Apple", "Samsung", "LG", "Sony", "Dell", "HP", "Lenovo", "Asus", "Acer", "Canon", "Nikon", "Bose", "JBL", "Nintendo", "Microsoft", "Whirlpool", "GE", "Dyson", "TP-Link", "Netgear", "Other"];
 
 const electronicsPostingCommonFields: CategoryAttributeField[] = [
-  { key: "brand", label: "Brand", options: electronicsBrandOptions, isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
-  { key: "modelNameNumber", label: "Model Name / Number", isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
-  { key: "condition", label: "Condition", options: electronicsConditionOptions, isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
-  { key: "purchaseYear", label: "Purchase Year", type: "number", isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
-  { key: "billAvailable", label: "Bill Available", options: yesNoOptions, isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
-  { key: "warranty", label: "Warranty", options: yesNoOptions, isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
-  { key: "warrantyRemainingMonths", label: "Warranty Remaining (months)", type: "number", sectionName: "Product Details", sectionOrder: 2 },
-  { key: "color", label: "Color", isRequired: true, sectionName: "Product Details", sectionOrder: 2 },
-  { key: "usageDuration", label: "Usage Duration", sectionName: "Product Details", sectionOrder: 2 },
-  { key: "price", label: "Price", type: "number", isRequired: true, sectionName: "Price Details", sectionOrder: 3 },
-  { key: "price_negotiable", label: "Price Negotiable", options: yesNoOptions, sectionName: "Price Details", sectionOrder: 3 },
-  { key: "area_locality", label: "Area / Locality", sectionName: "Location Details", sectionOrder: 4 },
-  { key: "map_lat_long", label: "Map Location (lat/long)", sectionName: "Location Details", sectionOrder: 4 },
-  ...electronicsFeatures,
-  { key: "seller_type", label: "Seller Type", options: ["Owner", "Dealer"], sectionName: "Seller Information", sectionOrder: 7 },
-  { key: "ad_type", label: "Ad Type", options: listingTypeOptions, sectionName: "Listing Settings", sectionOrder: 8 },
-  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Settings", sectionOrder: 8 },
+  { key: "brand", label: "Brand", options: electronicsBrandOptions, isRequired: true, sectionName: "Product Information", sectionOrder: 1 },
+  { key: "modelNameNumber", label: "Model Number", isRequired: true, sectionName: "Product Information", sectionOrder: 1 },
+  { key: "product_name", label: "Product Name", isRequired: true, sectionName: "Product Information", sectionOrder: 1 },
+  { key: "condition", label: "Condition", options: electronicsConditionOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 2 },
+  { key: "seller_type", label: "Ownership", options: ["Individual Seller", "Dealer / Retailer"], isRequired: true, sectionName: "Product Condition", sectionOrder: 2 },
+  { key: "purchase_date", label: "Purchase Date", type: "date", sectionName: "Product Condition", sectionOrder: 2 },
+  { key: "usageDuration", label: "Usage Duration", sectionName: "Product Condition", sectionOrder: 2 },
+  { key: "condition_notes", label: "Condition Notes", type: "textarea", sectionName: "Product Condition", sectionOrder: 2 },
+  { key: "price", label: "Selling Price (USD)", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "original_price", label: "Original Price", type: "number", sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "warranty", label: "Warranty Available", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "color", label: "Color", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "dimensions", label: "Dimensions", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "weight", label: "Weight", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "area_locality", label: "Pickup Area / Locality", sectionName: "Location Information", sectionOrder: 5 },
+  { key: "map_lat_long", label: "Map Location (lat/long)", sectionName: "Location Information", sectionOrder: 5 },
+  { key: "pickup_available", label: "Pickup Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 5 },
+  { key: "shipping_available", label: "Shipping Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 5 },
+  { key: "manufacturer_warranty", label: "Manufacturer Warranty", options: yesNoOptions, sectionName: "Warranty & Service", sectionOrder: 6 },
+  { key: "extended_warranty", label: "Extended Warranty", options: yesNoOptions, sectionName: "Warranty & Service", sectionOrder: 6 },
+  { key: "warranty_expiry_date", label: "Warranty Expiry Date", type: "date", sectionName: "Warranty & Service", sectionOrder: 6 },
+  { key: "service_history", label: "Service History", type: "textarea", sectionName: "Warranty & Service", sectionOrder: 6 },
+  { key: "product_video_url", label: "Product Video URL", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "invoice_upload", label: "Invoice Upload", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "warranty_card_upload", label: "Warranty Card Upload", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "store_name", label: "Store Name", sectionName: "Seller Information", sectionOrder: 8 },
+  { key: "website", label: "Website", sectionName: "Seller Information", sectionOrder: 8 },
+  { key: "local_pickup", label: "Local Pickup", options: yesNoOptions, sectionName: "Delivery & Shipping", sectionOrder: 9 },
+  { key: "delivery_charges", label: "Delivery Charges", type: "number", sectionName: "Delivery & Shipping", sectionOrder: 9 },
+  { key: "estimated_delivery_time", label: "Estimated Delivery Time", sectionName: "Delivery & Shipping", sectionOrder: 9 },
+  { key: "serial_number", label: "Serial Number (optional/private)", sectionName: "Verification & Compliance", sectionOrder: 11 },
+  { key: "authenticity_verified", label: "Authenticity Verified", options: yesNoOptions, sectionName: "Verification & Compliance", sectionOrder: 11 },
+  { key: "original_invoice_available", label: "Original Invoice Available", options: yesNoOptions, sectionName: "Verification & Compliance", sectionOrder: 11 },
+  { key: "return_policy", label: "Return Policy", type: "textarea", sectionName: "Verification & Compliance", sectionOrder: 11 },
+  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "boost_listing", label: "Boost Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "top_placement", label: "Top Placement", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+];
+
+const electronicsMobileFields: CategoryAttributeField[] = [
+  ...electronicsPostingCommonFields,
+  { key: "storage", label: "Storage", isRequired: true, options: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "ram", label: "RAM", isRequired: true, options: ["2GB", "4GB", "6GB", "8GB", "12GB", "16GB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "screenSize", label: "Screen Size", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "carrier_status", label: "Carrier Status", isRequired: true, options: ["Unlocked", "Carrier Locked"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "batteryHealth", label: "Battery Health", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "network", label: "Network", options: ["4G", "5G", "WiFi Only", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+];
+
+const electronicsComputerFields: CategoryAttributeField[] = [
+  ...electronicsPostingCommonFields,
+  { key: "processor", label: "Processor", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "8GB", "16GB", "32GB", "64GB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "storage", label: "Storage", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "storage_type", label: "Storage Type", options: ["SSD", "HDD", "Hybrid", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "operatingSystem", label: "Operating System", isRequired: true, options: ["Windows", "macOS", "Linux", "Chrome OS", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "graphicsCard", label: "Graphics Card", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "screenSize", label: "Screen Size", sectionName: "Product Specifications", sectionOrder: 4 },
+];
+
+const electronicsTvFields: CategoryAttributeField[] = [
+  ...electronicsPostingCommonFields,
+  { key: "screenSize", label: "Screen Size", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "displayType", label: "Display Type", options: ["LED", "OLED", "QLED", "LCD", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "resolution", label: "Resolution", isRequired: true, options: ["HD", "Full HD", "4K", "8K", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "smartTv", label: "Smart TV Features", isRequired: true, options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "hdmi_ports", label: "HDMI Ports", type: "number", sectionName: "Product Specifications", sectionOrder: 4 },
+];
+
+const electronicsCameraFields: CategoryAttributeField[] = [
+  ...electronicsPostingCommonFields,
+  { key: "megapixels", label: "Megapixels", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "lens_included", label: "Lens Included", options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "sensor_type", label: "Sensor Type", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "video_resolution", label: "Video Resolution", sectionName: "Product Specifications", sectionOrder: 4 },
+];
+
+const electronicsAudioFields: CategoryAttributeField[] = [
+  ...electronicsPostingCommonFields,
+  { key: "connectivity", label: "Connectivity", options: ["Bluetooth", "WiFi", "Wired", "USB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "battery_life", label: "Battery Life", sectionName: "Product Specifications", sectionOrder: 4 },
+];
+
+const electronicsApplianceFields: CategoryAttributeField[] = [
+  ...electronicsPostingCommonFields,
+  { key: "applianceType", label: "Appliance Type", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "capacity", label: "Capacity", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "energyRating", label: "Energy Rating", options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "ENERGY STAR", "Not Rated"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "powerConsumption", label: "Power Consumption", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "installation_service", label: "Installation Service", options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "inverterTechnology", label: "Inverter Technology", options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
+];
+
+const electronicsAccessoryFields: CategoryAttributeField[] = [
+  ...electronicsPostingCommonFields,
+  { key: "accessoryType", label: "Accessory Type", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "compatibility", label: "Compatibility", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "connectivity", label: "Connectivity", options: ["Bluetooth", "WiFi", "Wired", "USB-C", "Lightning", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "battery_life", label: "Battery Life", sectionName: "Product Specifications", sectionOrder: 4 },
+];
+
+const electronicsNetworkingFields: CategoryAttributeField[] = [
+  ...electronicsPostingCommonFields,
+  { key: "connectivity", label: "Connectivity", options: ["WiFi", "Ethernet", "Fiber", "Bluetooth", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "compatibility", label: "Compatibility", sectionName: "Product Specifications", sectionOrder: 4 },
+];
+
+const petPostingCommonFields: CategoryAttributeField[] = [
+  { key: "pet_name", label: "Pet Name", sectionName: "Pet Information", sectionOrder: 1 },
+  { key: "animal_type", label: "Animal Type", isRequired: true, sectionName: "Pet Information", sectionOrder: 1 },
+  { key: "breed", label: "Breed", sectionName: "Pet Information", sectionOrder: 1 },
+  { key: "gender", label: "Gender", options: ["Male", "Female", "Unknown"], sectionName: "Pet Information", sectionOrder: 1 },
+  { key: "age", label: "Age", isRequired: true, sectionName: "Pet Information", sectionOrder: 1 },
+  { key: "date_of_birth", label: "Date of Birth", type: "date", sectionName: "Pet Information", sectionOrder: 1 },
+  { key: "color_markings", label: "Color / Markings", sectionName: "Pet Information", sectionOrder: 1 },
+  { key: "pickup_available", label: "Pickup Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 2 },
+  { key: "delivery_available", label: "Delivery Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 2 },
+  { key: "vaccinated", label: "Vaccinated", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 3 },
+  { key: "spayed_neutered", label: "Spayed / Neutered", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 3 },
+  { key: "microchipped", label: "Microchipped", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 3 },
+  { key: "health_certificate_available", label: "Health Certificate Available", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 3 },
+  { key: "medical_history", label: "Medical History", type: "textarea", sectionName: "Health Information", sectionOrder: 3 },
+  { key: "vet_records_upload", label: "Vet Records Upload", type: "file", sectionName: "Health Information", sectionOrder: 3 },
+  { key: "friendly_with_kids", label: "Friendly with Kids", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 4 },
+  { key: "friendly_with_other_pets", label: "Friendly with Other Pets", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 4 },
+  { key: "house_trained", label: "House Trained", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 4 },
+  { key: "crate_trained", label: "Crate Trained", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 4 },
+  { key: "energy_level", label: "Energy Level", options: ["Low", "Medium", "High"], sectionName: "Pet Characteristics", sectionOrder: 4 },
+  { key: "temperament", label: "Temperament", options: ["Friendly", "Playful", "Calm", "Protective"], sectionName: "Pet Characteristics", sectionOrder: 4 },
+  { key: "pet_listing_type", label: "Listing Type", options: ["Adoption", "Rehoming", "Service Listing"], isRequired: true, sectionName: "Pricing & Adoption Information", sectionOrder: 5 },
+  { key: "adoption_fee", label: "Adoption Fee", type: "number", sectionName: "Pricing & Adoption Information", sectionOrder: 5 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing & Adoption Information", sectionOrder: 5 },
+  { key: "pet_video_url", label: "Videos", sectionName: "Media Upload", sectionOrder: 6 },
+  { key: "vaccination_records_upload", label: "Vaccination Records", type: "file", sectionName: "Media Upload", sectionOrder: 6 },
+  { key: "adoption_documents_upload", label: "Adoption Documents", type: "file", sectionName: "Media Upload", sectionOrder: 6 },
+  { key: "contact_name", label: "Contact Name", sectionName: "Owner / Organization Information", sectionOrder: 7 },
+  { key: "organization_name", label: "Organization Name", sectionName: "Owner / Organization Information", sectionOrder: 7 },
+  { key: "website", label: "Website", sectionName: "Owner / Organization Information", sectionOrder: 7 },
+  { key: "home_check_required", label: "Home Check Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 8 },
+  { key: "experience_required", label: "Experience Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 8 },
+  { key: "fenced_yard_required", label: "Fenced Yard Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 8 },
+  { key: "other_conditions", label: "Other Conditions", type: "textarea", sectionName: "Adoption Requirements", sectionOrder: 8 },
+  { key: "available_from_date", label: "Available From Date", type: "date", sectionName: "Availability Information", sectionOrder: 9 },
+  { key: "immediate_adoption_available", label: "Immediate Adoption Available", options: yesNoOptions, sectionName: "Availability Information", sectionOrder: 9 },
+  { key: "meet_greet_scheduling", label: "Meet & Greet Scheduling", options: yesNoOptions, sectionName: "Availability Information", sectionOrder: 9 },
+  { key: "shelter_rating", label: "Shelter Rating", type: "number", sectionName: "Reviews & Ratings", sectionOrder: 10 },
+  { key: "breeder_rating", label: "Breeder Rating", type: "number", sectionName: "Reviews & Ratings", sectionOrder: 10 },
+  { key: "service_provider_rating", label: "Service Provider Rating", type: "number", sectionName: "Reviews & Ratings", sectionOrder: 10 },
+  { key: "verified_shelter", label: "Verified Shelter", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 11 },
+  { key: "verified_breeder", label: "Verified Breeder", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 11 },
+  { key: "usda_license_number", label: "USDA License Number", sectionName: "Compliance & Verification", sectionOrder: 11 },
+  { key: "adoption_agreement_upload", label: "Adoption Agreement Upload", type: "file", sectionName: "Compliance & Verification", sectionOrder: 11 },
+  { key: "identity_verification", label: "Identity Verification", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 11 },
+  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "urgent_adoption_badge", label: "Urgent Adoption Badge", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "featured_placement", label: "Featured Placement", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+];
+
+const petDogFields: CategoryAttributeField[] = [
+  ...petPostingCommonFields,
+  { key: "training_status", label: "Training Status", options: ["Not Trained", "Basic", "Advanced", "Professional"], sectionName: "Dog Details", sectionOrder: 13 },
+  { key: "exercise_requirements", label: "Exercise Requirements", options: ["Low", "Moderate", "High"], sectionName: "Dog Details", sectionOrder: 13 },
+];
+
+const petCatFields: CategoryAttributeField[] = [
+  ...petPostingCommonFields,
+  { key: "indoor_outdoor_preference", label: "Indoor/Outdoor Preference", options: ["Indoor", "Outdoor", "Both"], sectionName: "Cat Details", sectionOrder: 13 },
+  { key: "litter_trained_status", label: "Litter Trained Status", options: ["Yes", "No", "In Training"], sectionName: "Cat Details", sectionOrder: 13 },
+];
+
+const petBirdFields: CategoryAttributeField[] = [
+  ...petPostingCommonFields,
+  { key: "wings_clipped", label: "Wings Clipped", options: yesNoOptions, sectionName: "Bird Details", sectionOrder: 13 },
+  { key: "cage_included", label: "Cage Included", options: yesNoOptions, sectionName: "Bird Details", sectionOrder: 13 },
+];
+
+const petFishFields: CategoryAttributeField[] = [
+  ...petPostingCommonFields,
+  { key: "tank_size_requirement", label: "Tank Size Requirement", sectionName: "Fish Details", sectionOrder: 13 },
+  { key: "water_type", label: "Freshwater/Saltwater", options: ["Freshwater", "Saltwater"], sectionName: "Fish Details", sectionOrder: 13 },
+];
+
+const petLostFoundFields: CategoryAttributeField[] = [
+  ...petPostingCommonFields,
+  { key: "last_seen_location", label: "Last Seen Location", isRequired: true, sectionName: "Lost Pet Details", sectionOrder: 13 },
+  { key: "last_seen_date", label: "Last Seen Date", type: "date", isRequired: true, sectionName: "Lost Pet Details", sectionOrder: 13 },
+  { key: "reward_offered", label: "Reward Offered", options: yesNoOptions, sectionName: "Lost Pet Details", sectionOrder: 13 },
+  { key: "contact_urgency", label: "Contact Urgency", options: ["Normal", "Urgent", "Emergency"], sectionName: "Lost Pet Details", sectionOrder: 13 },
+];
+
+const petServiceFields: CategoryAttributeField[] = [
+  ...petPostingCommonFields,
+  { key: "service_type", label: "Service Type", isRequired: true, sectionName: "Pet Service Details", sectionOrder: 13 },
+  { key: "business_hours", label: "Business Hours", sectionName: "Pet Service Details", sectionOrder: 13 },
+  { key: "service_area", label: "Service Area", sectionName: "Pet Service Details", sectionOrder: 13 },
+  { key: "certifications", label: "Certifications", sectionName: "Pet Service Details", sectionOrder: 13 },
 ];
 
 const careServiceOptions = [
@@ -756,13 +933,7 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "authenticity", label: "Authenticity", options: ["Original", "Replica", "Not Applicable"] },
   ],
   "Pets & Animals": [
-    { key: "breed", label: "Breed" },
-    { key: "age", label: "Age" },
-    { key: "gender", label: "Gender", options: ["Male", "Female", "Unknown"] },
-    { key: "vaccinated", label: "Vaccinated", options: ["Yes", "No", "Partial"] },
-    { key: "trained", label: "Trained", options: ["Yes", "No", "Partially"] },
-    { key: "healthStatus", label: "Health Status" },
-    { key: "adoptionOrSale", label: "Posting Type", options: ["For Sale", "Adoption", "Accessories / Feed"] },
+    ...petPostingCommonFields,
   ],
   "Books, Sports & Hobbies": [
     { key: "brandOrAuthor", label: "Brand / Author" },
@@ -1092,82 +1263,88 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Electronics & Appliances": {
     default: categoryAttributeFieldsByCategory["Electronics & Appliances"],
     subCategories: {
-      Mobiles: [
-        ...electronicsPostingCommonFields,
-        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "6GB", "8GB", "12GB", "16GB", "Other"] },
-        { key: "storage", label: "Storage", isRequired: true, options: ["64GB", "128GB", "256GB", "512GB", "1TB", "Other"] },
-        { key: "processor", label: "Processor" },
-        { key: "screenSize", label: "Screen Size", isRequired: true },
-        { key: "batteryHealth", label: "Battery Health" },
-        { key: "network", label: "Network", isRequired: true, options: ["4G", "5G"] },
-      ],
-      Computers: [
-        ...electronicsPostingCommonFields,
-        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "8GB", "16GB", "32GB", "64GB", "Other"] },
-        { key: "storage", label: "Storage (SSD/HDD + size)", isRequired: true },
-        { key: "processor", label: "Processor", isRequired: true },
-        { key: "graphicsCard", label: "Graphics Card" },
-        { key: "screenSize", label: "Screen Size", isRequired: true },
-        { key: "operatingSystem", label: "Operating System", isRequired: true, options: ["Windows", "Mac", "Linux", "Chrome OS", "Other"] },
-      ],
-      "Home Appliances": [
-        ...electronicsPostingCommonFields,
-        { key: "applianceType", label: "Appliance Type", isRequired: true, options: ["AC", "Refrigerator", "Washing Machine", "TV", "Other"] },
-        { key: "capacity", label: "Capacity", isRequired: true },
-        { key: "energyRating", label: "Energy Rating", isRequired: true, options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "Not Rated"] },
-        { key: "inverterTechnology", label: "Inverter Technology", isRequired: true, options: yesNoOptions },
-        { key: "powerConsumption", label: "Power Consumption" },
-      ],
-      Accessories: [
-        ...electronicsPostingCommonFields,
-        { key: "accessoryType", label: "Type", isRequired: true, options: ["Headphones", "Charger", "Smartwatch", "Speaker", "Cable", "Other"] },
-        { key: "compatibility", label: "Compatibility", isRequired: true, options: ["iOS", "Android", "Universal", "Windows", "Mac", "Other"] },
-        { key: "connectivity", label: "Connectivity", isRequired: true, options: ["Bluetooth", "Wired", "WiFi", "USB-C", "Lightning", "Other"] },
-      ],
+      "Mobile Phones & Tablets": electronicsMobileFields,
+      "Computers & Laptops": electronicsComputerFields,
+      "TVs & Home Entertainment": electronicsTvFields,
+      "Cameras & Photography": electronicsCameraFields,
+      "Audio & Music Systems": electronicsAudioFields,
+      "Gaming & Consoles": electronicsComputerFields,
+      "Smart Home Devices": electronicsNetworkingFields,
+      "Home Appliances": electronicsApplianceFields,
+      "Kitchen Appliances": electronicsApplianceFields,
+      "Office Electronics": electronicsNetworkingFields,
+      "Wearables & Accessories": electronicsAccessoryFields,
+      "Networking Equipment": electronicsNetworkingFields,
     },
     detailedCategories: {
-      Smartphones: [
-        ...electronicsPostingCommonFields,
-        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "6GB", "8GB", "12GB", "16GB", "Other"] },
-        { key: "storage", label: "Storage", isRequired: true, options: ["64GB", "128GB", "256GB", "512GB", "1TB", "Other"] },
-        { key: "processor", label: "Processor" },
-        { key: "screenSize", label: "Screen Size", isRequired: true },
-        { key: "batteryHealth", label: "Battery Health" },
-        { key: "network", label: "Network", isRequired: true, options: ["4G", "5G"] },
-      ],
-      "Laptops / Desktops": [
-        ...electronicsPostingCommonFields,
-        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "8GB", "16GB", "32GB", "64GB", "Other"] },
-        { key: "storage", label: "Storage (SSD/HDD + size)", isRequired: true },
-        { key: "processor", label: "Processor", isRequired: true },
-        { key: "graphicsCard", label: "Graphics Card" },
-        { key: "screenSize", label: "Screen Size", isRequired: true },
-        { key: "operatingSystem", label: "Operating System", isRequired: true, options: ["Windows", "Mac", "Linux", "Chrome OS", "Other"] },
-      ],
-      Tablets: [
-        ...electronicsPostingCommonFields,
-        { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "6GB", "8GB", "12GB", "16GB", "Other"] },
-        { key: "storage", label: "Storage", isRequired: true, options: ["64GB", "128GB", "256GB", "512GB", "1TB", "Other"] },
-        { key: "processor", label: "Processor" },
-        { key: "screenSize", label: "Screen Size", isRequired: true },
-        { key: "batteryHealth", label: "Battery Health" },
-        { key: "network", label: "Network", isRequired: true, options: ["4G", "5G"] },
-      ],
-      TVs: [
-        ...electronicsPostingCommonFields,
-        { key: "screenSize", label: "Screen Size (inches)", isRequired: true },
-        { key: "displayType", label: "Display Type", isRequired: true, options: ["LED", "OLED", "QLED"] },
-        { key: "resolution", label: "Resolution", isRequired: true, options: ["HD", "Full HD", "4K"] },
-        { key: "smartTv", label: "Smart TV", isRequired: true, options: yesNoOptions },
-      ],
-      "AC / Coolers": [
-        ...electronicsPostingCommonFields,
-        { key: "applianceType", label: "Appliance Type", isRequired: true, options: ["AC", "Air Cooler"] },
-        { key: "capacity", label: "Capacity", isRequired: true },
-        { key: "energyRating", label: "Energy Rating", isRequired: true, options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "Not Rated"] },
-        { key: "inverterTechnology", label: "Inverter Technology", isRequired: true, options: yesNoOptions },
-        { key: "powerConsumption", label: "Power Consumption" },
-      ],
+      Smartphones: electronicsMobileFields,
+      "Feature Phones": electronicsMobileFields,
+      Tablets: electronicsMobileFields,
+      iPads: electronicsMobileFields,
+      "Smart Watches": electronicsAccessoryFields,
+      "Mobile Accessories": electronicsAccessoryFields,
+      Laptops: electronicsComputerFields,
+      "Desktop Computers": electronicsComputerFields,
+      "All-in-One PCs": electronicsComputerFields,
+      Monitors: electronicsTvFields,
+      "Computer Accessories": electronicsAccessoryFields,
+      "Printers & Scanners": electronicsNetworkingFields,
+      "Smart TVs": electronicsTvFields,
+      "LED TVs": electronicsTvFields,
+      "OLED TVs": electronicsTvFields,
+      Projectors: electronicsTvFields,
+      "Streaming Devices": electronicsNetworkingFields,
+      "Home Theater Systems": electronicsAudioFields,
+      "DSLR Cameras": electronicsCameraFields,
+      "Mirrorless Cameras": electronicsCameraFields,
+      "Action Cameras": electronicsCameraFields,
+      Camcorders: electronicsCameraFields,
+      "Camera Lenses": electronicsCameraFields,
+      "Photography Accessories": electronicsAccessoryFields,
+      Headphones: electronicsAudioFields,
+      Earbuds: electronicsAudioFields,
+      "Bluetooth Speakers": electronicsAudioFields,
+      Soundbars: electronicsAudioFields,
+      "Home Audio Systems": electronicsAudioFields,
+      "DJ Equipment": electronicsAudioFields,
+      "PlayStation Consoles": electronicsComputerFields,
+      "Xbox Consoles": electronicsComputerFields,
+      "Nintendo Consoles": electronicsComputerFields,
+      "Gaming PCs": electronicsComputerFields,
+      "Gaming Accessories": electronicsAccessoryFields,
+      "VR Headsets": electronicsAccessoryFields,
+      "Smart Speakers": electronicsAudioFields,
+      "Smart Lights": electronicsNetworkingFields,
+      "Smart Thermostats": electronicsNetworkingFields,
+      "Smart Security Cameras": electronicsCameraFields,
+      "Video Doorbells": electronicsCameraFields,
+      "Home Automation Devices": electronicsNetworkingFields,
+      Refrigerators: electronicsApplianceFields,
+      "Washing Machines": electronicsApplianceFields,
+      Dryers: electronicsApplianceFields,
+      "Air Conditioners": electronicsApplianceFields,
+      "Air Purifiers": electronicsApplianceFields,
+      "Vacuum Cleaners": electronicsApplianceFields,
+      Microwaves: electronicsApplianceFields,
+      Ovens: electronicsApplianceFields,
+      Dishwashers: electronicsApplianceFields,
+      "Coffee Makers": electronicsApplianceFields,
+      "Mixers & Blenders": electronicsApplianceFields,
+      "Water Purifiers": electronicsApplianceFields,
+      Printers: electronicsNetworkingFields,
+      Scanners: electronicsNetworkingFields,
+      "Conference Equipment": electronicsNetworkingFields,
+      "POS Systems": electronicsNetworkingFields,
+      "Fitness Bands": electronicsAccessoryFields,
+      Chargers: electronicsAccessoryFields,
+      "Power Banks": electronicsAccessoryFields,
+      "Phone Cases": electronicsAccessoryFields,
+      "Screen Protectors": electronicsAccessoryFields,
+      Routers: electronicsNetworkingFields,
+      Modems: electronicsNetworkingFields,
+      "WiFi Extenders": electronicsNetworkingFields,
+      "Network Switches": electronicsNetworkingFields,
+      "Access Points": electronicsNetworkingFields,
     },
   },
   "Care Services": {
@@ -1307,33 +1484,54 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Pets & Animals": {
     default: categoryAttributeFieldsByCategory["Pets & Animals"],
     subCategories: {
-      Dogs: [
-        { key: "breed", label: "Breed" },
-        { key: "age", label: "Age" },
-        { key: "gender", label: "Gender", options: ["Male", "Female"] },
-        { key: "vaccinated", label: "Vaccinated", options: ["Yes", "No", "Partial"] },
-        { key: "trained", label: "Trained", options: ["Yes", "No", "Partially"] },
-      ],
-      Cats: [
-        { key: "breed", label: "Breed" },
-        { key: "age", label: "Age" },
-        { key: "gender", label: "Gender", options: ["Male", "Female"] },
-        { key: "vaccinated", label: "Vaccinated", options: ["Yes", "No", "Partial"] },
-        { key: "neutered", label: "Neutered", options: ["Yes", "No"] },
-      ],
-      Birds: [
-        { key: "birdType", label: "Bird Type" },
-        { key: "age", label: "Age" },
-        { key: "cageIncluded", label: "Cage Included", options: ["Yes", "No"] },
-        { key: "accessoryType", label: "Accessory Type" },
-      ],
-      "Farm Animals": [
-        { key: "animalType", label: "Animal Type" },
-        { key: "breed", label: "Breed" },
-        { key: "age", label: "Age" },
-        { key: "quantity", label: "Quantity", type: "number" },
-        { key: "healthStatus", label: "Health Status" },
-      ],
+      Dogs: petDogFields,
+      Cats: petCatFields,
+      Birds: petBirdFields,
+      "Fish & Aquariums": petFishFields,
+      "Small Pets": petPostingCommonFields,
+      "Reptiles & Amphibians": petPostingCommonFields,
+      "Horses & Livestock": petPostingCommonFields,
+      "Pet Adoption": petPostingCommonFields,
+      "Pet Services": petServiceFields,
+      "Pet Supplies & Accessories": petPostingCommonFields,
+      "Pet Boarding & Daycare": petServiceFields,
+      "Lost & Found Pets": petLostFoundFields,
+    },
+    detailedCategories: {
+      "Puppies for Adoption": petDogFields,
+      "Adult Dogs": petDogFields,
+      "Purebred Dogs": petDogFields,
+      "Mixed Breed Dogs": petDogFields,
+      "Dog Breeding Services": petDogFields,
+      "Kittens for Adoption": petCatFields,
+      "Adult Cats": petCatFields,
+      "Purebred Cats": petCatFields,
+      "Mixed Breed Cats": petCatFields,
+      Parrots: petBirdFields,
+      Cockatiels: petBirdFields,
+      "Love Birds": petBirdFields,
+      Canaries: petBirdFields,
+      "Exotic Birds": petBirdFields,
+      "Freshwater Fish": petFishFields,
+      "Saltwater Fish": petFishFields,
+      "Aquarium Setup": petFishFields,
+      "Aquarium Accessories": petFishFields,
+      "Dog Adoption": petDogFields,
+      "Cat Adoption": petCatFields,
+      "Bird Adoption": petBirdFields,
+      "Pet Grooming": petServiceFields,
+      "Pet Training": petServiceFields,
+      "Veterinary Services": petServiceFields,
+      "Pet Walking": petServiceFields,
+      "Pet Sitting": petServiceFields,
+      "Overnight Boarding": petServiceFields,
+      "Pet Daycare": petServiceFields,
+      "Luxury Pet Hotels": petServiceFields,
+      "Long-Term Boarding": petServiceFields,
+      "Lost Dogs": petLostFoundFields,
+      "Lost Cats": petLostFoundFields,
+      "Found Pets": petLostFoundFields,
+      "Pet Recovery Services": petLostFoundFields,
     },
   },
   "Books, Sports & Hobbies": {
@@ -2360,6 +2558,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     }
 
+    if (isRealEstateListing || form.categoryName === "Roommates & Rentals") {
+      const bathroomsValue = form.bathrooms.trim() || getAttributeValue(categoryAttributes, "bathrooms").trim();
+      if (bathroomsValue && !isWholeNumberText(bathroomsValue)) {
+        validationTargetStep = 2;
+        addFieldError("bathrooms", "Bathrooms must be a whole number.");
+      }
+    }
+
     if (!hasDynamicCategoryFields && isRealEstateListing && isRentRealEstateSubCategory(form.subCategory) && !form.securityDeposit.trim()) {
       if (!form.securityDeposit.trim()) {
         validationTargetStep = 2;
@@ -2581,17 +2787,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     const detailCategory = form.detailCategory;
     const condition = getAttributeValue(categoryAttributes, "condition");
     const warranty = getAttributeValue(categoryAttributes, "warranty");
-    const purchaseYear = numberAttribute(categoryAttributes, "purchaseYear", "purchase_year");
-    const currentYear = new Date().getFullYear() + 1;
 
     const requiredFields = [
       ["brand", "Brand"],
-      ["modelNameNumber", "model_name_number", "model", "Model Name / Number"],
+      ["modelNameNumber", "model_name_number", "model", "Model Number"],
+      ["productName", "product_name", "Product Name"],
       ["condition", "Condition"],
-      ["purchaseYear", "purchase_year", "Purchase Year"],
-      ["billAvailable", "bill_available", "Bill Available"],
-      ["warranty", "Warranty"],
-      ["color", "Color"],
+      ["sellerType", "seller_type", "Ownership"],
+      ["warranty", "Warranty Available"],
     ];
 
     const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
@@ -2600,27 +2803,21 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return false;
     }
 
-    if (!purchaseYear || purchaseYear < 1990 || purchaseYear > currentYear) {
-      setErrorMessage("Purchase Year should be a valid year.");
+    if (warranty === "Yes" && !getAttributeValue(categoryAttributes, "manufacturerWarranty", "manufacturer_warranty", "extendedWarranty", "extended_warranty", "warrantyExpiryDate", "warranty_expiry_date").trim()) {
+      setErrorMessage("Warranty details are required when Warranty Available is Yes.");
       return false;
     }
 
-    if (warranty === "Yes" && !getAttributeValue(categoryAttributes, "warrantyRemainingMonths", "warranty_remaining_months").trim()) {
-      setErrorMessage("Warranty Remaining is required when Warranty is Yes.");
+    if (condition === "Used" && !getAttributeValue(categoryAttributes, "usageDuration", "usage_duration").trim()) {
+      setErrorMessage("Usage Duration is required for used products.");
       return false;
     }
 
-    if (condition !== "New" && !getAttributeValue(categoryAttributes, "usageDuration", "usage_duration").trim()) {
-      setErrorMessage("Usage Duration is required for used or refurbished products.");
-      return false;
-    }
-
-    if (subCategory === "Mobiles" || detailCategory === "Smartphones" || detailCategory === "Tablets") {
+    if (subCategory === "Mobile Phones & Tablets" || ["Smartphones", "Feature Phones", "Tablets", "iPads"].includes(detailCategory)) {
       const mobileMissing = [
         ["ram", "RAM"],
         ["storage", "Storage"],
-        ["screenSize", "screen_size", "Screen Size"],
-        ["network", "Network"],
+        ["carrierStatus", "carrier_status", "Carrier Status"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (mobileMissing) {
@@ -2628,18 +2825,17 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         return false;
       }
 
-      if (condition !== "New" && !getAttributeValue(categoryAttributes, "batteryHealth", "battery_health").trim()) {
-        setErrorMessage("Battery Health is required for used phones.");
+      if (condition === "Used" && !getAttributeValue(categoryAttributes, "batteryHealth", "battery_health").trim()) {
+        setErrorMessage("Battery Health is required for used mobile phones.");
         return false;
       }
     }
 
-    if ((subCategory === "Computers" && detailCategory !== "Tablets") || detailCategory === "Laptops / Desktops") {
+    if (subCategory === "Computers & Laptops" || detailCategory === "Laptops") {
       const computerMissing = [
         ["ram", "RAM"],
         ["storage", "Storage"],
         ["processor", "Processor"],
-        ["screenSize", "screen_size", "Screen Size"],
         ["operatingSystem", "operating_system", "Operating System"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
@@ -2649,24 +2845,21 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
     }
 
-    if (detailCategory === "TVs") {
+    if (subCategory === "TVs & Home Entertainment" || ["Smart TVs", "LED TVs", "OLED TVs"].includes(detailCategory)) {
       const tvMissing = [
         ["screenSize", "screen_size", "Screen Size"],
-        ["displayType", "display_type", "Display Type"],
         ["resolution", "Resolution"],
-        ["smartTv", "smart_tv", "Smart TV"],
+        ["smartTv", "smart_tv", "Smart TV Features"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (tvMissing) {
         setErrorMessage(`${tvMissing[tvMissing.length - 1]} is required for TVs.`);
         return false;
       }
-    } else if (subCategory === "Home Appliances") {
+    } else if (subCategory === "Home Appliances" || subCategory === "Kitchen Appliances") {
       const applianceMissing = [
         ["applianceType", "appliance_type", "Appliance Type"],
         ["capacity", "Capacity"],
-        ["energyRating", "energy_rating", "Energy Rating"],
-        ["inverterTechnology", "inverter_technology", "Inverter Technology"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (applianceMissing) {
@@ -2675,11 +2868,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
     }
 
-    if (subCategory === "Accessories") {
+    if (subCategory === "Wearables & Accessories") {
       const accessoryMissing = [
-        ["accessoryType", "accessory_type", "Type"],
-        ["compatibility", "Compatibility"],
-        ["connectivity", "Connectivity"],
+        ["accessoryType", "accessory_type", "Accessory Type"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (accessoryMissing) {
@@ -2807,7 +2998,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return true;
     }
 
-    if (!isRealEstateListing && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances" && form.categoryName !== "Care Services" && !isFurnitureCategory(form.categoryName)) {
+    if (!isRealEstateListing && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances" && form.categoryName !== "Care Services" && form.categoryName !== "Roommates & Rentals" && form.categoryName !== "Jobs" && !isFurnitureCategory(form.categoryName)) {
       return true;
     }
 
@@ -2817,7 +3008,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ...form.galleryMedia,
     ].filter((value) => value.trim() && !isVideoValue(value)).length;
 
-    const minImageCount = form.categoryName === "Care Services" ? 1 : 3;
+    const minImageCount = form.categoryName === "Care Services" ? 1 : form.categoryName === "Roommates & Rentals" || form.categoryName === "Jobs" ? 0 : 3;
     if (form.categoryName === "Care Services" && !form.profileImageName.trim()) {
       setErrorMessage("Profile Photo is required for Care Services listings.");
       return false;
@@ -3665,14 +3856,14 @@ type NominatimAddressResult = {
   };
 };
 
-function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password" }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string }) {
+function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password", step }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string; step?: string }) {
   const inputId = useId();
 
   return (
     <div className={width}>
       <div className="form-group">
         <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
-        <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={placeholder} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} onChange={(event) => onChange(event.target.value)} />
+        <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={placeholder} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} onChange={(event) => onChange(event.target.value)} />
         <FieldError message={error} />
       </div>
     </div>
@@ -3964,6 +4155,8 @@ function RealEstatePostingSections({
   const showPlotDetails = isPlot && Boolean(propertyTypeGroup);
   const showResidential = isResidential && !isPg && !isService;
   const isRentListing = isRentRealEstateSubCategory(form.subCategory) && !isCommercial && !isPlot;
+  const priceTypeOptions = getRealEstatePriceTypeOptions(form.subCategory);
+  const selectedPriceType = attribute("price_type");
   const listingPlanOptions = includeCurrentValue(
     pricingPlans.length ? pricingPlans.map((plan) => plan.name) : listingTypeOptions,
     form.adType,
@@ -3987,6 +4180,12 @@ function RealEstatePostingSections({
   }
 
   const propertyImageFiles = galleryFiles.filter((item) => form.galleryMedia.includes(item.marker));
+
+  useEffect(() => {
+    if (selectedPriceType && !priceTypeOptions.includes(selectedPriceType)) {
+      setAttribute("price_type", "");
+    }
+  }, [form.subCategory, selectedPriceType, priceTypeOptions]);
 
   function updatePropertyImageFiles(files: GalleryUploadFile[]) {
     const propertyImageMarkers = new Set(propertyImageFiles.map((item) => item.marker));
@@ -4038,7 +4237,7 @@ function RealEstatePostingSections({
         <>
       <h4>Pricing</h4>
       <div className="row">
-        <SelectColumn placeholder="Price Type*" value={attribute("price_type")} error={fieldErrors[categoryFieldErrorKey("price_type")]} options={["Total Price", "Monthly Rent", "Lease", "Per Sq Ft"]} onChange={(value) => setAttribute("price_type", value)} />
+        <SelectColumn placeholder="Price Type*" value={attribute("price_type")} error={fieldErrors[categoryFieldErrorKey("price_type")]} options={priceTypeOptions} onChange={(value) => setAttribute("price_type", value)} />
         <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry || "United States")} type="number" value={form.price} error={fieldErrors.price} onChange={(value) => updateField("price", value)} />
       </div>
       {isRentListing ? (
@@ -4077,7 +4276,7 @@ function RealEstatePostingSections({
           {!isPlot ? (
             <div className="row">
               <InputColumn placeholder="Bedrooms*" value={form.bhk} error={fieldErrors.bhk} onChange={(value) => updateField("bhk", value)} />
-              <InputColumn placeholder="Bathrooms*" type="number" value={form.bathrooms} error={fieldErrors.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
+              <InputColumn placeholder="Bathrooms*" type="number" step="1" value={form.bathrooms} error={fieldErrors.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
             </div>
           ) : null}
           <div className="row">
@@ -4367,7 +4566,7 @@ function DetailCategoryFields({
         <Select placeholder="Property Type*" value={form.propertyType || form.detailCategory} options={includeCurrentValue(["Apartment", "Villa", "House"], form.detailCategory)} onChange={(value) => updateField("propertyType", value)} />
         <div className="row">
           <SelectColumn placeholder="BHK*" value={form.bhk} options={["1", "2", "3", "4+"]} onChange={(value) => updateField("bhk", value)} />
-          <InputColumn placeholder="Bathrooms*" type="number" value={form.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
+          <InputColumn placeholder="Bathrooms*" type="number" step="1" value={form.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
         </div>
         <div className="row">
           <InputColumn placeholder="Balconies" type="number" value={form.balconies} onChange={(value) => updateField("balconies", value)} />
@@ -4734,6 +4933,7 @@ function FileUpload({
   const savedFileName = !selectedFile && value && !value.startsWith("__")
     ? getFileNameFromPath(value)
     : "";
+  const hasSelectedFile = Boolean(selectedFile || savedFileName);
 
   function handleFileChange(fileList: FileList | null) {
     const file = fileList?.[0] || null;
@@ -4768,14 +4968,78 @@ function FileUpload({
         className={`form-control file-input${error ? " is-invalid" : ""}`}
         onChange={(event) => handleFileChange(event.target.files)}
       />
-      {selectedFile || savedFileName ? (
+      {hasSelectedFile ? (
         <div className="listing-upload-meta">
           <span>{selectedFile ? selectedFile.name : savedFileName}</span>
           {selectedFile ? <small>{formatFileSize(selectedFile.size)}</small> : null}
           <button type="button" className="btn btn-link" onClick={clearFile}>Remove</button>
         </div>
       ) : null}
+      {hasSelectedFile ? (
+        <FileUploadPreview
+          file={selectedFile || null}
+          value={selectedFile ? "" : value}
+          label={label}
+        />
+      ) : null}
       <FieldError message={error} />
+    </div>
+  );
+}
+
+function FileUploadPreview({
+  file,
+  value,
+  label,
+}: {
+  file: File | null;
+  value: string;
+  label: string;
+}) {
+  const [objectUrl, setObjectUrl] = useState("");
+
+  useEffect(() => {
+    if (!file) {
+      setObjectUrl("");
+      return;
+    }
+
+    const nextObjectUrl = URL.createObjectURL(file);
+    setObjectUrl(nextObjectUrl);
+    return () => URL.revokeObjectURL(nextObjectUrl);
+  }, [file]);
+
+  const previewUrl = file ? objectUrl : resolveUploadFileUrl(value);
+  const fileName = file?.name || getFileNameFromPath(value);
+
+  if (!previewUrl) {
+    return null;
+  }
+
+  const previewLabel = `${fieldLabelFromPlaceholder(label)} preview`;
+  const isImage = isPreviewImageFile(file, fileName);
+  const isVideo = isPreviewVideoFile(file, fileName);
+  const isPdf = isPreviewPdfFile(file, fileName);
+
+  return (
+    <div className="listing-upload-preview-card">
+      <div className="listing-upload-preview-frame">
+        {isImage ? (
+          <img src={previewUrl} alt={previewLabel} />
+        ) : isVideo ? (
+          <video src={previewUrl} controls />
+        ) : isPdf ? (
+          <iframe src={previewUrl} title={previewLabel} />
+        ) : (
+          <div className="listing-upload-preview-file">
+            <i className="material-icons">insert_drive_file</i>
+            <span>Preview available in new tab</span>
+          </div>
+        )}
+      </div>
+      <a className="listing-upload-preview-link" href={previewUrl} target="_blank" rel="noreferrer">
+        Preview file
+      </a>
     </div>
   );
 }
@@ -4783,6 +5047,46 @@ function FileUpload({
 function getFileNameFromPath(value: string) {
   const cleanValue = value.split("?")[0].split("#")[0];
   return cleanValue.split(/[\\/]/).filter(Boolean).pop() || "Uploaded file";
+}
+
+function resolveUploadFileUrl(value: string) {
+  const uploadValue = value.trim();
+
+  if (!uploadValue || uploadValue.startsWith("__")) {
+    return "";
+  }
+
+  if (uploadValue.startsWith("uploads/")) {
+    return resolveListingImageUrl(`/${uploadValue}`);
+  }
+
+  if (uploadValue.startsWith("/uploads/")) {
+    return resolveListingImageUrl(uploadValue);
+  }
+
+  if (
+    uploadValue.startsWith("/") ||
+    uploadValue.startsWith("http://") ||
+    uploadValue.startsWith("https://") ||
+    uploadValue.startsWith("data:") ||
+    uploadValue.startsWith("blob:")
+  ) {
+    return uploadValue;
+  }
+
+  return "";
+}
+
+function isPreviewImageFile(file: File | null, fileName: string) {
+  return file?.type.startsWith("image/") || /\.(avif|bmp|gif|jpe?g|png|svg|webp)(\?|#|$)/i.test(fileName);
+}
+
+function isPreviewVideoFile(file: File | null, fileName: string) {
+  return file?.type.startsWith("video/") || /\.(m4v|mov|mp4|webm)(\?|#|$)/i.test(fileName);
+}
+
+function isPreviewPdfFile(file: File | null, fileName: string) {
+  return file?.type === "application/pdf" || /\.pdf(\?|#|$)/i.test(fileName);
 }
 
 function isUploadCategoryField(field: CategoryAttributeField) {
@@ -5682,7 +5986,7 @@ function buildListingPayload(
     subCategory: isClassifiedMode ? form.categoryName.trim() : form.subCategory.trim(),
     detailCategory: isClassifiedMode ? form.detailCategory.trim() : form.detailCategory.trim() || form.subCategory.trim(),
     propertyDetails: {
-      listingKind: isClassifiedMode ? "Classified" : getListingKind(form.subCategory, form.detailCategory),
+      listingKind: isClassifiedMode ? "Classified" : getListingKind(form.categoryName, form.subCategory, form.detailCategory),
       propertyType: isClassifiedMode ? form.categoryName.trim() : form.propertyType.trim() || getAttributeValue(categoryAttributes, "property_type", "propertyType", "commercial_property_type", "commercialPropertyType").trim() || form.detailCategory.trim(),
       bhk: form.bhk.trim() || getAttributeValue(categoryAttributes, "bhk").trim(),
       bathrooms: numberOrNull(form.bathrooms) ?? numberAttribute(categoryAttributes, "bathrooms"),
@@ -5884,7 +6188,7 @@ function buildListingPayload(
       processor: getAttributeValue(categoryAttributes, "processor").trim(),
       screenSize: getAttributeValue(categoryAttributes, "screenSize", "screen_size").trim(),
       batteryHealth: getAttributeValue(categoryAttributes, "batteryHealth", "battery_health").trim(),
-      network: getAttributeValue(categoryAttributes, "network").trim(),
+      network: getAttributeValue(categoryAttributes, "network", "carrierStatus", "carrier_status").trim(),
       graphicsCard: getAttributeValue(categoryAttributes, "graphicsCard", "graphics_card").trim(),
       operatingSystem: getAttributeValue(categoryAttributes, "operatingSystem", "operating_system").trim(),
       displayType: getAttributeValue(categoryAttributes, "displayType", "display_type").trim(),
@@ -6696,6 +7000,14 @@ function numberOrNull(value?: string) {
   return Number.isFinite(parsed) && String(value || "").trim() !== "" ? parsed : null;
 }
 
+function isWholeNumberText(value?: string) {
+  const text = String(value || "").trim();
+  if (!text) return false;
+
+  const parsed = Number(text);
+  return Number.isInteger(parsed);
+}
+
 function boolOrNull(value?: string) {
   if (value === "Yes") return true;
   if (value === "No") return false;
@@ -7072,6 +7384,26 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isPaidEvent = getAttributeValue(values, "ticket_type", "ticketType").trim() === "Paid";
   const isTwentyOnePlusEvent = getAttributeValue(values, "age_restriction", "ageRestriction").trim() === "21+";
   const isTicketResale = eventSubCategory === "ticket resale & exchange";
+  const jobsWorkMode = getAttributeValue(values, "work_mode", "workMode").trim();
+  const jobsEmploymentType = getAttributeValue(values, "employment_type", "employmentType").trim();
+  const jobsSubCategory = form.subCategory.toLowerCase();
+  const jobsDetailCategory = form.detailCategory.toLowerCase();
+  const isHealthcareJob = jobsSubCategory === "healthcare";
+  const isDriverJob = jobsDetailCategory.includes("driver") || jobsSubCategory === "logistics & transportation";
+  const normalizedElectronicsCondition = electronicsCondition.trim().toLowerCase();
+  const electronicsSellerType = getAttributeValue(values, "seller_type", "sellerType").trim();
+  const isUsedElectronics = normalizedElectronicsCondition === "used";
+  const isDealerElectronics = electronicsSellerType === "Dealer / Retailer" || electronicsSellerType === "Dealer";
+  const isShippingElectronics = getAttributeValue(values, "shipping_available", "shippingAvailable").trim() === "Yes";
+  const hasElectronicsWarranty = electronicsWarranty.trim() === "Yes";
+  const petSubCategory = form.subCategory.toLowerCase();
+  const petDetailCategory = form.detailCategory.toLowerCase();
+  const isDogPet = petSubCategory === "dogs" || petDetailCategory.includes("dog") || petDetailCategory.includes("pupp");
+  const isCatPet = petSubCategory === "cats" || petDetailCategory.includes("cat") || petDetailCategory.includes("kitten");
+  const isBirdPet = petSubCategory === "birds" || petDetailCategory.includes("bird") || ["parrots", "cockatiels", "love birds", "canaries", "exotic birds"].includes(petDetailCategory);
+  const isFishPet = petSubCategory === "fish & aquariums" || petDetailCategory.includes("fish") || petDetailCategory.includes("aquarium");
+  const isLostFoundPet = petSubCategory === "lost & found pets" || petDetailCategory.includes("lost") || petDetailCategory.includes("found") || petDetailCategory.includes("recovery");
+  const isPetServiceListing = petSubCategory === "pet services" || petSubCategory === "pet boarding & daycare";
 
   if (form.categoryName === "Care Services") {
     if (!isChildCare && ["childagegroup", "child_age_group", "schoolpickupoption", "school_pickup_option"].includes(key)) {
@@ -7117,6 +7449,76 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     }
 
     if (!isTicketResale && ["originalticketproof", "original_ticket_proof", "transferpolicy", "transfer_policy"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (form.categoryName === "Jobs") {
+    if (jobsWorkMode === "Remote" && ["detailedofficeaddress", "detailed_office_address"].includes(key)) {
+      return false;
+    }
+
+    if (jobsWorkMode !== "Remote" && ["remoteworkpolicy", "remote_work_policy", "timezonerequirement", "time_zone_requirement"].includes(key)) {
+      return false;
+    }
+
+    if (jobsEmploymentType !== "Contract" && ["contractduration", "contract_duration", "hourlyrate", "hourly_rate"].includes(key)) {
+      return false;
+    }
+
+    if (jobsEmploymentType !== "Internship" && !jobsSubCategory.includes("internship") && ["internshipduration", "internship_duration", "collegerequirement", "college_requirement", "stipendinformation", "stipend_information"].includes(key)) {
+      return false;
+    }
+
+    if (!isHealthcareJob && ["medicallicensenumber", "medical_license_number", "certificationrequirements", "certification_requirements"].includes(key)) {
+      return false;
+    }
+
+    if (!isDriverJob && ["cdlrequired", "cdl_required", "drivingexperience", "driving_experience", "licenseclass", "license_class"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (form.categoryName === "Electronics & Appliances") {
+    if (!isUsedElectronics && ["purchasedate", "purchase_date", "usageduration", "usage_duration", "conditionnotes", "condition_notes"].includes(key)) {
+      return false;
+    }
+
+    if (!isDealerElectronics && ["storename", "store_name", "website"].includes(key)) {
+      return false;
+    }
+
+    if (!isShippingElectronics && ["deliverycharges", "delivery_charges", "estimateddeliverytime", "estimated_delivery_time"].includes(key)) {
+      return false;
+    }
+
+    if (!hasElectronicsWarranty && ["manufacturerwarranty", "manufacturer_warranty", "extendedwarranty", "extended_warranty", "warrantyexpirydate", "warranty_expiry_date", "warrantyremainingmonths", "warranty_remaining_months", "warrantycardupload", "warranty_card_upload"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (form.categoryName === "Pets & Animals") {
+    if (!isDogPet && ["trainingstatus", "training_status", "exerciserequirements", "exercise_requirements"].includes(key)) {
+      return false;
+    }
+
+    if (!isCatPet && ["indooroutdoorpreference", "indoor_outdoor_preference", "littertrainedstatus", "litter_trained_status"].includes(key)) {
+      return false;
+    }
+
+    if (!isBirdPet && ["wingsclipped", "wings_clipped", "cageincluded", "cage_included"].includes(key)) {
+      return false;
+    }
+
+    if (!isFishPet && ["tanksizerequirement", "tank_size_requirement", "watertype", "water_type"].includes(key)) {
+      return false;
+    }
+
+    if (!isLostFoundPet && ["lastseenlocation", "last_seen_location", "lastseendate", "last_seen_date", "rewardoffered", "reward_offered", "contacturgency", "contact_urgency"].includes(key)) {
+      return false;
+    }
+
+    if (!isPetServiceListing && ["servicetype", "service_type", "businesshours", "business_hours", "servicearea", "service_area", "certifications"].includes(key)) {
       return false;
     }
   }
@@ -7169,18 +7571,6 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   }
 
   if (form.categoryName === "Vehicles" && isAccessories && ["model", "variant", "yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vin", "vehiclecondition", "vehicle_condition", "ownershiptypevehicle", "ownership_type_vehicle", "fueltype", "fuel_type", "transmission", "drivetype", "drive_type", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "mileage", "ownercount", "owner_count", "numberofowners", "number_of_owners", "accidenthistory", "accident_history", "cleantitle", "clean_title", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "color", "interiorcolor", "interior_color", "enginecapacity", "engine_capacity", "horsepower", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status", "titlestatus", "title_status", "registrationstatus", "registration_status", "emissionstestpassed", "emissions_test_passed"].includes(key)) {
-    return false;
-  }
-
-  if (form.categoryName === "Electronics & Appliances" && electronicsCondition === "New" && ["usageduration", "usage_duration", "batteryhealth", "battery_health"].includes(key)) {
-    return false;
-  }
-
-  if (form.categoryName === "Electronics & Appliances" && electronicsWarranty !== "Yes" && ["warrantyremainingmonths", "warranty_remaining_months"].includes(key)) {
-    return false;
-  }
-
-  if (form.categoryName === "Electronics & Appliances" && form.subCategory === "Accessories" && ["ram", "storage", "processor", "screensize", "screen_size", "batteryhealth", "battery_health", "network", "graphicscard", "graphics_card", "operatingsystem", "operating_system", "displaytype", "display_type", "resolution", "smarttv", "smart_tv", "appliancetype", "appliance_type", "capacity", "energyrating", "energy_rating", "invertertechnology", "inverter_technology", "powerconsumption", "power_consumption"].includes(key)) {
     return false;
   }
 
@@ -7383,18 +7773,31 @@ function isSaleRealEstateSubCategory(subCategory: string) {
   return ["Sale", "Residential Sale", "Commercial Sale", "For Sale", "New Projects / New Construction"].includes(subCategory);
 }
 
+function getRealEstatePriceTypeOptions(subCategory: string) {
+  return isSaleRealEstateSubCategory(subCategory)
+    ? saleRealEstatePriceTypeOptions
+    : defaultRealEstatePriceTypeOptions;
+}
+
 function isPlotRealEstateCategory(subCategory: string, detailCategory = "") {
   return ["Plot", "Plots", "Land / Plot", "Land / Plots", "Land", "Lands & Plots"].includes(subCategory) || ["Land / Plot", "Land / Plots", "Commercial Land", "Lands & Plots"].includes(detailCategory);
 }
 
-function getListingKind(subCategory: string, detailCategory: string) {
-  if (isPlotRealEstateCategory(subCategory, detailCategory)) return "Plot";
-  if (isCommercialRealEstateSubCategory(subCategory)) return "Commercial";
-  if (["PG", "PG / Co-living"].includes(subCategory)) return "PG";
+function getListingKind(categoryName: string, subCategory: string, detailCategory: string) {
+  if (isRealEstateCategory(categoryName)) {
+    if (isPlotRealEstateCategory(subCategory, detailCategory)) return "Plot";
+    if (isCommercialRealEstateSubCategory(subCategory)) return "Commercial";
+    if (["PG", "PG / Co-living"].includes(subCategory)) return "PG";
+    return "Residential";
+  }
+
   if (["Restaurants", "Restaurant", "Restaurants (Dine-In)", "Fast Food", "Fast Food & Takeaway", "Cafes", "Cafe", "Cafes & Bakeries", "Bakery", "Cloud Kitchen", "Cloud Kitchen / Delivery Only", "Catering", "Catering Services", "Bars & Beverages", "Food Trucks & Pop-ups", "Grocery & Specialty Food Stores"].includes(subCategory)) return "Restaurant";
+  if (categoryName === "Vehicles") return "Vehicle";
+  if (categoryName === "Electronics & Appliances") return "Electronics";
+  if (categoryName === "Care Services") return "Care Service";
   if (subCategory === "Job Listings") return "Job";
   if (subCategory === "Freelance Services") return "Service";
-  return "Classified";
+  return "Business";
 }
 
 function getRequiredDetailFields(subCategory: string, detailCategory: string): Array<[StringFormField, string]> {

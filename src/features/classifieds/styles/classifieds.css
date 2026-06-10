@@ -141,6 +141,15 @@
   text-align: center;
 }
 
+.classified-category-card .ad-box-txt span {
+  display: block;
+  margin-top: 8px;
+  color: #58657c;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .classified-card-row {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -257,6 +266,96 @@
 
 .classified-list-results .classified-ad-card .plac-hom-box-im {
   height: 185px;
+}
+
+.classified-subcategory-section {
+  margin-bottom: 30px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #d7dee9;
+  border-radius: 8px;
+}
+
+.classified-directory-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.classified-directory-header span {
+  display: block;
+  color: #5b6680;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.classified-directory-header h2 {
+  margin: 3px 0 0;
+  color: #162238;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.classified-directory-header a {
+  flex: 0 0 auto;
+  color: #0d6efd;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.classified-subcategory-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.classified-subcategory-card {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 14px;
+  align-items: center;
+  min-height: 92px;
+  padding: 10px;
+  color: #162238;
+  text-decoration: none;
+  background: #f8fbff;
+  border: 1px solid #dfe6f0;
+  border-radius: 8px;
+}
+
+.classified-subcategory-card:hover {
+  color: #162238;
+  text-decoration: none;
+  border-color: #0d6efd;
+}
+
+.classified-subcategory-card img {
+  grid-row: 1 / span 2;
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 7px;
+  background: #fff;
+}
+
+.classified-subcategory-card strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.classified-subcategory-card span {
+  color: #66728a;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .classified-list-results .classified-ad-card .ad-box-txt {
@@ -859,6 +958,10 @@
   .classified-list-results .classified-ad-card .plac-hom-box-im {
     height: 185px;
   }
+
+  .classified-subcategory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 575px) {
@@ -871,6 +974,38 @@
   }
 
   .classified-related-posts .classified-card-row {
+    grid-template-columns: 1fr;
+  }
+
+  .classified-hero {
+    min-height: 280px;
+    margin-top: 72px;
+    background-size: cover;
+  }
+
+  .classified-hero h1 {
+    margin-top: 74px;
+    font-size: 34px;
+  }
+
+  .classified-hero p {
+    font-size: 17px;
+  }
+
+  .classified-subcategory-section {
+    padding: 16px;
+  }
+
+  .classified-directory-header {
+    display: block;
+  }
+
+  .classified-directory-header a {
+    display: inline-block;
+    margin-top: 10px;
+  }
+
+  .classified-subcategory-grid {
     grid-template-columns: 1fr;
   }
 }

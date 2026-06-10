@@ -86,7 +86,7 @@ export default function ListingDetailPage() {
           category,
           city: currentListing.city || getString(currentListing.locationDetails, "city") || undefined,
           page: 1,
-          pageSize: 200,
+          pageSize: 12,
         });
 
         if (isActive) {
@@ -946,7 +946,7 @@ function getPostedDetailSections(listing: ListingSummary): PostedDetailSection[]
   const categoryAttributes = asUnknownRecord(otherInformation.categoryAttributes);
   const customFields = asUnknownRecord(otherInformation.customFields);
   const categoryName = listing.categoryName || "";
-  const isClassified = categoryName === "Classifieds" || getString(listing.propertyDetails, "listingKind") === "Classified";
+  const isClassified = categoryName === "Classifieds";
   const classifiedCategory = getUnknownString(otherInformation, "classifiedCategory");
   const effectiveCategoryName = isClassified ? classifiedCategory : categoryName;
   const isRealEstate = effectiveCategoryName === "Real Estate";
@@ -1349,6 +1349,9 @@ function getCategorySlug(listing: ListingSummary): PublicListingQuery["category"
   if (listing.categoryName === "Electronics & Appliances") return "electronics-appliances";
   if (listing.categoryName === "Care Services") return "care-services";
   if (listing.categoryName === "Furniture & Home" || listing.categoryName === "Furniture & Home Decor") return "furniture-home-decor";
+  if (listing.categoryName === "Roommates & Rentals") return "roommates-rentals";
+  if (listing.categoryName === "Jobs") return "jobs";
+  if (listing.categoryName === "Events & Tickets" || listing.categoryName === "Tickets & Events") return "events-tickets";
   if (listing.categoryName === "Real Estate") return "real-estate";
   return undefined;
 }

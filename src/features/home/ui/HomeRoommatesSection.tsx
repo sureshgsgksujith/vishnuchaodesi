@@ -110,7 +110,7 @@ export default function HomeRoommatesSection() {
                 <li><i className="material-icons">check</i> Manage listings easily</li>
               </ul>
 
-              <a href="#" className="room-btn">List my place</a>
+              <a href="/dashboard/listings/new" className="room-btn">List my place</a>
             </div>
           </div>
 
@@ -131,7 +131,7 @@ export default function HomeRoommatesSection() {
                 <li><i className="material-icons">check</i> Track responses in dashboard</li>
               </ul>
 
-              <a href="#" className="room-btn">Find a place</a>
+              <a href="/all-listing?category=roommates-rentals" className="room-btn">Find a place</a>
             </div>
           </div>
         </div>
@@ -187,7 +187,7 @@ export default function HomeRoommatesSection() {
 
                     <div className="room-bottom">
                       <span className="room-price">{replaceDollarCurrency(item.price, currentCountry)} <small>/Month</small></span>
-                      <a href="#" className="room-link">View More</a>
+                      <a href="/all-listing?category=roommates-rentals" className="room-link">View More</a>
                     </div>
                   </div>
                 </div>
@@ -202,13 +202,13 @@ export default function HomeRoommatesSection() {
               <div className="col-md-6">
                 <div className="rental-box left-box">
                   <p>Discover offered rental houses available for rent.</p>
-                  <a href="#" className="cta-btn">Find rental houses</a>
+                  <a href="/all-listing?category=roommates-rentals&subCategory=Shared+Houses" className="cta-btn">Find rental houses</a>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="rental-box right-box">
                   <p>Search wanted listings for people looking for rental homes.</p>
-                  <a href="#" className="cta-btn">Find renters</a>
+                  <a href="/all-listing?category=roommates-rentals&subCategory=Roommates+Wanted" className="cta-btn">Find renters</a>
                 </div>
               </div>
             </div>

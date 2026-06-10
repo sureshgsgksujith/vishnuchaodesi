@@ -208,7 +208,7 @@ export default function AllListingPage() {
   useEffect(() => {
     let isActive = true;
 
-    getPublicListings({ page: 1, pageSize: 100 })
+    getPublicListings({ page: 1, pageSize: 50 })
       .then((result) => {
         if (isActive) {
           setFacetItems(result.items || []);
@@ -793,7 +793,10 @@ function getCategory(value: string | null): PublicListingQuery["category"] {
     value === "vehicles" ||
     value === "electronics-appliances" ||
     value === "care-services" ||
-    value === "furniture-home-decor"
+    value === "furniture-home-decor" ||
+    value === "roommates-rentals" ||
+    value === "jobs" ||
+    value === "events-tickets"
     ? value
     : undefined;
 }
@@ -931,6 +934,9 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Electronics & Appliances") return "electronics-appliances";
   if (label === "Care Services") return "care-services";
   if (label === "Furniture & Home" || label === "Furniture & Home Decor") return "furniture-home-decor";
+  if (label === "Roommates & Rentals") return "roommates-rentals";
+  if (label === "Jobs") return "jobs";
+  if (label === "Events & Tickets" || label === "Tickets & Events") return "events-tickets";
   return "";
 }
 
@@ -941,6 +947,9 @@ function buildCategoryLabel(category: PublicCategory) {
   if (category === "electronics-appliances") return "Electronics & Appliances";
   if (category === "care-services") return "Care Services";
   if (category === "furniture-home-decor") return "Furniture & Home";
+  if (category === "roommates-rentals") return "Roommates & Rentals";
+  if (category === "jobs") return "Jobs";
+  if (category === "events-tickets") return "Events & Tickets";
   return "Listings";
 }
 

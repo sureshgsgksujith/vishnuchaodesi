@@ -12,25 +12,46 @@ import { getListingCategoryTree, type ListingCategoryOption } from "../../dashbo
 import { resolveListingImageUrl, setFallbackListingImage } from "../../dashboard/utils/listingImages";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import { useCurrentLocationLabel } from "../../home/hooks/useCurrentLocationLabel";
 import "../styles/classifieds.css";
 
 const CLASSIFIED_PAGE_SIZE = 12;
-const fallbackCategoryNames = ["Vehicles", "Real Estate", "Mobiles", "Jobs", "Electronics & Appliances", "Furniture", "Fashion", "Pets"];
-const classifiedHomeCards = [
-  { title: "Bike", image: "/template-17/classifieds/images/1.jpg", category: "Vehicles" },
-  { title: "House rent", image: "/template-17/classifieds/images/2.jpg", category: "Real Estate" },
-  { title: "Villas for sale", image: "/template-17/classifieds/images/3.jpeg", category: "Real Estate" },
-  { title: "House for sale", image: "/template-17/classifieds/images/4.jpeg", category: "Real Estate" },
-  { title: "Resorts", image: "/template-17/classifieds/images/5.jpg", category: "Restaurants & Food" },
-  { title: "Pets", image: "/template-17/classifieds/images/pets-1.jpg", category: "Care Services" },
-  { title: "Shoes", image: "/template-17/classifieds/images/7.jpeg", category: "Vehicles" },
-  { title: "Electricals", image: "/template-17/classifieds/images/8.jpg", category: "Vehicles" },
+const primaryClassifiedCategoryNames = [
+  "Real Estate",
+  "Restaurants & Food",
+  "Vehicles",
+  "Care Services",
+  "Events & Tickets",
+  "Roommates & Rentals",
+  "Jobs",
 ];
+const fallbackCategoryNames = [...primaryClassifiedCategoryNames, "Electronics & Appliances", "Furniture & Home"];
+const classifiedCategoryImages: Record<string, string> = {
+  "Real Estate": "/template-17/classifieds/images/4.jpeg",
+  "Restaurants & Food": "/template-17/classifieds/images/5.jpg",
+  Vehicles: "/template-17/classifieds/images/1.jpg",
+  "Care Services": "/template-17/classifieds/images/pets-1.jpg",
+  "Events & Tickets": "/template-17/images/events/1.jpg",
+  "Roommates & Rentals": "/template-17/classifieds/images/2.jpg",
+  Jobs: "/template-17/images/icon/employee.png",
+  "Electronics & Appliances": "/template-17/classifieds/images/8.jpg",
+  "Furniture & Home": "/template-17/classifieds/images/3.jpeg",
+};
+
+type ClassifiedDirectoryCard = {
+  name: string;
+  image: string;
+  count: number;
+  href: string;
+};
 
 export function ClassifiedsHomePage() {
   const [listings, setListings] = useState<ListingSummary[]>([]);
+  const [categoryCards, setCategoryCards] = useState<ClassifiedDirectoryCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const currentLocation = useCurrentLocationLabel();
+  const currentCity = currentLocation.city || getCityFromLocationLabel(currentLocation.label);
 
   useEffect(() => {
     let isActive = true;
@@ -39,10 +60,34 @@ export function ClassifiedsHomePage() {
       try {
         setIsLoading(true);
         setErrorMessage("");
-        const listingResult = await getPublicListings({ categoryName: "Classifieds", page: 1, pageSize: 12 });
+        const [listingResult, categoryTree] = await Promise.all([
+          getPublicListings({ categoryName: "Classifieds", city: currentCity || undefined, page: 1, pageSize: 12 }),
+          getListingCategoryTree().catch(() => []),
+        ]);
+
+        const categoryNames = buildClassifiedCategoryNames(categoryTree);
+        const countResults = await Promise.all(
+          categoryNames.map((name) =>
+            getPublicListings({
+              categoryName: "Classifieds",
+              subCategory: name,
+              city: currentCity || undefined,
+              page: 1,
+              pageSize: 1,
+            })
+              .then((result) => result.totalCount || 0)
+              .catch(() => 0),
+          ),
+        );
 
         if (!isActive) return;
         setListings(listingResult.items || []);
+        setCategoryCards(categoryNames.map((name, index) => ({
+          name,
+          image: getClassifiedCategoryImage(name),
+          count: countResults[index] || 0,
+          href: buildClassifiedCategoryHref(name, currentCity),
+        })));
       } catch (error) {
         if (isActive) {
           setErrorMessage(getListingApiErrorMessage(error));
@@ -59,7 +104,7 @@ export function ClassifiedsHomePage() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [currentCity]);
 
   return (
     <>
@@ -69,8 +114,8 @@ export function ClassifiedsHomePage() {
           <div className="modu-hom-ban-inn">
             <div className="container">
               <div className="row">
-                <h1>Free classifieds in <strong>India</strong></h1>
-                <p>Buy and Sell for free anywhere in <strong>India</strong> with <strong>OLX</strong> Online Classified Advertising</p>
+                <h1>Free classifieds near <strong>{currentCity || "you"}</strong></h1>
+                <p>Browse local categories, compare counts, and post classified ads in your area.</p>
               </div>
             </div>
           </div>
@@ -80,20 +125,21 @@ export function ClassifiedsHomePage() {
           <div className="container">
             <div className="row">
               <div className="plac-det-tit-inn">
-                <h2>All Ads</h2>
+                <h2>Classified Categories</h2>
               </div>
               {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
-              {isLoading ? <div className="alert alert-info">Loading classified ads...</div> : null}
+              {isLoading ? <div className="alert alert-info">Loading classified categories...</div> : null}
               <div className="plac-hom-all-pla classified-category-grid">
                 <ul className="row">
-                  {classifiedHomeCards.map((category) => (
-                    <li className="col-lg-3 col-md-6 col-sm-6" key={category.title}>
-                      <Link className="plac-hom-box ad-box classified-category-card" to={`/classifieds/ads-all?category=${encodeURIComponent(category.category)}`}>
+                  {categoryCards.map((category) => (
+                    <li className="col-lg-3 col-md-6 col-sm-6" key={category.name}>
+                      <Link className="plac-hom-box ad-box classified-category-card" to={category.href}>
                         <div className="plac-hom-box-im">
                           <img src={category.image} alt="" onError={setFallbackListingImage} />
                         </div>
                         <div className="ad-box-txt">
-                          <h3>{category.title}</h3>
+                          <h3>{category.name}</h3>
+                          <span>{formatCount(category.count)} ads</span>
                         </div>
                       </Link>
                     </li>
@@ -144,11 +190,13 @@ export function ClassifiedAdsAllPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [facets, setFacets] = useState<ListingSummary[]>([]);
+  const [categoryFacetListings, setCategoryFacetListings] = useState<ListingSummary[]>([]);
   const [categories, setCategories] = useState<ListingCategoryOption[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const category = searchParams.get("category") || "";
+  const detailCategory = searchParams.get("detailCategory") || "";
   const city = searchParams.get("city") || "";
   const search = searchParams.get("search") || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
@@ -163,6 +211,7 @@ export function ClassifiedAdsAllPage() {
         const result = await getPublicListings({
           categoryName: "Classifieds",
           subCategory: category || undefined,
+          detailCategory: detailCategory || undefined,
           city: city || undefined,
           search: search || undefined,
           page,
@@ -188,13 +237,46 @@ export function ClassifiedAdsAllPage() {
     return () => {
       isActive = false;
     };
-  }, [category, city, page, search]);
+  }, [category, city, detailCategory, page, search]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!category) {
+      setCategoryFacetListings([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    getPublicListings({
+      categoryName: "Classifieds",
+      subCategory: category,
+      city: city || undefined,
+      page: 1,
+      pageSize: 200,
+    })
+      .then((result) => {
+        if (isActive) {
+          setCategoryFacetListings(result.items || []);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setCategoryFacetListings([]);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [category, city]);
 
   useEffect(() => {
     let isActive = true;
 
     Promise.all([
-      getPublicListings({ categoryName: "Classifieds", page: 1, pageSize: 200 }),
+      getPublicListings({ categoryName: "Classifieds", page: 1, pageSize: 50 }),
       getListingCategoryTree().catch(() => []),
     ])
       .then(([result, categoryTree]) => {
@@ -220,6 +302,23 @@ export function ClassifiedAdsAllPage() {
     const fromListings = uniqueValues(facets.map((item) => item.subCategory));
     return uniqueValues([...fromTree, ...fromListings, ...fallbackCategoryNames]);
   }, [categories, facets]);
+  const selectedCategoryTree = useMemo(
+    () => categories.find((item) => item.name === category),
+    [categories, category],
+  );
+  const detailOptions = useMemo(
+    () => buildClassifiedDetailOptions(selectedCategoryTree, categoryFacetListings),
+    [categoryFacetListings, selectedCategoryTree],
+  );
+  const subcategoryCards = useMemo(
+    () => detailOptions.map((name) => ({
+      name,
+      image: getClassifiedSubcategoryImage(category, name),
+      count: countListingsByDetailCategory(categoryFacetListings, name),
+      href: buildClassifiedSubcategoryHref(category, name, city, search),
+    })),
+    [category, categoryFacetListings, city, detailOptions, search],
+  );
   const cityOptions = useMemo(() => uniqueValues(facets.map(buildCityText)), [facets]);
   const totalPages = Math.max(1, Math.ceil(totalCount / CLASSIFIED_PAGE_SIZE));
 
@@ -244,7 +343,7 @@ export function ClassifiedAdsAllPage() {
             <div className="row">
               <aside className="col-md-3 fil-mob-view classified-filter-panel">
                 <div className="ban-search">
-                  <h1>{category ? `${category} Ads` : "Classified Ads"}</h1>
+                  <h1>{detailCategory || category ? `${detailCategory || category} Ads` : "Classified Ads"}</h1>
                   <p>{totalCount} ads found</p>
                   <form onSubmit={(event) => event.preventDefault()}>
                     <ul className="row">
@@ -260,9 +359,17 @@ export function ClassifiedAdsAllPage() {
                         </select>
                       </li>
                       <li className="sr-cate">
-                        <select value={category} onChange={(event) => updateQuery({ category: event.target.value, page: 1 })}>
+                        <select value={category} onChange={(event) => updateQuery({ category: event.target.value, detailCategory: null, page: 1 })}>
                           <option value="">All Category</option>
                           {categoryOptions.map((option) => (
+                            <option value={option} key={option}>{option}</option>
+                          ))}
+                        </select>
+                      </li>
+                      <li className="sr-cate">
+                        <select value={detailCategory} onChange={(event) => updateQuery({ detailCategory: event.target.value, page: 1 })} disabled={!category}>
+                          <option value="">All Subcategory</option>
+                          {detailOptions.map((option) => (
                             <option value={option} key={option}>{option}</option>
                           ))}
                         </select>
@@ -281,9 +388,29 @@ export function ClassifiedAdsAllPage() {
               </aside>
 
               <div className="col-md-9 us-ppg-com">
+                {category && !detailCategory && subcategoryCards.length ? (
+                  <div className="classified-subcategory-section">
+                    <div className="classified-directory-header">
+                      <div>
+                        <span>Browse {category}</span>
+                        <h2>Choose a subcategory</h2>
+                      </div>
+                      <Link to={`/classifieds/ads-all${city ? `?city=${encodeURIComponent(city)}` : ""}`}>Change category</Link>
+                    </div>
+                    <div className="classified-subcategory-grid">
+                      {subcategoryCards.map((item) => (
+                        <Link className="classified-subcategory-card" to={item.href} key={item.name}>
+                          <img src={item.image} alt="" onError={setFallbackListingImage} />
+                          <strong>{item.name}</strong>
+                          <span>{formatCount(item.count)} ads</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 <ul id="intseres" className="events-wrapper classified-list-results">
                   <div className="listng-res">
-                    <div className="count_no">Total of <span>{totalCount}</span> events found.</div>
+                    <div className="count_no">Total of <span>{totalCount}</span> ads found.</div>
                     <div className="list-res-selt"></div>
                   </div>
                   {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
@@ -592,6 +719,71 @@ function ClassifiedRelatedCard({ listing }: { listing: ListingSummary }) {
       </div>
     </Link>
   );
+}
+
+function buildClassifiedCategoryNames(categoryTree: ListingCategoryOption[]) {
+  const names = categoryTree.map((item) => item.name).filter((name) => name !== "Classifieds");
+  return uniqueValues([...primaryClassifiedCategoryNames, ...names, ...fallbackCategoryNames]);
+}
+
+function getClassifiedCategoryImage(categoryName: string) {
+  return classifiedCategoryImages[categoryName] || "/template-17/classifieds/images/4.jpeg";
+}
+
+function getClassifiedSubcategoryImage(categoryName: string, subcategoryName: string) {
+  const text = `${categoryName} ${subcategoryName}`.toLowerCase();
+  if (text.includes("restaurant") || text.includes("food") || text.includes("chef")) return "/template-17/classifieds/images/5.jpg";
+  if (text.includes("vehicle") || text.includes("car") || text.includes("bike") || text.includes("driver")) return "/template-17/classifieds/images/1.jpg";
+  if (text.includes("room") || text.includes("rent") || text.includes("house") || text.includes("apartment")) return "/template-17/classifieds/images/2.jpg";
+  if (text.includes("job") || text.includes("career") || text.includes("intern")) return "/template-17/images/icon/employee.png";
+  if (text.includes("event") || text.includes("ticket")) return "/template-17/images/events/1.jpg";
+  if (text.includes("care") || text.includes("nurse") || text.includes("health")) return "/template-17/classifieds/images/pets-1.jpg";
+  return getClassifiedCategoryImage(categoryName);
+}
+
+function buildClassifiedCategoryHref(categoryName: string, city?: string) {
+  const params = new URLSearchParams({ category: categoryName });
+  if (city) {
+    params.set("city", city);
+  }
+
+  return `/classifieds/ads-all?${params.toString()}`;
+}
+
+function buildClassifiedSubcategoryHref(categoryName: string, detailCategory: string, city: string, search: string) {
+  const params = new URLSearchParams({ category: categoryName, detailCategory });
+  if (city) {
+    params.set("city", city);
+  }
+  if (search) {
+    params.set("search", search);
+  }
+
+  return `/classifieds/ads-all?${params.toString()}`;
+}
+
+function buildClassifiedDetailOptions(category: ListingCategoryOption | undefined, listings: ListingSummary[]) {
+  const fromTree = category
+    ? category.subCategories.flatMap((subCategory) =>
+      subCategory.detailedCategories.length
+        ? subCategory.detailedCategories.map((detail) => detail.name)
+        : [subCategory.name],
+    )
+    : [];
+  const fromListings = listings.map((listing) => listing.detailCategory);
+  return uniqueValues([...fromTree, ...fromListings]);
+}
+
+function countListingsByDetailCategory(listings: ListingSummary[], detailCategory: string) {
+  return listings.filter((listing) => listing.detailCategory === detailCategory).length;
+}
+
+function getCityFromLocationLabel(label?: string | null) {
+  return label?.split(",")[0]?.trim() || "";
+}
+
+function formatCount(count: number) {
+  return count > 99 ? "99+" : String(count).padStart(2, "0");
 }
 
 function getListingImages(listing: ListingSummary) {

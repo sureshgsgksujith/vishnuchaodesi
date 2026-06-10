@@ -850,9 +850,8 @@ export default function ClassifiedPostingPage() {
 
 function isClassifiedListing(listing: ListingSummary) {
   const categoryName = listing.categoryName?.trim().toLowerCase();
-  const listingKind = stringValue(listing.propertyDetails?.listingKind).trim().toLowerCase();
 
-  return categoryName === "classifieds" || listingKind === "classified";
+  return categoryName === "classifieds";
 }
 
 function mapListingToClassifiedDraft(listing: ListingSummary): ClassifiedDraft {

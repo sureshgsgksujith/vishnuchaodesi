@@ -290,9 +290,8 @@ function getLatestListingDate(item: ListingSummary) {
 
 function isClassifiedListing(item: ListingSummary) {
   const categoryName = item.categoryName?.trim().toLowerCase();
-  const listingKind = String(item.propertyDetails?.listingKind || "").trim().toLowerCase();
 
-  return categoryName === "classifieds" || listingKind === "classified";
+  return categoryName === "classifieds";
 }
 
 function getListingModuleLabel(item: ListingSummary) {

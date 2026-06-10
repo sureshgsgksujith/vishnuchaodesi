@@ -19,15 +19,18 @@ const furnitureCategoryName = "Furniture & Home";
 
 export const categoryLinks: ExploreMenuLink[] = [
   { label: "All Services", href: "/all-category", icon: "/template-17/images/icon/shop.png" },
-  { label: "Furniture & Home", href: "/all-listing?category=furniture-home-decor", icon: "/template-17/images/icon/home.png" },
-  { label: "Roommates & Rentals", href: "/all-listing?category=real-estate&subCategory=PG+%2F+Co-living", icon: "/template-17/images/icon/home.png" },
-  { label: "Care Services", href: "/all-listing?category=care-services", icon: "/template-17/images/icon/expert.png" },
+  { label: "Real Estate", href: "/all-listing?category=real-estate", icon: "/template-17/images/icon/real-estate.png" },
+  { label: "Restaurants & Food", href: "/all-listing?category=restaurants-food", icon: "/template-17/images/icon/restaurant.png" },
+  { label: "Vehicles", href: "/all-listing?category=vehicles", icon: "/template-17/images/icon/vehicles.png" },
+  { label: "Care Services", href: "/all-listing?category=care-services", icon: "/template-17/images/icon/public-service.png" },
+  { label: "Events & Tickets", href: "/all-listing?category=events-tickets", icon: "/template-17/images/icon/calendar.png" },
+  { label: "Roommates & Rentals", href: "/all-listing?category=roommates-rentals", icon: "/template-17/images/icon/home.png" },
+  { label: "Jobs", href: "/all-listing?category=jobs", icon: "/template-17/images/icon/employee.png" },
   { label: "Classified Ads", href: "/classifieds/index", icon: "/template-17/images/icon/ads.png" },
+  { label: "Furniture & Home", href: "/all-listing?category=furniture-home-decor", icon: "/template-17/images/icon/home.png" },
   { label: "Service Experts", href: "/service-experts/index", icon: "/template-17/images/icon/expert.png" },
-  { label: "Jobs", href: "/jobs/index", icon: "/template-17/images/icon/employee.png" },
   { label: "Explore Travel", href: "/places/index", icon: "/template-17/images/places/icons/hot-air-balloon.png" },
   { label: "News & Magazines", href: "/news/index", icon: "/template-17/images/icon/news.png" },
-  { label: "Events", href: "/events", icon: "/template-17/images/icon/calendar.png" },
   { label: "Products", href: "/products", icon: "/template-17/images/icon/cart.png" },
   { label: "Coupon & Deals", href: "/coupons", icon: "/template-17/images/icon/coupons.png" },
   { label: "Blogs", href: "/blog-posts", icon: "/template-17/images/icon/blog1.png" },
@@ -54,7 +57,8 @@ export function useExploreCategories(): ExploreCategoryLink[] {
       const counts = await Promise.all(
         nextTree.map(async (category) => {
           const totalCount = await getPublicListings({
-            categoryName: category.name,
+            category: publicCategorySlugFromName(category.name),
+            categoryName: publicCategorySlugFromName(category.name) ? undefined : category.name,
             page: 1,
             pageSize: 1,
           })
@@ -81,7 +85,6 @@ export function useExploreCategories(): ExploreCategoryLink[] {
   return useMemo(
     () =>
       categoryTree
-        .filter((category) => !countsLoaded || (categoryCounts[category.name] || 0) > 0)
         .map((category) => ({
           label: category.name,
           href: buildCategoryHref(category.name),
@@ -96,7 +99,32 @@ function buildCategoryHref(categoryName: string) {
     return "/all-listing?category=furniture-home-decor";
   }
 
+  if (categoryName === "Roommates & Rentals") {
+    return "/all-listing?category=roommates-rentals";
+  }
+
+  if (categoryName === "Jobs") {
+    return "/all-listing?category=jobs";
+  }
+
+  if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") {
+    return "/all-listing?category=events-tickets";
+  }
+
   return `/all-listing?categoryName=${encodeURIComponent(categoryName)}`;
+}
+
+function publicCategorySlugFromName(categoryName: string) {
+  if (categoryName === "Real Estate") return "real-estate";
+  if (categoryName === "Restaurants & Food") return "restaurants-food";
+  if (categoryName === "Vehicles") return "vehicles";
+  if (categoryName === "Electronics & Appliances") return "electronics-appliances";
+  if (categoryName === "Care Services") return "care-services";
+  if (categoryName === "Furniture & Home" || categoryName === "Furniture & Home Decor") return "furniture-home-decor";
+  if (categoryName === "Roommates & Rentals") return "roommates-rentals";
+  if (categoryName === "Jobs") return "jobs";
+  if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") return "events-tickets";
+  return undefined;
 }
 
 function formatCategoryCount(count: number) {
