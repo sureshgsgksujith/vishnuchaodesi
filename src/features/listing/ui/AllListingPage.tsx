@@ -792,6 +792,7 @@ function getCategory(value: string | null): PublicListingQuery["category"] {
     value === "restaurants-food" ||
     value === "vehicles" ||
     value === "electronics-appliances" ||
+    value === "pets-animals" ||
     value === "care-services" ||
     value === "furniture-home-decor" ||
     value === "roommates-rentals" ||
@@ -932,6 +933,7 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Restaurants & Food") return "restaurants-food";
   if (label === "Vehicles") return "vehicles";
   if (label === "Electronics & Appliances") return "electronics-appliances";
+  if (label === "Pets & Animals") return "pets-animals";
   if (label === "Care Services") return "care-services";
   if (label === "Furniture & Home" || label === "Furniture & Home Decor") return "furniture-home-decor";
   if (label === "Roommates & Rentals") return "roommates-rentals";
@@ -945,6 +947,7 @@ function buildCategoryLabel(category: PublicCategory) {
   if (category === "restaurants-food") return "Restaurants & Food";
   if (category === "vehicles") return "Vehicles";
   if (category === "electronics-appliances") return "Electronics & Appliances";
+  if (category === "pets-animals") return "Pets & Animals";
   if (category === "care-services") return "Care Services";
   if (category === "furniture-home-decor") return "Furniture & Home";
   if (category === "roommates-rentals") return "Roommates & Rentals";

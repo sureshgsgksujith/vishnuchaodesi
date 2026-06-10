@@ -4,12 +4,14 @@ export type ListingDetailedCategoryOption = {
   id: number;
   name: string;
   slug: string;
+  iconUrl?: string | null;
 };
 
 export type ListingSubCategoryOption = {
   id: number;
   name: string;
   slug: string;
+  iconUrl?: string | null;
   detailedCategories: ListingDetailedCategoryOption[];
 };
 
@@ -17,6 +19,7 @@ export type ListingCategoryOption = {
   id: number;
   name: string;
   slug: string;
+  iconUrl?: string | null;
   subCategories: ListingSubCategoryOption[];
 };
 

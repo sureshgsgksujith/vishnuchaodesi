@@ -215,7 +215,7 @@ export async function getJobListings(page = 1, pageSize = 4) {
 }
 
 export type PublicListingQuery = {
-  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services" | "furniture-home-decor" | "roommates-rentals" | "jobs" | "events-tickets";
+  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "pets-animals" | "care-services" | "furniture-home-decor" | "roommates-rentals" | "jobs" | "events-tickets";
   categoryName?: string;
   subCategory?: string;
   detailCategory?: string;
@@ -248,13 +248,14 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
 
   const isFurnitureHome = query.category === "furniture-home-decor";
   const isEventsTickets = query.category === "events-tickets";
-  const categoryPath = query.category && !isFurnitureHome && !isEventsTickets ? `/${query.category}` : "";
+  const isPetsAnimals = query.category === "pets-animals";
+  const categoryPath = query.category && !isFurnitureHome && !isEventsTickets && !isPetsAnimals ? `/${query.category}` : "";
   const response = await apiClient.get<ListingListResponse>(`/Listings${categoryPath}`, {
     params: {
       page: query.page || 1,
       pageSize: query.pageSize || 10,
       search: query.search || undefined,
-      categoryName: isFurnitureHome ? "Furniture & Home" : isEventsTickets ? "Events & Tickets" : query.categoryName || undefined,
+      categoryName: isFurnitureHome ? "Furniture & Home" : isEventsTickets ? "Events & Tickets" : isPetsAnimals ? "Pets & Animals" : query.categoryName || undefined,
       subCategory: query.subCategory || undefined,
       detailCategory: query.detailCategory || undefined,
       city: query.city || undefined,

@@ -88,11 +88,25 @@
     min-height: 120px;
 }
 
-.login form.listing-polished-form .listing-field-label {
+.login form.listing-polished-form .listing-field-label,
+.login form.listing-polished-form label,
+.add-list .login form.listing-polished-form .listing-field-label,
+.add-list .login form.listing-polished-form label {
     color: #263858;
     font-size: 13px;
     font-weight: 800;
-    text-transform: uppercase;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+.login-main.add-list form label,
+.login-main.add-list form .listing-field-label,
+.login-main.add-list .listing-section-card label,
+.login-main.add-list .listing-section-card .listing-field-label,
+.classified-form-card label,
+.classified-form-card .listing-field-label {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
 }
 
 .login form.listing-polished-form .listing-amenity-row {
@@ -126,10 +140,126 @@
 }
 
 .login form.listing-polished-form .listing-upload-meta .btn-link {
-    padding: 0;
-    color: #b42318;
+    border: 1px solid #dc3545;
+    border-radius: 6px;
+    background: #dc3545;
+    color: #fff;
     font-weight: 700;
+    line-height: 1.2;
+    padding: 8px 14px;
     text-decoration: none;
+}
+
+.login form.listing-polished-form .listing-upload-meta .btn-link:hover {
+    background: #bb2d3b;
+    border-color: #bb2d3b;
+    color: #fff;
+}
+
+.login form.listing-polished-form .listing-upload-meta .listing-upload-remove-button,
+.listing-upload-meta .listing-upload-remove-button {
+    appearance: none;
+    border: 1px solid #0d6efd;
+    border-radius: 999px;
+    background: #e8f1ff;
+    color: #000 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    min-width: 120px;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.login form.listing-polished-form .listing-upload-meta .listing-upload-remove-button:hover,
+.login form.listing-polished-form .listing-upload-meta .listing-upload-remove-button:focus,
+.login form.listing-polished-form .listing-upload-meta .listing-upload-remove-button:active,
+.listing-upload-meta .listing-upload-remove-button:hover,
+.listing-upload-meta .listing-upload-remove-button:focus,
+.listing-upload-meta .listing-upload-remove-button:active {
+    background: #dbeafe;
+    border-color: #0b5ed7;
+    color: #000 !important;
+    text-decoration: none;
+    opacity: 1;
+}
+
+.listing-upload-preview-card {
+    border: 1px solid #d9e3f2;
+    border-radius: 8px;
+    background: #fff;
+    margin-top: 10px;
+    max-width: 360px;
+    overflow: hidden;
+}
+
+.listing-upload-preview-frame {
+    align-items: center;
+    background: #f7f9fc;
+    display: flex;
+    justify-content: center;
+    min-height: 120px;
+    padding: 8px;
+}
+
+.listing-upload-preview-frame img,
+.listing-upload-preview-frame video {
+    aspect-ratio: 16 / 9;
+    border: 0;
+    display: block;
+    max-height: 180px;
+    object-fit: contain;
+    width: 100%;
+}
+
+.listing-upload-preview-frame iframe {
+    border: 0;
+    display: block;
+    height: 180px;
+    width: 100%;
+}
+
+.listing-upload-preview-file {
+    align-items: center;
+    color: #40516f;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+    font-weight: 700;
+    gap: 6px;
+    min-height: 120px;
+    justify-content: center;
+    text-align: center;
+}
+
+.listing-upload-preview-file .material-icons {
+    color: #6b7a99;
+    font-size: 34px;
+}
+
+.listing-upload-preview-link {
+    background: #0d6efd;
+    border: 0;
+    color: #fff;
+    cursor: pointer;
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 10px 12px;
+    text-align: center;
+    text-decoration: none;
+    width: 100%;
+}
+
+.listing-upload-preview-link:hover {
+    background: #0b5ed7;
+    color: #fff;
 }
 
 .home-artist .plac-det-tit-inn {
@@ -2194,7 +2324,7 @@
     font-size: 14px;
     font-weight: 700;
     letter-spacing: 0;
-    text-transform: uppercase;
+    text-transform: none !important;
 }
 
 .listing-section-card .form-group:last-child,

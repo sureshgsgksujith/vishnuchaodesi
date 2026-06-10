@@ -2502,6 +2502,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
       return nextStep;
     });
+    scrollToWizardTop();
   }
 
   function handlePrevious() {
@@ -2514,6 +2515,16 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
       return nextStep;
     });
+    scrollToWizardTop();
+  }
+
+  function scrollToWizardTop() {
+    window.setTimeout(() => {
+      const wizard = document.querySelector<HTMLElement>(".login-reg");
+      const headerOffset = 95;
+      const top = Math.max((wizard?.getBoundingClientRect().top || 0) + window.scrollY - headerOffset, 0);
+      window.scrollTo({ top, behavior: "smooth" });
+    }, 0);
   }
 
   function scrollToFirstValidationError() {
@@ -2527,16 +2538,103 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }
 
   function validateStep(step: number) {
-    if (step !== 0) {
-      return true;
-    }
-
     const nextFieldErrors: FieldErrors = {};
     const addFieldError = (name: string, message: string) => {
       if (!nextFieldErrors[name]) {
         nextFieldErrors[name] = message;
       }
     };
+    const finishStepValidation = () => {
+      if (Object.keys(nextFieldErrors).length) {
+        setFieldErrors(nextFieldErrors);
+        setErrorMessage("");
+        scrollToFirstValidationError();
+        return false;
+      }
+
+      setFieldErrors({});
+      return true;
+    };
+
+    if (step === 1) {
+      if (isRealEstateListing) {
+        ([
+          ["title", "Listing Title"],
+          ["businessDescription", "Description"],
+          ["country", "Country"],
+          ["state", "State"],
+          ["city", "City"],
+          ["pincode", "ZIP Code"],
+          ["address", "Address"],
+        ] as Array<[StringFormField, string]>).forEach(([name, label]) => {
+          if (!form[name].trim()) {
+            addFieldError(name, `${label} is required.`);
+          }
+        });
+      } else {
+        const missingDetailField = hasDynamicCategoryFields || isClassifiedMode
+          ? undefined
+          : getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
+
+        if (missingDetailField) {
+          addFieldError(missingDetailField[0], `${missingDetailField[1]} is required.`);
+        }
+
+        if (!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && isVehicleRentalSubCategory(form.subCategory)) && !form.price.trim()) {
+          addFieldError("price", "Price is required.");
+        }
+
+        effectiveDynamicCategoryFields
+          .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+          .forEach((field) => {
+            if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+              addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+            }
+          });
+      }
+
+      return finishStepValidation();
+    }
+
+    if (step === 2 && isRealEstateListing) {
+      if (!form.price.trim()) {
+        addFieldError("price", isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
+      }
+
+      if (!getAttributeValue(categoryAttributes, "price_type").trim()) {
+        addFieldError(categoryFieldErrorKey("price_type"), "Price Type is required.");
+      }
+
+      if (!getAttributeValue(categoryAttributes, "property_type_group").trim()) {
+        addFieldError(categoryFieldErrorKey("property_type_group"), "Property Type is required.");
+      }
+
+      if (getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
+        const areaUnit = getAttributeValue(categoryAttributes, "area_unit").trim();
+        if (!areaUnit) {
+          addFieldError(categoryFieldErrorKey("area_unit"), "Area is required.");
+        } else if (areaUnit === "Acres" && !form.plotArea.trim()) {
+          addFieldError("plotArea", "Area Acres is required.");
+        } else if (areaUnit === "Sq Ft" && !form.superBuiltUpArea.trim()) {
+          addFieldError("superBuiltUpArea", "Area Sq Ft is required.");
+        }
+      }
+
+      if (isRentRealEstateSubCategory(form.subCategory) && !form.securityDeposit.trim()) {
+        addFieldError("securityDeposit", "Security Deposit is required.");
+      }
+
+      const bathroomsValue = form.bathrooms.trim() || getAttributeValue(categoryAttributes, "bathrooms").trim();
+      if (bathroomsValue && !isNonNegativeDecimalText(bathroomsValue)) {
+        addFieldError("bathrooms", "Bathrooms must be a valid number.");
+      }
+
+      return finishStepValidation();
+    }
+
+    if (step !== 0) {
+      return true;
+    }
 
     const requiredFields: Array<[StringFormField, string]> = [
       ["mobileNumber", "Mobile Number"],
@@ -2544,7 +2642,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ["subCategory", "Sub Category"],
     ];
 
-    if (detailCategoryOptions.length) {
+    if (!isClassifiedMode) {
       requiredFields.push(["detailCategory", "Detailed Category"]);
     }
 
@@ -2570,15 +2668,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       addFieldError("coverImageName", "Cover image is required.");
     }
 
-    if (Object.keys(nextFieldErrors).length) {
-      setFieldErrors(nextFieldErrors);
-      setErrorMessage("");
-      scrollToFirstValidationError();
-      return false;
-    }
-
-    setFieldErrors({});
-    return true;
+    return finishStepValidation();
   }
 
   function validateListingDetailsForSubmit() {
@@ -2657,9 +2747,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (isRealEstateListing || form.categoryName === "Roommates & Rentals") {
       const bathroomsValue = form.bathrooms.trim() || getAttributeValue(categoryAttributes, "bathrooms").trim();
-      if (bathroomsValue && !isWholeNumberText(bathroomsValue)) {
+      if (bathroomsValue && !isNonNegativeDecimalText(bathroomsValue)) {
         validationTargetStep = 2;
-        addFieldError("bathrooms", "Bathrooms must be a whole number.");
+        addFieldError("bathrooms", "Bathrooms must be a valid number.");
       }
     }
 
@@ -3292,7 +3382,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           />
         ) : null}
         {!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && isVehicleRentalSubCategory(form.subCategory)) ? (
-          <ListingPriceFields form={form} currencyCountry={currencyCountry} updateField={updateField} />
+          <ListingPriceFields form={form} currencyCountry={currencyCountry} fieldErrors={fieldErrors} updateField={updateField} />
         ) : null}
         <CategoryAttributesFields
           categoryName={form.categoryName}
@@ -3350,9 +3440,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         <Select placeholder="Seller Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Dealer"]} onChange={(value) => updateField("sellerType", value)} />
                       ) : null}
                       <h4>Category Selection</h4>
-                      <Select placeholder="Select Category" value={form.categoryName} error={fieldErrors.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} />
+                      <Select placeholder="Select Category*" value={form.categoryName} error={fieldErrors.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} />
                       <Select
-                        placeholder="Select Sub Category"
+                        placeholder="Select Sub Category*"
                         value={form.subCategory}
                         error={fieldErrors.subCategory}
                         options={subCategoryOptions}
@@ -3361,7 +3451,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                       />
                       {!isClassifiedMode ? (
                         <Select
-                          placeholder="Select Detailed Category"
+                          placeholder="Select Detailed Category*"
                           value={form.detailCategory}
                           error={fieldErrors.detailCategory}
                           options={detailCategoryOptions}
@@ -3374,6 +3464,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         <TemplateImageColumn
                           label="Choose profile image*"
                           value={form.profileImageName}
+                          file={profileImageFile}
                           error={fieldErrors.profileImageName}
                           onFileChange={(file) => {
                             setProfileImageFile(file);
@@ -3383,6 +3474,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         <TemplateImageColumn
                           label="Choose cover image*"
                           value={form.coverImageName}
+                          file={coverImageFile}
                           error={fieldErrors.coverImageName}
                           onFileChange={(file) => {
                             setCoverImageFile(file);
@@ -3410,7 +3502,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                     <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : "Category Details"}</h4>
                     <form className="listing_form_2" noValidate autoComplete="off">
                       {isRealEstateListing ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
-                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={40} />
+                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={40} />
                     </form>
                   </div>
                 </div>
@@ -3436,7 +3528,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           </li>
                         </ul>
                       )}
-                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={60} />
+                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={60} />
                     </form>
                   </div>
                 </div>
@@ -3456,7 +3548,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           </li>
                       </ul>
                       )}
-                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext(true)} onSkip={() => handleNext(true)} progress={80} />
+                      <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={80} />
                     </form>
                   </div>
                 </div>
@@ -3599,7 +3691,35 @@ function Input({ placeholder, value, onChange, error, type = "text", readOnly = 
 
 function fieldLabelFromPlaceholder(placeholder: string) {
   const label = placeholder.trim().replace(/^Select\s+/i, "");
-  return label === "Listing Name*" ? "Name*" : label;
+  return toTitleCaseLabel(label === "Listing Name*" ? "Name*" : label);
+}
+
+function toTitleCaseLabel(label: string) {
+  const acronyms: Record<string, string> = {
+    bhk: "BHK",
+    cctv: "CCTV",
+    hoa: "HOA",
+    id: "ID",
+    mls: "MLS",
+    pdf: "PDF",
+    rera: "RERA",
+    url: "URL",
+    upi: "UPI",
+    zip: "ZIP",
+  };
+
+  return label.replace(/\b[A-Za-z][A-Za-z']*/g, (word) => {
+    const normalized = word.toLowerCase();
+    if (acronyms[normalized]) {
+      return acronyms[normalized];
+    }
+
+    if (word.length > 1 && word === word.toUpperCase()) {
+      return word;
+    }
+
+    return `${normalized.charAt(0).toUpperCase()}${normalized.slice(1)}`;
+  });
 }
 
 function getSelectedPricingPlan(plans: PricingPlan[], value: string) {
@@ -3648,15 +3768,29 @@ function AddressAutocompleteInput({
   city: string;
   onPlaceSelect: (addressDetails: ListingAddressDetails) => void;
 }) {
+  const addressSearchMinLength = 5;
+  const addressSearchDebounceMs = 650;
   const inputId = useId();
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [suppressSuggestionsUntilClear, setSuppressSuggestionsUntilClear] = useState(false);
 
   useEffect(() => {
     const query = value.trim();
 
-    if (query.length < 3 || !country.trim()) {
+    if (suppressSuggestionsUntilClear && query) {
+      setSuggestions([]);
+      setIsOpen(false);
+      setIsLoading(false);
+      return undefined;
+    }
+
+    if (suppressSuggestionsUntilClear && !query) {
+      setSuppressSuggestionsUntilClear(false);
+    }
+
+    if (query.length < addressSearchMinLength) {
       setSuggestions([]);
       setIsOpen(false);
       setIsLoading(false);
@@ -3688,13 +3822,13 @@ function AddressAutocompleteInput({
             setIsLoading(false);
           }
         });
-    }, 350);
+    }, addressSearchDebounceMs);
 
     return () => {
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [city, country, state, value]);
+  }, [city, country, state, suppressSuggestionsUntilClear, value]);
 
   const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
     setIsLoading(true);
@@ -3712,6 +3846,7 @@ function AddressAutocompleteInput({
         state: details?.state || suggestion.state,
         city: details?.city || suggestion.city,
       });
+      setSuppressSuggestionsUntilClear(true);
     } catch {
       onPlaceSelect({
         address: suggestion.address,
@@ -3722,6 +3857,7 @@ function AddressAutocompleteInput({
         state: suggestion.state,
         city: suggestion.city,
       });
+      setSuppressSuggestionsUntilClear(true);
     } finally {
       setIsLoading(false);
       setSuggestions([]);
@@ -3729,9 +3865,7 @@ function AddressAutocompleteInput({
     }
   };
 
-  const helperText = !country
-    ? "Select country before searching address."
-    : isLoading
+  const helperText = isLoading
       ? "Searching..."
       : "";
 
@@ -3750,9 +3884,14 @@ function AddressAutocompleteInput({
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => {
+              if (!event.target.value.trim()) {
+                setSuppressSuggestionsUntilClear(false);
+              }
+              onChange(event.target.value);
+            }}
             onFocus={() => {
-              if (suggestions.length) setIsOpen(true);
+              if (!suppressSuggestionsUntilClear && suggestions.length) setIsOpen(true);
             }}
             onBlur={() => {
               window.setTimeout(() => setIsOpen(false), 150);
@@ -3795,8 +3934,15 @@ async function searchAddressSuggestions({
   city: string;
   signal: AbortSignal;
 }) {
+  const cacheKey = [query, country, state, city].map((part) => part.trim().toLowerCase()).join("|");
+  const cachedSuggestions = addressSuggestionCache.get(cacheKey);
+  if (cachedSuggestions) {
+    return cachedSuggestions;
+  }
+
   const googleSuggestions = await searchGoogleAddressSuggestions({ query, country, state, city, signal });
   if (googleSuggestions.length) {
+    addressSuggestionCache.set(cacheKey, googleSuggestions);
     return googleSuggestions;
   }
 
@@ -3824,8 +3970,12 @@ async function searchAddressSuggestions({
 
   const results = (await response.json()) as NominatimAddressResult[];
   const cityResults = results.filter((item) => isAddressInSelectedCity(item, country, state, city));
-  return (cityResults.length ? cityResults : results).map(mapAddressSuggestion);
+  const suggestions = (cityResults.length ? cityResults : results).map(mapAddressSuggestion);
+  addressSuggestionCache.set(cacheKey, suggestions);
+  return suggestions;
 }
+
+const addressSuggestionCache = new Map<string, AddressSuggestion[]>();
 
 async function searchGoogleAddressSuggestions({
   query,
@@ -4308,10 +4458,6 @@ function RealEstatePostingSections({
       <Textarea placeholder="Detailed Description*" value={form.businessDescription} error={fieldErrors.businessDescription} onChange={(value) => updateField("businessDescription", value)} />
 
       <h4>Property Location</h4>
-      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
-      <Select placeholder="Select State*" value={form.state} error={fieldErrors.state} options={includeCurrentValue(states.map((state) => state.name), form.state)} onChange={updateState} disabled={!form.country} />
-      <Select placeholder="Select City*" value={form.city} error={fieldErrors.city} options={includeCurrentValue(cities.map((city) => city.name), form.city)} onChange={updateCity} disabled={!form.state} />
-      <Input placeholder="Zip Code*" value={form.pincode} error={fieldErrors.pincode} onChange={(value) => updateField("pincode", value)} />
       <AddressAutocompleteInput
         placeholder="Street Address*"
         value={form.address}
@@ -4322,6 +4468,10 @@ function RealEstatePostingSections({
         onChange={(value) => updateField("address", value)}
         onPlaceSelect={handleAddressPlaceSelect}
       />
+      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
+      <Select placeholder="Select State*" value={form.state} error={fieldErrors.state} options={includeCurrentValue(states.map((state) => state.name), form.state)} onChange={updateState} disabled={!form.country} />
+      <Select placeholder="Select City*" value={form.city} error={fieldErrors.city} options={includeCurrentValue(cities.map((city) => city.name), form.city)} onChange={updateCity} disabled={!form.state} />
+      <Input placeholder="Zip Code*" value={form.pincode} error={fieldErrors.pincode} onChange={(value) => updateField("pincode", value)} />
       <div className="row">
         <InputColumn placeholder="Google Map Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
         <InputColumn placeholder="Google Map Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
@@ -4373,7 +4523,7 @@ function RealEstatePostingSections({
           {!isPlot ? (
             <div className="row">
               <InputColumn placeholder="Bedrooms*" value={form.bhk} error={fieldErrors.bhk} onChange={(value) => updateField("bhk", value)} />
-              <InputColumn placeholder="Bathrooms*" type="number" step="1" value={form.bathrooms} error={fieldErrors.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
+              <InputColumn placeholder="Bathrooms*" type="number" step="0.5" value={form.bathrooms} error={fieldErrors.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
             </div>
           ) : null}
           <div className="row">
@@ -4663,7 +4813,7 @@ function DetailCategoryFields({
         <Select placeholder="Property Type*" value={form.propertyType || form.detailCategory} options={includeCurrentValue(["Apartment", "Villa", "House"], form.detailCategory)} onChange={(value) => updateField("propertyType", value)} />
         <div className="row">
           <SelectColumn placeholder="BHK*" value={form.bhk} options={["1", "2", "3", "4+"]} onChange={(value) => updateField("bhk", value)} />
-          <InputColumn placeholder="Bathrooms*" type="number" step="1" value={form.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
+          <InputColumn placeholder="Bathrooms*" type="number" step="0.5" value={form.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
         </div>
         <div className="row">
           <InputColumn placeholder="Balconies" type="number" value={form.balconies} onChange={(value) => updateField("balconies", value)} />
@@ -4748,17 +4898,19 @@ function DetailCategoryFields({
 function ListingPriceFields({
   form,
   currencyCountry,
+  fieldErrors,
   updateField,
 }: {
   form: FormState;
   currencyCountry: string;
+  fieldErrors: FieldErrors;
   updateField: (name: StringFormField, value: string) => void;
 }) {
   return (
     <>
       <h5 className="mt-3 mb-3">Price Details</h5>
       <div className="row">
-        <InputColumn placeholder={labelWithCountryCurrency("Price", currencyCountry)} type="number" value={form.price} onChange={(value) => updateField("price", value)} />
+        <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry)} type="number" value={form.price} error={fieldErrors.price} onChange={(value) => updateField("price", value)} />
         <SelectColumn placeholder="Price Type" value={form.priceNegotiable} options={["Negotiable", "Fixed"]} onChange={(value) => updateField("priceNegotiable", value)} />
       </div>
     </>
@@ -4934,11 +5086,13 @@ void PriceAndAmenitiesFields;
 function TemplateImageColumn({
   label,
   value,
+  file,
   error,
   onFileChange,
 }: {
   label: string;
   value: string;
+  file: File | null;
   error?: string;
   onFileChange: (file: File | null) => void;
 }) {
@@ -4947,28 +5101,27 @@ function TemplateImageColumn({
   const [fileName, setFileName] = useState("");
 
   useEffect(() => {
-    if (!value || value.startsWith("__")) {
-      return;
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewUrl(objectUrl);
+      setFileName(file.name);
+      return () => URL.revokeObjectURL(objectUrl);
     }
 
-    setPreviewUrl(resolveListingImageUrl(value));
-    setFileName(getFileNameFromPath(value));
-  }, [value]);
-
-  function handleFileChange(files: FileList | null) {
-    const file = files?.[0] || null;
-    onFileChange(file);
-
-    if (!file) {
+    if (!value || value.startsWith("__")) {
       setPreviewUrl("");
       setFileName("");
       return;
     }
 
-    setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = () => setPreviewUrl(String(reader.result || ""));
-    reader.readAsDataURL(file);
+    setPreviewUrl(resolveListingImageUrl(value));
+    setFileName(getFileNameFromPath(value));
+    return undefined;
+  }, [file, value]);
+
+  function handleFileChange(files: FileList | null) {
+    const file = files?.[0] || null;
+    onFileChange(file);
   }
 
   return (
@@ -5069,7 +5222,7 @@ function FileUpload({
         <div className="listing-upload-meta">
           <span>{selectedFile ? selectedFile.name : savedFileName}</span>
           {selectedFile ? <small>{formatFileSize(selectedFile.size)}</small> : null}
-          <button type="button" className="btn btn-link" onClick={clearFile}>Remove</button>
+          <button type="button" className="listing-upload-remove-button" onClick={clearFile}>Remove</button>
         </div>
       ) : null}
       {hasSelectedFile ? (
@@ -5117,6 +5270,35 @@ function FileUploadPreview({
   const isImage = isPreviewImageFile(file, fileName);
   const isVideo = isPreviewVideoFile(file, fileName);
   const isPdf = isPreviewPdfFile(file, fileName);
+  const openPreview = () => {
+    const popup = window.open("", "_blank", "noopener,noreferrer,width=1200,height=850");
+    if (!popup) {
+      window.open(previewUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const escapedUrl = previewUrl.replace(/"/g, "&quot;");
+    const escapedTitle = previewLabel.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const content = isImage
+      ? `<img src="${escapedUrl}" alt="${escapedTitle}" />`
+      : isVideo
+        ? `<video src="${escapedUrl}" controls autoplay></video>`
+        : `<iframe src="${escapedUrl}" title="${escapedTitle}"></iframe>`;
+
+    popup.document.write(`<!doctype html>
+<html>
+<head>
+  <title>${escapedTitle}</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; background: #111827; }
+    body { display: flex; align-items: center; justify-content: center; }
+    img, video, iframe { max-width: 100%; max-height: 100%; width: 100%; height: 100%; object-fit: contain; border: 0; }
+  </style>
+</head>
+<body>${content}</body>
+</html>`);
+    popup.document.close();
+  };
 
   return (
     <div className="listing-upload-preview-card">
@@ -5134,9 +5316,9 @@ function FileUploadPreview({
           </div>
         )}
       </div>
-      <a className="listing-upload-preview-link" href={previewUrl} target="_blank" rel="noreferrer">
+      <button type="button" className="listing-upload-preview-link" onClick={openPreview}>
         Preview file
-      </a>
+      </button>
     </div>
   );
 }
@@ -7097,12 +7279,12 @@ function numberOrNull(value?: string) {
   return Number.isFinite(parsed) && String(value || "").trim() !== "" ? parsed : null;
 }
 
-function isWholeNumberText(value?: string) {
+function isNonNegativeDecimalText(value?: string) {
   const text = String(value || "").trim();
   if (!text) return false;
 
   const parsed = Number(text);
-  return Number.isInteger(parsed);
+  return Number.isFinite(parsed) && parsed >= 0;
 }
 
 function boolOrNull(value?: string) {

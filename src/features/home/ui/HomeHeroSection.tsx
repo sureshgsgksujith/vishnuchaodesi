@@ -18,6 +18,8 @@ const quickLinks = [
   { title: "Events & Tickets", image: "/template-17/images/icon/calendar.png", category: "events-tickets" },
   { title: "Roommates & Rentals", image: "/template-17/images/icon/home.png", category: "roommates-rentals" },
   { title: "Jobs", image: "/template-17/images/icon/employee.png", category: "jobs" },
+  { title: "Electronics & Appliances", image: "/template-17/images/icon/electronics.png", category: "electronics-appliances" },
+  { title: "Pets & Animals", image: "/template-17/classifieds/images/pets-1.jpg", category: "pets-animals" },
 ];
 
 const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> = [
@@ -28,6 +30,8 @@ const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> 
   { label: "Events & Tickets", value: "events-tickets" },
   { label: "Roommates & Rentals", value: "roommates-rentals" },
   { label: "Jobs", value: "jobs" },
+  { label: "Electronics & Appliances", value: "electronics-appliances" },
+  { label: "Pets & Animals", value: "pets-animals" },
 ];
 
 const defaultCityOptions = [
@@ -48,6 +52,8 @@ const searchKeywordOptions = [
   "Care Services",
   "Real Estate",
   "Vehicles",
+  "Electronics & Appliances",
+  "Pets & Animals",
 ];
 
 type HomeListingSummary = {
@@ -104,6 +110,7 @@ function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
   if (value.includes("furniture") || value.includes("home")) return "furniture-home-decor";
   if (value.includes("vehicle") || value.includes("automobile")) return "vehicles";
   if (value.includes("electronic")) return "electronics-appliances";
+  if (value.includes("pet") || value.includes("animal")) return "pets-animals";
   return "";
 }
 

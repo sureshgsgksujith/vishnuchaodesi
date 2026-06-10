@@ -2130,11 +2130,24 @@ button.add-list-rem-btn {
     row-gap: 4px;
 }
 
+.add-list .listing-polished-form .listing-field-label,
+.add-list .listing-polished-form label,
 .listing-polished-form .listing-field-label {
     color: #263858;
     font-size: 13px;
     font-weight: 800;
-    text-transform: uppercase;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+}
+
+.login-main.add-list form label,
+.login-main.add-list form .listing-field-label,
+.login-main.add-list .listing-section-card label,
+.login-main.add-list .listing-section-card .listing-field-label,
+.classified-form-card label,
+.classified-form-card .listing-field-label {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
 }
 
 .listing-polished-form .listing-amenity-row {
@@ -2256,17 +2269,67 @@ button.add-list-rem-btn {
 }
 
 .listing-upload-meta .btn-link {
-    padding: 0;
-    color: #b42318;
+    border: 1px solid #0d6efd;
+    border-radius: 6px;
+    background: #e8f1ff;
+    color: #000 !important;
     font-weight: 700;
+    line-height: 1.2;
+    padding: 8px 14px;
     text-decoration: none;
 }
 
+.listing-upload-meta .btn-link:hover {
+    background: #dbeafe;
+    border-color: #0b5ed7;
+    color: #000 !important;
+    text-decoration: none;
+}
+
+.listing-upload-meta .btn-link:focus,
+.listing-upload-meta .btn-link:active {
+    background: #dbeafe;
+    border-color: #0b5ed7;
+    color: #000 !important;
+    text-decoration: none;
+}
+
+.listing-upload-meta .listing-upload-remove-button {
+    appearance: none;
+    border: 1px solid #0d6efd;
+    border-radius: 999px;
+    background: #e8f1ff;
+    color: #000 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    min-width: 120px;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    opacity: 1;
+}
+
+.listing-upload-meta .listing-upload-remove-button:hover,
+.listing-upload-meta .listing-upload-remove-button:focus,
+.listing-upload-meta .listing-upload-remove-button:active {
+    background: #dbeafe;
+    border-color: #0b5ed7;
+    color: #000 !important;
+    text-decoration: none;
+    opacity: 1;
+}
+
 .listing-upload-preview-card {
-    border: 1px solid #e1e7f0;
-    border-radius: 6px;
+    border: 1px solid #d9e3f2;
+    border-radius: 8px;
     background: #fff;
     margin-top: 10px;
+    max-width: 360px;
     overflow: hidden;
 }
 
@@ -2275,26 +2338,25 @@ button.add-list-rem-btn {
     background: #f7f9fc;
     display: flex;
     justify-content: center;
-    min-height: 150px;
-}
-
-.listing-upload-preview-frame img,
-.listing-upload-preview-frame video,
-.listing-upload-preview-frame iframe {
-    border: 0;
-    display: block;
-    width: 100%;
+    min-height: 120px;
+    padding: 8px;
 }
 
 .listing-upload-preview-frame img,
 .listing-upload-preview-frame video {
     aspect-ratio: 16 / 9;
-    max-height: 220px;
+    border: 0;
+    display: block;
+    max-height: 180px;
     object-fit: contain;
+    width: 100%;
 }
 
 .listing-upload-preview-frame iframe {
-    height: 220px;
+    border: 0;
+    display: block;
+    height: 180px;
+    width: 100%;
 }
 
 .listing-upload-preview-file {
@@ -2305,7 +2367,7 @@ button.add-list-rem-btn {
     font-size: 13px;
     font-weight: 700;
     gap: 6px;
-    min-height: 150px;
+    min-height: 120px;
     justify-content: center;
     text-align: center;
 }
@@ -2316,17 +2378,22 @@ button.add-list-rem-btn {
 }
 
 .listing-upload-preview-link {
-    color: #0f63ff;
+    background: #0d6efd;
+    border: 0;
+    color: #fff;
+    cursor: pointer;
     display: block;
     font-size: 13px;
     font-weight: 800;
-    padding: 9px 12px;
-    text-align: right;
+    padding: 10px 12px;
+    text-align: center;
     text-decoration: none;
+    width: 100%;
 }
 
 .listing-upload-preview-link:hover {
-    text-decoration: underline;
+    background: #0b5ed7;
+    color: #fff;
 }
 
 .listing-info-arrow {
@@ -2405,8 +2472,8 @@ button.add-list-rem-btn {
     color: #2d374f;
     font-size: 14px;
     font-weight: 700;
-    letter-spacing: 0;
-    text-transform: uppercase;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
 }
 
 .listing-section-card .form-group:last-child,

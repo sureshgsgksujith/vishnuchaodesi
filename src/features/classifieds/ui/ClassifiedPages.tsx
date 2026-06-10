@@ -9,7 +9,6 @@ import {
   type ListingSummary,
 } from "../../dashboard/api/listingsApi";
 import { getListingCategoryTree, type ListingCategoryOption } from "../../dashboard/api/listingCategoriesApi";
-import { supportedListingCategoryNames } from "../../dashboard/config/listingCategoryTree";
 import { resolveListingImageUrl, setFallbackListingImage } from "../../dashboard/utils/listingImages";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
@@ -29,17 +28,16 @@ const primaryClassifiedCategoryNames = [
   "Pets & Animals",
 ];
 const fallbackCategoryNames = primaryClassifiedCategoryNames;
-const supportedListingCategoryNameSet = new Set<string>(supportedListingCategoryNames);
 const classifiedCategoryImages: Record<string, string> = {
-  "Real Estate": "/template-17/classifieds/images/4.jpeg",
-  "Restaurants & Food": "/template-17/classifieds/images/5.jpg",
-  Vehicles: "/template-17/classifieds/images/1.jpg",
-  "Care Services": "/template-17/classifieds/images/pets-1.jpg",
-  "Events & Tickets": "/template-17/images/events/1.jpg",
-  "Roommates & Rentals": "/template-17/classifieds/images/2.jpg",
-  Jobs: "/template-17/images/icon/employee.png",
-  "Electronics & Appliances": "/template-17/classifieds/images/8.jpg",
-  "Pets & Animals": "/template-17/classifieds/images/pets-1.jpg",
+  "Real Estate": "/template-17/images/services/villa-1.jpg",
+  "Restaurants & Food": "/template-17/images/services/resto-1.jpg",
+  Vehicles: "/template-17/images/home/usedcar-bg.jpg",
+  "Care Services": "/template-17/images/listing-ban/14944pexels-gustavo-fring-3985159.jpg",
+  "Events & Tickets": "/template-17/images/events/4.jpg",
+  "Roommates & Rentals": "/template-17/images/chao-home-room-listings/2.jpeg",
+  Jobs: "/template-17/images/all-job-bg.jpg",
+  "Electronics & Appliances": "/template-17/images/products/8.jpeg",
+  "Pets & Animals": "/template-17/images/services/pets-1.jpg",
 };
 
 type ClassifiedDirectoryCard = {
@@ -85,10 +83,11 @@ export function ClassifiedsHomePage() {
         );
 
         if (!isActive) return;
+        const categoryByName = new Map(categoryTree.map((item) => [item.name, item]));
         setListings(listingResult.items || []);
         setCategoryCards(categoryNames.map((name, index) => ({
           name,
-          image: getClassifiedCategoryImage(name),
+          image: getClassifiedCategoryImage(name, categoryByName.get(name)),
           count: countResults[index] || 0,
           href: buildClassifiedCategoryHref(name, currentCity),
         })));
@@ -212,19 +211,26 @@ export function ClassifiedAdsAllPage() {
       try {
         setIsLoading(true);
         setErrorMessage("");
+        const shouldClientFilterByClassifiedSubcategory = Boolean(category && detailCategory);
         const result = await getPublicListings({
           categoryName: "Classifieds",
           subCategory: category || undefined,
-          detailCategory: detailCategory || undefined,
           city: city || undefined,
           search: search || undefined,
-          page,
-          pageSize: CLASSIFIED_PAGE_SIZE,
+          page: shouldClientFilterByClassifiedSubcategory ? 1 : page,
+          pageSize: shouldClientFilterByClassifiedSubcategory ? 500 : CLASSIFIED_PAGE_SIZE,
         });
+        const categoryItems = result.items || [];
+        const filteredItems = detailCategory
+          ? categoryItems.filter((item) => getClassifiedSubcategory(item) === detailCategory)
+          : categoryItems;
+        const pageItems = shouldClientFilterByClassifiedSubcategory
+          ? filteredItems.slice((page - 1) * CLASSIFIED_PAGE_SIZE, page * CLASSIFIED_PAGE_SIZE)
+          : filteredItems;
 
         if (!isActive) return;
-        setItems(result.items || []);
-        setTotalCount(result.totalCount || 0);
+        setItems(pageItems);
+        setTotalCount(shouldClientFilterByClassifiedSubcategory ? filteredItems.length : result.totalCount || 0);
       } catch (error) {
         if (isActive) {
           setErrorMessage(getListingApiErrorMessage(error));
@@ -286,7 +292,7 @@ export function ClassifiedAdsAllPage() {
       .then(([result, categoryTree]) => {
         if (isActive) {
           setFacets(result.items || []);
-          setCategories(categoryTree.filter((item) => supportedListingCategoryNameSet.has(item.name)));
+          setCategories(categoryTree);
         }
       })
       .catch(() => {
@@ -303,7 +309,7 @@ export function ClassifiedAdsAllPage() {
 
   const categoryOptions = useMemo(() => {
     const fromTree = categories.map((item) => item.name);
-    const fromListings = uniqueValues(facets.map((item) => item.subCategory)).filter((name) => supportedListingCategoryNameSet.has(name));
+    const fromListings = uniqueValues(facets.map((item) => item.subCategory)).filter(Boolean);
     return uniqueValues([...fromTree, ...fromListings, ...fallbackCategoryNames]);
   }, [categories, facets]);
   const selectedCategoryTree = useMemo(
@@ -317,11 +323,11 @@ export function ClassifiedAdsAllPage() {
   const subcategoryCards = useMemo(
     () => detailOptions.map((name) => ({
       name,
-      image: getClassifiedSubcategoryImage(category, name),
+      image: getClassifiedSubcategoryImage(category, name, selectedCategoryTree),
       count: countListingsByDetailCategory(categoryFacetListings, name),
       href: buildClassifiedSubcategoryHref(category, name, city, search),
     })),
-    [category, categoryFacetListings, city, detailOptions, search],
+    [category, categoryFacetListings, city, detailOptions, search, selectedCategoryTree],
   );
   const cityOptions = useMemo(() => uniqueValues(facets.map(buildCityText)), [facets]);
   const totalPages = Math.max(1, Math.ceil(totalCount / CLASSIFIED_PAGE_SIZE));
@@ -414,23 +420,35 @@ export function ClassifiedAdsAllPage() {
                 ) : null}
                 <ul id="intseres" className="events-wrapper classified-list-results">
                   <div className="listng-res">
-                    <div className="count_no">Total of <span>{totalCount}</span> ads found.</div>
+                    <div className="count_no">
+                      {category && !detailCategory ? (
+                        <>Choose a subcategory to view matching ads.</>
+                      ) : (
+                        <>Total of <span>{totalCount}</span> ads found.</>
+                      )}
+                    </div>
                     <div className="list-res-selt"></div>
                   </div>
                   {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
-                  {isLoading ? <div className="alert alert-info">Loading ads...</div> : null}
-                  {!isLoading && !items.length ? <div className="classified-empty">No classified ads found.</div> : null}
-                  {items.map((listing) => (
-                    <li key={listing.id}>
-                      <ClassifiedAdCard listing={listing} />
-                    </li>
-                  ))}
+                  {category && !detailCategory ? null : (
+                    <>
+                      {isLoading ? <div className="alert alert-info">Loading ads...</div> : null}
+                      {!isLoading && !items.length ? <div className="classified-empty">No classified ads found.</div> : null}
+                      {items.map((listing) => (
+                        <li key={listing.id}>
+                          <ClassifiedAdCard listing={listing} />
+                        </li>
+                      ))}
+                    </>
+                  )}
                 </ul>
-                <div className="classified-pagination">
-                  <button type="button" disabled={page <= 1} onClick={() => updateQuery({ page: page - 1 })}>Previous</button>
-                  <strong>{page} / {totalPages}</strong>
-                  <button type="button" disabled={page >= totalPages} onClick={() => updateQuery({ page: page + 1 })}>Next</button>
-                </div>
+                {category && !detailCategory ? null : (
+                  <div className="classified-pagination">
+                    <button type="button" disabled={page <= 1} onClick={() => updateQuery({ page: page - 1 })}>Previous</button>
+                    <strong>{page} / {totalPages}</strong>
+                    <button type="button" disabled={page >= totalPages} onClick={() => updateQuery({ page: page + 1 })}>Next</button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -726,23 +744,40 @@ function ClassifiedRelatedCard({ listing }: { listing: ListingSummary }) {
 }
 
 function buildClassifiedCategoryNames(categoryTree: ListingCategoryOption[]) {
-  const names = categoryTree.map((item) => item.name).filter((name) => supportedListingCategoryNameSet.has(name));
+  const names = categoryTree.map((item) => item.name).filter(Boolean);
   return uniqueValues([...primaryClassifiedCategoryNames, ...names, ...fallbackCategoryNames]);
 }
 
-function getClassifiedCategoryImage(categoryName: string) {
+function getClassifiedCategoryImage(categoryName: string, category?: ListingCategoryOption) {
+  if (category?.iconUrl) {
+    return resolveListingImageUrl(category.iconUrl);
+  }
+
   return classifiedCategoryImages[categoryName] || "/template-17/classifieds/images/4.jpeg";
 }
 
-function getClassifiedSubcategoryImage(categoryName: string, subcategoryName: string) {
+function getClassifiedSubcategoryImage(
+  categoryName: string,
+  subcategoryName: string,
+  category?: ListingCategoryOption,
+) {
+  const subCategory = category?.subCategories.find((item) => item.name === subcategoryName);
+  if (subCategory?.iconUrl) {
+    return resolveListingImageUrl(subCategory.iconUrl);
+  }
+
   const text = `${categoryName} ${subcategoryName}`.toLowerCase();
-  if (text.includes("restaurant") || text.includes("food") || text.includes("chef")) return "/template-17/classifieds/images/5.jpg";
-  if (text.includes("vehicle") || text.includes("car") || text.includes("bike") || text.includes("driver")) return "/template-17/classifieds/images/1.jpg";
-  if (text.includes("room") || text.includes("rent") || text.includes("house") || text.includes("apartment")) return "/template-17/classifieds/images/2.jpg";
-  if (text.includes("job") || text.includes("career") || text.includes("intern")) return "/template-17/images/icon/employee.png";
-  if (text.includes("event") || text.includes("ticket")) return "/template-17/images/events/1.jpg";
-  if (text.includes("care") || text.includes("nurse") || text.includes("health")) return "/template-17/classifieds/images/pets-1.jpg";
-  return getClassifiedCategoryImage(categoryName);
+  if (text.includes("restaurant") || text.includes("food") || text.includes("chef") || text.includes("cafe") || text.includes("catering")) return "/template-17/images/services/resto-1.jpg";
+  if (text.includes("vehicle") || text.includes("car") || text.includes("truck") || text.includes("rental")) return "/template-17/images/home/usedcar-bg.jpg";
+  if (text.includes("bike") || text.includes("scooter") || text.includes("motorcycle")) return "/template-17/classifieds/images/1.jpg";
+  if (text.includes("room") || text.includes("rent") || text.includes("house") || text.includes("apartment") || text.includes("pg") || text.includes("student")) return "/template-17/images/chao-home-room-listings/2.jpeg";
+  if (text.includes("job") || text.includes("career") || text.includes("intern") || text.includes("hiring")) return "/template-17/images/all-job-bg.jpg";
+  if (text.includes("event") || text.includes("ticket") || text.includes("concert") || text.includes("festival")) return "/template-17/images/events/4.jpg";
+  if (text.includes("care") || text.includes("nurse") || text.includes("health") || text.includes("senior") || text.includes("baby")) return "/template-17/images/listing-ban/14944pexels-gustavo-fring-3985159.jpg";
+  if (text.includes("phone") || text.includes("laptop") || text.includes("computer") || text.includes("tv") || text.includes("electronic")) return "/template-17/images/products/8.jpeg";
+  if (text.includes("pet") || text.includes("dog") || text.includes("cat") || text.includes("bird") || text.includes("fish")) return "/template-17/images/services/pets-1.jpg";
+  if (text.includes("sale") || text.includes("villa") || text.includes("condo") || text.includes("land") || text.includes("plot")) return "/template-17/images/services/villa-1.jpg";
+  return getClassifiedCategoryImage(categoryName, category);
 }
 
 function buildClassifiedCategoryHref(categoryName: string, city?: string) {
@@ -767,19 +802,18 @@ function buildClassifiedSubcategoryHref(categoryName: string, detailCategory: st
 }
 
 function buildClassifiedDetailOptions(category: ListingCategoryOption | undefined, listings: ListingSummary[]) {
-  const fromTree = category
-    ? category.subCategories.flatMap((subCategory) =>
-      subCategory.detailedCategories.length
-        ? subCategory.detailedCategories.map((detail) => detail.name)
-        : [subCategory.name],
-    )
-    : [];
-  const fromListings = listings.map((listing) => listing.detailCategory);
+  const fromTree = category ? category.subCategories.map((subCategory) => subCategory.name) : [];
+  const fromListings = listings.map(getClassifiedSubcategory);
   return uniqueValues([...fromTree, ...fromListings]);
 }
 
 function countListingsByDetailCategory(listings: ListingSummary[], detailCategory: string) {
-  return listings.filter((listing) => listing.detailCategory === detailCategory).length;
+  return listings.filter((listing) => getClassifiedSubcategory(listing) === detailCategory).length;
+}
+
+function getClassifiedSubcategory(listing: ListingSummary) {
+  const parsedOther = parseOtherInformation(listing.propertyDetails?.otherInformation);
+  return getRecordString(parsedOther, "classifiedSubCategory") || listing.detailCategory || "";
 }
 
 function getCityFromLocationLabel(label?: string | null) {
@@ -852,7 +886,7 @@ function buildCityText(listing: ListingSummary) {
   return listing.city || getRecordString(listing.locationDetails, "city");
 }
 
-function getRecordString(record: Record<string, string | number | boolean | null> | undefined, key: string) {
+function getRecordString(record: Record<string, unknown> | undefined, key: string) {
   const value = record?.[key];
   return value === null || value === undefined ? "" : String(value);
 }
