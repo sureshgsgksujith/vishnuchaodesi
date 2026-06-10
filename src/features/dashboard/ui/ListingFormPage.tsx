@@ -12,6 +12,7 @@ import DashboardFooter from "../components/DashboardFooter";
 import { getMyPlanUsage, getPricingPlans, selectPricingPlan, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
 import { resolveListingImageUrl } from "../utils/listingImages";
 import { formatCurrencyAmount, labelWithCountryCurrency } from "../../../shared/utils/currency";
+import { supportedListingCategoryNames } from "../config/listingCategoryTree";
 import "../styles/listings.css";
 
 const wizardSteps = [
@@ -23,6 +24,7 @@ const wizardSteps = [
 ];
 
 const doneStepIndex = wizardSteps.length;
+const supportedListingCategoryNameSet = new Set<string>(supportedListingCategoryNames);
 const defaultRealEstatePriceTypeOptions = ["Total Price", "Monthly Rent", "Lease", "Per Sq Ft"];
 const saleRealEstatePriceTypeOptions = ["Total Price", "Per Sq Ft"];
 
@@ -840,6 +842,16 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "reraNumber", label: "RERA Number" },
     { key: "ownershipType", label: "Ownership Type", options: ["Freehold", "Leasehold"] },
   ],
+  "Roommates & Rentals": [
+    { key: "room_type", label: "Room Type", options: ["Private Room", "Shared Room", "Master Bedroom", "Entire Place"], sectionName: "Room Details", sectionOrder: 1 },
+    { key: "occupancy", label: "Occupancy", options: ["Single", "Double", "Shared", "Family"], sectionName: "Room Details", sectionOrder: 1 },
+    { key: "furnishing_type", label: "Furnishing Type", options: ["Furnished", "Semi-Furnished", "Unfurnished"], sectionName: "Room Details", sectionOrder: 1 },
+    { key: "preferred_roommate", label: "Preferred Roommate", options: ["Any", "Male", "Female", "Student", "Professional", "Family"], sectionName: "Roommate Preference", sectionOrder: 2 },
+    { key: "utilities_included", label: "Utilities Included", options: yesNoOptions, sectionName: "Rent & Utilities", sectionOrder: 3 },
+    { key: "monthly_rent", label: "Monthly Rent", type: "number", sectionName: "Rent & Utilities", sectionOrder: 3 },
+    { key: "security_deposit", label: "Security Deposit", type: "number", sectionName: "Rent & Utilities", sectionOrder: 3 },
+    { key: "available_from", label: "Available From", type: "date", sectionName: "Availability", sectionOrder: 4 },
+  ],
   Vehicles: [
     ...vehiclePostingCommonFields,
   ],
@@ -943,6 +955,15 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "quantity", label: "Quantity", type: "number" },
     { key: "ageGroup", label: "Age Group" },
     { key: "includedItems", label: "Included Items" },
+  ],
+  Jobs: [
+    { key: "companyOrProvider", label: "Company / Provider" },
+    { key: "jobOrServiceType", label: "Job / Service Type", options: ["Full Time", "Part Time", "Contract", "Freelance", "One Time Service", "Training"] },
+    { key: "experienceRequired", label: "Experience Required" },
+    { key: "qualification", label: "Qualification" },
+    { key: "salaryOrFee", label: "Salary / Fee" },
+    { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid", "At Customer Location"] },
+    { key: "availability", label: "Availability" },
   ],
   "Jobs / Services": [
     { key: "companyOrProvider", label: "Company / Provider" },
@@ -1067,6 +1088,34 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
         { key: "experience", label: "Experience" },
         { key: "licenseNumber", label: "License Number" },
       ],
+    },
+  },
+  "Roommates & Rentals": {
+    default: categoryAttributeFieldsByCategory["Roommates & Rentals"],
+    subCategories: {
+      "Roommates Wanted": [
+        ...categoryAttributeFieldsByCategory["Roommates & Rentals"],
+        { key: "move_in_timeline", label: "Move-in Timeline", sectionName: "Availability", sectionOrder: 4 },
+        { key: "house_rules", label: "House Rules", type: "textarea", sectionName: "Preferences", sectionOrder: 5 },
+      ],
+      "Rooms for Rent": categoryAttributeFieldsByCategory["Roommates & Rentals"],
+      "Shared Apartments": categoryAttributeFieldsByCategory["Roommates & Rentals"],
+      "Shared Houses": categoryAttributeFieldsByCategory["Roommates & Rentals"],
+      "Paying Guest (PG) Accommodation": [
+        ...categoryAttributeFieldsByCategory["Roommates & Rentals"],
+        { key: "meals_included", label: "Meals Included", options: yesNoOptions, sectionName: "PG Details", sectionOrder: 5 },
+      ],
+      "Student Housing": categoryAttributeFieldsByCategory["Roommates & Rentals"],
+      "Temporary & Short-Term Rentals": [
+        ...categoryAttributeFieldsByCategory["Roommates & Rentals"],
+        { key: "minimum_stay", label: "Minimum Stay", sectionName: "Availability", sectionOrder: 4 },
+      ],
+      "Sublease & Lease Transfer": [
+        ...categoryAttributeFieldsByCategory["Roommates & Rentals"],
+        { key: "lease_end_date", label: "Lease End Date", type: "date", sectionName: "Lease Details", sectionOrder: 5 },
+      ],
+      "Co-Living Spaces": categoryAttributeFieldsByCategory["Roommates & Rentals"],
+      "Vacation & Corporate Housing": categoryAttributeFieldsByCategory["Roommates & Rentals"],
     },
   },
   Vehicles: {
@@ -1566,6 +1615,54 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
       ],
     },
   },
+  Jobs: {
+    default: categoryAttributeFieldsByCategory.Jobs,
+    subCategories: {
+      "Information Technology (IT)": [
+        { key: "companyName", label: "Company Name", isRequired: true },
+        { key: "jobType", label: "Job Type", options: ["Full Time", "Part Time", "Contract", "Internship"], isRequired: true },
+        { key: "experienceRequired", label: "Experience Required" },
+        { key: "qualification", label: "Qualification" },
+        { key: "salaryRange", label: "Salary Range" },
+        { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true },
+        { key: "lastDateToApply", label: "Last Date To Apply", type: "date" },
+      ],
+      Engineering: [
+        { key: "companyName", label: "Company Name", isRequired: true },
+        { key: "jobType", label: "Job Type", options: ["Full Time", "Part Time", "Contract", "Internship"], isRequired: true },
+        { key: "experienceRequired", label: "Experience Required" },
+        { key: "qualification", label: "Qualification" },
+        { key: "salaryRange", label: "Salary Range" },
+        { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true },
+        { key: "lastDateToApply", label: "Last Date To Apply", type: "date" },
+      ],
+      Healthcare: [
+        { key: "companyName", label: "Company Name", isRequired: true },
+        { key: "jobType", label: "Job Type", options: ["Full Time", "Part Time", "Contract", "Internship"], isRequired: true },
+        { key: "medicalLicenseNumber", label: "Medical License Number" },
+        { key: "certificationRequirements", label: "Certification Requirements" },
+        { key: "experienceRequired", label: "Experience Required" },
+        { key: "salaryRange", label: "Salary Range" },
+        { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true },
+      ],
+      "Freelance & Remote Jobs": [
+        { key: "companyName", label: "Company / Client Name", isRequired: true },
+        { key: "jobType", label: "Job Type", options: ["Freelance", "Contract", "Part Time"], isRequired: true },
+        { key: "workMode", label: "Work Mode", options: ["Remote", "Hybrid"], isRequired: true },
+        { key: "remoteWorkPolicy", label: "Remote Work Policy", type: "textarea" },
+        { key: "timeZoneRequirement", label: "Time Zone Requirement" },
+        { key: "hourlyRate", label: "Hourly Rate", type: "number" },
+      ],
+      "Internships & Entry-Level Jobs": [
+        { key: "companyName", label: "Company Name", isRequired: true },
+        { key: "jobType", label: "Job Type", options: ["Internship", "Entry Level"], isRequired: true },
+        { key: "internshipDuration", label: "Internship Duration" },
+        { key: "collegeRequirement", label: "College Requirement" },
+        { key: "stipendInformation", label: "Stipend Information" },
+        { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true },
+      ],
+    },
+  },
   "Jobs / Services": {
     default: categoryAttributeFieldsByCategory["Jobs / Services"],
     subCategories: {
@@ -1780,7 +1877,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     getListingCategoryTree()
       .then((items) => {
         if (isActive) {
-          setListingCategories(items);
+          setListingCategories(items.filter((item) => supportedListingCategoryNameSet.has(item.name)));
         }
       })
       .catch(() => {

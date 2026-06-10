@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getListingCategoryTree, type ListingCategoryOption } from "../../dashboard/api/listingCategoriesApi";
-import { fallbackListingCategoryTree } from "../../dashboard/config/listingCategoryTree";
+import { fallbackListingCategoryTree, supportedListingCategoryNames } from "../../dashboard/config/listingCategoryTree";
 import { getPublicListings } from "../../dashboard/api/listingsApi";
 
 export type ExploreMenuLink = {
@@ -15,7 +15,7 @@ export type ExploreCategoryLink = {
   count: string;
 };
 
-const furnitureCategoryName = "Furniture & Home";
+const supportedListingCategoryNameSet = new Set<string>(supportedListingCategoryNames);
 
 export const categoryLinks: ExploreMenuLink[] = [
   { label: "All Services", href: "/all-category", icon: "/template-17/images/icon/shop.png" },
@@ -26,8 +26,9 @@ export const categoryLinks: ExploreMenuLink[] = [
   { label: "Events & Tickets", href: "/all-listing?category=events-tickets", icon: "/template-17/images/icon/calendar.png" },
   { label: "Roommates & Rentals", href: "/all-listing?category=roommates-rentals", icon: "/template-17/images/icon/home.png" },
   { label: "Jobs", href: "/all-listing?category=jobs", icon: "/template-17/images/icon/employee.png" },
+  { label: "Electronics & Appliances", href: "/all-listing?category=electronics-appliances", icon: "/template-17/images/icon/cart.png" },
+  { label: "Pets & Animals", href: "/all-listing?category=pets-animals", icon: "/template-17/classifieds/images/pets-1.jpg" },
   { label: "Classified Ads", href: "/classifieds/index", icon: "/template-17/images/icon/ads.png" },
-  { label: "Furniture & Home", href: "/all-listing?category=furniture-home-decor", icon: "/template-17/images/icon/home.png" },
   { label: "Service Experts", href: "/service-experts/index", icon: "/template-17/images/icon/expert.png" },
   { label: "Explore Travel", href: "/places/index", icon: "/template-17/images/places/icons/hot-air-balloon.png" },
   { label: "News & Magazines", href: "/news/index", icon: "/template-17/images/icon/news.png" },
@@ -52,10 +53,11 @@ export function useExploreCategories(): ExploreCategoryLink[] {
         .catch(() => fallbackListingCategoryTree);
 
       if (!isActive) return;
-      setCategoryTree(nextTree);
+      const supportedTree = nextTree.filter((category) => supportedListingCategoryNameSet.has(category.name));
+      setCategoryTree(supportedTree);
 
       const counts = await Promise.all(
-        nextTree.map(async (category) => {
+        supportedTree.map(async (category) => {
           const totalCount = await getPublicListings({
             category: publicCategorySlugFromName(category.name),
             categoryName: publicCategorySlugFromName(category.name) ? undefined : category.name,
@@ -95,10 +97,6 @@ export function useExploreCategories(): ExploreCategoryLink[] {
 }
 
 function buildCategoryHref(categoryName: string) {
-  if (categoryName === furnitureCategoryName || categoryName === "Furniture & Home Decor") {
-    return "/all-listing?category=furniture-home-decor";
-  }
-
   if (categoryName === "Roommates & Rentals") {
     return "/all-listing?category=roommates-rentals";
   }
@@ -120,7 +118,6 @@ function publicCategorySlugFromName(categoryName: string) {
   if (categoryName === "Vehicles") return "vehicles";
   if (categoryName === "Electronics & Appliances") return "electronics-appliances";
   if (categoryName === "Care Services") return "care-services";
-  if (categoryName === "Furniture & Home" || categoryName === "Furniture & Home Decor") return "furniture-home-decor";
   if (categoryName === "Roommates & Rentals") return "roommates-rentals";
   if (categoryName === "Jobs") return "jobs";
   if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") return "events-tickets";

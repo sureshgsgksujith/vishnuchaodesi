@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import HomeHeader from "./HomeHeader";
-import UserHomeHeader from "./UserHomeHeader";
+
+const UserHomeHeader = lazy(() => import("./UserHomeHeader"));
 
 export default function CustomerHeader() {
   const location = useLocation();
@@ -21,5 +22,11 @@ export default function CustomerHeader() {
     };
   }, [location.pathname, location.search]);
 
-  return isAuthenticated ? <UserHomeHeader /> : <HomeHeader />;
+  return isAuthenticated ? (
+    <Suspense fallback={<div style={{ minHeight: 72 }} />}>
+      <UserHomeHeader />
+    </Suspense>
+  ) : (
+    <HomeHeader />
+  );
 }

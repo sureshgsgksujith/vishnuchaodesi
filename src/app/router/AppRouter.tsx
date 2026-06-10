@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { lazy, Suspense, type ReactNode } from "react";
-import HomePage from "../../features/home/ui/HomePage";
 import { customerTemplateRoutes } from "./customerTemplateRoutes";
 import { clearCustomerSession, isCustomerAuthenticated } from "../../features/auth/utils/customerSession";
 
+const HomePage = lazy(() => import("../../features/home/ui/HomePage"));
 const LoginPage = lazy(() => import("../../features/auth/ui/LoginPage"));
 const UserInfoPage = lazy(() => import("../../features/auth/ui/UserInfoPage"));
 const StaticTemplatePage = lazy(() => import("../../features/template/ui/StaticTemplatePage"));

@@ -1,5 +1,19 @@
 import type { ListingCategoryOption } from "../api/listingCategoriesApi";
 
+export const supportedListingCategoryNames = [
+  "Real Estate",
+  "Restaurants & Food",
+  "Vehicles",
+  "Care Services",
+  "Events & Tickets",
+  "Roommates & Rentals",
+  "Jobs",
+  "Electronics & Appliances",
+  "Pets & Animals",
+] as const;
+
+const supportedListingCategoryNameSet = new Set<string>(supportedListingCategoryNames);
+
 export const fallbackListingCategoryTree: ListingCategoryOption[] = [
   {
     id: 1,
@@ -782,7 +796,7 @@ export const fallbackListingCategoryTree: ListingCategoryOption[] = [
   {
     id: 10,
     name: "Events & Tickets",
-    slug: "tickets-events",
+    slug: "events-tickets",
     subCategories: [
       { id: 1001, name: "Concerts & Music Events", slug: "concerts-music-events", detailedCategories: [
         { id: 10001, name: "Live Concerts", slug: "live-concerts" },
@@ -866,4 +880,4 @@ export const fallbackListingCategoryTree: ListingCategoryOption[] = [
       ] },
     ],
   },
-];
+].filter((category) => supportedListingCategoryNameSet.has(category.name));

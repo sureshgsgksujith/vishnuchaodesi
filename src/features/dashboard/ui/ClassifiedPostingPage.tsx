@@ -70,9 +70,6 @@ const classifiedSubCategories: Record<string, string[]> = {
     "Washing Machines",
   ],
   "Commercial Vehicles & Spares": ["Commercial & Other Vehicles", "Spare Parts"],
-  Furniture: ["Sofa & Dining", "Beds & Wardrobes", "Home Decor & Garden", "Kids Furniture", "Other Household Items"],
-  Fashion: ["Men", "Women", "Kids"],
-  "Books, Sports & Hobbies": ["Books", "Gym & Fitness", "Musical Instruments", "Sports Equipment", "Other Hobbies"],
   Pets: ["Fishes & Aquarium", "Pet Food & Accessories", "Dogs", "Other Pets"],
   Services: [
     "Education & Classes",

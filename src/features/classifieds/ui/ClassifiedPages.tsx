@@ -9,6 +9,7 @@ import {
   type ListingSummary,
 } from "../../dashboard/api/listingsApi";
 import { getListingCategoryTree, type ListingCategoryOption } from "../../dashboard/api/listingCategoriesApi";
+import { supportedListingCategoryNames } from "../../dashboard/config/listingCategoryTree";
 import { resolveListingImageUrl, setFallbackListingImage } from "../../dashboard/utils/listingImages";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
@@ -24,8 +25,11 @@ const primaryClassifiedCategoryNames = [
   "Events & Tickets",
   "Roommates & Rentals",
   "Jobs",
+  "Electronics & Appliances",
+  "Pets & Animals",
 ];
-const fallbackCategoryNames = [...primaryClassifiedCategoryNames, "Electronics & Appliances", "Furniture & Home"];
+const fallbackCategoryNames = primaryClassifiedCategoryNames;
+const supportedListingCategoryNameSet = new Set<string>(supportedListingCategoryNames);
 const classifiedCategoryImages: Record<string, string> = {
   "Real Estate": "/template-17/classifieds/images/4.jpeg",
   "Restaurants & Food": "/template-17/classifieds/images/5.jpg",
@@ -35,7 +39,7 @@ const classifiedCategoryImages: Record<string, string> = {
   "Roommates & Rentals": "/template-17/classifieds/images/2.jpg",
   Jobs: "/template-17/images/icon/employee.png",
   "Electronics & Appliances": "/template-17/classifieds/images/8.jpg",
-  "Furniture & Home": "/template-17/classifieds/images/3.jpeg",
+  "Pets & Animals": "/template-17/classifieds/images/pets-1.jpg",
 };
 
 type ClassifiedDirectoryCard = {
@@ -282,7 +286,7 @@ export function ClassifiedAdsAllPage() {
       .then(([result, categoryTree]) => {
         if (isActive) {
           setFacets(result.items || []);
-          setCategories(categoryTree);
+          setCategories(categoryTree.filter((item) => supportedListingCategoryNameSet.has(item.name)));
         }
       })
       .catch(() => {
@@ -299,7 +303,7 @@ export function ClassifiedAdsAllPage() {
 
   const categoryOptions = useMemo(() => {
     const fromTree = categories.map((item) => item.name);
-    const fromListings = uniqueValues(facets.map((item) => item.subCategory));
+    const fromListings = uniqueValues(facets.map((item) => item.subCategory)).filter((name) => supportedListingCategoryNameSet.has(name));
     return uniqueValues([...fromTree, ...fromListings, ...fallbackCategoryNames]);
   }, [categories, facets]);
   const selectedCategoryTree = useMemo(
@@ -722,7 +726,7 @@ function ClassifiedRelatedCard({ listing }: { listing: ListingSummary }) {
 }
 
 function buildClassifiedCategoryNames(categoryTree: ListingCategoryOption[]) {
-  const names = categoryTree.map((item) => item.name).filter((name) => name !== "Classifieds");
+  const names = categoryTree.map((item) => item.name).filter((name) => supportedListingCategoryNameSet.has(name));
   return uniqueValues([...primaryClassifiedCategoryNames, ...names, ...fallbackCategoryNames]);
 }
 
