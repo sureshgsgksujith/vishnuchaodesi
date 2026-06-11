@@ -23,9 +23,28 @@ export async function getPageBanners(pageKey: string) {
 }
 
 function resolveBannerImageUrl(value: string) {
-  if (value.startsWith("/template-17/") || value.startsWith("http") || value.startsWith("data:") || value.startsWith("blob:")) {
-    return value;
+  const imageUrl = value.trim();
+
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    try {
+      const parsedUrl = new URL(imageUrl);
+      const isLocalUpload =
+        (parsedUrl.hostname === "localhost" || parsedUrl.hostname === "127.0.0.1") &&
+        parsedUrl.pathname.startsWith("/uploads/");
+
+      if (isLocalUpload) {
+        return resolveListingImageUrl(parsedUrl.pathname);
+      }
+    } catch {
+      return imageUrl;
+    }
+
+    return imageUrl;
   }
 
-  return resolveListingImageUrl(value);
+  if (imageUrl.startsWith("/template-17/") || imageUrl.startsWith("data:") || imageUrl.startsWith("blob:")) {
+    return imageUrl;
+  }
+
+  return resolveListingImageUrl(imageUrl);
 }

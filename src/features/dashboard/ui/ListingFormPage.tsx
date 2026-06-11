@@ -12,7 +12,7 @@ import DashboardFooter from "../components/DashboardFooter";
 import { getMyPlanUsage, getPricingPlans, selectPricingPlan, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
 import { resolveListingImageUrl } from "../utils/listingImages";
 import { formatCurrencyAmount, labelWithCountryCurrency } from "../../../shared/utils/currency";
-import { supportedListingCategoryNames } from "../config/listingCategoryTree";
+import { fallbackListingCategoryTree, supportedListingCategoryNames } from "../config/listingCategoryTree";
 import "../styles/listings.css";
 
 const wizardSteps = [
@@ -42,7 +42,9 @@ type SocialLinks = { facebook: string; instagram: string; twitter: string; linke
 type PaymentMethods = { creditCard: boolean; cash: boolean; upi: boolean; googlePay: boolean; applePay: boolean; insurance: boolean };
 type RestaurantInfo = {
   restaurantName: string;
+  businessName: string;
   tagline: string;
+  description: string;
   cuisine: string;
   foodTypes: string[];
   foodType: string;
@@ -91,6 +93,7 @@ type RestaurantMenuItem = {
   description: string;
   price: string;
   foodType: string;
+  spiceLevel: string;
   calories: string;
   imageUrl: string;
   displayOrder: string;
@@ -356,7 +359,9 @@ const initialPaymentMethods: PaymentMethods = {
 
 const initialRestaurantInfo: RestaurantInfo = {
   restaurantName: "",
+  businessName: "",
   tagline: "",
+  description: "",
   cuisine: "",
   foodTypes: [],
   foodType: "",
@@ -406,6 +411,7 @@ const initialRestaurantMenuItem: RestaurantMenuItem = {
   description: "",
   price: "",
   foodType: "",
+  spiceLevel: "",
   calories: "",
   imageUrl: "",
   displayOrder: "1",
@@ -414,6 +420,13 @@ const initialRestaurantMenuItem: RestaurantMenuItem = {
 
 const commonConditionOptions = ["New", "Like New", "Good", "Fair", "Needs Repair"];
 const yesNoOptions = ["Yes", "No"];
+const restaurantServiceTypeOptions = [
+  { key: "dine_in", label: "Dine-In" },
+  { key: "takeaway", label: "Takeaway" },
+  { key: "delivery_available", label: "Delivery" },
+  { key: "catering_available", label: "Catering" },
+  { key: "reservations_accepted", label: "Reservations Accepted" },
+];
 const vehicleConditionOptions = ["New", "Used", "Certified Pre-Owned"];
 const vehicleFuelOptions = ["Gasoline", "Diesel", "Hybrid", "Electric"];
 const vehicleBrandOptions = ["Acura", "Audi", "BMW", "Chevrolet", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Jeep", "Kia", "Lexus", "Mercedes-Benz", "Nissan", "Subaru", "Tesla", "Toyota", "Volkswagen", "Yamaha", "Harley-Davidson", "Royal Enfield", "Other"];
@@ -424,6 +437,22 @@ const vehiclePriceNegotiableOptions = ["Yes", "No"];
 const nearbyServiceTypes = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
 const nearbyServicesAttributeKey = "nearby_services";
 const furnitureCategoryNames = ["Furniture & Home", "Furniture & Home Decor"];
+const sharedListingLocationCategories = [
+  "Vehicles",
+  "Care Services",
+  "Events & Tickets",
+  "Tickets & Events",
+  "Roommates & Rentals",
+  "Jobs",
+  "Electronics & Appliances",
+  "Pets & Animals",
+  "Furniture & Home",
+  "Furniture & Home Decor",
+  "Fashion & Lifestyle",
+  "Books, Sports & Hobbies",
+  "Business & Industrial",
+];
+const usaDefaultLocationCategories = ["Real Estate", "Restaurants & Food", ...sharedListingLocationCategories];
 const furnitureConditionOptions = ["New", "Like New", "Good", "Fair", "Salvage"];
 const furnitureMaterialOptions = ["Wood", "Metal", "Plastic", "Glass", "Fabric", "Leather"];
 const furniturePostingCommonFields: CategoryAttributeField[] = [
@@ -856,14 +885,12 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     ...vehiclePostingCommonFields,
   ],
   "Restaurants & Food": [
-    { key: "business_name", label: "Restaurant / Business Name", isRequired: true, sectionName: "Business Information", sectionOrder: 1 },
-    { key: "business_legal_name", label: "Business Name", sectionName: "Business Information", sectionOrder: 1 },
-    { key: "tagline", label: "Tagline", sectionName: "Business Information", sectionOrder: 1 },
+    { key: "restaurant_name", label: "Restaurant Name", isRequired: true, sectionName: "Restaurant / Business Information", sectionOrder: 1 },
+    { key: "business_name", label: "Business Name", sectionName: "Restaurant / Business Information", sectionOrder: 1 },
+    { key: "tagline", label: "Tagline", sectionName: "Restaurant / Business Information", sectionOrder: 1 },
+    { key: "description", label: "Description", type: "textarea", sectionName: "Restaurant / Business Information", sectionOrder: 1 },
     { key: "cuisine_type", label: "Cuisine Type", options: ["Indian", "Chinese", "Italian", "Mexican", "Thai", "Mediterranean", "American", "Vegan", "Korean", "Japanese", "Middle Eastern"], isRequired: true, sectionName: "Cuisine Information", sectionOrder: 2 },
     { key: "food_type", label: "Food Type", options: ["Veg", "Non-Veg", "Vegan", "Halal", "Kosher", "Gluten-Free"], sectionName: "Cuisine Information", sectionOrder: 2 },
-    { key: "business_type", label: "Business Type", options: ["Individual", "Company", "Franchise"], isRequired: true, sectionName: "Business Information", sectionOrder: 1 },
-    { key: "year_established", label: "Year Established", type: "number", isRequired: true, sectionName: "Business Information", sectionOrder: 1 },
-    { key: "staff_count", label: "Number of Staff", type: "number", sectionName: "Business Information", sectionOrder: 1 },
     { key: "service_type", label: "Service Type", options: ["Dine-In", "Takeaway", "Delivery", "Catering", "Reservations Accepted"], isRequired: true, sectionName: "Service Type", sectionOrder: 6 },
     { key: "delivery_radius", label: "Delivery Radius (miles)", type: "number", sectionName: "Location", sectionOrder: 4 },
     { key: "service_radius", label: "Service Radius (miles)", type: "number", sectionName: "Location", sectionOrder: 4 },
@@ -1759,7 +1786,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const [countries, setCountries] = useState<CountryOption[]>([]);
   const [states, setStates] = useState<StateOption[]>([]);
   const [cities, setCities] = useState<CityOption[]>([]);
-  const [listingCategories, setListingCategories] = useState<ListingCategoryOption[]>([]);
+  const [listingCategories, setListingCategories] = useState<ListingCategoryOption[]>(
+    fallbackListingCategoryTree.filter((item) => supportedListingCategoryNameSet.has(item.name)),
+  );
   const [dynamicCategoryFields, setDynamicCategoryFields] = useState<CategoryAttributeField[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
@@ -1780,6 +1809,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const sourceListingId = editListingId || duplicateListingId;
   const isEditMode = Boolean(editListingId);
   const isRealEstateListing = !isClassifiedMode && isRealEstateCategory(form.categoryName);
+  const isRestaurantListing = !isClassifiedMode && form.categoryName === "Restaurants & Food";
 
   useEffect(() => {
     if (isClassifiedMode) {
@@ -1877,13 +1907,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     getListingCategoryTree()
       .then((items) => {
         if (isActive) {
-          setListingCategories(items.filter((item) => supportedListingCategoryNameSet.has(item.name)));
+          const supportedItems = items.filter((item) => supportedListingCategoryNameSet.has(item.name));
+          if (supportedItems.length) {
+            setListingCategories(dedupeListingCategories(supportedItems));
+          }
         }
       })
       .catch(() => {
-        if (isActive) {
-          setListingCategories([]);
-        }
+        // Keep the local document-backed fallback visible if the API is unavailable.
       });
 
     return () => {
@@ -1911,7 +1942,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }, []);
 
   useEffect(() => {
-    if (!isRealEstateListing || form.country || !countries.length) {
+    if (!shouldDefaultCountryToUsa(form.categoryName) || form.country || !countries.length) {
       return;
     }
 
@@ -1926,7 +1957,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         countryId: defaultCountry.id,
       }));
     }
-  }, [countries, form.country, isRealEstateListing]);
+  }, [countries, form.categoryName, form.country]);
 
   useEffect(() => {
     let isActive = true;
@@ -2209,14 +2240,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       if (name === "categoryName") {
         nextForm.subCategory = "";
         nextForm.detailCategory = "";
-        if (value === "Restaurants & Food" && !nextForm.country) {
+        if (shouldDefaultCountryToUsa(value) && !nextForm.country) {
           nextForm.country = "United States";
         }
         if (value === "Restaurants & Food" && !["30", "60", "90"].includes(nextForm.adDurationDays)) {
           nextForm.adDurationDays = "30";
-        }
-        if (value === "Care Services" && !nextForm.country) {
-          nextForm.country = "United States";
         }
         if (value === "Care Services" && !["15", "30", "60"].includes(nextForm.adDurationDays)) {
           nextForm.adDurationDays = "30";
@@ -2461,6 +2489,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
             stateName: location.state,
             cityName: location.city || location.district,
             pincode,
+            latitude: location.latitude,
+            longitude: location.longitude,
           }, pincode);
         })
         .catch((error) => {
@@ -2485,6 +2515,37 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       pincode: addressDetails.pincode,
       latitude: addressDetails.latitude,
       longitude: addressDetails.longitude,
+    });
+  }, [cities, countries, form.country, states]);
+
+  const handleRestaurantAddressPlaceSelect = useCallback((addressDetails: ListingAddressDetails) => {
+    const countryName = addressDetails.country || form.country || "United States";
+
+    setContactInfo((currentContactInfo) => ({
+      ...currentContactInfo,
+      streetAddress: addressDetails.address || currentContactInfo.streetAddress,
+      zipcode: addressDetails.pincode || currentContactInfo.zipcode,
+      city: addressDetails.city || currentContactInfo.city,
+      state: addressDetails.state || currentContactInfo.state,
+    }));
+
+    void ensureAndApplyResolvedLocation({
+      countryName,
+      stateName: addressDetails.state,
+      cityName: addressDetails.city,
+      address: addressDetails.address,
+      pincode: addressDetails.pincode,
+      latitude: addressDetails.latitude,
+      longitude: addressDetails.longitude,
+    });
+
+    setFieldErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors };
+      delete nextErrors.restaurantStreetAddress;
+      delete nextErrors.restaurantZipcode;
+      delete nextErrors.restaurantCity;
+      delete nextErrors.restaurantState;
+      return nextErrors;
     });
   }, [cities, countries, form.country, states]);
 
@@ -2529,7 +2590,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function scrollToFirstValidationError() {
     window.setTimeout(() => {
-      const firstInvalidField = document.querySelector<HTMLElement>(".listing-polished-form .is-invalid");
+      const firstInvalidField = document.querySelector<HTMLElement>(".is-invalid, .listing-field-error");
       const target = firstInvalidField?.closest<HTMLElement>(".form-group") || firstInvalidField;
 
       target?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -2572,7 +2633,21 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           }
         });
       } else {
-        const missingDetailField = hasDynamicCategoryFields || isClassifiedMode
+        if (isRestaurantListing) {
+          if (!restaurantInfo.restaurantName.trim()) {
+            addFieldError("restaurantName", "Restaurant Name is required.");
+          }
+
+          if (!restaurantInfo.cuisine.trim()) {
+            addFieldError("restaurantCuisine", "Cuisine Type is required.");
+          }
+
+          if (!restaurantInfo.foodTypes.length) {
+            addFieldError("restaurantFoodTypes", "Food Type is required.");
+          }
+        }
+
+        const missingDetailField = hasDynamicCategoryFields || isClassifiedMode || isRestaurantListing
           ? undefined
           : getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
 
@@ -2584,13 +2659,16 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           addFieldError("price", "Price is required.");
         }
 
-        effectiveDynamicCategoryFields
-          .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-          .forEach((field) => {
-            if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-              addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-            }
-          });
+        if (!isRestaurantListing) {
+          effectiveDynamicCategoryFields
+            .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+            .forEach((field) => {
+              if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+                addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+              }
+            });
+          addSharedListingLocationErrors(addFieldError);
+        }
       }
 
       return finishStepValidation();
@@ -2627,6 +2705,70 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       const bathroomsValue = form.bathrooms.trim() || getAttributeValue(categoryAttributes, "bathrooms").trim();
       if (bathroomsValue && !isNonNegativeDecimalText(bathroomsValue)) {
         addFieldError("bathrooms", "Bathrooms must be a valid number.");
+      }
+
+      return finishStepValidation();
+    }
+
+    if (step === 2 && isRestaurantListing) {
+      const restaurantZipcode = contactInfo.zipcode || form.pincode;
+      const selectedRestaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
+
+      if (!(contactInfo.mainPhone || form.mobileNumber).trim()) {
+        addFieldError("restaurantPhone", "Phone is required.");
+      }
+
+      if (!(contactInfo.email || form.email).trim()) {
+        addFieldError("restaurantEmail", "Email is required.");
+      }
+
+      if (!(contactInfo.streetAddress || form.address).trim()) {
+        addFieldError("restaurantStreetAddress", "Street Address is required.");
+      }
+
+      if (!restaurantZipcode.trim()) {
+        addFieldError("restaurantZipcode", "ZIP Code is required.");
+      } else if (!/^\d{5}(-\d{4})?$/.test(restaurantZipcode.trim())) {
+        addFieldError("restaurantZipcode", "ZIP Code should be a valid US ZIP format.");
+      }
+
+      if (!(contactInfo.city || form.city).trim()) {
+        addFieldError("restaurantCity", "City is required.");
+      }
+
+      if (!(contactInfo.state || form.state).trim()) {
+        addFieldError("restaurantState", "State is required.");
+      }
+
+      if (!selectedRestaurantServiceTypes.length) {
+        addFieldError("restaurantServiceTypes", "At least one Service Type is required.");
+      }
+
+      return finishStepValidation();
+    }
+
+    if (step === 3 && isRestaurantListing) {
+      const isCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
+      const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
+      const selectedRestaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
+      const isDeliveryListing = restaurantInfo.deliveryAvailable || selectedRestaurantServiceTypes.includes("Delivery") || isCloudKitchen;
+      restaurantMenuItems.forEach((item, index) => {
+        if (!item.itemName.trim()) addFieldError(restaurantMenuItemErrorKey(index, "itemName"), "Item Name is required.");
+        if (!item.menuCategory.trim()) addFieldError(restaurantMenuItemErrorKey(index, "menuCategory"), "Category is required.");
+        if (numberOrNull(item.price) === null) addFieldError(restaurantMenuItemErrorKey(index, "price"), "Price is required.");
+        if (!item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.");
+      });
+
+      if ((isDeliveryListing || selectedRestaurantServiceTypes.includes("Catering") || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
+        addFieldError("restaurantServiceRadiusMiles", "Delivery Radius is required for delivery, catering, and cloud kitchen listings.");
+      }
+
+      if (isDeliveryListing && !restaurantInfo.deliveryFee.trim()) {
+        addFieldError("restaurantDeliveryFee", "Delivery Fee is required when delivery is available.");
+      }
+
+      if (isDeliveryListing && !restaurantInfo.minimumOrderValue.trim()) {
+        addFieldError("restaurantMinimumOrderValue", "Minimum Order Amount is required when delivery is available.");
       }
 
       return finishStepValidation();
@@ -2681,27 +2823,22 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     };
 
     if (!isClassifiedMode && form.categoryName === "Restaurants & Food" && !validateRestaurantFields()) {
-      setFieldErrors({});
       return false;
     }
 
     if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Vehicles" && !validateVehicleFields()) {
-      setFieldErrors({});
       return false;
     }
 
     if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Electronics & Appliances" && !validateElectronicsFields()) {
-      setFieldErrors({});
       return false;
     }
 
     if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Care Services" && !validateCareServiceFields()) {
-      setFieldErrors({});
       return false;
     }
 
     if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && isFurnitureCategory(form.categoryName) && !validateFurnitureFields()) {
-      setFieldErrors({});
       return false;
     }
 
@@ -2768,6 +2905,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
             addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
           }
         });
+      addSharedListingLocationErrors(addFieldError);
     }
 
     if (Object.keys(nextFieldErrors).length) {
@@ -2782,71 +2920,152 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     return true;
   }
 
+  function addSharedListingLocationErrors(addFieldError: (name: string, message: string) => void) {
+    if (!shouldUseSharedListingLocationSection(form.categoryName) || isClassifiedMode) {
+      return;
+    }
+
+    if (!form.country.trim()) addFieldError("country", "Country is required.");
+    if (!form.state.trim()) addFieldError("state", "State is required.");
+    if (!form.city.trim()) addFieldError("city", "City is required.");
+    if (!form.pincode.trim()) addFieldError("pincode", "ZIP Code is required.");
+  }
+
   function validateRestaurantFields() {
-    const year = numberOrNull(restaurantInfo.yearEstablished);
+    const nextFieldErrors: FieldErrors = {};
+    let validationTargetStep = 1;
+    const addFieldError = (name: string, message: string, targetStep: number) => {
+      if (!nextFieldErrors[name]) {
+        nextFieldErrors[name] = message;
+        validationTargetStep = Math.min(validationTargetStep, targetStep);
+      }
+    };
     const isCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
     const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
-    const isDeliveryListing = restaurantInfo.deliveryAvailable || isCloudKitchen;
+    const selectedRestaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
+    const isDeliveryListing = restaurantInfo.deliveryAvailable || selectedRestaurantServiceTypes.includes("Delivery") || isCloudKitchen;
+    const restaurantZipcode = contactInfo.zipcode || form.pincode;
 
     if (!restaurantInfo.restaurantName.trim()) {
-      setErrorMessage("Restaurant / Business Name is required.");
-      return false;
+      addFieldError("restaurantName", "Restaurant Name is required.", 1);
     }
 
     if (!restaurantInfo.cuisine.trim()) {
-      setErrorMessage("Cuisine Type is required.");
-      return false;
+      addFieldError("restaurantCuisine", "Cuisine Type is required.", 1);
     }
 
-    if (!restaurantInfo.businessType.trim()) {
-      setErrorMessage("Business Type is required.");
-      return false;
+    if (!restaurantInfo.foodTypes.length) {
+      addFieldError("restaurantFoodTypes", "Food Type is required.", 1);
     }
 
-    if (!year || year < 1800 || year > new Date().getFullYear()) {
-      setErrorMessage("Year Established should be a valid year.");
-      return false;
+    if (!selectedRestaurantServiceTypes.length) {
+      addFieldError("restaurantServiceTypes", "At least one Service Type is required.", 2);
     }
 
-    if (!restaurantInfo.serviceTypes.length) {
-      setErrorMessage("At least one Service Type is required.");
-      return false;
+    if (!(contactInfo.mainPhone || form.mobileNumber).trim()) {
+      addFieldError("restaurantPhone", "Phone is required.", 2);
     }
 
-    if (!/^\d{5}(-\d{4})?$/.test(form.pincode.trim())) {
-      setErrorMessage("ZIP Code should be a valid US ZIP format.");
-      return false;
+    if (!(contactInfo.email || form.email).trim()) {
+      addFieldError("restaurantEmail", "Email is required.", 2);
     }
 
-    if ((restaurantInfo.serviceTypes.includes("Delivery") || restaurantInfo.serviceTypes.includes("Catering") || isCloudKitchen || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
-      setErrorMessage("Service Radius is required for delivery, catering, and cloud kitchen listings.");
-      return false;
+    if (!(contactInfo.streetAddress || form.address).trim()) {
+      addFieldError("restaurantStreetAddress", "Street Address is required.", 2);
     }
 
-    if (isDeliveryListing && (!restaurantInfo.deliveryFee.trim() || !restaurantInfo.minimumOrderValue.trim())) {
-      setErrorMessage("Delivery Fee and Minimum Order Value are required when delivery is available.");
-      return false;
+    if (!restaurantZipcode.trim()) {
+      addFieldError("restaurantZipcode", "ZIP Code is required.", 2);
+    } else if (!/^\d{5}(-\d{4})?$/.test(restaurantZipcode.trim())) {
+      addFieldError("restaurantZipcode", "ZIP Code should be a valid US ZIP format.", 2);
+    }
+
+    if (!(contactInfo.city || form.city).trim()) {
+      addFieldError("restaurantCity", "City is required.", 2);
+    }
+
+    if (!(contactInfo.state || form.state).trim()) {
+      addFieldError("restaurantState", "State is required.", 2);
+    }
+
+    if ((selectedRestaurantServiceTypes.includes("Delivery") || selectedRestaurantServiceTypes.includes("Catering") || isCloudKitchen || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
+      addFieldError("restaurantServiceRadiusMiles", "Delivery Radius is required for delivery, catering, and cloud kitchen listings.", 3);
+    }
+
+    if (isDeliveryListing && !restaurantInfo.deliveryFee.trim()) {
+      addFieldError("restaurantDeliveryFee", "Delivery Fee is required when delivery is available.", 3);
+    }
+
+    if (isDeliveryListing && !restaurantInfo.minimumOrderValue.trim()) {
+      addFieldError("restaurantMinimumOrderValue", "Minimum Order Amount is required when delivery is available.", 3);
     }
 
     if (form.subCategory === "Bars & Beverages" && !restaurantInfo.alcoholLicenseNumber.trim()) {
-      setErrorMessage("Alcohol License Number is required for Bars & Beverages.");
-      return false;
+      addFieldError("restaurantAlcoholLicenseNumber", "Alcohol License is required for Bars & Beverages.", 4);
     }
 
-    const filledMenuItems = restaurantMenuItems.filter((item) => item.itemName.trim() || item.menuCategory.trim() || item.price.trim());
-    const invalidMenuItem = filledMenuItems.find((item) => !item.itemName.trim() || !item.menuCategory.trim() || !item.foodType.trim() || numberOrNull(item.price) === null);
-    if (invalidMenuItem) {
-      setErrorMessage("Each menu item needs Item Name, Menu Category, Price, and Food Type.");
-      return false;
-    }
+    restaurantMenuItems.forEach((item, index) => {
+      if (!item.itemName.trim()) addFieldError(restaurantMenuItemErrorKey(index, "itemName"), "Item Name is required.", 3);
+      if (!item.menuCategory.trim()) addFieldError(restaurantMenuItemErrorKey(index, "menuCategory"), "Category is required.", 3);
+      if (numberOrNull(item.price) === null) addFieldError(restaurantMenuItemErrorKey(index, "price"), "Price is required.", 3);
+      if (!item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.", 3);
+    });
 
     const invalidHours = businessHours.find((hour) => hour.status !== "Closed" && !hour.is24Hours && (!hour.open || !hour.close));
     if (invalidHours) {
       setErrorMessage(`${invalidHours.day} opening and closing time are required unless open 24/7.`);
+      setFieldErrors(nextFieldErrors);
+      setCurrentStep(2);
+      scrollToWizardTop();
       return false;
     }
 
+    if (Object.keys(nextFieldErrors).length) {
+      setFieldErrors(nextFieldErrors);
+      setErrorMessage("");
+      setCurrentStep(validationTargetStep);
+      scrollToFirstValidationError();
+      return false;
+    }
+
+    setFieldErrors({});
     return true;
+  }
+
+  function getVisibleCategoryFieldKey(...keys: string[]) {
+    const visibleFields = effectiveDynamicCategoryFields.filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form));
+    const field = visibleFields.find((item) => keys.some((key) =>
+      areEquivalentCategoryFieldKeys(item.key, key) ||
+      normalizeFieldKey(item.label) === normalizeFieldKey(key)
+    ));
+
+    return field?.key || null;
+  }
+
+  function validateInlineCategoryRules(rules: Array<{ keys: string[]; message: string; formKey?: string }>) {
+    const nextFieldErrors: FieldErrors = {};
+
+    rules.forEach((rule) => {
+      if (rule.formKey) {
+        nextFieldErrors[rule.formKey] = rule.message;
+        return;
+      }
+
+      const visibleKey = getVisibleCategoryFieldKey(...rule.keys);
+      if (visibleKey) {
+        nextFieldErrors[categoryFieldErrorKey(visibleKey)] = rule.message;
+      }
+    });
+
+    if (!Object.keys(nextFieldErrors).length) {
+      return true;
+    }
+
+    setFieldErrors(nextFieldErrors);
+    setErrorMessage("");
+    setCurrentStep(1);
+    scrollToFirstValidationError();
+    return false;
   }
 
   function validateVehicleFields() {
@@ -2860,8 +3079,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (isChargingStation) {
       if (!getAttributeValue(categoryAttributes, "chargingStationType", "charging_station_type", "chargingPortType", "charging_port_type").trim()) {
-        setErrorMessage("Charging Station Type or Charging Port Type is required for Charging Stations.");
-        return false;
+        return validateInlineCategoryRules([{ keys: ["chargingStationType", "charging_station_type", "chargingPortType", "charging_port_type"], message: "Charging Station Type is required." }]);
       }
 
       return true;
@@ -2869,8 +3087,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (isServices) {
       if (!getAttributeValue(categoryAttributes, "serviceType", "service_type").trim()) {
-        setErrorMessage("Service Type is required for Services & Repairs.");
-        return false;
+        return validateInlineCategoryRules([{ keys: ["serviceType", "service_type"], message: "Service Type is required." }]);
       }
 
       return true;
@@ -2893,8 +3110,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
     if (missing) {
-      setErrorMessage(`${missing[missing.length - 1]} is required.`);
-      return false;
+      return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
     }
 
     if (!isAccessories && isUsedVehicleCondition(condition)) {
@@ -2907,33 +3123,36 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (usedMissing) {
-        setErrorMessage(`${usedMissing[usedMissing.length - 1]} is required for used vehicles.`);
-        return false;
+        return validateInlineCategoryRules([{ keys: usedMissing.slice(0, -1), message: `${usedMissing[usedMissing.length - 1]} is required for used vehicles.` }]);
       }
 
       if (fuelType && !["Electric", "Other"].includes(fuelType) && !getAttributeValue(categoryAttributes, "pucAvailable", "puc_available").trim()) {
-        setErrorMessage("PUC is required for used fuel-based vehicles.");
-        return false;
+        return validateInlineCategoryRules([{ keys: ["pucAvailable", "puc_available"], message: "PUC is required for used fuel-based vehicles." }]);
       }
     }
 
     if (getAttributeValue(categoryAttributes, "insurance", "insuranceStatus", "insurance_status") === "Active" &&
       !getAttributeValue(categoryAttributes, "insuranceValidTill", "insurance_valid_till").trim()) {
-      setErrorMessage("Insurance Valid Till is required when Insurance is Active.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["insuranceValidTill", "insurance_valid_till"], message: "Insurance Valid Till is required when Insurance is Active." }]);
     }
 
     if (form.subCategory === "Cars") {
-      if (!getAttributeValue(categoryAttributes, "bodyType", "body_type").trim() || !getAttributeValue(categoryAttributes, "seatingCapacity", "seating_capacity").trim()) {
-        setErrorMessage("Body Type and Seating Capacity are required for Cars.");
-        return false;
+      const rules = [
+        ...(!getAttributeValue(categoryAttributes, "bodyType", "body_type").trim() ? [{ keys: ["bodyType", "body_type"], message: "Body Type is required for Cars." }] : []),
+        ...(!getAttributeValue(categoryAttributes, "seatingCapacity", "seating_capacity").trim() ? [{ keys: ["seatingCapacity", "seating_capacity"], message: "Seating Capacity is required for Cars." }] : []),
+      ];
+      if (rules.length) {
+        return validateInlineCategoryRules(rules);
       }
     }
 
     if (isVehicleMotorcycleSubCategory(form.subCategory)) {
-      if (!getAttributeValue(categoryAttributes, "engineCapacity", "engine_capacity").trim() || !getAttributeValue(categoryAttributes, "bikeType", "bike_type").trim()) {
-        setErrorMessage("Engine Capacity and Bike Type are required for Motorcycles & Scooters.");
-        return false;
+      const rules = [
+        ...(!getAttributeValue(categoryAttributes, "engineCapacity", "engine_capacity").trim() ? [{ keys: ["engineCapacity", "engine_capacity"], message: "Engine Capacity is required for Motorcycles & Scooters." }] : []),
+        ...(!getAttributeValue(categoryAttributes, "bikeType", "bike_type").trim() ? [{ keys: ["bikeType", "bike_type"], message: "Bike Type is required for Motorcycles & Scooters." }] : []),
+      ];
+      if (rules.length) {
+        return validateInlineCategoryRules(rules);
       }
     }
 
@@ -2946,24 +3165,20 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (commercialMissing) {
-        setErrorMessage(`${commercialMissing[commercialMissing.length - 1]} is required for Trucks & Commercial Vehicles.`);
-        return false;
+        return validateInlineCategoryRules([{ keys: commercialMissing.slice(0, -1), message: `${commercialMissing[commercialMissing.length - 1]} is required for Trucks & Commercial Vehicles.` }]);
       }
     }
 
     if (isRental) {
       if (!getAttributeValue(categoryAttributes, "rentalType", "rental_type").trim()) {
-        setErrorMessage("Rental Type is required for Rentals.");
-        return false;
+        return validateInlineCategoryRules([{ keys: ["rentalType", "rental_type"], message: "Rental Type is required for Rentals." }]);
       }
 
       if (!getAttributeValue(categoryAttributes, "pricePerHour", "price_per_hour").trim() && !getAttributeValue(categoryAttributes, "pricePerDay", "price_per_day", "daily_price").trim()) {
-        setErrorMessage("At least one of Price Per Hour or Daily Price is required.");
-        return false;
+        return validateInlineCategoryRules([{ keys: ["pricePerHour", "price_per_hour", "pricePerDay", "price_per_day", "daily_price"], message: "Price Per Hour or Daily Price is required." }]);
       }
     } else if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price", "sale_price", "vehicle_price").trim() && !form.price.trim()) {
-      setErrorMessage("Price is required for vehicle sale listings.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["price", "listing_price", "total_price", "sale_price", "vehicle_price"], formKey: getVisibleCategoryFieldKey("price", "listing_price", "total_price", "sale_price", "vehicle_price") ? undefined : "price", message: "Price is required for vehicle sale listings." }]);
     }
 
     return true;
@@ -2986,18 +3201,15 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
     if (missing) {
-      setErrorMessage(`${missing[missing.length - 1]} is required.`);
-      return false;
+      return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
     }
 
     if (warranty === "Yes" && !getAttributeValue(categoryAttributes, "manufacturerWarranty", "manufacturer_warranty", "extendedWarranty", "extended_warranty", "warrantyExpiryDate", "warranty_expiry_date").trim()) {
-      setErrorMessage("Warranty details are required when Warranty Available is Yes.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["manufacturerWarranty", "manufacturer_warranty", "extendedWarranty", "extended_warranty", "warrantyExpiryDate", "warranty_expiry_date"], message: "Warranty details are required when Warranty Available is Yes." }]);
     }
 
     if (condition === "Used" && !getAttributeValue(categoryAttributes, "usageDuration", "usage_duration").trim()) {
-      setErrorMessage("Usage Duration is required for used products.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["usageDuration", "usage_duration"], message: "Usage Duration is required for used products." }]);
     }
 
     if (subCategory === "Mobile Phones & Tablets" || ["Smartphones", "Feature Phones", "Tablets", "iPads"].includes(detailCategory)) {
@@ -3008,13 +3220,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (mobileMissing) {
-        setErrorMessage(`${mobileMissing[mobileMissing.length - 1]} is required for mobiles and tablets.`);
-        return false;
+        return validateInlineCategoryRules([{ keys: mobileMissing.slice(0, -1), message: `${mobileMissing[mobileMissing.length - 1]} is required for mobiles and tablets.` }]);
       }
 
       if (condition === "Used" && !getAttributeValue(categoryAttributes, "batteryHealth", "battery_health").trim()) {
-        setErrorMessage("Battery Health is required for used mobile phones.");
-        return false;
+        return validateInlineCategoryRules([{ keys: ["batteryHealth", "battery_health"], message: "Battery Health is required for used mobile phones." }]);
       }
     }
 
@@ -3027,8 +3237,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (computerMissing) {
-        setErrorMessage(`${computerMissing[computerMissing.length - 1]} is required for computers and laptops.`);
-        return false;
+        return validateInlineCategoryRules([{ keys: computerMissing.slice(0, -1), message: `${computerMissing[computerMissing.length - 1]} is required for computers and laptops.` }]);
       }
     }
 
@@ -3040,8 +3249,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (tvMissing) {
-        setErrorMessage(`${tvMissing[tvMissing.length - 1]} is required for TVs.`);
-        return false;
+        return validateInlineCategoryRules([{ keys: tvMissing.slice(0, -1), message: `${tvMissing[tvMissing.length - 1]} is required for TVs.` }]);
       }
     } else if (subCategory === "Home Appliances" || subCategory === "Kitchen Appliances") {
       const applianceMissing = [
@@ -3050,8 +3258,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (applianceMissing) {
-        setErrorMessage(`${applianceMissing[applianceMissing.length - 1]} is required for home appliances.`);
-        return false;
+        return validateInlineCategoryRules([{ keys: applianceMissing.slice(0, -1), message: `${applianceMissing[applianceMissing.length - 1]} is required for home appliances.` }]);
       }
     }
 
@@ -3061,14 +3268,12 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (accessoryMissing) {
-        setErrorMessage(`${accessoryMissing[accessoryMissing.length - 1]} is required for accessories.`);
-        return false;
+        return validateInlineCategoryRules([{ keys: accessoryMissing.slice(0, -1), message: `${accessoryMissing[accessoryMissing.length - 1]} is required for accessories.` }]);
       }
     }
 
     if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
-      setErrorMessage("Price is required for Electronics & Appliances listings.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["price", "listing_price", "total_price"], formKey: getVisibleCategoryFieldKey("price", "listing_price", "total_price") ? undefined : "price", message: "Price is required for Electronics & Appliances listings." }]);
     }
 
     return true;
@@ -3095,39 +3300,32 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
     if (missing) {
-      setErrorMessage(`${missing[missing.length - 1]} is required.`);
-      return false;
+      return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
     }
 
     if (!careServiceValues(categoryAttributes).length) {
-      setErrorMessage("At least one service offered is required.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["servicesOffered", "services_offered", "mealPreparation", "meal_preparation", "service_type", "serviceType"], message: "At least one service offered is required." }]);
     }
 
     if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
-      setErrorMessage("Price is required for Care Services listings.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["price", "listing_price", "total_price"], formKey: getVisibleCategoryFieldKey("price", "listing_price", "total_price") ? undefined : "price", message: "Price is required for Care Services listings." }]);
     }
 
     if (form.subCategory === "Nursing Services" && !getAttributeValue(categoryAttributes, "licenseNumber", "license_number").trim()) {
-      setErrorMessage("License Number is required for Nursing Services.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["licenseNumber", "license_number"], message: "License Number is required for Nursing Services." }]);
     }
 
     if (form.subCategory === "Nursing Services" && !getAttributeValue(categoryAttributes, "certificationDocuments", "certification_documents").trim()) {
-      setErrorMessage("Certifications are required for Nursing Services.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["certificationDocuments", "certification_documents"], message: "Certifications are required for Nursing Services." }]);
     }
 
     if (getAttributeValue(categoryAttributes, "providerType", "provider_type").trim() === "Agency / Company") {
       if (!getAttributeValue(categoryAttributes, "insurance", "insurance_coverage").trim()) {
-        setErrorMessage("Insurance Coverage is required for agency listings.");
-        return false;
+        return validateInlineCategoryRules([{ keys: ["insurance", "insurance_coverage"], message: "Insurance Coverage is required for agency listings." }]);
       }
 
       if (!getAttributeValue(categoryAttributes, "staffCount", "staff_count").trim()) {
-        setErrorMessage("Staff Count is required for agency listings.");
-        return false;
+        return validateInlineCategoryRules([{ keys: ["staffCount", "staff_count"], message: "Staff Count is required for agency listings." }]);
       }
     }
 
@@ -3159,18 +3357,15 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
     if (missing) {
-      setErrorMessage(`${missing[missing.length - 1]} is required.`);
-      return false;
+      return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
     }
 
     if (deliveryAvailable === "Yes" && !getAttributeValue(categoryAttributes, "delivery_charges", "deliveryCharges").trim()) {
-      setErrorMessage("Delivery Charges are required when delivery is available.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["delivery_charges", "deliveryCharges"], message: "Delivery Charges are required when delivery is available." }]);
     }
 
     if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
-      setErrorMessage("Price is required for Furniture & Home listings.");
-      return false;
+      return validateInlineCategoryRules([{ keys: ["price", "listing_price", "total_price"], formKey: getVisibleCategoryFieldKey("price", "listing_price", "total_price") ? undefined : "price", message: "Price is required for Furniture & Home listings." }]);
     }
 
     return true;
@@ -3362,25 +3557,93 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     );
   }
 
+  function renderRestaurantMediaAndPlanSections() {
+    return (
+      <RestaurantMediaAndPlanSections
+        form={form}
+        restaurantInfo={restaurantInfo}
+        categoryAttributes={categoryAttributes}
+        pricingPlans={pricingPlans}
+        profileImageFile={profileImageFile}
+        coverImageFile={coverImageFile}
+        galleryFiles={galleryFiles}
+        fieldErrors={fieldErrors}
+        updateField={updateField}
+        updateRestaurantInfo={setRestaurantInfo}
+        updateGalleryMedia={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
+        updateCategoryAttributes={updateCategoryAttributes}
+        setProfileImageFile={setProfileImageFile}
+        setCoverImageFile={setCoverImageFile}
+        setGalleryFiles={setGalleryFiles}
+        onViewPlans={() => {
+          setPlansModalMessage("");
+          setIsPlansModalOpen(true);
+        }}
+      />
+    );
+  }
+
+  function renderGenericListingVisibilityAndPromotions() {
+    const listingPlanOptions = includeCurrentValue(
+      pricingPlans.length ? pricingPlans.map((plan) => plan.name) : listingTypeOptions,
+      form.adType,
+    );
+    const selectedListingPlan = getSelectedPricingPlan(pricingPlans, form.adType);
+    const featuredUntilDate = selectedListingPlan
+      ? formatInputDate(addMonths(new Date(), selectedListingPlan.durationMonths))
+      : categoryAttributes.featured_until_date || "";
+
+    return (
+      <>
+        <h4>Listing Visibility & Promotions</h4>
+        <div className="row">
+          <SelectColumn placeholder="Listing Type" value={form.adType} options={listingPlanOptions} onChange={(value) => updateField("adType", value)} width="col-md-5" />
+          <InputColumn placeholder="Featured Until Date" type="date" value={featuredUntilDate} disabled onChange={() => undefined} width="col-md-5" />
+          <div className="col-md-2">
+            <div className="form-group listing-plan-action">
+              <label className="listing-field-label">&nbsp;</label>
+              <button
+                type="button"
+                className="btn btn-primary listing-plan-action-btn"
+                onClick={() => {
+                  setPlansModalMessage("");
+                  setIsPlansModalOpen(true);
+                }}
+              >
+                View Plans
+              </button>
+            </div>
+          </div>
+        </div>
+        <Select
+          placeholder="Boost Listing"
+          value={categoryAttributes.boost_listing || ""}
+          options={yesNoOptions}
+          onChange={(value) => updateCategoryAttributes({ ...categoryAttributes, boost_listing: value })}
+        />
+      </>
+    );
+  }
+
   function renderCategoryDynamicFields() {
     if (!form.categoryName || isRealEstateListing) {
       return null;
     }
 
+    if (!isClassifiedMode && form.categoryName === "Restaurants & Food") {
+      return (
+        <RestaurantInfoFields
+          restaurantInfo={restaurantInfo}
+          fieldErrors={fieldErrors}
+          onChange={setRestaurantInfo}
+        />
+      );
+    }
+
+    const useSharedLocation = !isClassifiedMode && shouldUseSharedListingLocationSection(form.categoryName);
+
     return (
       <>
-        {!isClassifiedMode && form.categoryName === "Restaurants & Food" ? (
-          <RestaurantInfoFields
-            form={form}
-            currencyCountry={currencyCountry}
-            restaurantInfo={restaurantInfo}
-            menuItems={restaurantMenuItems}
-            uploadFiles={galleryFiles}
-            onChange={setRestaurantInfo}
-            onMenuItemsChange={setRestaurantMenuItems}
-            onUploadFilesChange={setGalleryFiles}
-          />
-        ) : null}
         {!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && isVehicleRentalSubCategory(form.subCategory)) ? (
           <ListingPriceFields form={form} currencyCountry={currencyCountry} fieldErrors={fieldErrors} updateField={updateField} />
         ) : null}
@@ -3390,10 +3653,26 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           detailCategory={form.detailCategory}
           form={form}
           currencyCountry={currencyCountry}
-          dynamicFields={!isClassifiedMode && form.categoryName === "Restaurants & Food" ? [] : effectiveDynamicCategoryFields}
+          dynamicFields={effectiveDynamicCategoryFields}
           values={categoryAttributes}
           fieldErrors={fieldErrors}
           uploadFiles={galleryFiles}
+          omitLocationFields={useSharedLocation}
+          locationSection={useSharedLocation ? (
+            <SharedListingLocationFields
+              form={form}
+              countries={countries}
+              states={states}
+              cities={cities}
+              fieldErrors={fieldErrors}
+              updateField={updateField}
+              updateCountry={updateCountry}
+              updateState={updateState}
+              updateCity={updateCity}
+              onAddressPlaceSelect={handleAddressPlaceSelect}
+            />
+          ) : undefined}
+          locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
           onChange={updateCategoryAttributes}
           onUploadFilesChange={setGalleryFiles}
         />
@@ -3433,7 +3712,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         }}
                       />
                       <div className="row">
-                        <InputColumn placeholder="Phone number" value={form.mobileNumber} error={fieldErrors.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
+                        <InputColumn placeholder="Phone Number" value={form.mobileNumber} error={fieldErrors.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
                         <InputColumn placeholder="Email Id" type="email" value={form.email} error={fieldErrors.email} onChange={(value) => updateField("email", value)} />
                       </div>
                       {form.categoryName === "Vehicles" && !hasDynamicSellerTypeField ? (
@@ -3499,7 +3778,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
               {wizardSteps.length > 2 && currentStep === 1 ? (
                 <div className="log">
                   <div className="login">
-                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : "Category Details"}</h4>
+                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : "Category Details"}</h4>
                     <form className="listing_form_2" noValidate autoComplete="off">
                       {isRealEstateListing ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={40} />
@@ -3513,20 +3792,44 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                   <div className="login add-list-off">
                     <form className="listing_form_3" noValidate autoComplete="off">
                       {isRealEstateListing ? renderRealEstatePostingSections(1) : (
-                        <ul className="listing-section-stack">
-                          <li>
-                            <BusinessHoursEditor hours={businessHours} onChange={setBusinessHours} />
-                          </li>
-                          <li>
-                            <ContactLocationFields
-                              contactInfo={contactInfo}
-                              country={form.country}
+                        isRestaurantListing ? (
+                          <RestaurantOperationsFields
+                            form={form}
+                            sellerName={sellerName}
+                            contactInfo={contactInfo}
+                            webLinks={webLinks}
+                            socialLinks={socialLinks}
+                            restaurantInfo={restaurantInfo}
+                            businessHours={businessHours}
+                            categoryAttributes={categoryAttributes}
+                            fieldErrors={fieldErrors}
+                            updateField={updateField}
+                            onSellerNameChange={setSellerName}
+                            onContactInfoChange={setContactInfo}
+                            onWebLinksChange={setWebLinks}
+                            onSocialLinksChange={setSocialLinks}
+                            onRestaurantInfoChange={setRestaurantInfo}
+                            onBusinessHoursChange={setBusinessHours}
+                            onCategoryAttributesChange={updateCategoryAttributes}
+                            onAddressPlaceSelect={handleRestaurantAddressPlaceSelect}
+                          />
+                        ) : (
+                          <ul className="listing-section-stack">
+                            <li>
+                              <BusinessHoursEditor hours={businessHours} onChange={setBusinessHours} />
+                            </li>
+                            <li>
+                              <ContactLocationFields
+                                contactInfo={contactInfo}
+                                country={form.country}
                               fallbackState={form.state}
                               fallbackCity={form.city}
                               onChange={setContactInfo}
+                              showAddress={!shouldUseSharedListingLocationSection(form.categoryName)}
                             />
-                          </li>
-                        </ul>
+                            </li>
+                          </ul>
+                        )
                       )}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={60} />
                     </form>
@@ -3539,14 +3842,29 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                   <div className="login add-list-off">
                     <form className="listing_form_4" noValidate autoComplete="off">
                       {isRealEstateListing ? renderRealEstatePostingSections(2) : (
-                        <ul>
-                          <li>
-                            <WebLinksFields webLinks={webLinks} onChange={setWebLinks} />
-                          </li>
-                          <li>
-                            <SocialLinksFields socialLinks={socialLinks} onChange={setSocialLinks} />
-                          </li>
-                      </ul>
+                        isRestaurantListing ? (
+                          <RestaurantMenuPricingFields
+                            form={form}
+                            currencyCountry={currencyCountry}
+                            restaurantInfo={restaurantInfo}
+                            menuItems={restaurantMenuItems}
+                            uploadFiles={galleryFiles}
+                            fieldErrors={fieldErrors}
+                            onChange={setRestaurantInfo}
+                            onMenuItemsChange={setRestaurantMenuItems}
+                            onUploadFilesChange={setGalleryFiles}
+                            onFieldErrorClear={clearFieldError}
+                          />
+                        ) : (
+                          <ul>
+                            <li>
+                              <WebLinksFields webLinks={webLinks} onChange={setWebLinks} />
+                            </li>
+                            <li>
+                              <SocialLinksFields socialLinks={socialLinks} onChange={setSocialLinks} />
+                            </li>
+                          </ul>
+                        )
                       )}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={80} />
                     </form>
@@ -3563,6 +3881,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           {renderRealEstatePostingSections(3)}
                           {renderRealEstatePostingSections(4)}
                         </>
+                      ) : isRestaurantListing ? (
+                        renderRestaurantMediaAndPlanSections()
                       ) : (
                         <>
                           <h4>More Info</h4>
@@ -3589,6 +3909,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           <p></p>
                           <h4>Video Gallery</h4>
                           <Textarea placeholder="Paste Your Youtube iframe Code here" value={form.listingVideo} onChange={(value) => updateField("listingVideo", value)} />
+                          {renderGenericListingVisibilityAndPromotions()}
                         </>
                       )}
                       <div className="row">
@@ -3690,8 +4011,44 @@ function Input({ placeholder, value, onChange, error, type = "text", readOnly = 
 }
 
 function fieldLabelFromPlaceholder(placeholder: string) {
-  const label = placeholder.trim().replace(/^Select\s+/i, "");
+  const label = cleanOptionalText(placeholder).trim().replace(/^Select\s+/i, "");
   return toTitleCaseLabel(label === "Listing Name*" ? "Name*" : label);
+}
+
+function cleanOptionalText(value: string) {
+  return value
+    .replace(/\s*\((?:admin\s+)?optional(?:\/private)?\)/gi, "")
+    .replace(/\s*\(optional[^)]*\)/gi, "")
+    .replace(/\s*\(rich\s+text\)/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizePostalCodeSearchQuery(value: string, country?: string) {
+  const trimmedValue = value.trim();
+  const countryHint = country?.trim().toLowerCase() || "";
+  const isUnitedStates = !countryHint || ["us", "usa", "united states", "united states of america"].includes(countryHint);
+  const isIndia = !countryHint || ["in", "ind", "india"].includes(countryHint);
+
+  if (isUnitedStates) {
+    if (/^\d{9}$/.test(trimmedValue)) {
+      return `${trimmedValue.slice(0, 5)}-${trimmedValue.slice(5)}`;
+    }
+
+    if (/^\d{5}(?:-\d{4})?$/.test(trimmedValue)) {
+      return trimmedValue;
+    }
+  }
+
+  if (isIndia && /^\d{6}$/.test(trimmedValue)) {
+    return trimmedValue;
+  }
+
+  return "";
+}
+
+function isPostalCodeSearchQuery(value: string, country?: string) {
+  return Boolean(normalizePostalCodeSearchQuery(value, country));
 }
 
 function toTitleCaseLabel(label: string) {
@@ -3761,11 +4118,13 @@ function AddressAutocompleteInput({
   state,
   city,
   onChange,
+  onPostalCodeDetected,
   onPlaceSelect,
 }: FieldProps & {
   country: string;
   state: string;
   city: string;
+  onPostalCodeDetected?: (postalCode: string) => void;
   onPlaceSelect: (addressDetails: ListingAddressDetails) => void;
 }) {
   const addressSearchMinLength = 5;
@@ -3791,6 +4150,13 @@ function AddressAutocompleteInput({
     }
 
     if (query.length < addressSearchMinLength) {
+      setSuggestions([]);
+      setIsOpen(false);
+      setIsLoading(false);
+      return undefined;
+    }
+
+    if (isPostalCodeSearchQuery(query, country)) {
       setSuggestions([]);
       setIsOpen(false);
       setIsLoading(false);
@@ -3879,16 +4245,22 @@ function AddressAutocompleteInput({
             type="text"
             name={`listing-search-${inputId}`}
             value={value}
-            placeholder={placeholder}
+            placeholder={cleanOptionalText(placeholder)}
             autoComplete="new-password"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
             onChange={(event) => {
-              if (!event.target.value.trim()) {
+              const nextValue = event.target.value;
+              const normalizedValue = nextValue.trim();
+              if (!normalizedValue) {
                 setSuppressSuggestionsUntilClear(false);
               }
-              onChange(event.target.value);
+              const postalCode = normalizePostalCodeSearchQuery(normalizedValue, country);
+              if (onPostalCodeDetected && postalCode) {
+                onPostalCodeDetected(postalCode);
+              }
+              onChange(nextValue);
             }}
             onFocus={() => {
               if (!suppressSuggestionsUntilClear && suggestions.length) setIsOpen(true);
@@ -4110,7 +4482,7 @@ function InputColumn({ placeholder, value, onChange, error, type = "text", width
     <div className={width}>
       <div className="form-group">
         <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
-        <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={placeholder} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} onChange={(event) => onChange(event.target.value)} />
+          <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} onChange={(event) => onChange(event.target.value)} />
         <FieldError message={error} />
       </div>
     </div>
@@ -4130,20 +4502,20 @@ function LabeledInputColumn({
   return (
     <div className={width}>
       <div className="form-group">
-        <label>{label}</label>
-        <input className="form-control" type={type} name={`listing-contact-${inputId}`} value={value} placeholder={placeholder} autoComplete="new-password" onChange={(event) => onChange(event.target.value)} />
+        <label>{fieldLabelFromPlaceholder(label)}</label>
+        <input className="form-control" type={type} name={`listing-contact-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} autoComplete="new-password" onChange={(event) => onChange(event.target.value)} />
       </div>
     </div>
   );
 }
 
-function SelectColumn({ placeholder, value, options, onChange, error, width = "col-md-6", disabled = false }: FieldProps & { options: string[]; width?: string; disabled?: boolean }) {
+function SelectColumn({ placeholder, value, options, onChange, error, width = "col-md-6", disabled = false, emptyOptionLabel = placeholder }: FieldProps & { options: string[]; width?: string; disabled?: boolean; emptyOptionLabel?: string }) {
   return (
     <div className={width}>
       <div className="form-group">
         <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
         <select className={`chosen-select form-control${error ? " is-invalid" : ""}`} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
-          <option value="">{placeholder}</option>
+          <option value="">{cleanOptionalText(emptyOptionLabel)}</option>
           {options.map((option) => (
             <option key={option} value={option}>{option}</option>
           ))}
@@ -4161,7 +4533,7 @@ function CheckboxField({ label, checked, onChange, error }: { label: string; che
     <div className="form-group listing-checkbox-field">
       <div className="chbox">
         <input id={inputId} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-        <label htmlFor={inputId}>{label}</label>
+        <label htmlFor={inputId}>{fieldLabelFromPlaceholder(label)}</label>
       </div>
       <FieldError message={error} />
     </div>
@@ -4174,7 +4546,7 @@ function Textarea({ placeholder, value, onChange, error }: FieldProps) {
       <div className="col-md-12">
         <div className="form-group">
           <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
-          <textarea className={`form-control${error ? " is-invalid" : ""}`} value={value} rows={4} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+          <textarea className={`form-control${error ? " is-invalid" : ""}`} value={value} rows={4} placeholder={cleanOptionalText(placeholder)} onChange={(event) => onChange(event.target.value)} />
           <FieldError message={error} />
         </div>
       </div>
@@ -4198,7 +4570,7 @@ function Select({ placeholder, value, options, onChange, error, disabled = false
         <div className="form-group">
           <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
           <select className={`chosen-select form-control${error ? " is-invalid" : ""}`} value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
-            <option value="">{placeholder}</option>
+            <option value="">{cleanOptionalText(placeholder)}</option>
             {options.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
@@ -4224,6 +4596,9 @@ function CategoryAttributesFields({
   values,
   fieldErrors,
   uploadFiles,
+  omitLocationFields = false,
+  locationSection,
+  locationSectionOrder = 99,
   onChange,
   onUploadFilesChange,
 }: {
@@ -4236,16 +4611,33 @@ function CategoryAttributesFields({
   values: CategoryAttributes;
   fieldErrors: FieldErrors;
   uploadFiles: GalleryUploadFile[];
+  omitLocationFields?: boolean;
+  locationSection?: ReactNode;
+  locationSectionOrder?: number;
   onChange: (value: CategoryAttributes) => void;
   onUploadFilesChange: (files: GalleryUploadFile[]) => void;
 }) {
   const baseFields = dynamicFields.length
     ? dynamicFields
     : getCategoryAttributeFields(categoryName, subCategory, detailCategory);
-  const fields = baseFields.filter((field) => shouldShowCategoryAttributeField(field, values, form));
+  const fields = baseFields
+    .filter((field) => shouldShowCategoryAttributeField(field, values, form))
+    .filter((field) => !omitLocationFields || !isSharedListingLocationAttributeField(field));
   const sections = groupCategoryAttributeFields(fields, categoryName);
+  const sectionEntries = [
+    ...sections.map((section) => ({
+      key: `section-${section.name}`,
+      order: section.order,
+      content: renderCategoryAttributeSection(section),
+    })),
+    ...(locationSection ? [{
+      key: "shared-listing-location",
+      order: locationSectionOrder,
+      content: locationSection,
+    }] : []),
+  ].sort((left, right) => left.order - right.order || left.key.localeCompare(right.key));
 
-  if (!fields.length) {
+  if (!fields.length && !locationSection) {
     return null;
   }
 
@@ -4253,80 +4645,136 @@ function CategoryAttributesFields({
     onChange({ ...values, [key]: value });
   }
 
-  return (
-    <>
-      {sections.map((section) => (
-        <div key={section.name}>
-          <h5 className="mt-3 mb-3">{section.name}</h5>
-          <div className="row">
-            {section.fields.map((field) => {
-              const displayLabel = labelWithCountryCurrency(field.isRequired ? `${field.label}*` : field.label, currencyCountry);
-              const error = fieldErrors[categoryFieldErrorKey(field.key)];
+  function renderCategoryAttributeSection(section: { name: string; order: number; fields: CategoryAttributeField[] }) {
+    return (
+      <div key={section.name}>
+        <h5 className="mt-3 mb-3">{section.name}</h5>
+        <div className="row">
+          {section.fields.map((field) => {
+            const displayLabel = labelWithCountryCurrency(field.isRequired ? `${field.label}*` : field.label, currencyCountry);
+            const error = fieldErrors[categoryFieldErrorKey(field.key)];
 
-              if (isUploadCategoryField(field)) {
-                return (
-                  <FileUploadColumn
-                    key={field.key}
-                    label={fieldLabelFromPlaceholder(displayLabel)}
-                    accept={getUploadAcceptForField(field)}
-                    value={values[field.key] || ""}
-                    error={error}
-                    files={uploadFiles}
-                    onFilesChange={onUploadFilesChange}
-                    onChange={(value) => updateAttribute(field.key, value)}
-                  />
-                );
-              }
-
-              return field.options?.length ? (
-                <SelectColumn
+            if (isUploadCategoryField(field)) {
+              return (
+                <FileUploadColumn
                   key={field.key}
-                  placeholder={displayLabel}
+                  label={fieldLabelFromPlaceholder(displayLabel)}
+                  accept={getUploadAcceptForField(field)}
                   value={values[field.key] || ""}
                   error={error}
-                  options={field.options}
+                  files={uploadFiles}
+                  onFilesChange={onUploadFilesChange}
                   onChange={(value) => updateAttribute(field.key, value)}
                 />
-              ) : (
-                field.type === "textarea" ? (
-                  <div className="col-md-12" key={field.key}>
-                    <div className="form-group">
-                      <label className="listing-field-label">{fieldLabelFromPlaceholder(displayLabel)}</label>
-                      <textarea
-                        className={`form-control${error ? " is-invalid" : ""}`}
-                        placeholder={displayLabel}
-                        value={values[field.key] || ""}
-                        rows={3}
-                        onChange={(event) => updateAttribute(field.key, event.target.value)}
-                      />
-                      <FieldError message={error} />
-                    </div>
-                  </div>
-                ) : field.type === "checkbox" ? (
-                  <div className="col-md-6" key={field.key}>
-                    <CheckboxField
-                      label={displayLabel}
-                      checked={values[field.key] === "true"}
-                      error={error}
-                      onChange={(value) => updateAttribute(field.key, String(value))}
-                    />
-                  </div>
-                ) : (
-                  <InputColumn
-                    key={field.key}
-                    placeholder={displayLabel}
-                    type={field.type || "text"}
-                    value={values[field.key] || ""}
-                    error={error}
-                    onChange={(value) => updateAttribute(field.key, value)}
-                  />
-                )
               );
-            })}
-          </div>
+            }
+
+            return field.options?.length ? (
+              <SelectColumn
+                key={field.key}
+                placeholder={displayLabel}
+                value={values[field.key] || ""}
+                error={error}
+                options={field.options}
+                onChange={(value) => updateAttribute(field.key, value)}
+              />
+            ) : (
+              field.type === "textarea" ? (
+                <div className="col-md-12" key={field.key}>
+                  <div className="form-group">
+                    <label className="listing-field-label">{fieldLabelFromPlaceholder(displayLabel)}</label>
+                    <textarea
+                      className={`form-control${error ? " is-invalid" : ""}`}
+                      placeholder={cleanOptionalText(displayLabel)}
+                      value={values[field.key] || ""}
+                      rows={3}
+                      onChange={(event) => updateAttribute(field.key, event.target.value)}
+                    />
+                    <FieldError message={error} />
+                  </div>
+                </div>
+              ) : field.type === "checkbox" ? (
+                <div className="col-md-6" key={field.key}>
+                  <CheckboxField
+                    label={fieldLabelFromPlaceholder(displayLabel)}
+                    checked={values[field.key] === "true"}
+                    error={error}
+                    onChange={(value) => updateAttribute(field.key, String(value))}
+                  />
+                </div>
+              ) : (
+                <InputColumn
+                  key={field.key}
+                  placeholder={displayLabel}
+                  type={field.type || "text"}
+                  value={values[field.key] || ""}
+                  error={error}
+                  onChange={(value) => updateAttribute(field.key, value)}
+                />
+              )
+            );
+          })}
         </div>
-      ))}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {sectionEntries.map((entry) => <div key={entry.key}>{entry.content}</div>)}
     </>
+  );
+}
+
+function SharedListingLocationFields({
+  form,
+  countries,
+  states,
+  cities,
+  fieldErrors,
+  updateField,
+  updateCountry,
+  updateState,
+  updateCity,
+  onAddressPlaceSelect,
+}: {
+  form: FormState;
+  countries: CountryOption[];
+  states: StateOption[];
+  cities: CityOption[];
+  fieldErrors: FieldErrors;
+  updateField: (name: StringFormField, value: string) => void;
+  updateCountry: (value: string) => void;
+  updateState: (value: string) => void;
+  updateCity: (value: string) => void;
+  onAddressPlaceSelect: (addressDetails: ListingAddressDetails) => void;
+}) {
+  return (
+    <div>
+      <h5 className="mt-3 mb-3">{getSharedListingLocationSectionTitle(form.categoryName)}</h5>
+      <AddressAutocompleteInput
+        placeholder="Street Address"
+        value={form.address}
+        country={form.country || "United States"}
+        state={form.state}
+        city={form.city}
+        onChange={(value) => updateField("address", value)}
+        onPostalCodeDetected={(postalCode) => updateField("pincode", postalCode)}
+        onPlaceSelect={onAddressPlaceSelect}
+      />
+      <div className="row">
+        <SelectColumn placeholder="Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
+        <SelectColumn placeholder="State*" value={form.state} error={fieldErrors.state} options={includeCurrentValue(states.map((state) => state.name), form.state)} onChange={updateState} disabled={!form.country} />
+      </div>
+      <div className="row">
+        <SelectColumn placeholder="City*" value={form.city} error={fieldErrors.city} options={includeCurrentValue(cities.map((city) => city.name), form.city)} onChange={updateCity} disabled={!form.state} />
+        <InputColumn placeholder="ZIP Code*" value={form.pincode} error={fieldErrors.pincode} onChange={(value) => updateField("pincode", value)} />
+      </div>
+      <div className="row">
+        <InputColumn placeholder="Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
+        <InputColumn placeholder="Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
+      </div>
+    </div>
   );
 }
 
@@ -4466,6 +4914,7 @@ function RealEstatePostingSections({
         state={form.state}
         city={form.city}
         onChange={(value) => updateField("address", value)}
+        onPostalCodeDetected={(postalCode) => updateField("pincode", postalCode)}
         onPlaceSelect={handleAddressPlaceSelect}
       />
       <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
@@ -4768,6 +5217,445 @@ function RealEstatePostingSections({
       <Select placeholder="Boost Listing" value={attribute("boost_listing")} options={yesNoOptions} onChange={(value) => setAttribute("boost_listing", value)} />
         </>
       ) : null}
+    </>
+  );
+}
+
+function RestaurantOperationsFields({
+  form,
+  sellerName,
+  contactInfo,
+  webLinks,
+  socialLinks,
+  restaurantInfo,
+  businessHours,
+  categoryAttributes,
+  fieldErrors,
+  updateField,
+  onSellerNameChange,
+  onContactInfoChange,
+  onWebLinksChange,
+  onSocialLinksChange,
+  onRestaurantInfoChange,
+  onBusinessHoursChange,
+  onCategoryAttributesChange,
+  onAddressPlaceSelect,
+}: {
+  form: FormState;
+  sellerName: string;
+  contactInfo: ContactInfo;
+  webLinks: WebLinks;
+  socialLinks: SocialLinks;
+  restaurantInfo: RestaurantInfo;
+  businessHours: BusinessHour[];
+  categoryAttributes: CategoryAttributes;
+  fieldErrors: FieldErrors;
+  updateField: (name: StringFormField, value: string) => void;
+  onSellerNameChange: (value: string) => void;
+  onContactInfoChange: (value: ContactInfo) => void;
+  onWebLinksChange: (value: WebLinks) => void;
+  onSocialLinksChange: (value: SocialLinks) => void;
+  onRestaurantInfoChange: (value: RestaurantInfo) => void;
+  onBusinessHoursChange: (value: BusinessHour[]) => void;
+  onCategoryAttributesChange: (value: CategoryAttributes) => void;
+  onAddressPlaceSelect: (addressDetails: ListingAddressDetails) => void;
+}) {
+  const selectedServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
+
+  function serviceTypeSelectValue(key: string, label: string) {
+    const explicitValue = categoryAttributes[key];
+
+    if (explicitValue === "Yes" || explicitValue === "No") {
+      return explicitValue;
+    }
+
+    return selectedServiceTypes.includes(label) ? "Yes" : "";
+  }
+
+  function updateServiceType(key: string, label: string, value: string) {
+    const selectValue = value === "Yes" || value === "No" ? value : "";
+    const nextAttributes = { ...categoryAttributes, [key]: selectValue };
+    const nextServiceTypes = selectValue === "Yes"
+      ? Array.from(new Set([...selectedServiceTypes, label]))
+      : selectedServiceTypes.filter((item) => item !== label);
+
+    if (label === "Reservations Accepted") {
+      nextAttributes.table_booking = selectValue;
+    }
+
+    onCategoryAttributesChange(nextAttributes);
+    onRestaurantInfoChange({
+      ...restaurantInfo,
+      serviceTypes: nextServiceTypes,
+      deliveryAvailable: label === "Delivery" ? selectValue === "Yes" : restaurantInfo.deliveryAvailable,
+      tableBooking: label === "Reservations Accepted" ? selectValue === "Yes" : restaurantInfo.tableBooking,
+    });
+  }
+
+  return (
+    <>
+      <h5 className="mt-3 mb-3">Location (US-Based)</h5>
+      <AddressAutocompleteInput
+        placeholder="Street Address"
+        value={contactInfo.streetAddress || form.address}
+        error={fieldErrors.restaurantStreetAddress}
+        country={form.country || "United States"}
+        state={contactInfo.state || form.state}
+        city={contactInfo.city || form.city}
+        onChange={(value) => onContactInfoChange({ ...contactInfo, streetAddress: value })}
+        onPostalCodeDetected={(postalCode) => {
+          updateField("pincode", postalCode);
+          onContactInfoChange({ ...contactInfo, zipcode: postalCode });
+        }}
+        onPlaceSelect={onAddressPlaceSelect}
+      />
+      <div className="row">
+        <InputColumn placeholder="Country" value={form.country || "United States"} onChange={(value) => updateField("country", value || "United States")} />
+        <InputColumn placeholder="State*" value={contactInfo.state || form.state} error={fieldErrors.restaurantState} onChange={(value) => {
+          updateField("state", value);
+          onContactInfoChange({ ...contactInfo, state: value });
+        }} />
+      </div>
+      <div className="row">
+        <InputColumn placeholder="City*" value={contactInfo.city || form.city} error={fieldErrors.restaurantCity} onChange={(value) => {
+          updateField("city", value);
+          onContactInfoChange({ ...contactInfo, city: value });
+        }} />
+        <InputColumn placeholder="ZIP Code*" value={contactInfo.zipcode || form.pincode} error={fieldErrors.restaurantZipcode} onChange={(value) => {
+          updateField("pincode", value);
+          onContactInfoChange({ ...contactInfo, zipcode: value });
+        }} />
+      </div>
+      <div className="row">
+        <InputColumn placeholder="Latitude" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
+        <InputColumn placeholder="Longitude" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
+      </div>
+      <Input placeholder="Delivery Radius (miles)" type="number" value={restaurantInfo.serviceRadiusMiles} error={fieldErrors.restaurantServiceRadiusMiles} onChange={(value) => onRestaurantInfoChange({ ...restaurantInfo, serviceRadiusMiles: value })} />
+
+      <h5 className="mt-3 mb-3">Contact Information</h5>
+      <Input placeholder="Contact Person Name*" value={sellerName} error={fieldErrors.sellerName} onChange={onSellerNameChange} />
+      <div className="row">
+        <InputColumn placeholder="Phone (OTP verified)*" value={contactInfo.mainPhone || form.mobileNumber} error={fieldErrors.restaurantPhone} onChange={(value) => onContactInfoChange({ ...contactInfo, mainPhone: value })} />
+        <InputColumn placeholder="Email*" type="email" value={contactInfo.email || form.email} error={fieldErrors.restaurantEmail} onChange={(value) => onContactInfoChange({ ...contactInfo, email: value })} />
+      </div>
+      <Input placeholder="Website (optional)" value={webLinks.mainWebsite || form.website} onChange={(value) => onWebLinksChange({ ...webLinks, mainWebsite: value, displayWebsite: value })} />
+      <div className="row">
+        <InputColumn placeholder="Instagram" value={socialLinks.instagram} onChange={(value) => onSocialLinksChange({ ...socialLinks, instagram: value })} />
+        <InputColumn placeholder="Facebook" value={socialLinks.facebook} onChange={(value) => onSocialLinksChange({ ...socialLinks, facebook: value })} />
+      </div>
+
+      <BusinessHoursEditor hours={businessHours} onChange={onBusinessHoursChange} title="Working Hours" />
+
+      <h5 className="mt-3 mb-3">Service Type</h5>
+      <FieldError message={fieldErrors.restaurantServiceTypes} />
+      <div className="row">
+        {restaurantServiceTypeOptions.map((option) => (
+          <SelectColumn
+            key={option.key}
+            placeholder={option.label}
+            emptyOptionLabel="Select"
+            value={serviceTypeSelectValue(option.key, option.label)}
+            options={yesNoOptions}
+            onChange={(value) => updateServiceType(option.key, option.label, value)}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function RestaurantMenuPricingFields({
+  form,
+  currencyCountry,
+  restaurantInfo,
+  menuItems,
+  uploadFiles,
+  fieldErrors,
+  onChange,
+  onMenuItemsChange,
+  onUploadFilesChange,
+  onFieldErrorClear,
+}: {
+  form: FormState;
+  currencyCountry: string;
+  restaurantInfo: RestaurantInfo;
+  menuItems: RestaurantMenuItem[];
+  uploadFiles: GalleryUploadFile[];
+  fieldErrors: FieldErrors;
+  onChange: (value: RestaurantInfo) => void;
+  onMenuItemsChange: (value: RestaurantMenuItem[]) => void;
+  onUploadFilesChange: (files: GalleryUploadFile[]) => void;
+  onFieldErrorClear: (name: string) => void;
+}) {
+  const isCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
+  const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
+  const isFoodTruck = form.subCategory === "Food Trucks & Pop-ups";
+  const isGrocery = form.subCategory === "Grocery & Specialty Food Stores";
+  const showAlcohol = form.subCategory === "Bars & Beverages";
+  const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || isCloudKitchen;
+  const showCatering = restaurantInfo.serviceTypes.includes("Catering") || isCatering;
+  const amenityOptions = [
+    ...(isCloudKitchen ? [] : ["Parking", "Outdoor Seating", "Private Dining"]),
+    "WiFi",
+    "Live Music",
+    "Pet Friendly",
+    "Family Friendly",
+    "Wheelchair Accessible (ADA)",
+    "Bar Available",
+  ];
+
+  function toggleRestaurantList(key: "thirdPartyIntegrations" | "amenities" | "eventTypes", value: string, checked: boolean) {
+    const currentValues = restaurantInfo[key];
+    onChange({ ...restaurantInfo, [key]: checked ? [...currentValues, value] : currentValues.filter((item) => item !== value) });
+  }
+
+  function updateMenuItem(index: number, value: RestaurantMenuItem, key?: keyof RestaurantMenuItem) {
+    if (key) {
+      onFieldErrorClear(restaurantMenuItemErrorKey(index, key));
+    }
+    onMenuItemsChange(updateArrayItem(menuItems, index, value));
+  }
+
+  return (
+    <>
+      <h5 className="mt-3 mb-3">Menu Management</h5>
+      <FieldError message={fieldErrors.restaurantMenuItems} />
+      {menuItems.map((item, index) => (
+        <ListingSectionCard title={`Menu Item ${index + 1}`} key={index}>
+          <div className="row">
+            <InputColumn placeholder="Item Name*" value={item.itemName} error={fieldErrors[restaurantMenuItemErrorKey(index, "itemName")]} onChange={(value) => updateMenuItem(index, { ...item, itemName: value }, "itemName")} />
+            <SelectColumn placeholder="Category*" value={item.menuCategory} error={fieldErrors[restaurantMenuItemErrorKey(index, "menuCategory")]} options={["Starter", "Main Course", "Dessert", "Beverage"]} onChange={(value) => updateMenuItem(index, { ...item, menuCategory: value }, "menuCategory")} />
+          </div>
+          <Textarea placeholder="Description" value={item.description} onChange={(value) => updateMenuItem(index, { ...item, description: value })} />
+          <div className="row">
+            <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry)} type="number" value={item.price} error={fieldErrors[restaurantMenuItemErrorKey(index, "price")]} onChange={(value) => updateMenuItem(index, { ...item, price: value }, "price")} />
+            <InputColumn placeholder="Calories (optional)" type="number" value={item.calories} onChange={(value) => updateMenuItem(index, { ...item, calories: value }, "calories")} />
+          </div>
+          <div className="row">
+            <SelectColumn placeholder="Veg / Non-Veg*" value={item.foodType} error={fieldErrors[restaurantMenuItemErrorKey(index, "foodType")]} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => updateMenuItem(index, { ...item, foodType: value }, "foodType")} />
+            <SelectColumn placeholder="Spice Level (optional)" value={item.spiceLevel} options={["Mild", "Medium", "Hot", "Extra Hot"]} onChange={(value) => updateMenuItem(index, { ...item, spiceLevel: value }, "spiceLevel")} />
+          </div>
+          <FileUploadColumn
+            label="Item Image"
+            accept="image/*,.jpg,.jpeg,.png,.webp"
+            value={item.imageUrl}
+            files={uploadFiles}
+            onFilesChange={onUploadFilesChange}
+            onChange={(value) => updateMenuItem(index, { ...item, imageUrl: value }, "imageUrl")}
+          />
+          {menuItems.length > 1 ? (
+            <button type="button" className="btn btn-primary" onClick={() => onMenuItemsChange(menuItems.filter((_, itemIndex) => itemIndex !== index))}>Remove Item</button>
+          ) : null}
+        </ListingSectionCard>
+      ))}
+      <button type="button" className="btn btn-primary" onClick={() => onMenuItemsChange([...menuItems, { ...initialRestaurantMenuItem, displayOrder: String(menuItems.length + 1) }])}>Add Menu Item</button>
+
+      <h5 className="mt-3 mb-3">Pricing & Offers</h5>
+      <div className="row">
+        <InputColumn placeholder={labelWithCountryCurrency("Average Cost for Two", currencyCountry)} type="number" value={restaurantInfo.averageCostForTwo} onChange={(value) => onChange({ ...restaurantInfo, averageCostForTwo: value })} />
+        <SelectColumn placeholder="Price Range" value={restaurantInfo.priceRange} options={["Budget", "Moderate", "Premium"]} onChange={(value) => onChange({ ...restaurantInfo, priceRange: value })} />
+      </div>
+      <Textarea placeholder="Offers / Discounts" value={restaurantInfo.discountsOffers} onChange={(value) => onChange({ ...restaurantInfo, discountsOffers: value })} />
+      <div className="row">
+        <InputColumn placeholder="Coupon Codes (optional)" value={restaurantInfo.couponCodes} onChange={(value) => onChange({ ...restaurantInfo, couponCodes: value })} />
+        {showAlcohol ? <InputColumn placeholder="Happy Hours" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} /> : null}
+      </div>
+
+      {showDeliveryFields ? (
+        <>
+          <h5 className="mt-3 mb-3">Delivery Details</h5>
+          <div className="row">
+            <InputColumn placeholder="Delivery Radius (miles)" type="number" value={restaurantInfo.serviceRadiusMiles} error={fieldErrors.restaurantServiceRadiusMiles} onChange={(value) => onChange({ ...restaurantInfo, serviceRadiusMiles: value })} />
+            <InputColumn placeholder={labelWithCountryCurrency("Delivery Fee", currencyCountry)} type="number" value={restaurantInfo.deliveryFee} error={fieldErrors.restaurantDeliveryFee} onChange={(value) => onChange({ ...restaurantInfo, deliveryFee: value })} />
+            <InputColumn placeholder={labelWithCountryCurrency("Minimum Order Amount", currencyCountry)} type="number" value={restaurantInfo.minimumOrderValue} error={fieldErrors.restaurantMinimumOrderValue} onChange={(value) => onChange({ ...restaurantInfo, minimumOrderValue: value })} />
+            <InputColumn placeholder="Estimated Delivery Time" value={restaurantInfo.estimatedDeliveryTime} onChange={(value) => onChange({ ...restaurantInfo, estimatedDeliveryTime: value })} />
+          </div>
+          <MultiSelectCheckboxes title="Third-party Delivery" options={["DoorDash", "Uber Eats", "Grubhub"]} selected={restaurantInfo.thirdPartyIntegrations} onChange={(value, checked) => toggleRestaurantList("thirdPartyIntegrations", value, checked)} />
+        </>
+      ) : null}
+
+      {showCatering ? (
+        <>
+          <h5 className="mt-3 mb-3">Catering Details</h5>
+          <div className="row">
+            <InputColumn placeholder="Catering Type" value={restaurantInfo.cateringType} onChange={(value) => onChange({ ...restaurantInfo, cateringType: value })} />
+            <InputColumn placeholder="Minimum Guests" type="number" value={restaurantInfo.minimumGuests} onChange={(value) => onChange({ ...restaurantInfo, minimumGuests: value })} />
+            <InputColumn placeholder="Maximum Guests" type="number" value={restaurantInfo.maximumGuests} onChange={(value) => onChange({ ...restaurantInfo, maximumGuests: value })} />
+            <InputColumn placeholder={labelWithCountryCurrency("Per Plate Pricing", currencyCountry)} type="number" value={restaurantInfo.perPlatePricing} onChange={(value) => onChange({ ...restaurantInfo, perPlatePricing: value })} />
+          </div>
+          <MultiSelectCheckboxes title="Event Types" options={["Wedding", "Corporate", "Birthday", "Festival"]} selected={restaurantInfo.eventTypes} onChange={(value, checked) => toggleRestaurantList("eventTypes", value, checked)} />
+          <Textarea placeholder="Bulk Pricing" value={restaurantInfo.bulkOrderNotes} onChange={(value) => onChange({ ...restaurantInfo, bulkOrderNotes: value })} />
+        </>
+      ) : null}
+
+      {!isCloudKitchen ? (
+        <MultiSelectCheckboxes title="Amenities" options={amenityOptions} selected={restaurantInfo.amenities} onChange={(value, checked) => toggleRestaurantList("amenities", value, checked)} />
+      ) : null}
+
+      {isFoodTruck ? (
+        <>
+          <h5 className="mt-3 mb-3">Food Truck Details</h5>
+          <Textarea placeholder="Mobile Locations" value={restaurantInfo.mobileLocations} onChange={(value) => onChange({ ...restaurantInfo, mobileLocations: value })} />
+          <Textarea placeholder="Operating Zones" value={restaurantInfo.operatingZones} onChange={(value) => onChange({ ...restaurantInfo, operatingZones: value })} />
+        </>
+      ) : null}
+      {isGrocery ? <Textarea placeholder="Specialty products / departments" value={restaurantInfo.customOrderOptions} onChange={(value) => onChange({ ...restaurantInfo, customOrderOptions: value })} /> : null}
+    </>
+  );
+}
+
+function RestaurantMediaAndPlanSections({
+  form,
+  restaurantInfo,
+  categoryAttributes,
+  pricingPlans,
+  profileImageFile,
+  coverImageFile,
+  galleryFiles,
+  fieldErrors,
+  updateField,
+  updateRestaurantInfo,
+  updateGalleryMedia,
+  updateCategoryAttributes,
+  setProfileImageFile,
+  setCoverImageFile,
+  setGalleryFiles,
+  onViewPlans,
+}: {
+  form: FormState;
+  restaurantInfo: RestaurantInfo;
+  categoryAttributes: CategoryAttributes;
+  pricingPlans: PricingPlan[];
+  profileImageFile: File | null;
+  coverImageFile: File | null;
+  galleryFiles: GalleryUploadFile[];
+  fieldErrors: FieldErrors;
+  updateField: (name: StringFormField, value: string) => void;
+  updateRestaurantInfo: (value: RestaurantInfo) => void;
+  updateGalleryMedia: (items: string[]) => void;
+  updateCategoryAttributes: (value: CategoryAttributes) => void;
+  setProfileImageFile: (file: File | null) => void;
+  setCoverImageFile: (file: File | null) => void;
+  setGalleryFiles: (files: GalleryUploadFile[]) => void;
+  onViewPlans: () => void;
+}) {
+  const showAlcohol = form.subCategory === "Bars & Beverages";
+  function setAttribute(key: string, value: string) {
+    updateCategoryAttributes({ ...categoryAttributes, [key]: value });
+  }
+
+  function attribute(key: string) {
+    return categoryAttributes[key] || "";
+  }
+
+  const listingPlanOptions = includeCurrentValue(
+    pricingPlans.length ? pricingPlans.map((plan) => plan.name) : listingTypeOptions,
+    form.adType,
+  );
+  const selectedListingPlan = getSelectedPricingPlan(pricingPlans, form.adType);
+  const featuredUntilDate = selectedListingPlan
+    ? formatInputDate(addMonths(new Date(), selectedListingPlan.durationMonths))
+    : attribute("featured_until_date");
+
+  return (
+    <>
+      <h4>Media Upload</h4>
+      <div className="row">
+        <TemplateImageColumn
+          label="Logo"
+          value={form.profileImageName}
+          file={profileImageFile}
+          onFileChange={(file) => {
+            setProfileImageFile(file);
+            updateField("profileImageName", file ? profileImageUploadMarker : "");
+          }}
+        />
+        <TemplateImageColumn
+          label="Cover Banner"
+          value={form.coverImageName}
+          file={coverImageFile}
+          onFileChange={(file) => {
+            setCoverImageFile(file);
+            updateField("coverImageName", file ? coverImageUploadMarker : "");
+          }}
+        />
+      </div>
+      <div className="form-group">
+        <label>Restaurant Photos (multiple)</label>
+        <GalleryMediaEditor
+          items={form.galleryMedia}
+          files={galleryFiles}
+          onChange={updateGalleryMedia}
+          onFilesChange={setGalleryFiles}
+        />
+      </div>
+      <FileUpload
+        label="Food Photos"
+        accept="image/*,.jpg,.jpeg,.png,.webp"
+        value={attribute("food_photos")}
+        files={galleryFiles}
+        onFilesChange={setGalleryFiles}
+        onChange={(value) => setAttribute("food_photos", value)}
+      />
+      <FileUpload
+        label="Videos"
+        accept="video/*,.mp4,.mov,.webm,.m4v"
+        value={form.listingVideo}
+        files={galleryFiles}
+        onFilesChange={setGalleryFiles}
+        onChange={(value) => updateField("listingVideo", value)}
+      />
+      <FileUpload
+        label="Menu PDF Upload"
+        accept=".pdf,application/pdf"
+        value={attribute("menu_pdf_upload")}
+        files={galleryFiles}
+        onFilesChange={setGalleryFiles}
+        onChange={(value) => setAttribute("menu_pdf_upload", value)}
+      />
+
+      <h4>Reviews & Ratings</h4>
+      <div className="row">
+        <InputColumn placeholder="Average Rating (system-generated)" value={attribute("average_rating")} disabled onChange={() => undefined} />
+        <InputColumn placeholder="Customer Reviews" value={attribute("customer_reviews")} disabled onChange={() => undefined} />
+      </div>
+      <Textarea placeholder="Featured Reviews (admin optional)" value={attribute("featured_reviews")} onChange={(value) => setAttribute("featured_reviews", value)} />
+
+      <h4>Compliance & Licensing</h4>
+      <Input placeholder="Food License Number" value={restaurantInfo.foodLicenseNumber} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, foodLicenseNumber: value })} />
+      <div className="row">
+        <InputColumn placeholder="Health Inspection Rating" value={restaurantInfo.healthInspectionRating} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, healthInspectionRating: value })} />
+        {showAlcohol ? <InputColumn placeholder="Alcohol License" value={restaurantInfo.alcoholLicenseNumber} error={fieldErrors.restaurantAlcoholLicenseNumber} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, alcoholLicenseNumber: value })} /> : null}
+        <InputColumn placeholder="Business Registration Number" value={restaurantInfo.businessRegistrationNumber} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, businessRegistrationNumber: value })} />
+      </div>
+      {showAlcohol ? (
+        <Input placeholder="Age Restriction" value={restaurantInfo.ageRestrictedNotice} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, ageRestrictedNotice: value })} />
+      ) : null}
+
+      <h4>Reservation & Booking</h4>
+      <CheckboxField label="Table Reservation Enabled" checked={restaurantInfo.tableBooking} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, tableBooking: value })} />
+      {restaurantInfo.tableBooking ? (
+        <div className="row">
+          <InputColumn placeholder="Reservation Capacity" type="number" value={restaurantInfo.reservationCapacity} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, reservationCapacity: value })} />
+          <InputColumn placeholder="Online Booking URL (optional)" value={restaurantInfo.onlineBookingUrl} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, onlineBookingUrl: value })} />
+        </div>
+      ) : null}
+
+      <h4>Listing Visibility & Promotions</h4>
+      <div className="row">
+        <SelectColumn placeholder="Listing Type" value={form.adType} options={listingPlanOptions} onChange={(value) => updateField("adType", value)} width="col-md-5" />
+        <InputColumn placeholder="Featured Until Date" type="date" value={featuredUntilDate} disabled onChange={() => undefined} width="col-md-5" />
+        <div className="col-md-2">
+          <div className="form-group listing-plan-action">
+            <label className="listing-field-label">&nbsp;</label>
+            <button type="button" className="btn btn-primary listing-plan-action-btn" onClick={onViewPlans}>
+              View Plans
+            </button>
+          </div>
+        </div>
+      </div>
+      <Select placeholder="Sponsored Listing" value={attribute("sponsored_listing")} options={yesNoOptions} onChange={(value) => setAttribute("sponsored_listing", value)} />
+      <Select placeholder="Boost Listing" value={attribute("boost_listing")} options={yesNoOptions} onChange={(value) => setAttribute("boost_listing", value)} />
     </>
   );
 }
@@ -5211,7 +6099,7 @@ function FileUpload({
 
   return (
     <div className="form-group">
-      <label>{label}</label>
+      <label>{fieldLabelFromPlaceholder(label)}</label>
       <input
         type="file"
         accept={accept}
@@ -5229,7 +6117,7 @@ function FileUpload({
         <FileUploadPreview
           file={selectedFile || null}
           value={selectedFile ? "" : value}
-          label={label}
+          label={fieldLabelFromPlaceholder(label)}
         />
       ) : null}
       <FieldError message={error} />
@@ -5541,189 +6429,50 @@ function formatFileSize(bytes: number) {
 }
 
 function RestaurantInfoFields({
-  form,
-  currencyCountry,
   restaurantInfo,
-  menuItems,
-  uploadFiles,
+  fieldErrors,
   onChange,
-  onMenuItemsChange,
-  onUploadFilesChange,
 }: {
-  form: FormState;
-  currencyCountry: string;
   restaurantInfo: RestaurantInfo;
-  menuItems: RestaurantMenuItem[];
-  uploadFiles: GalleryUploadFile[];
+  fieldErrors: FieldErrors;
   onChange: (value: RestaurantInfo) => void;
-  onMenuItemsChange: (value: RestaurantMenuItem[]) => void;
-  onUploadFilesChange: (files: GalleryUploadFile[]) => void;
 }) {
-  const isCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
-  const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
-  const isCafeBakery = ["Cafe", "Bakery", "Cafes & Bakeries"].includes(form.subCategory);
-  const isFoodTruck = form.subCategory === "Food Trucks & Pop-ups";
-  const isGrocery = form.subCategory === "Grocery & Specialty Food Stores";
-  const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || isCloudKitchen;
-  const showAlcohol = form.subCategory === "Bars & Beverages";
-  const showDineIn = (restaurantInfo.serviceTypes.includes("Dine-In") || restaurantInfo.serviceTypes.includes("Dine-in")) && !isCloudKitchen;
-  const showCatering = restaurantInfo.serviceTypes.includes("Catering") || isCatering;
-  const serviceTypeOptions = isCloudKitchen
-    ? ["Delivery", "Takeaway"]
-    : isCatering
-      ? ["Catering", "Delivery", "Takeaway"]
-      : ["Dine-In", "Takeaway", "Delivery", "Catering", "Reservations Accepted"];
-  const amenityOptions = [
-    ...(isCloudKitchen ? [] : ["Parking", "Outdoor Seating", "Private Dining"]),
-    "WiFi",
-    "Live Music",
-    "Pet Friendly",
-    "Family Friendly",
-    "Wheelchair Accessible (ADA)",
-    "Bar Available",
-  ];
+  const cuisineOptions = ["Indian", "Chinese", "Italian", "Mexican", "Thai", "Mediterranean", "American", "Vegan", "Korean", "Japanese", "Middle Eastern"];
+  const selectedCuisines = restaurantInfo.cuisine
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 
-  function toggleRestaurantList(key: "foodTypes" | "serviceTypes" | "thirdPartyIntegrations" | "amenities" | "eventTypes", value: string, checked: boolean) {
-    const currentValues = restaurantInfo[key];
-    onChange({ ...restaurantInfo, [key]: checked ? [...currentValues, value] : currentValues.filter((item) => item !== value) });
+  function toggleCuisine(value: string, checked: boolean) {
+    const nextCuisines = checked
+      ? [...selectedCuisines, value]
+      : selectedCuisines.filter((item) => item !== value);
+
+    onChange({ ...restaurantInfo, cuisine: Array.from(new Set(nextCuisines)).join(", ") });
   }
 
-  function updateMenuItem(index: number, value: RestaurantMenuItem) {
-    onMenuItemsChange(updateArrayItem(menuItems, index, value));
+  function toggleFoodType(value: string, checked: boolean) {
+    onChange({
+      ...restaurantInfo,
+      foodTypes: checked
+        ? [...restaurantInfo.foodTypes, value]
+        : restaurantInfo.foodTypes.filter((item) => item !== value),
+    });
   }
 
   return (
     <>
-      <h5 className="mt-3 mb-3">Restaurant Info</h5>
+      <h5 className="mt-3 mb-3">Restaurant / Business Information</h5>
       <div className="row">
-        <InputColumn placeholder="Restaurant / Business Name*" value={restaurantInfo.restaurantName} onChange={(value) => onChange({ ...restaurantInfo, restaurantName: value })} />
-        <InputColumn placeholder="Tagline" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
-      </div>
-      <div className="row">
-        <SelectColumn placeholder="Cuisine Type*" value={restaurantInfo.cuisine} options={["Indian", "Chinese", "Italian", "Mexican", "Thai", "Mediterranean", "American", "Vegan", "Korean", "Japanese", "Middle Eastern", "Multi-cuisine", "Other"]} onChange={(value) => onChange({ ...restaurantInfo, cuisine: value })} />
-        <SelectColumn placeholder="Business Type*" value={restaurantInfo.businessType} options={["Individual", "Company", "Franchise"]} onChange={(value) => onChange({ ...restaurantInfo, businessType: value })} />
-      </div>
-      <MultiSelectCheckboxes title="Food Type" options={["Veg", "Non-Veg", "Vegan", "Halal", "Kosher", "Gluten-Free"]} selected={restaurantInfo.foodTypes} onChange={(value, checked) => toggleRestaurantList("foodTypes", value, checked)} />
-      <div className="row">
-        <InputColumn placeholder="Year Established*" type="number" value={restaurantInfo.yearEstablished} onChange={(value) => onChange({ ...restaurantInfo, yearEstablished: value })} />
-        <InputColumn placeholder="Number of Staff" type="number" value={restaurantInfo.staffCount} onChange={(value) => onChange({ ...restaurantInfo, staffCount: value })} />
-      </div>
-      <MultiSelectCheckboxes title="Service Types" options={serviceTypeOptions} selected={restaurantInfo.serviceTypes} onChange={(value, checked) => toggleRestaurantList("serviceTypes", value, checked)} />
-      {(showDeliveryFields || showCatering) ? (
-        <Input placeholder="Service Radius in miles*" type="number" value={restaurantInfo.serviceRadiusMiles} onChange={(value) => onChange({ ...restaurantInfo, serviceRadiusMiles: value })} />
-      ) : null}
-
-      <h5 className="mt-3 mb-3">Menu Management</h5>
-      {menuItems.map((item, index) => (
-        <ListingSectionCard title={`Menu Item ${index + 1}`} key={index}>
-          <div className="row">
-            <InputColumn placeholder="Item Name*" value={item.itemName} onChange={(value) => updateMenuItem(index, { ...item, itemName: value })} />
-            <SelectColumn placeholder="Menu Category*" value={item.menuCategory} options={["Starters", "Main Course", "Desserts", "Beverages", "Specials", "Combo", "Other"]} onChange={(value) => updateMenuItem(index, { ...item, menuCategory: value })} />
-          </div>
-          <Textarea placeholder="Description" value={item.description} onChange={(value) => updateMenuItem(index, { ...item, description: value })} />
-          <div className="row">
-            <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry)} type="number" value={item.price} onChange={(value) => updateMenuItem(index, { ...item, price: value })} />
-            <SelectColumn placeholder="Food Type*" value={item.foodType} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => updateMenuItem(index, { ...item, foodType: value })} />
-          </div>
-          <div className="row">
-            <InputColumn placeholder="Calories" type="number" value={item.calories} onChange={(value) => updateMenuItem(index, { ...item, calories: value })} />
-            <FileUploadColumn
-              label="Item Image"
-              accept="image/*,.jpg,.jpeg,.png,.webp"
-              value={item.imageUrl}
-              files={uploadFiles}
-              onFilesChange={onUploadFilesChange}
-              onChange={(value) => updateMenuItem(index, { ...item, imageUrl: value })}
-            />
-          </div>
-          <CheckboxField label="Available" checked={item.isAvailable} onChange={(value) => updateMenuItem(index, { ...item, isAvailable: value })} />
-          {menuItems.length > 1 ? (
-            <button type="button" className="btn btn-primary" onClick={() => onMenuItemsChange(menuItems.filter((_, itemIndex) => itemIndex !== index))}>Remove Item</button>
-          ) : null}
-        </ListingSectionCard>
-      ))}
-      <button type="button" className="btn btn-primary" onClick={() => onMenuItemsChange([...menuItems, { ...initialRestaurantMenuItem, displayOrder: String(menuItems.length + 1) }])}>Add Menu Item</button>
-
-      <h5 className="mt-3 mb-3">Pricing & Offers</h5>
-      <div className="row">
-        <InputColumn placeholder={labelWithCountryCurrency("Average Cost for Two", currencyCountry)} type="number" value={restaurantInfo.averageCostForTwo} onChange={(value) => onChange({ ...restaurantInfo, averageCostForTwo: value })} />
-        <SelectColumn placeholder="Price Range" value={restaurantInfo.priceRange} options={["Budget", "Moderate", "Premium"]} onChange={(value) => onChange({ ...restaurantInfo, priceRange: value })} />
+        <InputColumn placeholder="Restaurant Name*" value={restaurantInfo.restaurantName} error={fieldErrors.restaurantName} onChange={(value) => onChange({ ...restaurantInfo, restaurantName: value })} />
+        <InputColumn placeholder="Business Name (optional)" value={restaurantInfo.businessName} onChange={(value) => onChange({ ...restaurantInfo, businessName: value })} />
       </div>
       <div className="row">
-        <InputColumn placeholder="Coupon Codes" value={restaurantInfo.couponCodes} onChange={(value) => onChange({ ...restaurantInfo, couponCodes: value })} />
-        {showAlcohol ? <InputColumn placeholder="Happy Hours" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} /> : null}
+        <InputColumn placeholder="Tagline (optional)" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
       </div>
-      <Textarea placeholder="Discounts / Offers" value={restaurantInfo.discountsOffers} onChange={(value) => onChange({ ...restaurantInfo, discountsOffers: value })} />
-      {showAlcohol ? (
-        <Input placeholder="Age-restricted notice" value={restaurantInfo.ageRestrictedNotice} onChange={(value) => onChange({ ...restaurantInfo, ageRestrictedNotice: value })} />
-      ) : null}
-
-      <h5 className="mt-3 mb-3">Delivery & Ordering</h5>
-      <CheckboxField label="Delivery Available" checked={restaurantInfo.deliveryAvailable || isCloudKitchen} onChange={(value) => onChange({ ...restaurantInfo, deliveryAvailable: value })} />
-      {showDeliveryFields ? (
-        <div className="row">
-          <InputColumn placeholder={labelWithCountryCurrency("Delivery Fee", currencyCountry)} type="number" value={restaurantInfo.deliveryFee} onChange={(value) => onChange({ ...restaurantInfo, deliveryFee: value })} />
-          <InputColumn placeholder={labelWithCountryCurrency("Minimum Order Value", currencyCountry)} type="number" value={restaurantInfo.minimumOrderValue} onChange={(value) => onChange({ ...restaurantInfo, minimumOrderValue: value })} />
-          <InputColumn placeholder="Estimated Delivery Time" value={restaurantInfo.estimatedDeliveryTime} onChange={(value) => onChange({ ...restaurantInfo, estimatedDeliveryTime: value })} />
-        </div>
-      ) : null}
-      <CheckboxField label="Online Ordering" checked={restaurantInfo.onlineOrdering} onChange={(value) => onChange({ ...restaurantInfo, onlineOrdering: value })} />
-      {restaurantInfo.onlineOrdering ? (
-        <MultiSelectCheckboxes title="Third-party Delivery" options={["DoorDash", "Uber Eats", "Grubhub"]} selected={restaurantInfo.thirdPartyIntegrations} onChange={(value, checked) => toggleRestaurantList("thirdPartyIntegrations", value, checked)} />
-      ) : null}
-
-      {!isCloudKitchen ? (
-        <MultiSelectCheckboxes title="Amenities & Features" options={amenityOptions} selected={restaurantInfo.amenities} onChange={(value, checked) => toggleRestaurantList("amenities", value, checked)} />
-      ) : null}
-
-      <h5 className="mt-3 mb-3">Compliance</h5>
-      <Input placeholder="Food License Number" value={restaurantInfo.foodLicenseNumber} onChange={(value) => onChange({ ...restaurantInfo, foodLicenseNumber: value })} />
-      <div className="row">
-        <InputColumn placeholder="Health Inspection Rating" value={restaurantInfo.healthInspectionRating} onChange={(value) => onChange({ ...restaurantInfo, healthInspectionRating: value })} />
-        {showAlcohol ? <InputColumn placeholder="Alcohol License Number*" value={restaurantInfo.alcoholLicenseNumber} onChange={(value) => onChange({ ...restaurantInfo, alcoholLicenseNumber: value })} /> : null}
-        <InputColumn placeholder="Business Registration Number" value={restaurantInfo.businessRegistrationNumber} onChange={(value) => onChange({ ...restaurantInfo, businessRegistrationNumber: value })} />
-      </div>
-
-      <h5 className="mt-3 mb-3">Lead & Interaction</h5>
-      <div className="row listing-amenity-row">
-        <div className="col-md-6">
-          <CheckboxField label="Enable Chat" checked={restaurantInfo.enableChat} onChange={(value) => onChange({ ...restaurantInfo, enableChat: value })} />
-          <CheckboxField label="Enable Call" checked={restaurantInfo.enableCall} onChange={(value) => onChange({ ...restaurantInfo, enableCall: value })} />
-        </div>
-        <div className="col-md-6">
-          {showDineIn ? <CheckboxField label="Table Booking" checked={restaurantInfo.tableBooking} onChange={(value) => onChange({ ...restaurantInfo, tableBooking: value })} /> : null}
-          <CheckboxField label="Order Now Button" checked={restaurantInfo.orderNow} onChange={(value) => onChange({ ...restaurantInfo, orderNow: value })} />
-        </div>
-      </div>
-      {restaurantInfo.tableBooking ? (
-        <div className="row">
-          <InputColumn placeholder="Reservation Capacity" type="number" value={restaurantInfo.reservationCapacity} onChange={(value) => onChange({ ...restaurantInfo, reservationCapacity: value })} />
-          <InputColumn placeholder="Online Booking URL" value={restaurantInfo.onlineBookingUrl} onChange={(value) => onChange({ ...restaurantInfo, onlineBookingUrl: value })} />
-        </div>
-      ) : null}
-      {showCatering ? (
-        <>
-          <h5 className="mt-3 mb-3">Catering Details</h5>
-          <div className="row">
-            <InputColumn placeholder="Catering Type" value={restaurantInfo.cateringType} onChange={(value) => onChange({ ...restaurantInfo, cateringType: value })} />
-            <InputColumn placeholder="Minimum Guests" type="number" value={restaurantInfo.minimumGuests} onChange={(value) => onChange({ ...restaurantInfo, minimumGuests: value })} />
-            <InputColumn placeholder="Maximum Guests" type="number" value={restaurantInfo.maximumGuests} onChange={(value) => onChange({ ...restaurantInfo, maximumGuests: value })} />
-            <InputColumn placeholder={labelWithCountryCurrency("Per Plate Pricing", currencyCountry)} type="number" value={restaurantInfo.perPlatePricing} onChange={(value) => onChange({ ...restaurantInfo, perPlatePricing: value })} />
-          </div>
-          <MultiSelectCheckboxes title="Event Types" options={["Wedding", "Corporate", "Birthday", "Festival"]} selected={restaurantInfo.eventTypes} onChange={(value, checked) => toggleRestaurantList("eventTypes", value, checked)} />
-          <Textarea placeholder="Bulk order notes" value={restaurantInfo.bulkOrderNotes} onChange={(value) => onChange({ ...restaurantInfo, bulkOrderNotes: value })} />
-        </>
-      ) : null}
-      {isCafeBakery ? <Textarea placeholder="Custom cake / order options" value={restaurantInfo.customOrderOptions} onChange={(value) => onChange({ ...restaurantInfo, customOrderOptions: value })} /> : null}
-      {isFoodTruck ? (
-        <>
-          <h5 className="mt-3 mb-3">Mobile Locations</h5>
-          <Textarea placeholder="Mobile Locations" value={restaurantInfo.mobileLocations} onChange={(value) => onChange({ ...restaurantInfo, mobileLocations: value })} />
-          <Textarea placeholder="Operating Zones" value={restaurantInfo.operatingZones} onChange={(value) => onChange({ ...restaurantInfo, operatingZones: value })} />
-          <Textarea placeholder="Event / pop-up location notes" value={restaurantInfo.eventLocationNotes} onChange={(value) => onChange({ ...restaurantInfo, eventLocationNotes: value })} />
-        </>
-      ) : null}
-      {isGrocery ? <Textarea placeholder="Specialty products / departments" value={restaurantInfo.customOrderOptions} onChange={(value) => onChange({ ...restaurantInfo, customOrderOptions: value })} /> : null}
+      <Textarea placeholder="Description (rich text)" value={restaurantInfo.description} onChange={(value) => onChange({ ...restaurantInfo, description: value })} />
+      <MultiSelectCheckboxes title="Cuisine Information" options={cuisineOptions} selected={selectedCuisines} error={fieldErrors.restaurantCuisine} onChange={toggleCuisine} />
+      <MultiSelectCheckboxes title="Food Type" options={["Veg", "Non-Veg", "Vegan", "Halal", "Kosher", "Gluten-Free"]} selected={restaurantInfo.foodTypes} error={fieldErrors.restaurantFoodTypes} onChange={toggleFoodType} />
     </>
   );
 }
@@ -5732,16 +6481,19 @@ function MultiSelectCheckboxes({
   title,
   options,
   selected,
+  error,
   onChange,
 }: {
   title: string;
   options: string[];
   selected: string[];
+  error?: string;
   onChange: (value: string, checked: boolean) => void;
 }) {
   return (
     <>
       <h5 className="mt-3 mb-3">{title}</h5>
+      <FieldError message={error} />
       <div className="row listing-amenity-row">
         {options.map((option) => (
           <div className="col-md-6" key={option}>
@@ -5756,9 +6508,11 @@ function MultiSelectCheckboxes({
 function BusinessHoursEditor({
   hours,
   onChange,
+  title = "Business Hours",
 }: {
   hours: BusinessHour[];
   onChange: (value: BusinessHour[]) => void;
+  title?: string;
 }) {
   const [bulkHour, setBulkHour] = useState({ status: "Open", open: "", close: "", is24Hours: false });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
@@ -5788,7 +6542,7 @@ function BusinessHoursEditor({
   }
 
   return (
-    <ListingSectionCard title="Business Hours">
+    <ListingSectionCard title={title}>
       <div className="listing-hours-tools">
         <div className="listing-hours-bulk">
           <div className="listing-hours-bulk-row">
@@ -5868,12 +6622,14 @@ function ContactLocationFields({
   fallbackState,
   fallbackCity,
   onChange,
+  showAddress = true,
 }: {
   contactInfo: ContactInfo;
   country: string;
   fallbackState: string;
   fallbackCity: string;
   onChange: (value: ContactInfo) => void;
+  showAddress?: boolean;
 }) {
   const searchState = contactInfo.state || fallbackState;
   const searchCity = contactInfo.city || fallbackCity;
@@ -5928,7 +6684,7 @@ function ContactLocationFields({
           <LabeledInputColumn label="Email *" placeholder="" type="email" value={contactInfo.email} onChange={(value) => onChange({ ...contactInfo, email: value })} />
         </div>
       </ListingSectionCard>
-      <ListingSectionCard title="Address" className="listing-address-card">
+      {showAddress ? <ListingSectionCard title="Address" className="listing-address-card">
         <AddressAutocompleteInput
           placeholder="Street Address"
           value={contactInfo.streetAddress}
@@ -5936,6 +6692,7 @@ function ContactLocationFields({
           state={searchState}
           city={searchCity}
           onChange={(value) => onChange({ ...contactInfo, streetAddress: value })}
+          onPostalCodeDetected={(postalCode) => onChange({ ...contactInfo, zipcode: postalCode })}
           onPlaceSelect={(addressDetails) => onChange({
             ...contactInfo,
             streetAddress: addressDetails.address || contactInfo.streetAddress,
@@ -5950,7 +6707,7 @@ function ContactLocationFields({
           <InputColumn placeholder="City" value={contactInfo.city} onChange={(value) => onChange({ ...contactInfo, city: value })} />
           <InputColumn placeholder="State" value={contactInfo.state} onChange={(value) => onChange({ ...contactInfo, state: value })} />
         </div>
-      </ListingSectionCard>
+      </ListingSectionCard> : null}
     </>
   );
 }
@@ -5998,8 +6755,8 @@ function InputColumnWithLabel({ label, placeholder, value, onChange, type = "tex
   return (
     <div className="col-md-6">
       <div className="form-group">
-        <label>{label}</label>
-        <input className="form-control" type={type} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} />
+        <label>{fieldLabelFromPlaceholder(label)}</label>
+        <input className="form-control" type={type} value={value} placeholder={cleanOptionalText(placeholder)} onChange={(event) => onChange(event.target.value)} />
       </div>
     </div>
   );
@@ -6244,7 +7001,7 @@ function buildListingPayload(
     numberOrNull(form.adDurationDays) ??
     30;
   const sellerType = getAttributeValue(categoryAttributes, "seller_type", "sellerType").trim() || form.sellerType.trim();
-  const restaurantServiceTypes = splitAttributeList(categoryAttributes, "service_type", "service_types", "serviceTypes");
+  const restaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
   const isRestaurantCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
   const restaurantAmenities = [
     ["WiFi", "wifi"],
@@ -6327,12 +7084,12 @@ function buildListingPayload(
       countryId: form.countryId,
       stateId: form.stateId,
       cityId: form.cityId,
-      country: form.country.trim(),
-      state: form.state.trim(),
-      city: form.city.trim(),
-      locality: vehicleAreaLocality || form.address.trim(),
+      country: (form.categoryName === "Restaurants & Food" ? form.country || "USA" : form.country).trim(),
+      state: (form.categoryName === "Restaurants & Food" ? contactInfo.state || form.state : form.state).trim(),
+      city: (form.categoryName === "Restaurants & Food" ? contactInfo.city || form.city : form.city).trim(),
+      locality: form.categoryName === "Restaurants & Food" ? (contactInfo.streetAddress || form.address).trim() : vehicleAreaLocality || form.address.trim(),
       landmark: form.serviceLocations.trim(),
-      pincode: form.pincode.trim(),
+      pincode: (form.categoryName === "Restaurants & Food" ? contactInfo.zipcode || form.pincode : form.pincode).trim(),
       latitude: numberOrNull(form.latitude) ?? vehicleMapLocation?.latitude ?? null,
       longitude: numberOrNull(form.longitude) ?? vehicleMapLocation?.longitude ?? null,
     },
@@ -6359,10 +7116,10 @@ function buildListingPayload(
     },
     sellerInformation: {
       name: sellerName.trim() || form.title.trim(),
-      mobileNumber: form.mobileNumber.trim(),
-      email: form.email.trim(),
+      mobileNumber: (form.categoryName === "Restaurants & Food" ? contactInfo.mainPhone || form.mobileNumber : form.mobileNumber).trim(),
+      email: (form.categoryName === "Restaurants & Food" ? contactInfo.email || form.email : form.email).trim(),
       whatsAppNumber: form.whatsapp.trim(),
-      websiteUrl: form.website.trim(),
+      websiteUrl: (form.categoryName === "Restaurants & Food" ? webLinks.mainWebsite || form.website : form.website).trim(),
       sellerType,
       isMobileOtpVerified: false,
       reraNumber: form.reraNumber.trim() || getAttributeValue(categoryAttributes, "rera_number", "reraNumber").trim(),
@@ -6377,13 +7134,15 @@ function buildListingPayload(
       verifiedByAdmin: false,
     },
     restaurantFoodDetails: {
-      businessName: restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "business_name", "restaurant_name", "restaurantName").trim() || form.title.trim(),
+      restaurantName: restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "restaurant_name", "restaurantName").trim() || form.title.trim(),
+      businessName: restaurantInfo.businessName.trim() || restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "business_name", "restaurant_name", "restaurantName").trim() || form.title.trim(),
       tagline: restaurantInfo.tagline.trim(),
+      description: restaurantInfo.description.trim(),
       cuisineType: restaurantInfo.cuisine.trim() || getAttributeValue(categoryAttributes, "cuisine_type", "cuisine").trim(),
-      businessType: restaurantInfo.businessType.trim() || getAttributeValue(categoryAttributes, "business_type", "businessType").trim(),
-      yearEstablished: numberOrNull(restaurantInfo.yearEstablished) ?? numberAttribute(categoryAttributes, "year_established", "yearEstablished"),
-      numberOfStaff: numberOrNull(restaurantInfo.staffCount) ?? numberAttribute(categoryAttributes, "staff_count", "staffCount"),
-      serviceTypes: restaurantInfo.serviceTypes.length ? restaurantInfo.serviceTypes : restaurantServiceTypes,
+      businessType: "",
+      yearEstablished: null,
+      numberOfStaff: null,
+      serviceTypes: restaurantServiceTypes,
       serviceRadiusMiles: numberOrNull(restaurantInfo.serviceRadiusMiles) ?? numberAttribute(categoryAttributes, "delivery_radius", "service_radius", "service_radius_miles", "serviceRadiusMiles"),
       instagramUrl: socialLinks.instagram.trim() || getAttributeValue(categoryAttributes, "instagram_url", "instagram").trim(),
       facebookUrl: socialLinks.facebook.trim() || getAttributeValue(categoryAttributes, "facebook_url", "facebook").trim(),
@@ -6404,7 +7163,7 @@ function buildListingPayload(
       healthInspectionRating: restaurantInfo.healthInspectionRating.trim() || getAttributeValue(categoryAttributes, "health_inspection_rating", "healthInspectionRating").trim(),
       alcoholLicenseNumber: restaurantInfo.alcoholLicenseNumber.trim() || getAttributeValue(categoryAttributes, "alcohol_license_number", "alcohol_license", "alcoholLicenseNumber").trim(),
       taxIdInternal: restaurantInfo.businessRegistrationNumber.trim() || getAttributeValue(categoryAttributes, "business_registration_number", "tax_id", "taxId").trim(),
-      tableBookingEnabled: restaurantInfo.tableBooking || boolAttribute(categoryAttributes, "table_booking", "tableBooking") === true,
+      tableBookingEnabled: restaurantInfo.tableBooking || boolAttribute(categoryAttributes, "table_booking", "tableBooking", "reservations_accepted") === true,
       orderNowEnabled: restaurantInfo.orderNow || boolAttribute(categoryAttributes, "order_now_button", "orderNow") === true,
       enableChat: restaurantInfo.enableChat && boolAttribute(categoryAttributes, "enable_chat", "enableChat") !== false,
       enableCall: restaurantInfo.enableCall && boolAttribute(categoryAttributes, "enable_call", "enableCall") !== false,
@@ -6526,6 +7285,7 @@ function buildListingPayload(
         description: item.description.trim(),
         price: numberOrNull(item.price) ?? 0,
         foodType: item.foodType.trim(),
+        spiceLevel: item.spiceLevel.trim(),
         calories: numberOrNull(item.calories),
         imageUrl: item.imageUrl.trim(),
         displayOrder: numberOrNull(item.displayOrder) ?? index + 1,
@@ -6643,8 +7403,10 @@ function mapRestaurantInfoFromListing(listing: ListingSummary, propertyDetails: 
 
   return {
     ...legacyInfo,
-    restaurantName: stringValue(restaurantDetails.businessName) || legacyInfo.restaurantName,
+    restaurantName: stringValue(restaurantDetails.restaurantName) || stringValue(restaurantDetails.businessName) || legacyInfo.restaurantName,
+    businessName: stringValue(restaurantDetails.businessName) || legacyInfo.businessName || "",
     tagline: stringValue(restaurantDetails.tagline) || legacyInfo.tagline,
+    description: stringValue(restaurantDetails.description) || legacyInfo.description || "",
     cuisine: stringValue(restaurantDetails.cuisineType) || legacyInfo.cuisine,
     foodTypes: Array.isArray(legacyInfo.foodTypes) ? legacyInfo.foodTypes.map(String) : [],
     foodType: legacyInfo.foodType || "",
@@ -6740,21 +7502,24 @@ function mapPropertyAttributesFromListing(listing: ListingSummary): CategoryAttr
 function mapRestaurantAttributesFromListing(listing: ListingSummary): CategoryAttributes {
   const details = listing.restaurantFoodDetails || {};
   const amenities = Array.isArray(details.amenities) ? details.amenities.map(String) : [];
+  const serviceTypes = Array.isArray(details.serviceTypes) ? details.serviceTypes.map(String) : [];
 
   return trimCategoryAttributes({
     business_name: stringValue(details.businessName),
-    restaurant_name: stringValue(details.businessName),
+    restaurant_name: stringValue(details.restaurantName) || stringValue(details.businessName),
+    description: stringValue(details.description),
     cuisine_type: stringValue(details.cuisineType),
-    business_type: stringValue(details.businessType),
-    year_established: stringValue(details.yearEstablished),
-    staff_count: stringValue(details.numberOfStaff),
-    service_type: Array.isArray(details.serviceTypes) ? details.serviceTypes.map(String).join(", ") : "",
+    service_type: serviceTypes.join(", "),
+    dine_in: booleanSelectValue(serviceTypes.includes("Dine-In")),
+    takeaway: booleanSelectValue(serviceTypes.includes("Takeaway")),
+    catering_available: booleanSelectValue(serviceTypes.includes("Catering")),
+    reservations_accepted: booleanSelectValue(serviceTypes.includes("Reservations Accepted") || details.tableBookingEnabled === true),
     service_radius: stringValue(details.serviceRadiusMiles),
     average_cost_for_two: stringValue(details.averageCostForTwo),
     discounts_offers: stringValue(details.discountsOffers),
     coupon_codes: stringValue(details.couponCodes),
     happy_hours: stringValue(details.happyHours),
-    delivery_available: booleanSelectValue(details.deliveryAvailable),
+    delivery_available: booleanSelectValue(details.deliveryAvailable === true || serviceTypes.includes("Delivery")),
     delivery_fee: stringValue(details.deliveryFee),
     minimum_order_value: stringValue(details.minimumOrderValue),
     online_ordering: booleanSelectValue(details.onlineOrderingAvailable),
@@ -7078,6 +7843,7 @@ function mapRestaurantMenuItemsFromListing(listing: ListingSummary): RestaurantM
     description: stringValue(item.description),
     price: stringValue(item.price),
     foodType: stringValue(item.foodType),
+    spiceLevel: stringValue(item.spiceLevel),
     calories: stringValue(item.calories),
     imageUrl: stringValue(item.imageUrl),
     displayOrder: stringValue(item.displayOrder) || String(index + 1),
@@ -7293,6 +8059,21 @@ function boolOrNull(value?: string) {
   return null;
 }
 
+function getSelectedRestaurantServiceTypes(restaurantInfo: RestaurantInfo, values: CategoryAttributes) {
+  const selected = restaurantServiceTypeOptions
+    .filter(({ key, label }) => (
+      restaurantInfo.serviceTypes.includes(label) ||
+      boolAttribute(values, key) === true ||
+      (label === "Delivery" && restaurantInfo.deliveryAvailable) ||
+      (label === "Reservations Accepted" && restaurantInfo.tableBooking)
+    ))
+    .map(({ label }) => label);
+  const listed = splitAttributeList(values, "service_type", "service_types", "serviceTypes")
+    .filter((service) => restaurantServiceTypeOptions.some((option) => option.label.toLowerCase() === service.toLowerCase()));
+
+  return Array.from(new Set([...selected, ...listed]));
+}
+
 function parsePriceNegotiable(value: string, fallback: boolean) {
   const normalized = value.trim().toLowerCase();
 
@@ -7357,6 +8138,10 @@ function hasAnyFieldKey(fields: CategoryAttributeField[], ...keys: string[]) {
 
 function categoryFieldErrorKey(key: string) {
   return `categoryAttributes.${key}`;
+}
+
+function restaurantMenuItemErrorKey(index: number, key: keyof RestaurantMenuItem) {
+  return `restaurantMenuItems.${index}.${key}`;
 }
 
 function isMissingRequiredCategoryValue(field: CategoryAttributeField, value?: string) {
@@ -7449,9 +8234,79 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
   );
 }
 
+function shouldUseSharedListingLocationSection(categoryName: string) {
+  return sharedListingLocationCategories.includes(categoryName);
+}
+
+function shouldDefaultCountryToUsa(categoryName: string) {
+  return usaDefaultLocationCategories.includes(categoryName);
+}
+
+function getSharedListingLocationSectionOrder(categoryName: string) {
+  const orderByCategory: Record<string, number> = {
+    Vehicles: 3,
+    "Care Services": 4,
+    "Events & Tickets": 4,
+    "Tickets & Events": 4,
+    "Roommates & Rentals": 3,
+    Jobs: 4,
+    "Electronics & Appliances": 5,
+    "Pets & Animals": 3,
+    "Furniture & Home": 4,
+    "Furniture & Home Decor": 4,
+  };
+
+  return orderByCategory[categoryName] || 4;
+}
+
+function getSharedListingLocationSectionTitle(categoryName: string) {
+  if (categoryName === "Care Services") return "Service Location";
+  if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") return "Event Location";
+  if (categoryName === "Jobs") return "Job Location";
+  return "Location Information";
+}
+
+function isSharedListingLocationAttributeField(field: CategoryAttributeField) {
+  const key = normalizeFieldKey(field.key);
+  const label = normalizeFieldKey(field.label);
+  return [
+    "country",
+    "state",
+    "city",
+    "zipcode",
+    "zip",
+    "pincode",
+    "address",
+    "streetaddress",
+    "streetaddresslocality",
+    "arealocality",
+    "maplatlong",
+    "googlemaplatlong",
+    "latitude",
+    "longitude",
+    "pickuplocation",
+  ].includes(key) || [
+    "country",
+    "state",
+    "city",
+    "zipcode",
+    "zip",
+    "address",
+    "streetaddress",
+    "latitudelongitude",
+    "maplocationlatlong",
+    "pickuplatlong",
+  ].includes(label);
+}
+
 function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryName: string, subCategory: string, detailCategory: string) {
-  if (categoryName !== "Vehicles" && categoryName !== "Electronics & Appliances" && categoryName !== "Care Services" && !isFurnitureCategory(categoryName)) {
-    return fields;
+  const shouldMergeCommonFields = categoryName === "Vehicles" ||
+    categoryName === "Electronics & Appliances" ||
+    categoryName === "Care Services" ||
+    isFurnitureCategory(categoryName);
+
+  if (!shouldMergeCommonFields) {
+    return dedupeCategoryPostingFields(fields);
   }
 
   const commonFields =
@@ -7463,21 +8318,25 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
           ? careServiceFields
           : furniturePostingCommonFields;
   const requiredFields = [...fields, ...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
+
+  return dedupeCategoryPostingFields(requiredFields);
+}
+
+function dedupeCategoryPostingFields(fields: CategoryAttributeField[]) {
   const nextFields: CategoryAttributeField[] = [];
 
-  for (const field of requiredFields) {
-    if (!nextFields.some((item) => areEquivalentCategoryFieldKeys(item.key, field.key))) {
-      nextFields.push(field);
-    }
-  }
-
   for (const field of fields) {
-    if (!nextFields.some((item) => areEquivalentCategoryFieldKeys(item.key, field.key))) {
+    if (!nextFields.some((item) => areEquivalentCategoryFields(item, field))) {
       nextFields.push(field);
     }
   }
 
   return nextFields;
+}
+
+function areEquivalentCategoryFields(firstField: CategoryAttributeField, secondField: CategoryAttributeField) {
+  return areEquivalentCategoryFieldKeys(firstField.key, secondField.key) ||
+    normalizeFieldKey(firstField.label) === normalizeFieldKey(secondField.label);
 }
 
 function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
@@ -7978,6 +8837,19 @@ function includeCurrentValue(options: string[], currentValue: string) {
   }
 
   return [currentValue, ...options];
+}
+
+function dedupeListingCategories(items: ListingCategoryOption[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = item.name.trim().toLowerCase();
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
 }
 
 function getClassifiedListingStepIndex(pathname: string) {

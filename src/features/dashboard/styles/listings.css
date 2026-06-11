@@ -1141,6 +1141,13 @@
   font-weight: 700;
 }
 
+.listing-field-error {
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 6px 0 10px;
+}
+
 .classified-form-card > .btn.btn-primary,
 .classified-form-card .classified-step-actions .btn,
 .classified-form-card .row > .col-md-12 > .btn.btn-primary {

@@ -8,7 +8,7 @@ const usPostalLookupBaseUrl =
   import.meta.env.VITE_US_POSTAL_LOOKUP_URL ||
   "https://api.zippopotam.us/us";
 
-const postalLookupCachePrefix = "postal_lookup:";
+const postalLookupCachePrefix = "postal_lookup:v2:";
 const currentCountryCacheKey = "postal_lookup:current_country";
 
 let currentCountryRequest: Promise<string | null> | null = null;
@@ -19,9 +19,13 @@ export type PostalCodeLocation = {
   state: string;
   district: string;
   city: string;
+  latitude?: string;
+  longitude?: string;
 };
 
 type NominatimSearchResult = {
+  lat?: string;
+  lon?: string;
   address?: {
     country?: string;
     country_code?: string;
@@ -63,6 +67,8 @@ type UsPostalCodeResponse = {
     "place name"?: string;
     state?: string;
     "state abbreviation"?: string;
+    latitude?: string;
+    longitude?: string;
   }>;
 };
 
@@ -197,6 +203,8 @@ function mapNominatimResult(
     state: address.state || address.province || address.region || "",
     district,
     city,
+    latitude: result.lat || "",
+    longitude: result.lon || "",
   };
 
   if (
@@ -310,11 +318,12 @@ async function requestUsPostalLocation(
   country?: string,
   signal?: AbortSignal,
 ) {
-  if (!/^\d{5}$/.test(postalCode.trim()) || !isUnitedStatesCountryHint(country)) {
+  const usPostalCode = postalCode.trim().match(/^\d{5}/)?.[0] || "";
+  if (!usPostalCode || !isUnitedStatesCountryHint(country)) {
     return null;
   }
 
-  const url = new URL(`${usPostalLookupBaseUrl.replace(/\/$/, "")}/${postalCode}`);
+  const url = new URL(`${usPostalLookupBaseUrl.replace(/\/$/, "")}/${usPostalCode}`);
   const response = await fetch(url.toString(), {
     headers: {
       Accept: "application/json",
@@ -339,6 +348,8 @@ async function requestUsPostalLocation(
     state: place.state || "",
     district: "",
     city: place["place name"] || "",
+    latitude: place.latitude || "",
+    longitude: place.longitude || "",
   };
 }
 
