@@ -1,40 +1,15 @@
-import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
+import { useEffect, useState } from "react";
+import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
 import { replaceDollarCurrency } from "../../../shared/utils/currency";
-
-const roommateListings = [
-  {
-    image: "/template-17/images/chao-home-room-listings/1.png",
-    title:
-      "Midtown Manhattan Furnished Room, Utils Incl - No Lease - Male Only Midtown Manhattan Furnished Room, Utils Incl - No Lease - Male Only",
-    availableFrom: "01 Apr 2026",
-    gender: "Male",
-    roomType: "Single Room",
-    adType: "Room Offered",
-    extra: "American Academy of Dramatic Arts University: American Academy of Dramatic Arts",
-    price: "$800",
-  },
-  {
-    image: "/template-17/images/chao-home-room-listings/2.jpeg",
-    title: "Spacious Master Bedroom Available For Rent",
-    availableFrom: "15 Apr 2026",
-    gender: "Both",
-    roomType: "Single Room",
-    adType: "Room Offered",
-    extra: "Neighborhood:Hamilton Park",
-    price: "$1000",
-  },
-  {
-    image: "/template-17/images/chao-home-room-listings/3.png",
-    title: "Semi Furnished Private Room Available For Females Only",
-    availableFrom: "15 Apr 2026",
-    gender: "Female",
-    roomType: "Single Room",
-    adType: "Room Offered",
-    extra: "Bergen County Technical Schools - Adult and",
-    price: "$895",
-  },
-];
+import {
+  getPublicListings,
+  type ListingSummary,
+} from "../../dashboard/api/listingsApi";
+import {
+  resolveListingImageUrl,
+  setFallbackListingImage,
+} from "../../dashboard/utils/listingImages";
 
 const whyItems = [
   {
@@ -69,18 +44,117 @@ const whyItems = [
   },
 ];
 
+function getDetailValue(
+  listing: ListingSummary,
+  sections: Array<keyof Pick<ListingSummary, "propertyDetails" | "priceDetails" | "locationDetails" | "settings">>,
+  keys: string[],
+) {
+  for (const sectionName of sections) {
+    const section = listing[sectionName];
+    if (!section) {
+      continue;
+    }
+
+    for (const key of keys) {
+      const value = section[key];
+      if (value !== undefined && value !== null && String(value).trim()) {
+        return String(value).trim();
+      }
+    }
+  }
+
+  return "";
+}
+
+function formatRoomPrice(listing: ListingSummary, country: string) {
+  const explicitPrice = listing.price ? `$${listing.price}` : "";
+  const price =
+    explicitPrice ||
+    getDetailValue(listing, ["priceDetails", "propertyDetails"], [
+      "monthlyRent",
+      "rent",
+      "price",
+      "expectedRent",
+      "priceRange",
+    ]);
+
+  return price ? replaceDollarCurrency(price, country) : "Contact";
+}
+
+function getRoomLocation(listing: ListingSummary, fallbackLocation: string) {
+  const locality = listing.locality || getDetailValue(listing, ["locationDetails"], ["locality", "neighborhood", "area"]);
+  const city = listing.city || getDetailValue(listing, ["locationDetails"], ["city"]);
+  const state = getDetailValue(listing, ["locationDetails"], ["state"]);
+
+  return [locality, city, state].filter(Boolean).join(", ") || fallbackLocation;
+}
+
 export default function HomeRoommatesSection() {
-  const currentLocation = useCurrentLocationLabel();
+  const { currentLocation, selectedCity, activeCity, activeLocationLabel, locationRevision } = useHomeSelectedLocation();
   const currentCountry = useCurrentCountry();
-  const hasCurrentLocation = currentLocation.status === "ready" && currentLocation.label;
+  const [roommateListings, setRoommateListings] = useState<ListingSummary[]>([]);
+  const [isLoadingListings, setIsLoadingListings] = useState(false);
+  const hasCurrentLocation = Boolean(activeLocationLabel);
   const locationChipText =
-    currentLocation.status === "loading"
+    currentLocation.status === "loading" && !activeLocationLabel
       ? "Detecting current location"
-      : currentLocation.label || "Current location unavailable";
+      : activeLocationLabel || "Current location unavailable";
   const listingTitle = hasCurrentLocation
-    ? `Explore Rooms for Rent & Roommate Listings in and near ${currentLocation.label}`
+    ? `Explore Rooms for Rent & Roommate Listings in and near ${activeLocationLabel}`
     : "Explore Rooms for Rent & Roommate Listings near your current location";
-  const listingLocationText = currentLocation.label || "Near your current location";
+  const listingLocationText = activeLocationLabel || "Near your current location";
+  const roommatesHref = `/all-listing?${new URLSearchParams({
+    category: "roommates-rentals",
+    ...(activeCity ? { city: activeCity } : {}),
+  }).toString()}`;
+  const rentalHousesHref = `/all-listing?${new URLSearchParams({
+    category: "roommates-rentals",
+    subCategory: "Shared Houses",
+    ...(activeCity ? { city: activeCity } : {}),
+  }).toString()}`;
+  const rentersHref = `/all-listing?${new URLSearchParams({
+    category: "roommates-rentals",
+    subCategory: "Roommates Wanted",
+    ...(activeCity ? { city: activeCity } : {}),
+  }).toString()}`;
+
+  useEffect(() => {
+    let isActive = true;
+
+    if (!selectedCity && (currentLocation.status === "loading" || currentLocation.status === "idle")) {
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsLoadingListings(true);
+    getPublicListings({
+      category: "roommates-rentals",
+      city: activeCity || undefined,
+      page: 1,
+      pageSize: 3,
+      forceRefresh: locationRevision > 0,
+    })
+      .then((result) => {
+        if (isActive) {
+          setRoommateListings(result.items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setRoommateListings([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingListings(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeCity, currentLocation.status, locationRevision, selectedCity]);
 
   return (
     <section className="home-roommates">
@@ -131,7 +205,7 @@ export default function HomeRoommatesSection() {
                 <li><i className="material-icons">check</i> Track responses in dashboard</li>
               </ul>
 
-              <a href="/all-listing?category=roommates-rentals" className="room-btn">Find a place</a>
+              <a href={roommatesHref} className="room-btn">Find a place</a>
             </div>
           </div>
         </div>
@@ -156,7 +230,15 @@ export default function HomeRoommatesSection() {
           </div>
         </div>
 
-        <div className="home-room-listings">
+        {isLoadingListings ? (
+          <div className="home-section-loader">
+            <span className="home-location-spinner" aria-hidden="true"></span>
+            Loading roommate listings
+          </div>
+        ) : null}
+
+        {!isLoadingListings && roommateListings.length ? (
+          <div className="home-room-listings">
           <div>
             <div className="listing-title text-center">
               <span className="current-location-chip">
@@ -167,34 +249,44 @@ export default function HomeRoommatesSection() {
             </div>
 
             <div className="row room-listing-row">
-              {roommateListings.map((item) => (
-                <div className="col-md-4" key={item.title}>
+              {roommateListings.map((item) => {
+                const availableFrom = getDetailValue(item, ["propertyDetails", "settings"], ["availableFrom", "availableDate", "moveInDate"]) || "Contact";
+                const gender = getDetailValue(item, ["propertyDetails", "settings"], ["gender", "preferredGender"]) || "Any";
+                const roomType = item.subCategory || getDetailValue(item, ["propertyDetails"], ["roomType", "rentalType"]) || "Room";
+                const adType = item.detailCategory || getDetailValue(item, ["propertyDetails"], ["adType"]) || "Rental";
+                const extra = getDetailValue(item, ["locationDetails", "propertyDetails"], ["nearby", "landmark", "neighborhood", "area"]) || item.description;
+                const image = resolveListingImageUrl(item.primaryImageUrl || item.imageUrls?.[0]);
+
+                return (
+                  <div className="col-md-4" key={item.id}>
                   <div className="room-list-card">
                     <div className="room-img">
-                      <img src={item.image} alt={item.title} />
+                      <img src={image} alt={item.title} onError={setFallbackListingImage} />
                     </div>
 
                     <h4 className="room-title">{item.title}</h4>
 
                     <ul className="room-details">
-                      <li><i className="material-icons">location_on</i> {listingLocationText}</li>
-                      <li><i className="material-icons">calendar_today</i> Available from: {item.availableFrom}</li>
-                      <li><i className="material-icons">person</i> Gender: {item.gender}</li>
-                      <li><i className="material-icons">meeting_room</i> Room Type: {item.roomType}</li>
-                      <li><i className="material-icons">local_offer</i> Ad Type: {item.adType}</li>
-                      <li><i className="material-icons">school</i> {item.extra}</li>
+                      <li><i className="material-icons">location_on</i> {getRoomLocation(item, listingLocationText)}</li>
+                      <li><i className="material-icons">calendar_today</i> Available from: {availableFrom}</li>
+                      <li><i className="material-icons">person</i> Gender: {gender}</li>
+                      <li><i className="material-icons">meeting_room</i> Room Type: {roomType}</li>
+                      <li><i className="material-icons">local_offer</i> Ad Type: {adType}</li>
+                      <li><i className="material-icons">school</i> {extra}</li>
                     </ul>
 
                     <div className="room-bottom">
-                      <span className="room-price">{replaceDollarCurrency(item.price, currentCountry)} <small>/Month</small></span>
-                      <a href="/all-listing?category=roommates-rentals" className="room-link">View More</a>
+                      <span className="room-price">{formatRoomPrice(item, currentCountry)} <small>/Month</small></span>
+                      <a href={`/listing/${item.id}`} className="room-link">View More</a>
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-        </div>
+          </div>
+        ) : null}
 
         <div className="home-rental-cta">
           <div className="container">
@@ -202,13 +294,13 @@ export default function HomeRoommatesSection() {
               <div className="col-md-6">
                 <div className="rental-box left-box">
                   <p>Discover offered rental houses available for rent.</p>
-                  <a href="/all-listing?category=roommates-rentals&subCategory=Shared+Houses" className="cta-btn">Find rental houses</a>
+                  <a href={rentalHousesHref} className="cta-btn">Find rental houses</a>
                 </div>
               </div>
               <div className="col-md-6">
                 <div className="rental-box right-box">
                   <p>Search wanted listings for people looking for rental homes.</p>
-                  <a href="/all-listing?category=roommates-rentals&subCategory=Roommates+Wanted" className="cta-btn">Find renters</a>
+                  <a href={rentersHref} className="cta-btn">Find renters</a>
                 </div>
               </div>
             </div>

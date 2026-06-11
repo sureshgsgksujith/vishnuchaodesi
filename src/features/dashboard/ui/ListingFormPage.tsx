@@ -795,13 +795,15 @@ const careServiceOptions = [
   "Therapy Assistance",
 ];
 const careServiceFields: CategoryAttributeField[] = [
+  { key: "serviceTitle", label: "Service Title", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
   { key: "businessCaregiverName", label: "Business / Caregiver Name", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
   { key: "tagline", label: "Tagline", sectionName: "Service Information", sectionOrder: 2 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
   { key: "providerType", label: "Provider Type", options: ["Individual Caregiver", "Agency / Company"], isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
   { key: "experienceYears", label: "Years of Experience", type: "number", isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
   { key: "languagesSpoken", label: "Languages Spoken", isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
   { key: "genderPreference", label: "Gender", options: ["No Preference", "Female", "Male"], sectionName: "Provider Information", sectionOrder: 3 },
-  { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number", sectionName: "Service Location", sectionOrder: 4 },
+  { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number", isRequired: true, sectionName: "Service Location", sectionOrder: 4 },
   { key: "willingToTravel", label: "Willing to Travel", options: yesNoOptions, isRequired: true, sectionName: "Service Location", sectionOrder: 4 },
   { key: "availabilityType", label: "Availability Type", options: ["Full-time", "Part-time", "Hourly", "Live-in"], isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
   { key: "availableDays", label: "Available Days", isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
@@ -809,7 +811,7 @@ const careServiceFields: CategoryAttributeField[] = [
   { key: "startDate", label: "Start Date", type: "date", isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
   { key: "rateType", label: "Pricing Type", options: ["Hourly", "Daily", "Weekly", "Monthly"], isRequired: true, sectionName: "Pricing", sectionOrder: 6 },
   { key: "price", label: "Rate (USD)", type: "number", isRequired: true, sectionName: "Pricing", sectionOrder: 6 },
-  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 6 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Pricing", sectionOrder: 6 },
   { key: "minimumHoursRequired", label: "Minimum Hours Required", type: "number", sectionName: "Pricing", sectionOrder: 6 },
   { key: "mealPreparation", label: "Meal Preparation", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
   { key: "medicationReminder", label: "Medication Reminder", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
@@ -826,33 +828,31 @@ const careServiceFields: CategoryAttributeField[] = [
   { key: "licenseNumber", label: "License Number", sectionName: "Qualifications & Certifications", sectionOrder: 8 },
   { key: "certificationDocuments", label: "Certifications Upload", sectionName: "Qualifications & Certifications", sectionOrder: 8 },
   { key: "backgroundCheck", label: "Background Verified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
-  { key: "referencesAvailable", label: "References Available", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
   { key: "ageGroups", label: "Age Group", options: ["Infants", "Children", "Adults", "Seniors"], isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
   { key: "specialNeedsExperience", label: "Special Needs Experience", options: yesNoOptions, isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
-  { key: "smokingAllowed", label: "Smoking Allowed", options: yesNoOptions, sectionName: "Care Preferences", sectionOrder: 9 },
-  { key: "petFriendly", label: "Pet Friendly", options: yesNoOptions, sectionName: "Care Preferences", sectionOrder: 9 },
+  { key: "smokingAllowed", label: "Smoking Allowed", options: yesNoOptions, isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
+  { key: "petFriendly", label: "Pet Friendly", options: yesNoOptions, isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
   { key: "videoIntroductionUrl", label: "Intro Video", sectionName: "Media Upload", sectionOrder: 10 },
   { key: "businessLogo", label: "Business Logo", sectionName: "Media Upload", sectionOrder: 10 },
-  { key: "chatEnabled", label: "Chat Enabled", options: yesNoOptions, sectionName: "Contact Information", sectionOrder: 11 },
-  { key: "callEnabled", label: "Call Enabled", options: yesNoOptions, sectionName: "Contact Information", sectionOrder: 11 },
-  { key: "identityVerification", label: "Identity Verification", options: yesNoOptions, sectionName: "Compliance & Safety", sectionOrder: 12 },
-  { key: "backgroundVerification", label: "Background Check Status", options: yesNoOptions, sectionName: "Compliance & Safety", sectionOrder: 12 },
+  { key: "chatEnabled", label: "Chat Enabled", options: yesNoOptions, isRequired: true, sectionName: "Contact Information", sectionOrder: 11 },
+  { key: "callEnabled", label: "Call Enabled", options: yesNoOptions, isRequired: true, sectionName: "Contact Information", sectionOrder: 11 },
+  { key: "identityVerification", label: "Identity Verification", options: yesNoOptions, isRequired: true, sectionName: "Compliance & Safety", sectionOrder: 12 },
+  { key: "backgroundVerification", label: "Background Check Status", options: yesNoOptions, isRequired: true, sectionName: "Compliance & Safety", sectionOrder: 12 },
   { key: "insurance", label: "Insurance Coverage", sectionName: "Compliance & Safety", sectionOrder: 12 },
   { key: "serviceDisclaimer", label: "Medical Disclaimer", type: "textarea", sectionName: "Compliance & Safety", sectionOrder: 12 },
   { key: "hipaaCompliance", label: "HIPAA Compliance", options: yesNoOptions, sectionName: "Compliance & Safety", sectionOrder: 12 },
-  { key: "scheduleInterview", label: "Appointment Booking Enabled", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 13 },
-  { key: "onlineConsultation", label: "Online Consultation", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 13 },
-  { key: "emergencyAvailability", label: "Emergency Availability", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 13 },
+  { key: "scheduleInterview", label: "Appointment Booking Enabled", options: yesNoOptions, isRequired: true, sectionName: "Booking & Appointments", sectionOrder: 13 },
+  { key: "onlineConsultation", label: "Online Consultation", options: yesNoOptions, isRequired: true, sectionName: "Booking & Appointments", sectionOrder: 13 },
+  { key: "emergencyAvailability", label: "Emergency Availability", options: yesNoOptions, isRequired: true, sectionName: "Booking & Appointments", sectionOrder: 13 },
   { key: "childAgeGroup", label: "Child Age Group", options: ["Infants", "Toddlers", "Preschool", "School Age"], sectionName: "Child Care Details", sectionOrder: 14 },
   { key: "schoolPickupOption", label: "School Pickup Option", options: yesNoOptions, sectionName: "Child Care Details", sectionOrder: 14 },
   { key: "mobilityAssistance", label: "Mobility Assistance", options: yesNoOptions, sectionName: "Elder Care Details", sectionOrder: 15 },
   { key: "dementiaCareExperience", label: "Dementia Care Experience", options: yesNoOptions, sectionName: "Elder Care Details", sectionOrder: 15 },
   { key: "petTypeExperience", label: "Pet Type Experience", sectionName: "Pet Care Details", sectionOrder: 16 },
   { key: "staffCount", label: "Staff Count", type: "number", sectionName: "Agency Details", sectionOrder: 17 },
-  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
-  { key: "ad_duration_days", label: "Ad Duration", options: ["15", "30", "60"], sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
-  { key: "sponsoredListing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
-  { key: "boostListing", label: "Boost Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
+  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, isRequired: true, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
+  { key: "sponsoredListing", label: "Sponsored Listing", options: yesNoOptions, isRequired: true, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
+  { key: "boostListing", label: "Boost Listing", options: yesNoOptions, isRequired: true, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
 ];
 
 const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]> = {
@@ -1426,31 +1426,20 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Care Services": {
     default: categoryAttributeFieldsByCategory["Care Services"],
     subCategories: {
-      "Child Care / Babysitting": [
-        ...careServiceFields,
-        { key: "ageGroups", label: "Age Group", isRequired: true, sectionName: "Matching Preferences", sectionOrder: 9 },
-      ],
-      "Elder Care": [
-        ...careServiceFields,
-        { key: "specialSkills", label: "Special Skills (dementia, mobility, companionship)", type: "textarea", sectionName: "Experience Details", sectionOrder: 8 },
-      ],
-      "Home Health Care": [
-        ...careServiceFields,
-        { key: "rnLpn", label: "RN / LPN", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-        { key: "licenseNumber", label: "License Number", sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-      ],
-      "Nursing Services": [
-        ...careServiceFields,
-        { key: "rnLpn", label: "RN / LPN", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-        { key: "licenseNumber", label: "License Number", isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 7 },
-      ],
-      "Pet Care": [
-        ...careServiceFields,
-      ],
-      "Special Needs Care": [
-        ...careServiceFields,
-        { key: "specialNeedsExperience", label: "Special Needs Experience", options: yesNoOptions, isRequired: true, sectionName: "Matching Preferences", sectionOrder: 9 },
-      ],
+      "Child Care Services": careServiceFields,
+      "Child Care / Babysitting": careServiceFields,
+      "Babysitting & Nanny Services": careServiceFields,
+      "Elder Care Services": careServiceFields,
+      "Elder Care": careServiceFields,
+      "Home Health Care": careServiceFields,
+      "Nursing Services": careServiceFields,
+      "Pet Care Services": careServiceFields,
+      "Pet Care": careServiceFields,
+      "Disability & Special Needs Care": careServiceFields,
+      "Special Needs Care": careServiceFields,
+      "Companion Care Services": careServiceFields,
+      "Rehabilitation & Therapy Services": careServiceFields,
+      "Hospice & Palliative Care": careServiceFields,
     },
   },
   "Furniture & Home": {
@@ -3281,24 +3270,41 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function validateCareServiceFields() {
     const requiredFields = [
+      ["businessCaregiverName", "business_caregiver_name", "Business / Caregiver Name"],
       ["providerType", "provider_type", "Provider Type"],
       ["experienceYears", "experience_years", "Experience"],
       ["languagesSpoken", "languages_spoken", "Languages Spoken"],
+      ["serviceRadiusMiles", "service_radius_miles", "Service Radius"],
+      ["willingToTravel", "willing_to_travel", "Willing to Travel"],
       ["availabilityType", "availability_type", "Availability Type"],
       ["availableDays", "available_days", "Available Days"],
       ["availableTimeSlots", "available_time_slots", "Available Time Slots"],
       ["startDate", "start_date", "Start Date"],
-      ["rateType", "rate_type", "Rate Type"],
-      ["willingToTravel", "willing_to_travel", "Willing to Travel"],
+      ["rateType", "rate_type", "Pricing Type"],
+      ["price_negotiable", "priceNegotiable", "negotiable", "Negotiable"],
       ["cprCertified", "cpr_certified", "CPR Certified"],
       ["firstAidCertified", "first_aid_certified", "First Aid Certified"],
       ["backgroundCheck", "background_check", "Background Check"],
-      ["referencesAvailable", "references_available", "References Available"],
       ["ageGroups", "age_groups", "Age Group"],
       ["specialNeedsExperience", "special_needs_experience", "Special Needs Experience"],
+      ["smokingAllowed", "smoking_allowed", "Smoking Allowed"],
+      ["petFriendly", "pet_friendly", "Pet Friendly"],
+      ["chatEnabled", "chat_enabled", "Chat Enabled"],
+      ["callEnabled", "call_enabled", "Call Enabled"],
+      ["identityVerification", "identity_verification", "Identity Verification"],
+      ["backgroundVerification", "background_verification", "Background Check Status"],
+      ["scheduleInterview", "schedule_interview", "Appointment Booking Enabled"],
+      ["onlineConsultation", "online_consultation", "Online Consultation"],
+      ["emergencyAvailability", "emergency_availability", "Emergency Availability"],
+      ["ad_type", "listing_type", "adType", "Listing Type"],
+      ["sponsoredListing", "sponsored_listing", "Sponsored Listing"],
+      ["boostListing", "boost_listing", "Boost Listing"],
     ];
 
-    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    const missing = requiredFields.find((field) => {
+      const fieldKeys = field.slice(0, -1);
+      return getVisibleCategoryFieldKey(...fieldKeys) && !getAttributeValue(categoryAttributes, ...fieldKeys).trim();
+    });
     if (missing) {
       return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
     }
@@ -3311,11 +3317,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return validateInlineCategoryRules([{ keys: ["price", "listing_price", "total_price"], formKey: getVisibleCategoryFieldKey("price", "listing_price", "total_price") ? undefined : "price", message: "Price is required for Care Services listings." }]);
     }
 
-    if (form.subCategory === "Nursing Services" && !getAttributeValue(categoryAttributes, "licenseNumber", "license_number").trim()) {
+    if (isNursingCareSubCategory(form.subCategory) && !getAttributeValue(categoryAttributes, "licenseNumber", "license_number").trim()) {
       return validateInlineCategoryRules([{ keys: ["licenseNumber", "license_number"], message: "License Number is required for Nursing Services." }]);
     }
 
-    if (form.subCategory === "Nursing Services" && !getAttributeValue(categoryAttributes, "certificationDocuments", "certification_documents").trim()) {
+    if (isNursingCareSubCategory(form.subCategory) && !getAttributeValue(categoryAttributes, "certificationDocuments", "certification_documents").trim()) {
       return validateInlineCategoryRules([{ keys: ["certificationDocuments", "certification_documents"], message: "Certifications are required for Nursing Services." }]);
     }
 
@@ -3778,7 +3784,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
               {wizardSteps.length > 2 && currentStep === 1 ? (
                 <div className="log">
                   <div className="login">
-                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : "Category Details"}</h4>
+                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : form.categoryName === "Care Services" ? "Care Service Details" : "Category Details"}</h4>
                     <form className="listing_form_2" noValidate autoComplete="off">
                       {isRealEstateListing ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={40} />
@@ -4623,7 +4629,13 @@ function CategoryAttributesFields({
   const fields = baseFields
     .filter((field) => shouldShowCategoryAttributeField(field, values, form))
     .filter((field) => !omitLocationFields || !isSharedListingLocationAttributeField(field));
-  const sections = groupCategoryAttributeFields(fields, categoryName);
+  const careLocationFields = categoryName === "Care Services" && locationSection
+    ? fields.filter((field) => field.sectionName === "Service Location")
+    : [];
+  const fieldsForSections = careLocationFields.length
+    ? fields.filter((field) => field.sectionName !== "Service Location")
+    : fields;
+  const sections = groupCategoryAttributeFields(fieldsForSections, categoryName);
   const sectionEntries = [
     ...sections.map((section) => ({
       key: `section-${section.name}`,
@@ -4633,7 +4645,14 @@ function CategoryAttributesFields({
     ...(locationSection ? [{
       key: "shared-listing-location",
       order: locationSectionOrder,
-      content: locationSection,
+      content: careLocationFields.length ? (
+        <>
+          {locationSection}
+          <div className="row">
+            {careLocationFields.map((field) => renderCategoryAttributeField(field))}
+          </div>
+        </>
+      ) : locationSection,
     }] : []),
   ].sort((left, right) => left.order - right.order || left.key.localeCompare(right.key));
 
@@ -4650,72 +4669,72 @@ function CategoryAttributesFields({
       <div key={section.name}>
         <h5 className="mt-3 mb-3">{section.name}</h5>
         <div className="row">
-          {section.fields.map((field) => {
-            const displayLabel = labelWithCountryCurrency(field.isRequired ? `${field.label}*` : field.label, currencyCountry);
-            const error = fieldErrors[categoryFieldErrorKey(field.key)];
-
-            if (isUploadCategoryField(field)) {
-              return (
-                <FileUploadColumn
-                  key={field.key}
-                  label={fieldLabelFromPlaceholder(displayLabel)}
-                  accept={getUploadAcceptForField(field)}
-                  value={values[field.key] || ""}
-                  error={error}
-                  files={uploadFiles}
-                  onFilesChange={onUploadFilesChange}
-                  onChange={(value) => updateAttribute(field.key, value)}
-                />
-              );
-            }
-
-            return field.options?.length ? (
-              <SelectColumn
-                key={field.key}
-                placeholder={displayLabel}
-                value={values[field.key] || ""}
-                error={error}
-                options={field.options}
-                onChange={(value) => updateAttribute(field.key, value)}
-              />
-            ) : (
-              field.type === "textarea" ? (
-                <div className="col-md-12" key={field.key}>
-                  <div className="form-group">
-                    <label className="listing-field-label">{fieldLabelFromPlaceholder(displayLabel)}</label>
-                    <textarea
-                      className={`form-control${error ? " is-invalid" : ""}`}
-                      placeholder={cleanOptionalText(displayLabel)}
-                      value={values[field.key] || ""}
-                      rows={3}
-                      onChange={(event) => updateAttribute(field.key, event.target.value)}
-                    />
-                    <FieldError message={error} />
-                  </div>
-                </div>
-              ) : field.type === "checkbox" ? (
-                <div className="col-md-6" key={field.key}>
-                  <CheckboxField
-                    label={fieldLabelFromPlaceholder(displayLabel)}
-                    checked={values[field.key] === "true"}
-                    error={error}
-                    onChange={(value) => updateAttribute(field.key, String(value))}
-                  />
-                </div>
-              ) : (
-                <InputColumn
-                  key={field.key}
-                  placeholder={displayLabel}
-                  type={field.type || "text"}
-                  value={values[field.key] || ""}
-                  error={error}
-                  onChange={(value) => updateAttribute(field.key, value)}
-                />
-              )
-            );
-          })}
+          {section.fields.map((field) => renderCategoryAttributeField(field))}
         </div>
       </div>
+    );
+  }
+
+  function renderCategoryAttributeField(field: CategoryAttributeField) {
+    const displayLabel = labelWithCountryCurrency(field.isRequired ? `${field.label}*` : field.label, currencyCountry);
+    const error = fieldErrors[categoryFieldErrorKey(field.key)];
+
+    if (isUploadCategoryField(field)) {
+      return (
+        <FileUploadColumn
+          key={field.key}
+          label={fieldLabelFromPlaceholder(displayLabel)}
+          accept={getUploadAcceptForField(field)}
+          value={values[field.key] || ""}
+          error={error}
+          files={uploadFiles}
+          onFilesChange={onUploadFilesChange}
+          onChange={(value) => updateAttribute(field.key, value)}
+        />
+      );
+    }
+
+    return field.options?.length ? (
+      <SelectColumn
+        key={field.key}
+        placeholder={displayLabel}
+        value={values[field.key] || ""}
+        error={error}
+        options={field.options}
+        onChange={(value) => updateAttribute(field.key, value)}
+      />
+    ) : field.type === "textarea" ? (
+      <div className="col-md-12" key={field.key}>
+        <div className="form-group">
+          <label className="listing-field-label">{fieldLabelFromPlaceholder(displayLabel)}</label>
+          <textarea
+            className={`form-control${error ? " is-invalid" : ""}`}
+            placeholder={cleanOptionalText(displayLabel)}
+            value={values[field.key] || ""}
+            rows={3}
+            onChange={(event) => updateAttribute(field.key, event.target.value)}
+          />
+          <FieldError message={error} />
+        </div>
+      </div>
+    ) : field.type === "checkbox" ? (
+      <div className="col-md-6" key={field.key}>
+        <CheckboxField
+          label={fieldLabelFromPlaceholder(displayLabel)}
+          checked={values[field.key] === "true"}
+          error={error}
+          onChange={(value) => updateAttribute(field.key, String(value))}
+        />
+      </div>
+    ) : (
+      <InputColumn
+        key={field.key}
+        placeholder={displayLabel}
+        type={field.type || "text"}
+        value={values[field.key] || ""}
+        error={error}
+        onChange={(value) => updateAttribute(field.key, value)}
+      />
     );
   }
 
@@ -6984,7 +7003,9 @@ function buildListingPayload(
   mode: ListingFormMode = "listing",
 ): UpsertListingPayload {
   const isClassifiedMode = mode === "classified";
-  const listingDescription = form.description.trim() || form.businessDescription.trim();
+  const careServiceTitle = form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "serviceTitle", "service_title").trim() : "";
+  const careServiceDescription = form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "description", "serviceDescription", "service_description").trim() : "";
+  const listingDescription = careServiceDescription || form.description.trim() || form.businessDescription.trim();
   const businessDescription = form.businessDescription.trim() || form.description.trim();
   const listingPrice =
     numberAttribute(categoryAttributes, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price") ??
@@ -7016,7 +7037,7 @@ function buildListingPayload(
     .map(([label]) => label);
 
   return {
-    title: form.title.trim(),
+    title: careServiceTitle || form.title.trim(),
     description: listingDescription,
     categoryName: isClassifiedMode ? "Classifieds" : form.categoryName.trim(),
     subCategory: isClassifiedMode ? form.categoryName.trim() : form.subCategory.trim(),
@@ -7132,6 +7153,24 @@ function buildListingPayload(
       metaTitle: form.metaTitle.trim(),
       metaDescription: form.metaDescription.trim(),
       verifiedByAdmin: false,
+      careBusinessCaregiverName: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "businessCaregiverName", "business_caregiver_name").trim() : "",
+      careTagline: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "tagline").trim() : "",
+      careMinimumHoursRequired: form.categoryName === "Care Services" ? numberAttribute(categoryAttributes, "minimumHoursRequired", "minimum_hours_required") : null,
+      carePriceNegotiable: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "price_negotiable", "priceNegotiable", "negotiable").trim() : "",
+      careSmokingAllowed: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "smokingAllowed", "smoking_allowed").trim() : "",
+      carePetFriendly: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "petFriendly", "pet_friendly").trim() : "",
+      careBusinessLogo: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "businessLogo", "business_logo").trim() : "",
+      careHipaaCompliance: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "hipaaCompliance", "hipaa_compliance").trim() : "",
+      careOnlineConsultation: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "onlineConsultation", "online_consultation").trim() : "",
+      careEmergencyAvailability: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "emergencyAvailability", "emergency_availability").trim() : "",
+      careChildAgeGroup: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "childAgeGroup", "child_age_group").trim() : "",
+      careSchoolPickupOption: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "schoolPickupOption", "school_pickup_option").trim() : "",
+      careMobilityAssistance: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "mobilityAssistance", "mobility_assistance").trim() : "",
+      careDementiaCareExperience: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "dementiaCareExperience", "dementia_care_experience").trim() : "",
+      carePetTypeExperience: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "petTypeExperience", "pet_type_experience").trim() : "",
+      careStaffCount: form.categoryName === "Care Services" ? numberAttribute(categoryAttributes, "staffCount", "staff_count") : null,
+      careSponsoredListing: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "sponsoredListing", "sponsored_listing").trim() : "",
+      careBoostListing: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "boostListing", "boost_listing").trim() : "",
     },
     restaurantFoodDetails: {
       restaurantName: restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "restaurant_name", "restaurantName").trim() || form.title.trim(),
@@ -7736,6 +7775,14 @@ function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryA
   const locationDetails = listing.locationDetails || {};
   const settings = listing.settings || {};
   const values: CategoryAttributes = {
+    serviceTitle: stringValue(listing.title),
+    service_title: stringValue(listing.title),
+    description: stringValue(listing.description),
+    serviceDescription: stringValue(listing.description),
+    service_description: stringValue(listing.description),
+    businessCaregiverName: stringValue(settings.careBusinessCaregiverName),
+    business_caregiver_name: stringValue(settings.careBusinessCaregiverName),
+    tagline: stringValue(settings.careTagline),
     providerType: stringValue(details.providerType),
     provider_type: stringValue(details.providerType),
     experienceYears: stringValue(details.experienceYears),
@@ -7752,6 +7799,8 @@ function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryA
     start_date: stringValue(details.startDate).slice(0, 10),
     rateType: stringValue(details.rateType),
     rate_type: stringValue(details.rateType),
+    minimumHoursRequired: stringValue(settings.careMinimumHoursRequired),
+    minimum_hours_required: stringValue(settings.careMinimumHoursRequired),
     willingToTravel: booleanSelectValue(details.willingToTravel),
     willing_to_travel: booleanSelectValue(details.willingToTravel),
     serviceRadiusMiles: stringValue(details.serviceRadiusMiles),
@@ -7785,6 +7834,8 @@ function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryA
     certification_documents: Array.isArray(details.certificationDocuments) ? details.certificationDocuments.map(String).join(", ") : "",
     videoIntroductionUrl: stringValue(details.videoIntroductionUrl),
     video_introduction_url: stringValue(details.videoIntroductionUrl),
+    businessLogo: stringValue(settings.careBusinessLogo),
+    business_logo: stringValue(settings.careBusinessLogo),
     chatEnabled: booleanSelectValue(details.chatEnabled),
     chat_enabled: booleanSelectValue(details.chatEnabled),
     callEnabled: booleanSelectValue(details.callEnabled),
@@ -7797,9 +7848,35 @@ function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryA
     background_verification: booleanSelectValue(details.backgroundVerification),
     serviceDisclaimer: stringValue(details.serviceDisclaimer),
     service_disclaimer: stringValue(details.serviceDisclaimer),
+    hipaaCompliance: stringValue(settings.careHipaaCompliance),
+    hipaa_compliance: stringValue(settings.careHipaaCompliance),
     insurance: stringValue(details.insurance),
+    onlineConsultation: stringValue(settings.careOnlineConsultation),
+    online_consultation: stringValue(settings.careOnlineConsultation),
+    emergencyAvailability: stringValue(settings.careEmergencyAvailability),
+    emergency_availability: stringValue(settings.careEmergencyAvailability),
+    childAgeGroup: stringValue(settings.careChildAgeGroup),
+    child_age_group: stringValue(settings.careChildAgeGroup),
+    schoolPickupOption: stringValue(settings.careSchoolPickupOption),
+    school_pickup_option: stringValue(settings.careSchoolPickupOption),
+    mobilityAssistance: stringValue(settings.careMobilityAssistance),
+    mobility_assistance: stringValue(settings.careMobilityAssistance),
+    dementiaCareExperience: stringValue(settings.careDementiaCareExperience),
+    dementia_care_experience: stringValue(settings.careDementiaCareExperience),
+    petTypeExperience: stringValue(settings.carePetTypeExperience),
+    pet_type_experience: stringValue(settings.carePetTypeExperience),
+    staffCount: stringValue(settings.careStaffCount),
+    staff_count: stringValue(settings.careStaffCount),
+    sponsoredListing: stringValue(settings.careSponsoredListing),
+    sponsored_listing: stringValue(settings.careSponsoredListing),
+    boostListing: stringValue(settings.careBoostListing),
+    boost_listing: stringValue(settings.careBoostListing),
     price: stringValue(priceDetails.price || listing.price),
-    price_negotiable: priceDetails.priceNegotiable === false ? "No" : priceDetails.priceNegotiable === true ? "Yes" : "",
+    price_negotiable: stringValue(settings.carePriceNegotiable) || (priceDetails.priceNegotiable === false ? "No" : priceDetails.priceNegotiable === true ? "Yes" : ""),
+    smokingAllowed: stringValue(settings.careSmokingAllowed),
+    smoking_allowed: stringValue(settings.careSmokingAllowed),
+    petFriendly: stringValue(settings.carePetFriendly),
+    pet_friendly: stringValue(settings.carePetFriendly),
     area_locality: stringValue(locationDetails.locality || listing.locality),
     ad_type: stringValue(settings.adType),
     ad_duration_days: stringValue(settings.adDurationDays),
@@ -8317,7 +8394,9 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
         : categoryName === "Care Services"
           ? careServiceFields
           : furniturePostingCommonFields;
-  const requiredFields = [...fields, ...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
+  const requiredFields = categoryName === "Care Services"
+    ? [...commonFields, ...fields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)]
+    : [...fields, ...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
 
   return dedupeCategoryPostingFields(requiredFields);
 }
@@ -8441,6 +8520,8 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["smartfeatures", "smart_features"],
     ["remotecontrol", "remote_control"],
     ["providertype", "provider_type"],
+    ["servicetitle", "service_title", "listingtitle", "listing_title"],
+    ["description", "servicedescription", "service_description"],
     ["businesscaregivername", "business_caregiver_name"],
     ["experienceyears", "experience_years"],
     ["languagesspoken", "languages_spoken"],
@@ -8481,6 +8562,19 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["identityverification", "identity_verification"],
     ["backgroundverification", "background_verification"],
     ["servicedisclaimer", "service_disclaimer"],
+    ["minimumhoursrequired", "minimum_hours_required"],
+    ["smokingallowed", "smoking_allowed"],
+    ["petfriendly", "pet_friendly"],
+    ["businesslogo", "business_logo"],
+    ["hipaacompliance", "hipaa_compliance"],
+    ["onlineconsultation", "online_consultation"],
+    ["emergencyavailability", "emergency_availability"],
+    ["childagegroup", "child_age_group"],
+    ["schoolpickupoption", "school_pickup_option"],
+    ["mobilityassistance", "mobility_assistance"],
+    ["dementiacareexperience", "dementia_care_experience"],
+    ["pettypeexperience", "pet_type_experience"],
+    ["staffcount", "staff_count"],
   ].map((group) => new Set(group));
 
   return aliases.some((group) => group.has(first) && group.has(second));
@@ -8510,11 +8604,10 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isBarsRestaurant = restaurantSubCategory === "bars & beverages";
   const isCateringRestaurant = restaurantSubCategory === "catering" || restaurantSubCategory === "catering services";
   const isFoodTruckRestaurant = restaurantSubCategory === "food trucks & pop-ups";
-  const careSubCategory = form.subCategory.toLowerCase();
-  const isChildCare = careSubCategory === "child care services" || careSubCategory === "babysitting & nanny services";
-  const isElderCare = careSubCategory === "elder care services";
-  const isNursingCare = careSubCategory === "nursing services";
-  const isPetCare = careSubCategory === "pet care services";
+  const isChildCare = isChildCareSubCategory(form.subCategory);
+  const isElderCare = isElderCareSubCategory(form.subCategory);
+  const isNursingCare = isNursingCareSubCategory(form.subCategory);
+  const isPetCare = isPetCareSubCategory(form.subCategory);
   const isAgencyCare = getAttributeValue(values, "providerType", "provider_type").trim() === "Agency / Company";
   const eventSubCategory = form.subCategory.toLowerCase();
   const isEventsCategory = form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events";
@@ -8544,6 +8637,10 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isPetServiceListing = petSubCategory === "pet services" || petSubCategory === "pet boarding & daycare";
 
   if (form.categoryName === "Care Services") {
+    if (["referencesavailable", "references_available", "ad_duration_days", "addurationdays", "ad_duration"].includes(key)) {
+      return false;
+    }
+
     if (!isChildCare && ["childagegroup", "child_age_group", "schoolpickupoption", "school_pickup_option"].includes(key)) {
       return false;
     }
@@ -8556,11 +8653,11 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
       return false;
     }
 
-    if (!isAgencyCare && ["staffcount", "staff_count"].includes(key)) {
+    if (!isAgencyCare && ["insurance", "insurance_coverage", "staffcount", "staff_count", "businesslogo", "business_logo"].includes(key)) {
       return false;
     }
 
-    if (isPetCare && ["cnacertified", "cna_certified", "rnlpn", "rn_lpn", "licensenumber", "license_number", "certificationdocuments", "certification_documents", "hipaacompliance", "hipaa_compliance", "servicedisclaimer", "service_disclaimer"].includes(key)) {
+    if (isPetCare && ["cprcertified", "cpr_certified", "firstaidcertified", "first_aid_certified", "cnacertified", "cna_certified", "rnlpn", "rn_lpn", "licensenumber", "license_number", "certificationdocuments", "certification_documents", "hipaacompliance", "hipaa_compliance", "servicedisclaimer", "service_disclaimer"].includes(key)) {
       return false;
     }
 
@@ -8800,6 +8897,28 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
 
 function normalizeFieldKey(key: string) {
   return key.replace(/[^a-z0-9_]/gi, "").toLowerCase();
+}
+
+function normalizeCategoryName(value?: string | null) {
+  return value?.trim().toLowerCase() || "";
+}
+
+function isChildCareSubCategory(value?: string | null) {
+  const subCategory = normalizeCategoryName(value);
+  return subCategory.includes("child care") || subCategory.includes("babysitting") || subCategory.includes("nanny");
+}
+
+function isElderCareSubCategory(value?: string | null) {
+  const subCategory = normalizeCategoryName(value);
+  return subCategory.includes("elder care") || subCategory.includes("senior") || subCategory.includes("hospice") || subCategory.includes("palliative");
+}
+
+function isNursingCareSubCategory(value?: string | null) {
+  return normalizeCategoryName(value).includes("nursing");
+}
+
+function isPetCareSubCategory(value?: string | null) {
+  return normalizeCategoryName(value).includes("pet care");
 }
 
 function mapDynamicFieldDefinition(field: ListingCategoryFieldDefinition): CategoryAttributeField {

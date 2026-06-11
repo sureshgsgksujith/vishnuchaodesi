@@ -4,7 +4,18 @@ import {
   getPublicListings,
   type PublicListingQuery,
 } from "../../dashboard/api/listingsApi";
-import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
+import {
+  getLocationCities,
+  getLocationCountries,
+  getLocationStates,
+  type CityOption,
+  type CountryOption,
+  type StateOption,
+} from "../../../shared/api/locationMastersApi";
+import {
+  getCityFromLocationLabel,
+  useHomeSelectedLocation,
+} from "../hooks/useHomeSelectedLocation";
 
 type HomeCategorySlug = NonNullable<PublicListingQuery["category"]>;
 
@@ -35,6 +46,7 @@ const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> 
 ];
 
 const defaultCityOptions = [
+  "Novi",
   "Chicago",
   "Houston",
   "Phoenix",
@@ -68,10 +80,6 @@ const emptySummary: HomeListingSummary = {
   cities: [],
 };
 
-function getCityFromLocationLabel(label?: string | null) {
-  return label?.split(",")[0]?.trim() || "";
-}
-
 function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
   if (item.href) {
     return item.href;
@@ -90,9 +98,48 @@ function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
   return `/all-listing?${params.toString()}`;
 }
 
+function buildListingsHref(category: HomeCategorySlug | "", city: string) {
+  const params = new URLSearchParams();
+
+  if (category) {
+    params.set("category", category);
+  }
+
+  if (city) {
+    params.set("city", city);
+  }
+
+  return `/all-listing${params.toString() ? `?${params.toString()}` : ""}`;
+}
+
 function uniqueSorted(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.map((value) => value?.trim()).filter(Boolean) as string[]))
     .sort((a, b) => a.localeCompare(b));
+}
+
+function namesMatch(left?: string | null, right?: string | null) {
+  return Boolean(left && right && left.trim().toLowerCase() === right.trim().toLowerCase());
+}
+
+function findCountryByName(countries: CountryOption[], countryName?: string | null) {
+  const cleanCountryName = countryName?.trim();
+
+  if (!cleanCountryName) {
+    return undefined;
+  }
+
+  return countries.find((country) => {
+    const isUnitedStates =
+      namesMatch(country.name, "United States") ||
+      namesMatch(country.name, "United States of America") ||
+      namesMatch(country.code, "US") ||
+      namesMatch(country.code, "USA");
+    const aliases = isUnitedStates
+      ? [country.name, country.code, "United States", "United States of America", "USA", "US"]
+      : [country.name, country.code];
+
+    return aliases.some((alias) => namesMatch(alias, cleanCountryName));
+  });
 }
 
 function formatCount(count: number) {
@@ -116,46 +163,244 @@ function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
 
 export default function HomeHeroSection() {
   const navigate = useNavigate();
-  const currentLocation = useCurrentLocationLabel();
+  const {
+    currentLocation,
+    currentCity,
+    selectedLocation,
+    selectedCity,
+    activeCity,
+    activeLocationLabel,
+    setHomeSelectedLocation,
+  } = useHomeSelectedLocation();
   const [selectedCategory, setSelectedCategory] = useState<HomeCategorySlug | "">("");
-  const [selectedCity, setSelectedCity] = useState("current-location");
   const [selectedKeyword, setSelectedKeyword] = useState("");
   const [searchText, setSearchText] = useState("");
   const [listingSummary, setListingSummary] = useState<HomeListingSummary>(emptySummary);
-  const currentCity = currentLocation.city || getCityFromLocationLabel(currentLocation.label);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [states, setStates] = useState<StateOption[]>([]);
+  const [cities, setCities] = useState<CityOption[]>([]);
+  const [draftCountryId, setDraftCountryId] = useState("");
+  const [draftStateId, setDraftStateId] = useState("");
+  const [draftCityName, setDraftCityName] = useState("");
+  const [pendingStateName, setPendingStateName] = useState("");
+  const [pendingCityName, setPendingCityName] = useState("");
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [locationReloadKey, setLocationReloadKey] = useState(0);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
   const cityOptions = useMemo(
-    () => uniqueSorted([...listingSummary.cities, ...defaultCityOptions, currentCity]),
-    [currentCity, listingSummary.cities],
+    () => uniqueSorted([...listingSummary.cities, ...defaultCityOptions, currentCity, activeCity]),
+    [activeCity, currentCity, listingSummary.cities],
+  );
+  const modalCityOptions = useMemo(
+    () => uniqueSorted([
+      ...cities.map((city) => city.name),
+      ...cityOptions,
+      draftCityName,
+      pendingCityName,
+    ]),
+    [cities, cityOptions, draftCityName, pendingCityName],
   );
   const topCounts = useMemo(
     () => [
-      { title: "All Listings", count: formatCount(listingSummary.totalCount), image: "/template-17/images/icon/listing.png", href: "/all-listing" },
+      { title: "All Listings", count: formatCount(listingSummary.totalCount), image: "/template-17/images/icon/listing.png", href: buildListingsHref("", activeCity) },
       ...listingCategoryOptions.map((category) => ({
         title: category.label,
         count: formatCount(listingSummary.categoryCounts[category.value] || 0),
         image: quickLinks.find((item) => item.category === category.value)?.image || "/template-17/images/icon/listing.png",
-        href: `/all-listing?category=${category.value}`,
+        href: buildListingsHref(category.value, activeCity),
       })),
     ],
-    [listingSummary.categoryCounts, listingSummary.totalCount],
+    [activeCity, listingSummary.categoryCounts, listingSummary.totalCount],
   );
   const heroLocationText =
-    currentLocation.status === "ready" && currentLocation.label
-      ? currentLocation.label
+    activeLocationLabel
+      ? activeLocationLabel
       : "your current location";
-  const citySelectText =
+  const locationButtonText =
     currentLocation.status === "loading"
       ? "Detecting location"
-      : currentLocation.label || "Use current location";
+      : activeLocationLabel || "Use current location";
+
+  useEffect(() => {
+    if (isLocationModalOpen) {
+      const nextCity = selectedLocation.cityName || activeCity || currentCity || getCityFromLocationLabel(currentLocation.label);
+      const nextState = selectedLocation.stateName || currentLocation.state || "";
+      const nextCountry = selectedLocation.countryName || currentLocation.country || "";
+      const matchedCountry = findCountryByName(countries, nextCountry);
+
+      setDraftCountryId(matchedCountry ? String(matchedCountry.id) : "");
+      setDraftStateId("");
+      setDraftCityName(nextCity);
+      setPendingStateName(nextState);
+      setPendingCityName(nextCity);
+    }
+  }, [
+    activeCity,
+    countries,
+    currentCity,
+    currentLocation.country,
+    currentLocation.label,
+    currentLocation.state,
+    isLocationModalOpen,
+    selectedLocation.cityName,
+    selectedLocation.countryName,
+    selectedLocation.stateName,
+  ]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    setIsLoadingCountries(true);
+    getLocationCountries()
+      .then((items) => {
+        if (isActive) {
+          setCountries(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setCountries([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingCountries(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+    const countryId = Number(draftCountryId);
+
+    if (!countryId) {
+      setStates([]);
+      setDraftStateId("");
+      setCities([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsLoadingStates(true);
+    getLocationStates(countryId)
+      .then((items) => {
+        if (isActive) {
+          setStates(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setStates([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingStates(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [draftCountryId]);
+
+  useEffect(() => {
+    if (!pendingStateName || !states.length || draftStateId) {
+      return;
+    }
+
+    const matchedState = states.find((state) => namesMatch(state.name, pendingStateName) || namesMatch(state.code, pendingStateName));
+
+    if (matchedState) {
+      setDraftStateId(String(matchedState.id));
+      setPendingStateName("");
+    }
+  }, [draftStateId, pendingStateName, states]);
+
+  useEffect(() => {
+    let isActive = true;
+    const stateId = Number(draftStateId);
+
+    if (!stateId) {
+      setCities([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsLoadingCities(true);
+    getLocationCities(stateId)
+      .then((items) => {
+        if (isActive) {
+          setCities(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setCities([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingCities(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [draftStateId]);
+
+  useEffect(() => {
+    if (!pendingCityName || !cities.length) {
+      return;
+    }
+
+    const matchedCity = cities.find((city) => namesMatch(city.name, pendingCityName));
+
+    if (matchedCity) {
+      setDraftCityName(matchedCity.name);
+      setPendingCityName("");
+    }
+  }, [cities, pendingCityName]);
+
+  useEffect(() => {
+    if (!isLocationModalOpen) {
+      return undefined;
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsLocationModalOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isLocationModalOpen]);
 
   useEffect(() => {
     let isActive = true;
 
     async function loadHomeListings() {
+      setIsSummaryLoading(true);
+      const cityFilter = activeCity || undefined;
+      const forceRefresh = locationReloadKey > 0;
       const [allListingsResult, ...categoryResults] = await Promise.allSettled([
-        getPublicListings({ page: 1, pageSize: 1 }),
+        getPublicListings({ city: cityFilter, page: 1, pageSize: 1, forceRefresh }),
         ...listingCategoryOptions.map((category) =>
-          getPublicListings({ category: category.value, page: 1, pageSize: 1 }),
+          getPublicListings({ category: category.value, city: cityFilter, page: 1, pageSize: 1, forceRefresh }),
         ),
       ]);
 
@@ -176,6 +421,7 @@ export default function HomeHeroSection() {
         categoryCounts,
         cities: [],
       });
+      setIsSummaryLoading(false);
     }
 
     void loadHomeListings();
@@ -183,7 +429,47 @@ export default function HomeHeroSection() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [activeCity, locationReloadKey]);
+
+  function applyLocationSelection() {
+    const country = countries.find((item) => String(item.id) === draftCountryId);
+    const state = states.find((item) => String(item.id) === draftStateId);
+    const nextCity = draftCityName.trim() || currentCity || getCityFromLocationLabel(currentLocation.label);
+
+    setHomeSelectedLocation({
+      countryName: country?.name || "",
+      stateName: state?.name || "",
+      cityName: nextCity,
+    });
+    setLocationReloadKey((value) => value + 1);
+    setIsLocationModalOpen(false);
+  }
+
+  function useDetectedLocation() {
+    const detectedCity = currentCity || getCityFromLocationLabel(currentLocation.label);
+    const matchedCountry = findCountryByName(countries, currentLocation.country);
+
+    setDraftCountryId(matchedCountry ? String(matchedCountry.id) : "");
+    setDraftStateId("");
+    setDraftCityName(detectedCity);
+    setPendingStateName(currentLocation.state || "");
+    setPendingCityName(detectedCity);
+  }
+
+  function handleCountryChange(countryId: string) {
+    setDraftCountryId(countryId);
+    setDraftStateId("");
+    setDraftCityName("");
+    setPendingStateName("");
+    setPendingCityName("");
+    setCities([]);
+  }
+
+  function handleStateChange(stateId: string) {
+    setDraftStateId(stateId);
+    setDraftCityName("");
+    setPendingCityName("");
+  }
 
   function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -192,7 +478,7 @@ export default function HomeHeroSection() {
     const keyword = searchText.trim() || selectedKeyword.trim();
     const keywordCategory = getCategoryForSearchKeyword(keyword);
     const category = selectedCategory || keywordCategory;
-    const city = selectedCity === "current-location" ? currentCity : selectedCity;
+    const city = activeCity;
 
     if (category) {
       params.set("category", category);
@@ -250,18 +536,16 @@ export default function HomeHeroSection() {
                 </li>
 
                 <li className="sr-cit">
-                  <select
-                    id="city_check"
-                    name="city_check"
-                    className="chosen-select"
-                    value={selectedCity}
-                    onChange={(event) => setSelectedCity(event.target.value)}
+                  <button
+                    type="button"
+                    className="home-location-trigger"
+                    onClick={() => setIsLocationModalOpen(true)}
+                    aria-haspopup="dialog"
+                    aria-expanded={isLocationModalOpen}
                   >
-                    <option value="current-location">{citySelectText}</option>
-                    {cityOptions.map((city) => (
-                      <option value={city} key={city}>{city}</option>
-                    ))}
-                  </select>
+                    <i className="material-icons" aria-hidden="true">my_location</i>
+                    <span>{locationButtonText}</span>
+                  </button>
                 </li>
 
                 <li className="sr-nor">
@@ -305,6 +589,122 @@ export default function HomeHeroSection() {
             </form>
           </div>
 
+          {isLocationModalOpen ? (
+            <div
+              className="home-location-modal-backdrop"
+              role="presentation"
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget) {
+                  setIsLocationModalOpen(false);
+                }
+              }}
+            >
+              <div
+                className="home-location-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="home-location-title"
+              >
+                <button
+                  type="button"
+                  className="home-location-modal-close"
+                  onClick={() => setIsLocationModalOpen(false)}
+                  aria-label="Close location popup"
+                >
+                  <i className="material-icons" aria-hidden="true">close</i>
+                </button>
+
+                <div className="home-location-modal-head">
+                  <i className="material-icons" aria-hidden="true">location_on</i>
+                  <div>
+                    <h3 id="home-location-title">Location</h3>
+                    <p>{currentLocation.label || selectedCity || "Current location unavailable"}</p>
+                  </div>
+                </div>
+
+                <div className="home-location-select-grid">
+                  <label htmlFor="home-location-country">
+                    Country
+                    <select
+                      id="home-location-country"
+                      value={draftCountryId}
+                      onChange={(event) => handleCountryChange(event.target.value)}
+                      disabled={isLoadingCountries}
+                      autoFocus
+                    >
+                      <option value="">{isLoadingCountries ? "Loading countries" : "Select Country"}</option>
+                      {countries.map((country) => (
+                        <option value={country.id} key={country.id}>{country.name}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label htmlFor="home-location-state">
+                    State
+                    <select
+                      id="home-location-state"
+                      value={draftStateId}
+                      onChange={(event) => handleStateChange(event.target.value)}
+                      disabled={!draftCountryId || isLoadingStates}
+                    >
+                      <option value="">{isLoadingStates ? "Loading states" : "Select State"}</option>
+                      {states.map((state) => (
+                        <option value={state.id} key={state.id}>{state.name}</option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label htmlFor="home-location-city">
+                    City
+                    <select
+                      id="home-location-city"
+                      value={draftCityName}
+                      onChange={(event) => setDraftCityName(event.target.value)}
+                      disabled={!draftStateId || isLoadingCities}
+                    >
+                      <option value="">{isLoadingCities ? "Loading cities" : "Select City"}</option>
+                      {modalCityOptions.map((city) => (
+                        <option value={city} key={city}>{city}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                {isLoadingCountries || isLoadingStates || isLoadingCities ? (
+                  <div className="home-location-loading">
+                    <span className="home-location-spinner" aria-hidden="true"></span>
+                    {isLoadingCountries
+                      ? "Loading countries"
+                      : isLoadingStates
+                        ? "Loading states"
+                        : "Loading cities"}
+                  </div>
+                ) : null}
+
+                <div className="home-location-modal-actions">
+                  <button
+                    type="button"
+                    className="home-location-secondary"
+                    onClick={useDetectedLocation}
+                    disabled={!currentCity && !currentLocation.label}
+                  >
+                    <i className="material-icons" aria-hidden="true">my_location</i>
+                    Use current
+                  </button>
+                  <button
+                    type="button"
+                    className="home-location-primary"
+                    onClick={applyLocationSelection}
+                    disabled={isSummaryLoading || !draftCityName.trim()}
+                  >
+                    <i className="material-icons" aria-hidden="true">refresh</i>
+                    {isSummaryLoading ? "Loading" : "Reload"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="ban-short-links ani">
             <ul>
               {quickLinks.map((item) => (
@@ -312,7 +712,7 @@ export default function HomeHeroSection() {
                   <div>
                     <img src={item.image} alt={item.title} />
                     <h4>{item.title}</h4>
-                    <a href={buildQuickLinkHref(item, currentCity)} className="fclick"></a>
+                    <a href={buildQuickLinkHref(item, activeCity)} className="fclick"></a>
                   </div>
                 </li>
               ))}

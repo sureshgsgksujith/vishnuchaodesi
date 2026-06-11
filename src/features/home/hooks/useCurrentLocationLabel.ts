@@ -7,7 +7,9 @@ type LocationSource = "browser" | "ip" | "none";
 type ReverseGeocodeResult = {
   label: string | null;
   city: string | null;
+  country?: string | null;
   precision?: LocationPrecision;
+  state?: string | null;
 };
 
 type CurrentLocationResult = ReverseGeocodeResult & {
@@ -30,6 +32,8 @@ type OpenCageReverseGeocodeResponse = {
       city?: string;
       county?: string;
       city_district?: string;
+      country?: string;
+      country_code?: string;
       neighbourhood?: string;
       postcode?: string;
       quarter?: string;
@@ -54,8 +58,10 @@ type IpLocationResponse = {
 type CurrentLocationState = {
   accuracyMeters?: number | null;
   city?: string | null;
+  country?: string | null;
   label: string | null;
   source?: LocationSource;
+  state?: string | null;
   status: LocationStatus;
 };
 
@@ -207,8 +213,10 @@ const reverseGeocodeWithOpenCage = async (latitude: number, longitude: number) =
 
   return {
     city,
+    country: components.country || null,
     label: formatLocationLabel(locality, district, cityName && !district ? cityName : null, components.state_code || components.state),
     precision: locality ? "locality" : district ? "district" : "city",
+    state: components.state || components.state_code || null,
   } satisfies ReverseGeocodeResult;
 };
 
@@ -230,8 +238,10 @@ const reverseGeocodeWithFallbackService = async (latitude: number, longitude: nu
 
   return {
     city,
+    country: data.countryName || null,
     label: formatLocationLabel(data.locality === city ? null : data.locality, city, state || data.countryName),
     precision: data.locality && data.locality !== city ? "locality" : "city",
+    state: state || null,
   } satisfies ReverseGeocodeResult;
 };
 
@@ -270,8 +280,10 @@ const getApproximateLocationFromIp = async () => {
 
   return {
     city: data.city || null,
+    country: data.country_name || null,
     label: formatLocationLabel(data.city, data.region_code || data.region, data.country_name),
     precision: "city",
+    state: data.region || data.region_code || null,
   } satisfies ReverseGeocodeResult;
 };
 
@@ -296,7 +308,9 @@ const getCurrentLocation = async (): Promise<CurrentLocationResult> => {
 
   return {
     city: fallbackLocation?.city || null,
+    country: fallbackLocation?.country || null,
     label: fallbackLocation?.label || null,
+    state: fallbackLocation?.state || null,
     accuracyMeters: null,
     source: fallbackLocation?.label ? "ip" : "none",
   };
@@ -337,7 +351,7 @@ export function useCurrentLocationLabel(): CurrentLocationState {
       }
 
       if (isMounted) {
-        setLocation({ accuracyMeters: null, city: null, label: null, source: "none", status: "unavailable" });
+        setLocation({ accuracyMeters: null, city: null, country: null, label: null, source: "none", state: null, status: "unavailable" });
       }
     };
 

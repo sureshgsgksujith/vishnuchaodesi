@@ -37,24 +37,49 @@ type ListResponse<T> = {
   items: T[];
 };
 
+let countriesCache: CountryOption[] | null = null;
+const statesCache = new Map<string, StateOption[]>();
+const citiesCache = new Map<string, CityOption[]>();
+
 export async function getLocationCountries() {
+  if (countriesCache) {
+    return countriesCache;
+  }
+
   const response = await apiClient.get<ListResponse<CountryOption>>("/location-masters/countries", {
     params: { page: 1, pageSize: 200 },
   });
-  return response.data.items;
+  countriesCache = response.data.items;
+  return countriesCache;
 }
 
 export async function getLocationStates(countryId?: number) {
+  const cacheKey = String(countryId || "all");
+  const cachedStates = statesCache.get(cacheKey);
+
+  if (cachedStates) {
+    return cachedStates;
+  }
+
   const response = await apiClient.get<ListResponse<StateOption>>("/location-masters/states", {
     params: { countryId, page: 1, pageSize: 200 },
   });
+  statesCache.set(cacheKey, response.data.items);
   return response.data.items;
 }
 
 export async function getLocationCities(stateId?: number) {
+  const cacheKey = String(stateId || "all");
+  const cachedCities = citiesCache.get(cacheKey);
+
+  if (cachedCities) {
+    return cachedCities;
+  }
+
   const response = await apiClient.get<ListResponse<CityOption>>("/location-masters/cities", {
     params: { stateId, page: 1, pageSize: 200 },
   });
+  citiesCache.set(cacheKey, response.data.items);
   return response.data.items;
 }
 

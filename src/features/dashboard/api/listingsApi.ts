@@ -224,6 +224,7 @@ export type PublicListingQuery = {
   search?: string;
   page?: number;
   pageSize?: number;
+  forceRefresh?: boolean;
 };
 
 const publicListingCache = new Map<string, { value: ListingListResponse; expiresAt: number }>();
@@ -242,7 +243,7 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
     pageSize: query.pageSize || 10,
   });
   const cached = publicListingCache.get(cacheKey);
-  if (cached && cached.expiresAt > Date.now()) {
+  if (!query.forceRefresh && cached && cached.expiresAt > Date.now()) {
     return cached.value;
   }
 

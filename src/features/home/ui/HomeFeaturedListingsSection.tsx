@@ -7,7 +7,7 @@ import {
   resolveListingImageUrl,
   setFallbackListingImage,
 } from "../../dashboard/utils/listingImages";
-import { useCurrentLocationLabel } from "../hooks/useCurrentLocationLabel";
+import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 
 type FeaturedListingCard = {
   title: string;
@@ -28,10 +28,6 @@ type FeaturedListingGroup = {
 };
 
 type FeaturedListingCategory = "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services";
-
-function getCityFromLocationLabel(label?: string | null) {
-  return label?.split(",")[0]?.trim() || "";
-}
 
 function buildListingGroupHref(
   category: FeaturedListingCategory,
@@ -85,17 +81,19 @@ function useFeaturedListingGroups() {
   const [restaurantItems, setRestaurantItems] = useState<FeaturedListingCard[]>([]);
   const [vehicleItems, setVehicleItems] = useState<FeaturedListingCard[]>([]);
   const [electronicsItems, setElectronicsItems] = useState<FeaturedListingCard[]>([]);
-  const currentLocation = useCurrentLocationLabel();
-  const currentCity = currentLocation.city || getCityFromLocationLabel(currentLocation.label);
+  const { currentLocation, selectedCity, activeCity, locationRevision } = useHomeSelectedLocation();
 
   useEffect(() => {
     let isActive = true;
 
-    if (currentLocation.status === "loading" || currentLocation.status === "idle") {
+    if (!selectedCity && (currentLocation.status === "loading" || currentLocation.status === "idle")) {
       return () => {
         isActive = false;
       };
     }
+
+    const cityFilter = activeCity || undefined;
+    const forceRefresh = locationRevision > 0;
 
     setRealEstateItems([]);
     setRestaurantItems([]);
@@ -103,10 +101,10 @@ function useFeaturedListingGroups() {
     setElectronicsItems([]);
 
     Promise.allSettled([
-      getPublicListings({ category: "real-estate", city: currentCity || undefined, page: 1, pageSize: 10 }),
-      getPublicListings({ category: "restaurants-food", city: currentCity || undefined, page: 1, pageSize: 10 }),
-      getPublicListings({ category: "vehicles", city: currentCity || undefined, page: 1, pageSize: 10 }),
-      getPublicListings({ category: "electronics-appliances", city: currentCity || undefined, page: 1, pageSize: 10 }),
+      getPublicListings({ category: "real-estate", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
+      getPublicListings({ category: "restaurants-food", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
+      getPublicListings({ category: "vehicles", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
+      getPublicListings({ category: "electronics-appliances", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
     ]).then(([realEstateResult, restaurantResult, vehicleResult, electronicsResult]) => {
       if (!isActive) {
         return;
@@ -114,25 +112,25 @@ function useFeaturedListingGroups() {
 
       if (realEstateResult.status === "fulfilled") {
         setRealEstateItems(
-          mapListingsToCards(realEstateResult.value.items, "real-estate", currentCity),
+          mapListingsToCards(realEstateResult.value.items, "real-estate", activeCity),
         );
       }
 
       if (restaurantResult.status === "fulfilled") {
         setRestaurantItems(
-          mapListingsToCards(restaurantResult.value.items, "restaurants-food", currentCity),
+          mapListingsToCards(restaurantResult.value.items, "restaurants-food", activeCity),
         );
       }
 
       if (vehicleResult.status === "fulfilled") {
         setVehicleItems(
-          mapListingsToCards(vehicleResult.value.items, "vehicles", currentCity),
+          mapListingsToCards(vehicleResult.value.items, "vehicles", activeCity),
         );
       }
 
       if (electronicsResult.status === "fulfilled") {
         setElectronicsItems(
-          mapListingsToCards(electronicsResult.value.items, "electronics-appliances", currentCity),
+          mapListingsToCards(electronicsResult.value.items, "electronics-appliances", activeCity),
         );
       }
     });
@@ -140,12 +138,12 @@ function useFeaturedListingGroups() {
     return () => {
       isActive = false;
     };
-  }, [currentCity, currentLocation.status]);
+  }, [activeCity, currentLocation.status, locationRevision, selectedCity]);
 
   return [
     {
       titleLead: "Featured Real Estate",
-      titleRest: currentCity ? `in ${currentCity}` : "in your city",
+      titleRest: activeCity ? `in ${activeCity}` : "in your city",
       description: "Explore premium apartments, commercial spaces, villas, and properties near you.",
       iconClass: "plac-hom-tit-ic-ser",
       showDetails: true,
@@ -153,9 +151,9 @@ function useFeaturedListingGroups() {
     },
     {
       titleLead: "Top Restaurants",
-      titleRest: currentCity ? `near ${currentCity}` : "Near You",
-      description: currentCity
-        ? `Discover popular restaurants, cafes, and fine dining experiences near ${currentCity}.`
+      titleRest: activeCity ? `near ${activeCity}` : "Near You",
+      description: activeCity
+        ? `Discover popular restaurants, cafes, and fine dining experiences near ${activeCity}.`
         : "Discover popular restaurants, cafes, and fine dining experiences near you.",
       iconClass: "plac-hom-tit-ic-eve",
       wrapperClass: "plac-det-eve",
@@ -164,7 +162,7 @@ function useFeaturedListingGroups() {
     },
     {
       titleLead: "Featured Vehicles",
-      titleRest: currentCity ? `in ${currentCity}` : "in your city",
+      titleRest: activeCity ? `in ${activeCity}` : "in your city",
       description: "Browse cars, bikes, rentals, commercial vehicles, and parts from local sellers.",
       iconClass: "plac-hom-tit-ic-ser",
       showDetails: true,
@@ -172,7 +170,7 @@ function useFeaturedListingGroups() {
     },
     {
       titleLead: "Electronics & Appliances",
-      titleRest: currentCity ? `in ${currentCity}` : "near you",
+      titleRest: activeCity ? `in ${activeCity}` : "near you",
       description: "Browse mobiles, laptops, TVs, appliances, accessories, and gadgets from local sellers.",
       iconClass: "plac-hom-tit-ic-ser",
       showDetails: true,
@@ -183,28 +181,35 @@ function useFeaturedListingGroups() {
 
 function useCareFeaturedListingGroup() {
   const [careServiceItems, setCareServiceItems] = useState<FeaturedListingCard[]>([]);
-  const currentLocation = useCurrentLocationLabel();
-  const currentCity = currentLocation.city || getCityFromLocationLabel(currentLocation.label);
+  const { currentLocation, selectedCity, activeCity, locationRevision } = useHomeSelectedLocation();
 
   useEffect(() => {
     let isActive = true;
 
-    if (currentLocation.status === "loading" || currentLocation.status === "idle") {
+    if (!selectedCity && (currentLocation.status === "loading" || currentLocation.status === "idle")) {
       return () => {
         isActive = false;
       };
     }
 
+    const cityFilter = activeCity || undefined;
+
     setCareServiceItems([]);
 
-    getPublicListings({ category: "care-services", city: currentCity || undefined, page: 1, pageSize: 10 })
+    getPublicListings({
+      category: "care-services",
+      city: cityFilter,
+      page: 1,
+      pageSize: 10,
+      forceRefresh: locationRevision > 0,
+    })
       .then((result) => {
         if (!isActive) {
           return;
         }
 
         setCareServiceItems(
-          mapListingsToCards(result.items, "care-services", currentCity),
+          mapListingsToCards(result.items, "care-services", activeCity),
         );
       })
       .catch(() => {
@@ -218,11 +223,11 @@ function useCareFeaturedListingGroup() {
     return () => {
       isActive = false;
     };
-  }, [currentCity, currentLocation.status]);
+  }, [activeCity, currentLocation.status, locationRevision, selectedCity]);
 
   return {
     titleLead: "Care Services",
-    titleRest: currentCity ? `near ${currentCity}` : "near you",
+    titleRest: activeCity ? `near ${activeCity}` : "near you",
     description: "Browse child care, elder care, nursing, home health, special needs, and pet care providers.",
     iconClass: "plac-hom-tit-ic-ser",
     showDetails: true,
