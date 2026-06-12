@@ -763,6 +763,7 @@
   white-space: nowrap;
 }
 
+.listing-image-upload-preview-wrap,
 .listing-image-upload-preview,
 .listing-image-upload-placeholder {
   align-self: center;
@@ -771,8 +772,32 @@
   width: 88px;
 }
 
+.listing-image-upload-preview-wrap {
+  position: relative;
+}
+
 .listing-image-upload-preview {
+  border-left: 0;
   object-fit: cover;
+}
+
+.listing-image-upload-remove {
+  background: rgba(17, 24, 39, 0.84);
+  border: 0;
+  border-radius: 4px;
+  bottom: 6px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  left: 50%;
+  line-height: 1;
+  padding: 5px 7px;
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.listing-image-upload-remove:hover {
+  background: rgba(220, 53, 69, 0.95);
 }
 
 .listing-image-upload-placeholder {
@@ -1146,6 +1171,11 @@
   font-size: 13px;
   font-weight: 700;
   margin: 6px 0 10px;
+}
+
+.listing-gallery-uploader.is-invalid {
+  border: 1px solid #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
 }
 
 .classified-form-card > .btn.btn-primary,

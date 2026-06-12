@@ -144,7 +144,7 @@ export default function AllListingsPage() {
                       <td>
                         <div className="dashboard-listing-title-cell">
                           <img
-                            src={resolveListingImageUrl(item.primaryImageUrl)}
+                            src={resolveListingImageUrl(item.logoUrl || item.primaryImageUrl || item.imageUrls?.[0])}
                             alt={item.title}
                             onError={setFallbackListingImage}
                           />

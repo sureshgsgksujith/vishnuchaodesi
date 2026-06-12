@@ -106,7 +106,7 @@ type CategoryAttributeField = {
   isRequired?: boolean;
   sectionName?: string;
   sectionOrder?: number;
-  type?: "text" | "number" | "date" | "checkbox" | "textarea" | "file";
+  type?: "text" | "number" | "date" | "time" | "checkbox" | "textarea" | "file";
   options?: string[];
 };
 type CategoryAttributeFieldSet = {
@@ -430,8 +430,8 @@ const restaurantServiceTypeOptions = [
 const vehicleConditionOptions = ["New", "Used", "Certified Pre-Owned"];
 const vehicleFuelOptions = ["Gasoline", "Diesel", "Hybrid", "Electric"];
 const vehicleBrandOptions = ["Acura", "Audi", "BMW", "Chevrolet", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Jeep", "Kia", "Lexus", "Mercedes-Benz", "Nissan", "Subaru", "Tesla", "Toyota", "Volkswagen", "Yamaha", "Harley-Davidson", "Royal Enfield", "Other"];
-const transmissionOptions = ["Automatic", "Manual", "Not Applicable"];
-const vehicleDriveTypeOptions = ["FWD", "AWD", "4WD", "RWD", "Not Applicable"];
+const transmissionOptions = ["Automatic", "Manual"];
+const vehicleDriveTypeOptions = ["FWD", "AWD", "4WD"];
 const listingTypeOptions = ["Free", "Featured", "Premium"];
 const vehiclePriceNegotiableOptions = ["Yes", "No"];
 const nearbyServiceTypes = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
@@ -453,6 +453,14 @@ const sharedListingLocationCategories = [
   "Business & Industrial",
 ];
 const usaDefaultLocationCategories = ["Real Estate", "Restaurants & Food", ...sharedListingLocationCategories];
+
+function isElectronicsCategoryName(categoryName: string) {
+  const normalizedCategory = normalizeFieldKey(categoryName);
+  return normalizedCategory === "electronicsappliances" ||
+    normalizedCategory === "electronicsandappliances" ||
+    normalizedCategory === "electronics";
+}
+
 const furnitureConditionOptions = ["New", "Like New", "Good", "Fair", "Salvage"];
 const furnitureMaterialOptions = ["Wood", "Metal", "Plastic", "Glass", "Fabric", "Leather"];
 const furniturePostingCommonFields: CategoryAttributeField[] = [
@@ -493,67 +501,49 @@ const furniturePostingCommonFields: CategoryAttributeField[] = [
 ];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
+  { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "brand", label: "Vehicle Brand / Make", options: vehicleBrandOptions, isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "model", label: "Model", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "variant", label: "Variant / Trim", sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "yearOfManufacture", label: "Year", type: "number", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "vin", label: "VIN Number (optional/private)", sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "kilometersDriven", label: "Mileage (miles)", type: "number", isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "fuelType", label: "Fuel Type", options: vehicleFuelOptions, isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "transmission", label: "Transmission", options: transmissionOptions, isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "driveType", label: "Drive Type", options: vehicleDriveTypeOptions, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "engineCapacity", label: "Engine Capacity", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "horsepower", label: "Horsepower", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "color", label: "Exterior Color", isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "interiorColor", label: "Interior Color", sectionName: "Vehicle Specifications", sectionOrder: 2 },
   { key: "vehicleCondition", label: "Condition", options: vehicleConditionOptions, isRequired: true, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
   { key: "ownershipTypeVehicle", label: "Ownership Type", options: ["Owner", "Dealer"], sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
   { key: "ownerCount", label: "Number of Owners", type: "number", sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
   { key: "accidentHistory", label: "Accident History", options: yesNoOptions, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
   { key: "cleanTitle", label: "Clean Title", options: yesNoOptions, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
-  { key: "titleStatus", label: "Title Status", options: ["Clean", "Salvage", "Rebuilt"], sectionName: "Legal & Compliance", sectionOrder: 12 },
-  { key: "registrationStatus", label: "Registration Status", sectionName: "Legal & Compliance", sectionOrder: 12 },
-  { key: "emissionsTestPassed", label: "Emissions Test Passed", options: yesNoOptions, sectionName: "Legal & Compliance", sectionOrder: 12 },
-  { key: "dealerLicenseNumber", label: "Dealer License Number", sectionName: "Legal & Compliance", sectionOrder: 12 },
-  { key: "fuelType", label: "Fuel Type", options: vehicleFuelOptions, isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "transmission", label: "Transmission", options: transmissionOptions, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "driveType", label: "Drive Type", options: vehicleDriveTypeOptions, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "kilometersDriven", label: "Mileage (miles)", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "engineCapacity", label: "Engine Capacity", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "horsepower", label: "Horsepower", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "color", label: "Exterior Color", isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "interiorColor", label: "Interior Color", sectionName: "Vehicle Specifications", sectionOrder: 2 },
+  { key: "vin", label: "VIN Number (optional/private)", sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
+  { key: "registrationStatus", label: "Registration Status", sectionName: "Legal & Compliance", sectionOrder: 16 },
+  { key: "emissionsTestPassed", label: "Emissions Test Passed", options: yesNoOptions, sectionName: "Legal & Compliance", sectionOrder: 16 },
+  { key: "titleStatus", label: "Title Status", options: ["Clean", "Salvage", "Rebuilt"], sectionName: "Legal & Compliance", sectionOrder: 16 },
+  { key: "dealerLicenseNumber", label: "Dealer License Number", sectionName: "Legal & Compliance", sectionOrder: 16 },
 ];
 
 const vehiclePriceFields: CategoryAttributeField[] = [
-  { key: "price", label: "Price (USD)", type: "number", sectionName: "Pricing", sectionOrder: 4 },
+  { key: "price", label: "Price (USD)", type: "number", isRequired: true, sectionName: "Pricing", sectionOrder: 4 },
   { key: "price_negotiable", label: "Negotiable", options: vehiclePriceNegotiableOptions, sectionName: "Pricing", sectionOrder: 4 },
   { key: "financing_available", label: "Financing Available", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 4 },
   { key: "lease_option", label: "Lease Option", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 4 },
-];
-
-const vehicleLocationFields: CategoryAttributeField[] = [
-  { key: "area_locality", label: "Street Address / Locality", sectionName: "Location", sectionOrder: 3 },
-  { key: "map_lat_long", label: "Latitude / Longitude", sectionName: "Location", sectionOrder: 3 },
 ];
 
 const vehicleDocumentFields: CategoryAttributeField[] = [
   { key: "warrantyAvailable", label: "Warranty Available", options: yesNoOptions, sectionName: "Insurance & Warranty", sectionOrder: 6 },
   { key: "insuranceIncluded", label: "Insurance Included", options: yesNoOptions, sectionName: "Insurance & Warranty", sectionOrder: 6 },
   { key: "extendedWarranty", label: "Extended Warranty", sectionName: "Insurance & Warranty", sectionOrder: 6 },
-  { key: "insurance", label: "Insurance Status", options: ["Active", "Expired", "Not Included"], sectionName: "Insurance & Warranty", sectionOrder: 6 },
-  { key: "insuranceValidTill", label: "Insurance Valid Till", type: "date", sectionName: "Insurance & Warranty", sectionOrder: 6 },
-  { key: "rcAvailable", label: "Registration Available", options: yesNoOptions, sectionName: "Legal & Compliance", sectionOrder: 12 },
-  { key: "pucAvailable", label: "Emissions / Inspection Certificate", options: yesNoOptions, sectionName: "Legal & Compliance", sectionOrder: 12 },
-  { key: "serviceHistory", label: "Service History", options: ["Available", "Not Available"], sectionName: "Legal & Compliance", sectionOrder: 12 },
-  { key: "loanStatus", label: "Loan Status", options: ["Clear", "Active Loan"], sectionName: "Legal & Compliance", sectionOrder: 12 },
 ];
 
-const vehicleSellerFields: CategoryAttributeField[] = [
-  { key: "seller_type", label: "Seller Type", options: ["Owner", "Dealer"], sectionName: "Contact Information", sectionOrder: 9 },
-  { key: "dealer_name", label: "Dealer Name", sectionName: "Contact Information", sectionOrder: 9 },
-  { key: "preferred_contact_time", label: "Preferred Contact Time", sectionName: "Availability & Scheduling", sectionOrder: 10 },
-  { key: "availability_status", label: "Availability Status", options: ["Available", "Sold", "Reserved"], sectionName: "Availability & Scheduling", sectionOrder: 10 },
-  { key: "schedule_test_drive", label: "Schedule Test Drive", options: yesNoOptions, sectionName: "Availability & Scheduling", sectionOrder: 10 },
-];
-
-const vehicleListingSettingsFields: CategoryAttributeField[] = [
-  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 11 },
-  { key: "boost_listing", label: "Boost Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 11 },
-  { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 11 },
-  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Visibility & Promotions", sectionOrder: 11 },
+const vehicleAvailabilityFields: CategoryAttributeField[] = [
+  { key: "availability_status", label: "Availability Status", options: ["Available", "Sold", "Reserved"], sectionName: "Availability & Scheduling", sectionOrder: 14 },
+  { key: "schedule_test_drive", label: "Schedule Test Drive", options: yesNoOptions, sectionName: "Availability & Scheduling", sectionOrder: 14 },
+  { key: "preferred_contact_time", label: "Preferred Contact Time", sectionName: "Availability & Scheduling", sectionOrder: 14 },
 ];
 
 const vehicleFeatureFields: CategoryAttributeField[] = [
@@ -571,29 +561,29 @@ const vehicleFeatureFields: CategoryAttributeField[] = [
 const vehiclePostingCommonFields: CategoryAttributeField[] = [
   ...vehicleCoreFields,
   ...vehiclePriceFields,
-  ...vehicleLocationFields,
   ...vehicleDocumentFields,
   ...vehicleFeatureFields,
-  ...vehicleSellerFields,
-  ...vehicleListingSettingsFields,
+  ...vehicleAvailabilityFields,
 ];
 
 const electronicsConditionOptions = ["New", "Open Box", "Refurbished", "Used"];
 const electronicsBrandOptions = ["Apple", "Samsung", "LG", "Sony", "Dell", "HP", "Lenovo", "Asus", "Acer", "Canon", "Nikon", "Bose", "JBL", "Nintendo", "Microsoft", "Whirlpool", "GE", "Dyson", "TP-Link", "Netgear", "Other"];
 
 const electronicsPostingCommonFields: CategoryAttributeField[] = [
-  { key: "brand", label: "Brand", options: electronicsBrandOptions, isRequired: true, sectionName: "Product Information", sectionOrder: 1 },
-  { key: "modelNameNumber", label: "Model Number", isRequired: true, sectionName: "Product Information", sectionOrder: 1 },
-  { key: "product_name", label: "Product Name", isRequired: true, sectionName: "Product Information", sectionOrder: 1 },
-  { key: "condition", label: "Condition", options: electronicsConditionOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 2 },
-  { key: "seller_type", label: "Ownership", options: ["Individual Seller", "Dealer / Retailer"], isRequired: true, sectionName: "Product Condition", sectionOrder: 2 },
-  { key: "purchase_date", label: "Purchase Date", type: "date", sectionName: "Product Condition", sectionOrder: 2 },
-  { key: "usageDuration", label: "Usage Duration", sectionName: "Product Condition", sectionOrder: 2 },
-  { key: "condition_notes", label: "Condition Notes", type: "textarea", sectionName: "Product Condition", sectionOrder: 2 },
-  { key: "price", label: "Selling Price (USD)", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 3 },
-  { key: "original_price", label: "Original Price", type: "number", sectionName: "Pricing Information", sectionOrder: 3 },
-  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 3 },
-  { key: "warranty", label: "Warranty Available", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "product_name", label: "Product Name", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "condition", label: "Condition", options: electronicsConditionOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "seller_type", label: "Ownership", options: ["Individual Seller", "Dealer / Retailer"], isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "purchase_date", label: "Purchase Date", type: "date", sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "usageDuration", label: "Usage Duration", sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "condition_notes", label: "Condition Notes", type: "textarea", sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "price", label: "Selling Price (USD)", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "original_price", label: "Original Price", type: "number", sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "warranty", label: "Warranty Available", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "brand", label: "Brand", options: electronicsBrandOptions, isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "modelNameNumber", label: "Model", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "color", label: "Color", sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "dimensions", label: "Dimensions", sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "weight", label: "Weight", sectionName: "Product Specifications", sectionOrder: 4 },
@@ -605,50 +595,46 @@ const electronicsPostingCommonFields: CategoryAttributeField[] = [
   { key: "extended_warranty", label: "Extended Warranty", options: yesNoOptions, sectionName: "Warranty & Service", sectionOrder: 6 },
   { key: "warranty_expiry_date", label: "Warranty Expiry Date", type: "date", sectionName: "Warranty & Service", sectionOrder: 6 },
   { key: "service_history", label: "Service History", type: "textarea", sectionName: "Warranty & Service", sectionOrder: 6 },
-  { key: "product_video_url", label: "Product Video URL", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "product_video_url", label: "Product Videos", sectionName: "Media Upload", sectionOrder: 7 },
   { key: "invoice_upload", label: "Invoice Upload", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
   { key: "warranty_card_upload", label: "Warranty Card Upload", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "seller_name", label: "Seller Name", isRequired: true, sectionName: "Seller Information", sectionOrder: 8 },
+  { key: "phone", label: "Phone", isRequired: true, sectionName: "Seller Information", sectionOrder: 8 },
+  { key: "email", label: "Email", isRequired: true, sectionName: "Seller Information", sectionOrder: 8 },
   { key: "store_name", label: "Store Name", sectionName: "Seller Information", sectionOrder: 8 },
   { key: "website", label: "Website", sectionName: "Seller Information", sectionOrder: 8 },
   { key: "local_pickup", label: "Local Pickup", options: yesNoOptions, sectionName: "Delivery & Shipping", sectionOrder: 9 },
+  { key: "shipping_available_delivery", label: "Shipping Available", options: yesNoOptions, sectionName: "Delivery & Shipping", sectionOrder: 9 },
   { key: "delivery_charges", label: "Delivery Charges", type: "number", sectionName: "Delivery & Shipping", sectionOrder: 9 },
   { key: "estimated_delivery_time", label: "Estimated Delivery Time", sectionName: "Delivery & Shipping", sectionOrder: 9 },
   { key: "serial_number", label: "Serial Number (optional/private)", sectionName: "Verification & Compliance", sectionOrder: 11 },
   { key: "authenticity_verified", label: "Authenticity Verified", options: yesNoOptions, sectionName: "Verification & Compliance", sectionOrder: 11 },
   { key: "original_invoice_available", label: "Original Invoice Available", options: yesNoOptions, sectionName: "Verification & Compliance", sectionOrder: 11 },
   { key: "return_policy", label: "Return Policy", type: "textarea", sectionName: "Verification & Compliance", sectionOrder: 11 },
-  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
-  { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
-  { key: "boost_listing", label: "Boost Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
-  { key: "top_placement", label: "Top Placement", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
-  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "top_placement", label: "Top Placement", options: yesNoOptions, sectionName: "Promotions", sectionOrder: 13 },
 ];
 
 const electronicsMobileFields: CategoryAttributeField[] = [
   ...electronicsPostingCommonFields,
-  { key: "storage", label: "Storage", isRequired: true, options: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "storage", label: "Storage Capacity", isRequired: true, options: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "ram", label: "RAM", isRequired: true, options: ["2GB", "4GB", "6GB", "8GB", "12GB", "16GB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "screenSize", label: "Screen Size", sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "carrier_status", label: "Carrier Status", isRequired: true, options: ["Unlocked", "Carrier Locked"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "carrier_status", label: "Carrier Locked / Unlocked", isRequired: true, options: ["Unlocked", "Carrier Locked"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "batteryHealth", label: "Battery Health", sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "network", label: "Network", options: ["4G", "5G", "WiFi Only", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
 ];
 
 const electronicsComputerFields: CategoryAttributeField[] = [
   ...electronicsPostingCommonFields,
   { key: "processor", label: "Processor", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "8GB", "16GB", "32GB", "64GB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "storage", label: "Storage", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "storage_type", label: "Storage Type", options: ["SSD", "HDD", "Hybrid", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "storage_type", label: "Storage Type (SSD/HDD)", options: ["SSD", "HDD", "Hybrid", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "operatingSystem", label: "Operating System", isRequired: true, options: ["Windows", "macOS", "Linux", "Chrome OS", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "graphicsCard", label: "Graphics Card", sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "screenSize", label: "Screen Size", sectionName: "Product Specifications", sectionOrder: 4 },
 ];
 
 const electronicsTvFields: CategoryAttributeField[] = [
   ...electronicsPostingCommonFields,
   { key: "screenSize", label: "Screen Size", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "displayType", label: "Display Type", options: ["LED", "OLED", "QLED", "LCD", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "resolution", label: "Resolution", isRequired: true, options: ["HD", "Full HD", "4K", "8K", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "smartTv", label: "Smart TV Features", isRequired: true, options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "hdmi_ports", label: "HDMI Ports", type: "number", sectionName: "Product Specifications", sectionOrder: 4 },
@@ -670,12 +656,10 @@ const electronicsAudioFields: CategoryAttributeField[] = [
 
 const electronicsApplianceFields: CategoryAttributeField[] = [
   ...electronicsPostingCommonFields,
-  { key: "applianceType", label: "Appliance Type", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "capacity", label: "Capacity", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "energyRating", label: "Energy Rating", options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "ENERGY STAR", "Not Rated"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "powerConsumption", label: "Power Consumption", sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "installation_service", label: "Installation Service", options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "inverterTechnology", label: "Inverter Technology", options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "installation_service", label: "Installation Included", options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
 ];
 
 const electronicsAccessoryFields: CategoryAttributeField[] = [
@@ -693,95 +677,94 @@ const electronicsNetworkingFields: CategoryAttributeField[] = [
 ];
 
 const petPostingCommonFields: CategoryAttributeField[] = [
-  { key: "pet_name", label: "Pet Name", sectionName: "Pet Information", sectionOrder: 1 },
-  { key: "animal_type", label: "Animal Type", isRequired: true, sectionName: "Pet Information", sectionOrder: 1 },
-  { key: "breed", label: "Breed", sectionName: "Pet Information", sectionOrder: 1 },
-  { key: "gender", label: "Gender", options: ["Male", "Female", "Unknown"], sectionName: "Pet Information", sectionOrder: 1 },
-  { key: "age", label: "Age", isRequired: true, sectionName: "Pet Information", sectionOrder: 1 },
-  { key: "date_of_birth", label: "Date of Birth", type: "date", sectionName: "Pet Information", sectionOrder: 1 },
-  { key: "color_markings", label: "Color / Markings", sectionName: "Pet Information", sectionOrder: 1 },
-  { key: "pickup_available", label: "Pickup Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 2 },
-  { key: "delivery_available", label: "Delivery Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 2 },
-  { key: "vaccinated", label: "Vaccinated", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 3 },
-  { key: "spayed_neutered", label: "Spayed / Neutered", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 3 },
-  { key: "microchipped", label: "Microchipped", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 3 },
-  { key: "health_certificate_available", label: "Health Certificate Available", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 3 },
-  { key: "medical_history", label: "Medical History", type: "textarea", sectionName: "Health Information", sectionOrder: 3 },
-  { key: "vet_records_upload", label: "Vet Records Upload", type: "file", sectionName: "Health Information", sectionOrder: 3 },
-  { key: "friendly_with_kids", label: "Friendly with Kids", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 4 },
-  { key: "friendly_with_other_pets", label: "Friendly with Other Pets", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 4 },
-  { key: "house_trained", label: "House Trained", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 4 },
-  { key: "crate_trained", label: "Crate Trained", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 4 },
-  { key: "energy_level", label: "Energy Level", options: ["Low", "Medium", "High"], sectionName: "Pet Characteristics", sectionOrder: 4 },
-  { key: "temperament", label: "Temperament", options: ["Friendly", "Playful", "Calm", "Protective"], sectionName: "Pet Characteristics", sectionOrder: 4 },
-  { key: "pet_listing_type", label: "Listing Type", options: ["Adoption", "Rehoming", "Service Listing"], isRequired: true, sectionName: "Pricing & Adoption Information", sectionOrder: 5 },
-  { key: "adoption_fee", label: "Adoption Fee", type: "number", sectionName: "Pricing & Adoption Information", sectionOrder: 5 },
-  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing & Adoption Information", sectionOrder: 5 },
-  { key: "pet_video_url", label: "Videos", sectionName: "Media Upload", sectionOrder: 6 },
-  { key: "vaccination_records_upload", label: "Vaccination Records", type: "file", sectionName: "Media Upload", sectionOrder: 6 },
-  { key: "adoption_documents_upload", label: "Adoption Documents", type: "file", sectionName: "Media Upload", sectionOrder: 6 },
-  { key: "contact_name", label: "Contact Name", sectionName: "Owner / Organization Information", sectionOrder: 7 },
-  { key: "organization_name", label: "Organization Name", sectionName: "Owner / Organization Information", sectionOrder: 7 },
-  { key: "website", label: "Website", sectionName: "Owner / Organization Information", sectionOrder: 7 },
-  { key: "home_check_required", label: "Home Check Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 8 },
-  { key: "experience_required", label: "Experience Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 8 },
-  { key: "fenced_yard_required", label: "Fenced Yard Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 8 },
-  { key: "other_conditions", label: "Other Conditions", type: "textarea", sectionName: "Adoption Requirements", sectionOrder: 8 },
-  { key: "available_from_date", label: "Available From Date", type: "date", sectionName: "Availability Information", sectionOrder: 9 },
-  { key: "immediate_adoption_available", label: "Immediate Adoption Available", options: yesNoOptions, sectionName: "Availability Information", sectionOrder: 9 },
-  { key: "meet_greet_scheduling", label: "Meet & Greet Scheduling", options: yesNoOptions, sectionName: "Availability Information", sectionOrder: 9 },
-  { key: "shelter_rating", label: "Shelter Rating", type: "number", sectionName: "Reviews & Ratings", sectionOrder: 10 },
-  { key: "breeder_rating", label: "Breeder Rating", type: "number", sectionName: "Reviews & Ratings", sectionOrder: 10 },
-  { key: "service_provider_rating", label: "Service Provider Rating", type: "number", sectionName: "Reviews & Ratings", sectionOrder: 10 },
-  { key: "verified_shelter", label: "Verified Shelter", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 11 },
-  { key: "verified_breeder", label: "Verified Breeder", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 11 },
-  { key: "usda_license_number", label: "USDA License Number", sectionName: "Compliance & Verification", sectionOrder: 11 },
-  { key: "adoption_agreement_upload", label: "Adoption Agreement Upload", type: "file", sectionName: "Compliance & Verification", sectionOrder: 11 },
-  { key: "identity_verification", label: "Identity Verification", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 11 },
-  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
-  { key: "urgent_adoption_badge", label: "Urgent Adoption Badge", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
-  { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
-  { key: "featured_placement", label: "Featured Placement", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 12 },
+  { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "pet_name", label: "Pet Name", sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "animal_type", label: "Animal Type", isRequired: true, sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "breed", label: "Breed", sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "gender", label: "Gender", options: ["Male", "Female", "Unknown"], sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "age", label: "Age", isRequired: true, sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "date_of_birth", label: "Date of Birth", type: "date", sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "color_markings", label: "Color / Markings", sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Pet Information", sectionOrder: 2 },
+  { key: "pickup_available", label: "Pickup Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 3 },
+  { key: "delivery_available", label: "Delivery Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 3 },
+  { key: "vaccinated", label: "Vaccinated", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 4 },
+  { key: "spayed_neutered", label: "Spayed / Neutered", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 4 },
+  { key: "microchipped", label: "Microchipped", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 4 },
+  { key: "health_certificate_available", label: "Health Certificate Available", options: yesNoOptions, sectionName: "Health Information", sectionOrder: 4 },
+  { key: "medical_history", label: "Medical History", type: "textarea", sectionName: "Health Information", sectionOrder: 4 },
+  { key: "vet_records_upload", label: "Vet Records Upload", type: "file", sectionName: "Health Information", sectionOrder: 4 },
+  { key: "friendly_with_kids", label: "Friendly with Kids", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 5 },
+  { key: "friendly_with_other_pets", label: "Friendly with Other Pets", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 5 },
+  { key: "house_trained", label: "House Trained", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 5 },
+  { key: "crate_trained", label: "Crate Trained", options: yesNoOptions, sectionName: "Pet Characteristics", sectionOrder: 5 },
+  { key: "energy_level", label: "Energy Level", options: ["Low", "Medium", "High"], sectionName: "Pet Characteristics", sectionOrder: 5 },
+  { key: "temperament", label: "Temperament", options: ["Friendly", "Playful", "Calm", "Protective"], sectionName: "Pet Characteristics", sectionOrder: 5 },
+  { key: "pet_listing_type", label: "Listing Type", options: ["Adoption", "Rehoming", "Service Listing"], isRequired: true, sectionName: "Pricing & Adoption Information", sectionOrder: 6 },
+  { key: "adoption_fee", label: "Fee Amount", type: "number", sectionName: "Pricing & Adoption Information", sectionOrder: 6 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing & Adoption Information", sectionOrder: 6 },
+  { key: "pet_video_url", label: "Videos", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "vaccination_records_upload", label: "Vaccination Records", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "adoption_documents_upload", label: "Adoption Documents", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "contact_name", label: "Contact Name", isRequired: true, sectionName: "Owner / Organization Information", sectionOrder: 8 },
+  { key: "phone", label: "Phone", isRequired: true, sectionName: "Owner / Organization Information", sectionOrder: 8 },
+  { key: "email", label: "Email", isRequired: true, sectionName: "Owner / Organization Information", sectionOrder: 8 },
+  { key: "organization_name", label: "Organization Name", sectionName: "Owner / Organization Information", sectionOrder: 8 },
+  { key: "website", label: "Website", sectionName: "Owner / Organization Information", sectionOrder: 8 },
+  { key: "home_check_required", label: "Home Check Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 9 },
+  { key: "experience_required", label: "Experience Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 9 },
+  { key: "fenced_yard_required", label: "Fenced Yard Required", options: yesNoOptions, sectionName: "Adoption Requirements", sectionOrder: 9 },
+  { key: "other_conditions", label: "Other Conditions", type: "textarea", sectionName: "Adoption Requirements", sectionOrder: 9 },
+  { key: "available_from_date", label: "Available From Date", type: "date", sectionName: "Availability Information", sectionOrder: 10 },
+  { key: "immediate_adoption_available", label: "Immediate Adoption Available", options: yesNoOptions, sectionName: "Availability Information", sectionOrder: 10 },
+  { key: "meet_greet_scheduling", label: "Meet & Greet Scheduling", options: yesNoOptions, sectionName: "Availability Information", sectionOrder: 10 },
+  { key: "verified_shelter", label: "Verified Shelter", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 12 },
+  { key: "verified_breeder", label: "Verified Breeder", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 12 },
+  { key: "usda_license_number", label: "USDA License Number", sectionName: "Compliance & Verification", sectionOrder: 12 },
+  { key: "adoption_agreement_upload", label: "Adoption Agreement Upload", type: "file", sectionName: "Compliance & Verification", sectionOrder: 12 },
+  { key: "identity_verification", label: "Identity Verification", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 12 },
+  { key: "urgent_adoption_badge", label: "Urgent Adoption Badge", options: yesNoOptions, sectionName: "Promotions", sectionOrder: 13 },
+  { key: "featured_placement", label: "Featured Placement", options: yesNoOptions, sectionName: "Promotions", sectionOrder: 13 },
 ];
 
 const petDogFields: CategoryAttributeField[] = [
   ...petPostingCommonFields,
-  { key: "training_status", label: "Training Status", options: ["Not Trained", "Basic", "Advanced", "Professional"], sectionName: "Dog Details", sectionOrder: 13 },
-  { key: "exercise_requirements", label: "Exercise Requirements", options: ["Low", "Moderate", "High"], sectionName: "Dog Details", sectionOrder: 13 },
+  { key: "training_status", label: "Training Status", options: ["Not Trained", "Basic", "Advanced", "Professional"], sectionName: "Dog Details", sectionOrder: 14 },
+  { key: "exercise_requirements", label: "Exercise Requirements", options: ["Low", "Moderate", "High"], sectionName: "Dog Details", sectionOrder: 14 },
 ];
 
 const petCatFields: CategoryAttributeField[] = [
   ...petPostingCommonFields,
-  { key: "indoor_outdoor_preference", label: "Indoor/Outdoor Preference", options: ["Indoor", "Outdoor", "Both"], sectionName: "Cat Details", sectionOrder: 13 },
-  { key: "litter_trained_status", label: "Litter Trained Status", options: ["Yes", "No", "In Training"], sectionName: "Cat Details", sectionOrder: 13 },
+  { key: "indoor_outdoor_preference", label: "Indoor/Outdoor Preference", options: ["Indoor", "Outdoor", "Both"], sectionName: "Cat Details", sectionOrder: 14 },
+  { key: "litter_trained_status", label: "Litter Trained Status", options: ["Yes", "No", "In Training"], sectionName: "Cat Details", sectionOrder: 14 },
 ];
 
 const petBirdFields: CategoryAttributeField[] = [
   ...petPostingCommonFields,
-  { key: "wings_clipped", label: "Wings Clipped", options: yesNoOptions, sectionName: "Bird Details", sectionOrder: 13 },
-  { key: "cage_included", label: "Cage Included", options: yesNoOptions, sectionName: "Bird Details", sectionOrder: 13 },
+  { key: "wings_clipped", label: "Wings Clipped", options: yesNoOptions, sectionName: "Bird Details", sectionOrder: 14 },
+  { key: "cage_included", label: "Cage Included", options: yesNoOptions, sectionName: "Bird Details", sectionOrder: 14 },
 ];
 
 const petFishFields: CategoryAttributeField[] = [
   ...petPostingCommonFields,
-  { key: "tank_size_requirement", label: "Tank Size Requirement", sectionName: "Fish Details", sectionOrder: 13 },
-  { key: "water_type", label: "Freshwater/Saltwater", options: ["Freshwater", "Saltwater"], sectionName: "Fish Details", sectionOrder: 13 },
+  { key: "tank_size_requirement", label: "Tank Size Requirement", sectionName: "Fish Details", sectionOrder: 14 },
+  { key: "water_type", label: "Freshwater/Saltwater", options: ["Freshwater", "Saltwater"], sectionName: "Fish Details", sectionOrder: 14 },
 ];
 
 const petLostFoundFields: CategoryAttributeField[] = [
   ...petPostingCommonFields,
-  { key: "last_seen_location", label: "Last Seen Location", isRequired: true, sectionName: "Lost Pet Details", sectionOrder: 13 },
-  { key: "last_seen_date", label: "Last Seen Date", type: "date", isRequired: true, sectionName: "Lost Pet Details", sectionOrder: 13 },
-  { key: "reward_offered", label: "Reward Offered", options: yesNoOptions, sectionName: "Lost Pet Details", sectionOrder: 13 },
-  { key: "contact_urgency", label: "Contact Urgency", options: ["Normal", "Urgent", "Emergency"], sectionName: "Lost Pet Details", sectionOrder: 13 },
+  { key: "last_seen_location", label: "Last Seen Location", isRequired: true, sectionName: "Lost Pet Details", sectionOrder: 14 },
+  { key: "last_seen_date", label: "Last Seen Date", type: "date", isRequired: true, sectionName: "Lost Pet Details", sectionOrder: 14 },
+  { key: "reward_offered", label: "Reward Offered", options: yesNoOptions, sectionName: "Lost Pet Details", sectionOrder: 14 },
+  { key: "contact_urgency", label: "Contact Urgency", options: ["Normal", "Urgent", "Emergency"], sectionName: "Lost Pet Details", sectionOrder: 14 },
 ];
 
 const petServiceFields: CategoryAttributeField[] = [
   ...petPostingCommonFields,
-  { key: "service_type", label: "Service Type", isRequired: true, sectionName: "Pet Service Details", sectionOrder: 13 },
-  { key: "business_hours", label: "Business Hours", sectionName: "Pet Service Details", sectionOrder: 13 },
-  { key: "service_area", label: "Service Area", sectionName: "Pet Service Details", sectionOrder: 13 },
-  { key: "certifications", label: "Certifications", sectionName: "Pet Service Details", sectionOrder: 13 },
+  { key: "service_type", label: "Service Type", isRequired: true, sectionName: "Pet Service Details", sectionOrder: 14 },
+  { key: "business_hours", label: "Business Hours", sectionName: "Pet Service Details", sectionOrder: 14 },
+  { key: "service_area", label: "Service Area", sectionName: "Pet Service Details", sectionOrder: 14 },
+  { key: "certifications", label: "Certifications", sectionName: "Pet Service Details", sectionOrder: 14 },
 ];
 
 const careServiceOptions = [
@@ -801,17 +784,17 @@ const careServiceFields: CategoryAttributeField[] = [
   { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
   { key: "providerType", label: "Provider Type", options: ["Individual Caregiver", "Agency / Company"], isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
   { key: "experienceYears", label: "Years of Experience", type: "number", isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
-  { key: "languagesSpoken", label: "Languages Spoken", isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
+  { key: "languagesSpoken", label: "Languages Spoken", options: ["English", "Hindi", "Telugu", "Tamil", "Kannada", "Malayalam", "Gujarati", "Punjabi", "Bengali", "Marathi", "Urdu", "Spanish"], isRequired: true, sectionName: "Provider Information", sectionOrder: 3 },
   { key: "genderPreference", label: "Gender", options: ["No Preference", "Female", "Male"], sectionName: "Provider Information", sectionOrder: 3 },
-  { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number", isRequired: true, sectionName: "Service Location", sectionOrder: 4 },
+  { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number", sectionName: "Service Location", sectionOrder: 4 },
   { key: "willingToTravel", label: "Willing to Travel", options: yesNoOptions, isRequired: true, sectionName: "Service Location", sectionOrder: 4 },
   { key: "availabilityType", label: "Availability Type", options: ["Full-time", "Part-time", "Hourly", "Live-in"], isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
-  { key: "availableDays", label: "Available Days", isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
-  { key: "availableTimeSlots", label: "Available Time Slots", isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
+  { key: "availableDays", label: "Available Days", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"], isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
+  { key: "availableTimeSlots", label: "Available Time Slots", options: ["Morning", "Afternoon", "Evening", "Night", "Overnight", "Flexible"], isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
   { key: "startDate", label: "Start Date", type: "date", isRequired: true, sectionName: "Availability & Scheduling", sectionOrder: 5 },
   { key: "rateType", label: "Pricing Type", options: ["Hourly", "Daily", "Weekly", "Monthly"], isRequired: true, sectionName: "Pricing", sectionOrder: 6 },
   { key: "price", label: "Rate (USD)", type: "number", isRequired: true, sectionName: "Pricing", sectionOrder: 6 },
-  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Pricing", sectionOrder: 6 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 6 },
   { key: "minimumHoursRequired", label: "Minimum Hours Required", type: "number", sectionName: "Pricing", sectionOrder: 6 },
   { key: "mealPreparation", label: "Meal Preparation", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
   { key: "medicationReminder", label: "Medication Reminder", type: "checkbox", sectionName: "Services Offered", sectionOrder: 7 },
@@ -826,33 +809,32 @@ const careServiceFields: CategoryAttributeField[] = [
   { key: "cnaCertified", label: "CNA Certified", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
   { key: "rnLpn", label: "RN / LPN License", options: yesNoOptions, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
   { key: "licenseNumber", label: "License Number", sectionName: "Qualifications & Certifications", sectionOrder: 8 },
-  { key: "certificationDocuments", label: "Certifications Upload", sectionName: "Qualifications & Certifications", sectionOrder: 8 },
+  { key: "certificationDocuments", label: "Certifications Upload (PDF/Image)", type: "file", sectionName: "Qualifications & Certifications", sectionOrder: 8 },
   { key: "backgroundCheck", label: "Background Verified", options: yesNoOptions, isRequired: true, sectionName: "Qualifications & Certifications", sectionOrder: 8 },
   { key: "ageGroups", label: "Age Group", options: ["Infants", "Children", "Adults", "Seniors"], isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
   { key: "specialNeedsExperience", label: "Special Needs Experience", options: yesNoOptions, isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
   { key: "smokingAllowed", label: "Smoking Allowed", options: yesNoOptions, isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
   { key: "petFriendly", label: "Pet Friendly", options: yesNoOptions, isRequired: true, sectionName: "Care Preferences", sectionOrder: 9 },
-  { key: "videoIntroductionUrl", label: "Intro Video", sectionName: "Media Upload", sectionOrder: 10 },
-  { key: "businessLogo", label: "Business Logo", sectionName: "Media Upload", sectionOrder: 10 },
-  { key: "chatEnabled", label: "Chat Enabled", options: yesNoOptions, isRequired: true, sectionName: "Contact Information", sectionOrder: 11 },
-  { key: "callEnabled", label: "Call Enabled", options: yesNoOptions, isRequired: true, sectionName: "Contact Information", sectionOrder: 11 },
-  { key: "identityVerification", label: "Identity Verification", options: yesNoOptions, isRequired: true, sectionName: "Compliance & Safety", sectionOrder: 12 },
-  { key: "backgroundVerification", label: "Background Check Status", options: yesNoOptions, isRequired: true, sectionName: "Compliance & Safety", sectionOrder: 12 },
-  { key: "insurance", label: "Insurance Coverage", sectionName: "Compliance & Safety", sectionOrder: 12 },
-  { key: "serviceDisclaimer", label: "Medical Disclaimer", type: "textarea", sectionName: "Compliance & Safety", sectionOrder: 12 },
-  { key: "hipaaCompliance", label: "HIPAA Compliance", options: yesNoOptions, sectionName: "Compliance & Safety", sectionOrder: 12 },
-  { key: "scheduleInterview", label: "Appointment Booking Enabled", options: yesNoOptions, isRequired: true, sectionName: "Booking & Appointments", sectionOrder: 13 },
-  { key: "onlineConsultation", label: "Online Consultation", options: yesNoOptions, isRequired: true, sectionName: "Booking & Appointments", sectionOrder: 13 },
-  { key: "emergencyAvailability", label: "Emergency Availability", options: yesNoOptions, isRequired: true, sectionName: "Booking & Appointments", sectionOrder: 13 },
-  { key: "childAgeGroup", label: "Child Age Group", options: ["Infants", "Toddlers", "Preschool", "School Age"], sectionName: "Child Care Details", sectionOrder: 14 },
-  { key: "schoolPickupOption", label: "School Pickup Option", options: yesNoOptions, sectionName: "Child Care Details", sectionOrder: 14 },
-  { key: "mobilityAssistance", label: "Mobility Assistance", options: yesNoOptions, sectionName: "Elder Care Details", sectionOrder: 15 },
-  { key: "dementiaCareExperience", label: "Dementia Care Experience", options: yesNoOptions, sectionName: "Elder Care Details", sectionOrder: 15 },
-  { key: "petTypeExperience", label: "Pet Type Experience", sectionName: "Pet Care Details", sectionOrder: 16 },
-  { key: "staffCount", label: "Staff Count", type: "number", sectionName: "Agency Details", sectionOrder: 17 },
-  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, isRequired: true, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
-  { key: "sponsoredListing", label: "Sponsored Listing", options: yesNoOptions, isRequired: true, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
-  { key: "boostListing", label: "Boost Listing", options: yesNoOptions, isRequired: true, sectionName: "Listing Visibility & Promotions", sectionOrder: 18 },
+  { key: "contactName", label: "Contact Name", sectionName: "Contact Information", sectionOrder: 12 },
+  { key: "contactPhone", label: "Phone", sectionName: "Contact Information", sectionOrder: 12 },
+  { key: "contactEmail", label: "Email", sectionName: "Contact Information", sectionOrder: 12 },
+  { key: "contactWebsite", label: "Website", sectionName: "Contact Information", sectionOrder: 12 },
+  { key: "chatEnabled", label: "Chat Enabled", options: yesNoOptions, sectionName: "Contact Information", sectionOrder: 12 },
+  { key: "callEnabled", label: "Call Enabled", options: yesNoOptions, sectionName: "Contact Information", sectionOrder: 12 },
+  { key: "identityVerification", label: "Identity Verification", options: yesNoOptions, isRequired: true, sectionName: "Compliance & Safety", sectionOrder: 13 },
+  { key: "backgroundVerification", label: "Background Check Status", options: yesNoOptions, isRequired: true, sectionName: "Compliance & Safety", sectionOrder: 13 },
+  { key: "insurance", label: "Insurance Coverage", sectionName: "Compliance & Safety", sectionOrder: 13 },
+  { key: "serviceDisclaimer", label: "Medical Disclaimer", type: "textarea", sectionName: "Compliance & Safety", sectionOrder: 13 },
+  { key: "hipaaCompliance", label: "HIPAA Compliance", options: yesNoOptions, sectionName: "Compliance & Safety", sectionOrder: 13 },
+  { key: "scheduleInterview", label: "Appointment Booking Enabled", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 14 },
+  { key: "onlineConsultation", label: "Online Consultation", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 14 },
+  { key: "emergencyAvailability", label: "Emergency Availability", options: yesNoOptions, sectionName: "Booking & Appointments", sectionOrder: 14 },
+  { key: "childAgeGroup", label: "Child Age Group", options: ["Infants", "Toddlers", "Preschool", "School Age"], sectionName: "Child Care Details", sectionOrder: 16 },
+  { key: "schoolPickupOption", label: "School Pickup Option", options: yesNoOptions, sectionName: "Child Care Details", sectionOrder: 16 },
+  { key: "mobilityAssistance", label: "Mobility Assistance", options: yesNoOptions, sectionName: "Elder Care Details", sectionOrder: 17 },
+  { key: "dementiaCareExperience", label: "Dementia Care Experience", options: yesNoOptions, sectionName: "Elder Care Details", sectionOrder: 17 },
+  { key: "petTypeExperience", label: "Pet Type Experience", sectionName: "Pet Care Details", sectionOrder: 18 },
+  { key: "staffCount", label: "Staff Count", type: "number", sectionName: "Agency Details", sectionOrder: 19 },
 ];
 
 const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]> = {
@@ -872,14 +854,68 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "ownershipType", label: "Ownership Type", options: ["Freehold", "Leasehold"] },
   ],
   "Roommates & Rentals": [
-    { key: "room_type", label: "Room Type", options: ["Private Room", "Shared Room", "Master Bedroom", "Entire Place"], sectionName: "Room Details", sectionOrder: 1 },
-    { key: "occupancy", label: "Occupancy", options: ["Single", "Double", "Shared", "Family"], sectionName: "Room Details", sectionOrder: 1 },
-    { key: "furnishing_type", label: "Furnishing Type", options: ["Furnished", "Semi-Furnished", "Unfurnished"], sectionName: "Room Details", sectionOrder: 1 },
-    { key: "preferred_roommate", label: "Preferred Roommate", options: ["Any", "Male", "Female", "Student", "Professional", "Family"], sectionName: "Roommate Preference", sectionOrder: 2 },
-    { key: "utilities_included", label: "Utilities Included", options: yesNoOptions, sectionName: "Rent & Utilities", sectionOrder: 3 },
-    { key: "monthly_rent", label: "Monthly Rent", type: "number", sectionName: "Rent & Utilities", sectionOrder: 3 },
-    { key: "security_deposit", label: "Security Deposit", type: "number", sectionName: "Rent & Utilities", sectionOrder: 3 },
-    { key: "available_from", label: "Available From", type: "date", sectionName: "Availability", sectionOrder: 4 },
+    { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Property Information", sectionOrder: 2 },
+    { key: "property_type", label: "Property Type", options: ["Apartment", "House", "Condo", "Townhouse", "Basement", "Studio"], isRequired: true, sectionName: "Property Information", sectionOrder: 2 },
+    { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Property Information", sectionOrder: 2 },
+    { key: "neighborhood", label: "Neighborhood", sectionName: "Location Information", sectionOrder: 3 },
+    { key: "monthly_rent", label: "Monthly Rent (USD)", type: "number", isRequired: true, sectionName: "Rental Information", sectionOrder: 4 },
+    { key: "security_deposit", label: "Security Deposit (USD)", type: "number", isRequired: true, sectionName: "Rental Information", sectionOrder: 4 },
+    { key: "utilities_included", label: "Utilities Included", options: yesNoOptions, sectionName: "Rental Information", sectionOrder: 4 },
+    { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, sectionName: "Rental Information", sectionOrder: 4 },
+    { key: "lease_duration", label: "Lease Duration", options: ["Weekly", "Monthly", "6 Months", "12 Months", "Flexible"], sectionName: "Rental Information", sectionOrder: 4 },
+    { key: "available_from", label: "Available From Date", type: "date", isRequired: true, sectionName: "Rental Information", sectionOrder: 4 },
+    { key: "bedrooms", label: "Number of Bedrooms", type: "number", isRequired: true, sectionName: "Room Details", sectionOrder: 5 },
+    { key: "bathrooms", label: "Number of Bathrooms", type: "number", isRequired: true, sectionName: "Room Details", sectionOrder: 5 },
+    { key: "room_type", label: "Room Type", options: ["Private Room", "Shared Room"], isRequired: true, sectionName: "Room Details", sectionOrder: 5 },
+    { key: "furnishing_type", label: "Furnishing", options: ["Fully Furnished", "Semi-Furnished", "Unfurnished"], isRequired: true, sectionName: "Room Details", sectionOrder: 5 },
+    { key: "room_size_sqft", label: "Room Size (sq ft)", type: "number", isRequired: true, sectionName: "Room Details", sectionOrder: 5 },
+    { key: "preferred_gender", label: "Preferred Gender", options: ["Male", "Female", "Any"], isRequired: true, sectionName: "Roommate Preferences", sectionOrder: 6 },
+    { key: "preferred_occupation", label: "Preferred Occupation", options: ["Student", "Professional", "Any"], isRequired: true, sectionName: "Roommate Preferences", sectionOrder: 6 },
+    { key: "preferred_age_range", label: "Preferred Age Range", sectionName: "Roommate Preferences", sectionOrder: 6 },
+    { key: "smoking_allowed", label: "Smoking Allowed", options: yesNoOptions, sectionName: "Roommate Preferences", sectionOrder: 6 },
+    { key: "pets_allowed", label: "Pets Allowed", options: yesNoOptions, sectionName: "Roommate Preferences", sectionOrder: 6 },
+    { key: "couples_allowed", label: "Couples Allowed", options: yesNoOptions, sectionName: "Roommate Preferences", sectionOrder: 6 },
+    { key: "wifi_included", label: "WiFi Included", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "parking_available", label: "Parking Available", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "laundry_facility", label: "Laundry Facility", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "air_conditioning", label: "Air Conditioning", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "heating", label: "Heating", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "gym_access", label: "Gym Access", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "swimming_pool", label: "Swimming Pool", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "elevator", label: "Elevator", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "security_system", label: "Security System", type: "checkbox", sectionName: "Property Amenities", sectionOrder: 7 },
+    { key: "public_transportation_nearby", label: "Public Transportation Nearby", type: "checkbox", sectionName: "Nearby Facilities", sectionOrder: 8 },
+    { key: "university_nearby", label: "University Nearby", type: "checkbox", sectionName: "Nearby Facilities", sectionOrder: 8 },
+    { key: "grocery_stores_nearby", label: "Grocery Stores Nearby", type: "checkbox", sectionName: "Nearby Facilities", sectionOrder: 8 },
+    { key: "hospital_nearby", label: "Hospital Nearby", type: "checkbox", sectionName: "Nearby Facilities", sectionOrder: 8 },
+    { key: "shopping_center_nearby", label: "Shopping Center Nearby", type: "checkbox", sectionName: "Nearby Facilities", sectionOrder: 8 },
+    { key: "property_photos", label: "Property Photos", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
+    { key: "room_photos", label: "Room Photos", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
+    { key: "floor_plan", label: "Floor Plan", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
+    { key: "property_video_tour", label: "Property Video Tour", sectionName: "Media Upload", sectionOrder: 9 },
+    { key: "virtual_tour_360", label: "360 Virtual Tour", sectionName: "Media Upload", sectionOrder: 9 },
+    { key: "contact_name", label: "Contact Name", isRequired: true, sectionName: "Contact Information", sectionOrder: 10 },
+    { key: "phone", label: "Phone", isRequired: true, sectionName: "Contact Information", sectionOrder: 10 },
+    { key: "email", label: "Email", isRequired: true, sectionName: "Contact Information", sectionOrder: 10 },
+    { key: "preferred_contact_method", label: "Preferred Contact Method", options: ["Call", "SMS", "Chat", "Email"], sectionName: "Contact Information", sectionOrder: 10 },
+    { key: "available_until", label: "Available Until", type: "date", sectionName: "Availability & Viewing", sectionOrder: 11 },
+    { key: "schedule_property_viewing", label: "Schedule Property Viewing", options: yesNoOptions, sectionName: "Availability & Viewing", sectionOrder: 11 },
+    { key: "open_house_dates", label: "Open House Dates", type: "date", sectionName: "Availability & Viewing", sectionOrder: 11 },
+    { key: "identity_verified", label: "Identity Verified", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 13 },
+    { key: "property_ownership_verified", label: "Property Ownership Verified", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 13 },
+    { key: "lease_document_upload", label: "Lease Document Upload", type: "file", sectionName: "Compliance & Verification", sectionOrder: 13 },
+    { key: "background_verification", label: "Background Verification", options: yesNoOptions, sectionName: "Compliance & Verification", sectionOrder: 13 },
+    { key: "university_name", label: "University Name", sectionName: "Student Housing Details", sectionOrder: 15 },
+    { key: "distance_from_campus", label: "Distance from Campus", sectionName: "Student Housing Details", sectionOrder: 15 },
+    { key: "student_only", label: "Student Only Option", options: yesNoOptions, sectionName: "Student Housing Details", sectionOrder: 15 },
+    { key: "original_lease_end_date", label: "Original Lease End Date", type: "date", sectionName: "Sublease Details", sectionOrder: 16 },
+    { key: "landlord_approval_required", label: "Landlord Approval Required", options: yesNoOptions, sectionName: "Sublease Details", sectionOrder: 16 },
+    { key: "corporate_rates", label: "Corporate Rates", sectionName: "Corporate Housing Details", sectionOrder: 17 },
+    { key: "business_traveler_amenities", label: "Business Traveler Amenities", type: "textarea", sectionName: "Corporate Housing Details", sectionOrder: 17 },
+    { key: "daily_rate", label: "Daily Rate", type: "number", sectionName: "Vacation Rental Details", sectionOrder: 18 },
+    { key: "check_in_date", label: "Check-In Date", type: "date", sectionName: "Vacation Rental Details", sectionOrder: 18 },
+    { key: "check_out_date", label: "Check-Out Date", type: "date", sectionName: "Vacation Rental Details", sectionOrder: 18 },
+    { key: "cleaning_fee", label: "Cleaning Fee", type: "number", sectionName: "Vacation Rental Details", sectionOrder: 18 },
   ],
   Vehicles: [
     ...vehiclePostingCommonFields,
@@ -984,13 +1020,73 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "includedItems", label: "Included Items" },
   ],
   Jobs: [
-    { key: "companyOrProvider", label: "Company / Provider" },
-    { key: "jobOrServiceType", label: "Job / Service Type", options: ["Full Time", "Part Time", "Contract", "Freelance", "One Time Service", "Training"] },
-    { key: "experienceRequired", label: "Experience Required" },
-    { key: "qualification", label: "Qualification" },
-    { key: "salaryOrFee", label: "Salary / Fee" },
-    { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid", "At Customer Location"] },
-    { key: "availability", label: "Availability" },
+    { key: "job_title", label: "Job Title", isRequired: true, sectionName: "Job Information", sectionOrder: 2 },
+    { key: "job_code", label: "Job Code", sectionName: "Job Information", sectionOrder: 2 },
+    { key: "company_name", label: "Company Name", isRequired: true, sectionName: "Job Information", sectionOrder: 2 },
+    { key: "hiring_manager", label: "Hiring Manager", sectionName: "Job Information", sectionOrder: 2 },
+    { key: "job_description", label: "Job Description", type: "textarea", isRequired: true, sectionName: "Job Information", sectionOrder: 2 },
+    { key: "company_website", label: "Company Website", sectionName: "Company Information", sectionOrder: 3 },
+    { key: "industry", label: "Industry", isRequired: true, sectionName: "Company Information", sectionOrder: 3 },
+    { key: "company_size", label: "Company Size", options: ["1-10", "11-50", "51-200", "201-500", "501-1000", "1000+"], sectionName: "Company Information", sectionOrder: 3 },
+    { key: "company_description", label: "Company Description", type: "textarea", sectionName: "Company Information", sectionOrder: 3 },
+    { key: "company_logo", label: "Company Logo", type: "file", sectionName: "Company Information", sectionOrder: 3 },
+    { key: "work_mode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true, sectionName: "Job Location", sectionOrder: 4 },
+    { key: "detailed_office_address", label: "Detailed Office Address", sectionName: "Job Location", sectionOrder: 4 },
+    { key: "remote_work_policy", label: "Remote Work Policy", type: "textarea", sectionName: "Job Location", sectionOrder: 4 },
+    { key: "time_zone_requirement", label: "Time Zone Requirement", sectionName: "Job Location", sectionOrder: 4 },
+    { key: "salary_type", label: "Salary Type", options: ["Hourly", "Monthly", "Annually"], isRequired: true, sectionName: "Compensation", sectionOrder: 5 },
+    { key: "price", label: "Salary Range (Min)", type: "number", isRequired: true, sectionName: "Compensation", sectionOrder: 5 },
+    { key: "salary_max", label: "Salary Range (Max)", type: "number", isRequired: true, sectionName: "Compensation", sectionOrder: 5 },
+    { key: "currency", label: "Currency", options: ["USD"], sectionName: "Compensation", sectionOrder: 5 },
+    { key: "bonus_available", label: "Bonus Available", options: yesNoOptions, sectionName: "Compensation", sectionOrder: 5 },
+    { key: "benefits_included", label: "Benefits Included", options: yesNoOptions, sectionName: "Compensation", sectionOrder: 5 },
+    { key: "employment_type", label: "Employment Type", options: ["Full-Time", "Part-Time", "Contract", "Temporary", "Internship", "Freelance"], isRequired: true, sectionName: "Employment Details", sectionOrder: 6 },
+    { key: "experience_required", label: "Experience Required", options: ["Fresher", "1-3 Years", "3-5 Years", "5-10 Years", "10+ Years"], isRequired: true, sectionName: "Employment Details", sectionOrder: 6 },
+    { key: "education_requirement", label: "Education Requirement", options: ["High School", "Associate Degree", "Bachelor's Degree", "Master's Degree", "PhD"], sectionName: "Education Requirements", sectionOrder: 7 },
+    { key: "technical_skills", label: "Technical Skills", options: ["Java", ".NET", "Python", "React", "Angular", "SQL", "AWS", "Azure", "DevOps"], sectionName: "Skills & Technologies", sectionOrder: 8 },
+    { key: "soft_skills", label: "Soft Skills", options: ["Communication", "Leadership", "Team Management"], sectionName: "Skills & Technologies", sectionOrder: 8 },
+    { key: "work_authorization", label: "Work Authorization", options: ["US Citizen", "Green Card", "H1B", "H4 EAD", "OPT", "CPT", "TN Visa", "Any Authorized Worker"], sectionName: "Visa & Work Authorization", sectionOrder: 9 },
+    { key: "sponsorship_available", label: "Sponsorship Available", options: yesNoOptions, sectionName: "Visa & Work Authorization", sectionOrder: 9 },
+    { key: "key_responsibilities", label: "Key Responsibilities", type: "textarea", isRequired: true, sectionName: "Job Responsibilities", sectionOrder: 10 },
+    { key: "day_to_day_tasks", label: "Day-to-Day Tasks", type: "textarea", sectionName: "Job Responsibilities", sectionOrder: 10 },
+    { key: "reporting_structure", label: "Reporting Structure", sectionName: "Job Responsibilities", sectionOrder: 10 },
+    { key: "health_insurance", label: "Health Insurance", type: "checkbox", sectionName: "Benefits", sectionOrder: 11 },
+    { key: "dental_insurance", label: "Dental Insurance", type: "checkbox", sectionName: "Benefits", sectionOrder: 11 },
+    { key: "vision_insurance", label: "Vision Insurance", type: "checkbox", sectionName: "Benefits", sectionOrder: 11 },
+    { key: "401k", label: "401(k)", type: "checkbox", sectionName: "Benefits", sectionOrder: 11 },
+    { key: "paid_time_off", label: "Paid Time Off", type: "checkbox", sectionName: "Benefits", sectionOrder: 11 },
+    { key: "remote_work_option", label: "Remote Work Option", type: "checkbox", sectionName: "Benefits", sectionOrder: 11 },
+    { key: "relocation_assistance", label: "Relocation Assistance", type: "checkbox", sectionName: "Benefits", sectionOrder: 11 },
+    { key: "application_method", label: "Application Method", options: ["Apply on Platform", "External Website", "Email Resume"], isRequired: true, sectionName: "Application Process", sectionOrder: 12 },
+    { key: "required_documents", label: "Required Documents", options: ["Resume", "Cover Letter", "Portfolio", "Certifications"], sectionName: "Application Process", sectionOrder: 12 },
+    { key: "external_apply_url", label: "External Apply URL", sectionName: "Application Process", sectionOrder: 12 },
+    { key: "resume_email", label: "Resume Email", sectionName: "Application Process", sectionOrder: 12 },
+    { key: "contact_name", label: "Contact Name", isRequired: true, sectionName: "Recruiter Contact Information", sectionOrder: 13 },
+    { key: "phone", label: "Phone Number", isRequired: true, sectionName: "Recruiter Contact Information", sectionOrder: 13 },
+    { key: "email", label: "Email Address", isRequired: true, sectionName: "Recruiter Contact Information", sectionOrder: 13 },
+    { key: "application_deadline", label: "Application Deadline", type: "date", sectionName: "Job Posting Settings", sectionOrder: 14 },
+    { key: "immediate_hiring", label: "Immediate Hiring", options: yesNoOptions, sectionName: "Job Posting Settings", sectionOrder: 14 },
+    { key: "number_of_openings", label: "Number of Openings", type: "number", sectionName: "Job Posting Settings", sectionOrder: 14 },
+    { key: "priority_level", label: "Priority Level", options: ["Low", "Normal", "High", "Urgent"], sectionName: "Job Posting Settings", sectionOrder: 14 },
+    { key: "office_photos", label: "Office Photos", type: "file", sectionName: "Media Upload", sectionOrder: 15 },
+    { key: "recruitment_video", label: "Recruitment Video", type: "file", sectionName: "Media Upload", sectionOrder: 15 },
+    { key: "job_brochure_pdf", label: "Job Brochure PDF", type: "file", sectionName: "Media Upload", sectionOrder: 15 },
+    { key: "verified_company_badge", label: "Verified Company Badge", options: yesNoOptions, sectionName: "Employer Verification", sectionOrder: 16 },
+    { key: "business_registration_verification", label: "Business Registration Verification", type: "file", sectionName: "Employer Verification", sectionOrder: 16 },
+    { key: "recruiter_verification", label: "Recruiter Verification", type: "file", sectionName: "Employer Verification", sectionOrder: 16 },
+    { key: "urgent_hiring_badge", label: "Urgent Hiring Badge", options: yesNoOptions, sectionName: "Promotions", sectionOrder: 17 },
+    { key: "sponsored_job", label: "Sponsored Job", options: yesNoOptions, sectionName: "Promotions", sectionOrder: 17 },
+    { key: "top_search_placement", label: "Top Search Placement", options: yesNoOptions, sectionName: "Promotions", sectionOrder: 17 },
+    { key: "contract_duration", label: "Contract Duration", sectionName: "Contract Job Details", sectionOrder: 18 },
+    { key: "hourly_rate", label: "Hourly Rate", type: "number", sectionName: "Contract Job Details", sectionOrder: 18 },
+    { key: "internship_duration", label: "Internship Duration", sectionName: "Internship Details", sectionOrder: 19 },
+    { key: "college_requirement", label: "College Requirement", sectionName: "Internship Details", sectionOrder: 19 },
+    { key: "stipend_information", label: "Stipend Information", sectionName: "Internship Details", sectionOrder: 19 },
+    { key: "medical_license_number", label: "Medical License Number", sectionName: "Healthcare Details", sectionOrder: 20 },
+    { key: "certification_requirements", label: "Certification Requirements", type: "textarea", sectionName: "Healthcare Details", sectionOrder: 20 },
+    { key: "cdl_required", label: "CDL Required", options: yesNoOptions, sectionName: "Driver Job Details", sectionOrder: 21 },
+    { key: "driving_experience", label: "Driving Experience", sectionName: "Driver Job Details", sectionOrder: 21 },
+    { key: "license_class", label: "License Class", sectionName: "Driver Job Details", sectionOrder: 21 },
   ],
   "Jobs / Services": [
     { key: "companyOrProvider", label: "Company / Provider" },
@@ -1011,12 +1107,14 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "warrantyOrService", label: "Warranty / Service" },
   ],
   "Events & Tickets": [
+    { key: "event_title", label: "Event Title", isRequired: true, sectionName: "Event Information", sectionOrder: 2 },
     { key: "organizer_name", label: "Organizer Name", isRequired: true, sectionName: "Event Information", sectionOrder: 2 },
     { key: "tagline", label: "Tagline", sectionName: "Event Information", sectionOrder: 2 },
+    { key: "event_description", label: "Event Description", type: "textarea", isRequired: true, sectionName: "Event Information", sectionOrder: 2 },
     { key: "event_start_date", label: "Event Start Date", type: "date", isRequired: true, sectionName: "Event Date & Time", sectionOrder: 3 },
     { key: "event_end_date", label: "Event End Date", type: "date", sectionName: "Event Date & Time", sectionOrder: 3 },
-    { key: "start_time", label: "Start Time", sectionName: "Event Date & Time", sectionOrder: 3 },
-    { key: "end_time", label: "End Time", sectionName: "Event Date & Time", sectionOrder: 3 },
+    { key: "start_time", label: "Start Time", type: "time", sectionName: "Event Date & Time", sectionOrder: 3 },
+    { key: "end_time", label: "End Time", type: "time", sectionName: "Event Date & Time", sectionOrder: 3 },
     { key: "time_zone", label: "Time Zone", options: ["Eastern Time", "Central Time", "Mountain Time", "Pacific Time", "Alaska Time", "Hawaii Time"], isRequired: true, sectionName: "Event Date & Time", sectionOrder: 3 },
     { key: "recurring_event", label: "Recurring Event", options: yesNoOptions, sectionName: "Event Date & Time", sectionOrder: 3 },
     { key: "venue_name", label: "Venue Name", sectionName: "Event Location", sectionOrder: 4 },
@@ -1024,7 +1122,7 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "map_lat_long", label: "Latitude / Longitude", sectionName: "Event Location", sectionOrder: 4 },
     { key: "online_meeting_url", label: "Online Meeting URL", sectionName: "Virtual Event", sectionOrder: 5 },
     { key: "streaming_platform", label: "Platform", options: ["Zoom", "Google Meet", "Microsoft Teams", "YouTube Live"], sectionName: "Virtual Event", sectionOrder: 5 },
-    { key: "ticket_type", label: "Ticket Type", options: ["Free", "Paid", "Donation-based"], isRequired: true, sectionName: "Ticket Information", sectionOrder: 6 },
+    { key: "ticket_type", label: "Ticket Type", options: ["Free", "Paid", "Donation-based"], sectionName: "Ticket Information", sectionOrder: 6 },
     { key: "ticket_categories", label: "Ticket Categories", options: ["General Admission", "VIP", "Early Bird", "Premium Seating"], sectionName: "Ticket Information", sectionOrder: 6 },
     { key: "ticket_price", label: "Ticket Price (USD)", type: "number", sectionName: "Ticket Information", sectionOrder: 6 },
     { key: "quantity_available", label: "Quantity Available", type: "number", sectionName: "Ticket Information", sectionOrder: 6 },
@@ -1034,13 +1132,19 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "refund_policy", label: "Refund Policy", type: "textarea", sectionName: "Payment & Registration", sectionOrder: 7 },
     { key: "cancellation_policy", label: "Cancellation Policy", type: "textarea", sectionName: "Payment & Registration", sectionOrder: 7 },
     { key: "event_capacity", label: "Event Capacity", type: "number", sectionName: "Audience & Capacity", sectionOrder: 8 },
-    { key: "age_restriction", label: "Age Restriction", options: ["All Ages", "18+", "21+"], isRequired: true, sectionName: "Audience & Capacity", sectionOrder: 8 },
+    { key: "age_restriction", label: "Age Restriction", options: ["All Ages", "18+", "21+"], sectionName: "Audience & Capacity", sectionOrder: 8 },
     { key: "age_verification", label: "Age Verification", options: yesNoOptions, sectionName: "Audience & Capacity", sectionOrder: 8 },
     { key: "audience_type", label: "Audience Type", options: ["Public", "Invite Only"], sectionName: "Audience & Capacity", sectionOrder: 8 },
     { key: "organizer_type", label: "Organizer Type", options: ["Individual", "Company", "Nonprofit Organization"], sectionName: "Organizer Information", sectionOrder: 9 },
+    { key: "contact_name", label: "Contact Name", sectionName: "Organizer Information", sectionOrder: 9 },
+    { key: "phone", label: "Phone (OTP verified)", sectionName: "Organizer Information", sectionOrder: 9 },
+    { key: "email", label: "Email", sectionName: "Organizer Information", sectionOrder: 9 },
+    { key: "website", label: "Website", sectionName: "Organizer Information", sectionOrder: 9 },
     { key: "social_media_links", label: "Social Media Links", sectionName: "Organizer Information", sectionOrder: 9 },
+    { key: "event_banner", label: "Event Banner", type: "file", sectionName: "Media Upload", sectionOrder: 10 },
+    { key: "event_photos", label: "Event Photos", type: "file", sectionName: "Media Upload", sectionOrder: 10 },
     { key: "promo_video_url", label: "Promo Videos", sectionName: "Media Upload", sectionOrder: 10 },
-    { key: "brochure_flyer_pdf", label: "Brochure / Flyer PDF", sectionName: "Media Upload", sectionOrder: 10 },
+    { key: "brochure_flyer_pdf", label: "Brochure / Flyer PDF", type: "file", sectionName: "Media Upload", sectionOrder: 10 },
     { key: "parking_available", label: "Parking Available", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
     { key: "food_drinks_available", label: "Food & Drinks Available", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
     { key: "wheelchair_accessible", label: "Wheelchair Accessible", type: "checkbox", sectionName: "Event Features & Amenities", sectionOrder: 11 },
@@ -1056,14 +1160,12 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
     { key: "promo_codes_coupons", label: "Promo Codes / Coupons", sectionName: "Promotions & Marketing", sectionOrder: 13 },
     { key: "email_campaign_integration", label: "Email Campaign Integration", options: yesNoOptions, sectionName: "Promotions & Marketing", sectionOrder: 13 },
     { key: "tickets_sold", label: "Tickets Sold", type: "number", sectionName: "Analytics & Tracking", sectionOrder: 14 },
+    { key: "page_views", label: "Page Views", type: "number", sectionName: "Analytics & Tracking", sectionOrder: 14 },
     { key: "rsvps", label: "RSVPs", type: "number", sectionName: "Analytics & Tracking", sectionOrder: 14 },
     { key: "attendance_tracking", label: "Attendance Tracking", options: yesNoOptions, sectionName: "Analytics & Tracking", sectionOrder: 14 },
     { key: "revenue_generated", label: "Revenue Generated", type: "number", sectionName: "Analytics & Tracking", sectionOrder: 14 },
     { key: "original_ticket_proof", label: "Original Ticket Proof", sectionName: "Ticket Resale", sectionOrder: 15 },
     { key: "transfer_policy", label: "Transfer Policy", type: "textarea", sectionName: "Ticket Resale", sectionOrder: 15 },
-    { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 16 },
-    { key: "boost_event", label: "Boost Event", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 16 },
-    { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 16 },
   ],
   "Tickets & Events": [],
 };
@@ -1120,27 +1222,14 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Roommates & Rentals": {
     default: categoryAttributeFieldsByCategory["Roommates & Rentals"],
     subCategories: {
-      "Roommates Wanted": [
-        ...categoryAttributeFieldsByCategory["Roommates & Rentals"],
-        { key: "move_in_timeline", label: "Move-in Timeline", sectionName: "Availability", sectionOrder: 4 },
-        { key: "house_rules", label: "House Rules", type: "textarea", sectionName: "Preferences", sectionOrder: 5 },
-      ],
+      "Roommates Wanted": categoryAttributeFieldsByCategory["Roommates & Rentals"],
       "Rooms for Rent": categoryAttributeFieldsByCategory["Roommates & Rentals"],
       "Shared Apartments": categoryAttributeFieldsByCategory["Roommates & Rentals"],
       "Shared Houses": categoryAttributeFieldsByCategory["Roommates & Rentals"],
-      "Paying Guest (PG) Accommodation": [
-        ...categoryAttributeFieldsByCategory["Roommates & Rentals"],
-        { key: "meals_included", label: "Meals Included", options: yesNoOptions, sectionName: "PG Details", sectionOrder: 5 },
-      ],
+      "Paying Guest (PG) Accommodation": categoryAttributeFieldsByCategory["Roommates & Rentals"],
       "Student Housing": categoryAttributeFieldsByCategory["Roommates & Rentals"],
-      "Temporary & Short-Term Rentals": [
-        ...categoryAttributeFieldsByCategory["Roommates & Rentals"],
-        { key: "minimum_stay", label: "Minimum Stay", sectionName: "Availability", sectionOrder: 4 },
-      ],
-      "Sublease & Lease Transfer": [
-        ...categoryAttributeFieldsByCategory["Roommates & Rentals"],
-        { key: "lease_end_date", label: "Lease End Date", type: "date", sectionName: "Lease Details", sectionOrder: 5 },
-      ],
+      "Temporary & Short-Term Rentals": categoryAttributeFieldsByCategory["Roommates & Rentals"],
+      "Sublease & Lease Transfer": categoryAttributeFieldsByCategory["Roommates & Rentals"],
       "Co-Living Spaces": categoryAttributeFieldsByCategory["Roommates & Rentals"],
       "Vacation & Corporate Housing": categoryAttributeFieldsByCategory["Roommates & Rentals"],
     },
@@ -1150,8 +1239,8 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
     subCategories: {
       Cars: [
         ...vehicleCoreFields,
-        { key: "bodyType", label: "Body Type", isRequired: true, options: ["Sedan", "SUV", "Hatchback", "Coupe", "Convertible", "Luxury Car", "Sports Car", "Hybrid Car", "Electric Car", "Other"] },
-        { key: "seatingCapacity", label: "Seating Capacity", isRequired: true, type: "number" },
+        { key: "bodyType", label: "Body Type", options: ["Sedan", "SUV", "Hatchback", "Coupe", "Convertible", "Luxury Car", "Sports Car", "Hybrid Car", "Electric Car", "Other"] },
+        { key: "seatingCapacity", label: "Seating Capacity", type: "number" },
         { key: "bootSpace", label: "Boot Space" },
         { key: "mileage", label: "Fuel Economy / Mileage" },
         { key: "airConditioning", label: "Air Conditioning", type: "checkbox" },
@@ -1177,23 +1266,17 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
       ],
       "Trucks & Commercial Vehicles": [
         ...vehicleCoreFields,
-        { key: "vehicleType", label: "Vehicle Type", isRequired: true, options: ["Pickup Truck", "Box Truck", "Cargo Van", "Semi Truck", "Dump Truck", "Delivery Van", "Other"] },
-        { key: "loadCapacity", label: "Load Capacity", isRequired: true, type: "number" },
-        { key: "cargoDimensions", label: "Cargo Dimensions" },
-        { key: "dotCompliance", label: "DOT Compliance", options: yesNoOptions },
-        { key: "fleetVehicle", label: "Fleet Vehicle", options: yesNoOptions },
-        { key: "numberOfWheels", label: "Number of Wheels", isRequired: true, type: "number" },
-        { key: "permitType", label: "Permit Type", isRequired: true, options: ["National", "State", "Local", "None"] },
+        { key: "loadCapacity", label: "Load Capacity", isRequired: true, type: "number", sectionName: "Commercial Vehicle Fields", sectionOrder: 10 },
+        { key: "cargoDimensions", label: "Cargo Dimensions", sectionName: "Commercial Vehicle Fields", sectionOrder: 10 },
+        { key: "dotCompliance", label: "DOT Compliance", options: yesNoOptions, sectionName: "Commercial Vehicle Fields", sectionOrder: 10 },
+        { key: "fleetVehicle", label: "Fleet Vehicle", options: yesNoOptions, sectionName: "Commercial Vehicle Fields", sectionOrder: 10 },
       ],
       "Commercial Vehicles": [
         ...vehicleCoreFields,
-        { key: "vehicleType", label: "Vehicle Type", isRequired: true, options: ["Pickup Truck", "Box Truck", "Cargo Van", "Semi Truck", "Dump Truck", "Delivery Van", "Other"] },
-        { key: "loadCapacity", label: "Load Capacity", isRequired: true, type: "number" },
-        { key: "cargoDimensions", label: "Cargo Dimensions" },
-        { key: "dotCompliance", label: "DOT Compliance", options: yesNoOptions },
-        { key: "fleetVehicle", label: "Fleet Vehicle", options: yesNoOptions },
-        { key: "numberOfWheels", label: "Number of Wheels", isRequired: true, type: "number" },
-        { key: "permitType", label: "Permit Type", isRequired: true, options: ["National", "State", "Local", "None"] },
+        { key: "loadCapacity", label: "Load Capacity", isRequired: true, type: "number", sectionName: "Commercial Vehicle Fields", sectionOrder: 10 },
+        { key: "cargoDimensions", label: "Cargo Dimensions", sectionName: "Commercial Vehicle Fields", sectionOrder: 10 },
+        { key: "dotCompliance", label: "DOT Compliance", options: yesNoOptions, sectionName: "Commercial Vehicle Fields", sectionOrder: 10 },
+        { key: "fleetVehicle", label: "Fleet Vehicle", options: yesNoOptions, sectionName: "Commercial Vehicle Fields", sectionOrder: 10 },
       ],
       "RVs & Campers": [
         ...vehicleCoreFields,
@@ -1209,42 +1292,36 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
       ],
       Rentals: [
         ...vehicleCoreFields,
-        { key: "rentalType", label: "Rental Type", isRequired: true, options: ["Car Rental", "Luxury Rental", "Party Bus Rental", "Truck Rental", "RV Rental", "Self-drive", "With Driver"] },
-        { key: "rentalDuration", label: "Rental Duration" },
-        { key: "pricePerHour", label: "Price Per Hour", type: "number" },
-        { key: "pricePerDay", label: "Daily Price", type: "number" },
-        { key: "securityDepositVehicle", label: "Deposit Amount", type: "number" },
+        { key: "rentalType", label: "Rental Type", isRequired: true, options: ["Car Rental", "Luxury Rental", "Party Bus Rental", "Truck Rental", "RV Rental", "Self-drive", "With Driver"], sectionName: "Rental Details", sectionOrder: 11 },
+        { key: "rentalDuration", label: "Rental Duration", isRequired: true, sectionName: "Rental Details", sectionOrder: 11 },
+        { key: "pricePerDay", label: "Daily Price", type: "number", isRequired: true, sectionName: "Rental Details", sectionOrder: 11 },
+        { key: "securityDepositVehicle", label: "Deposit Amount", type: "number", isRequired: true, sectionName: "Rental Details", sectionOrder: 11 },
       ],
       "Vehicle Rentals": [
         ...vehicleCoreFields,
-        { key: "rentalType", label: "Rental Type", isRequired: true, options: ["Car Rental", "Luxury Rental", "Party Bus Rental", "Truck Rental", "RV Rental", "Self-drive", "With Driver"] },
-        { key: "rentalDuration", label: "Rental Duration" },
-        { key: "pricePerHour", label: "Price Per Hour", type: "number" },
-        { key: "pricePerDay", label: "Daily Price", type: "number" },
-        { key: "securityDepositVehicle", label: "Deposit Amount", type: "number" },
+        { key: "rentalType", label: "Rental Type", isRequired: true, options: ["Car Rental", "Luxury Rental", "Party Bus Rental", "Truck Rental", "RV Rental", "Self-drive", "With Driver"], sectionName: "Rental Details", sectionOrder: 11 },
+        { key: "rentalDuration", label: "Rental Duration", isRequired: true, sectionName: "Rental Details", sectionOrder: 11 },
+        { key: "pricePerDay", label: "Daily Price", type: "number", isRequired: true, sectionName: "Rental Details", sectionOrder: 11 },
+        { key: "securityDepositVehicle", label: "Deposit Amount", type: "number", isRequired: true, sectionName: "Rental Details", sectionOrder: 11 },
       ],
       "Auto Parts & Accessories": [
-        { key: "partType", label: "Part Type", isRequired: true, options: ["Tires & Wheels", "Batteries", "Car Audio Systems", "Seat Covers", "GPS & Electronics", "Performance Parts", "Other"] },
-        { key: "compatibleModels", label: "Compatible Brands / Models" },
-        { key: "brand", label: "Brand" },
-        { key: "oemAftermarket", label: "OEM / Aftermarket", options: ["OEM", "Aftermarket"] },
-        { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"] },
-        { key: "warranty", label: "Warranty", options: ["No Warranty", "Seller Warranty", "Manufacturer Warranty"] },
+        { key: "partType", label: "Part Type", isRequired: true, options: ["Tires & Wheels", "Batteries", "Car Audio Systems", "Seat Covers", "GPS & Electronics", "Performance Parts", "Other"], sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
+        { key: "compatibleModels", label: "Compatible Brands / Models", isRequired: true, sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
+        { key: "oemAftermarket", label: "OEM / Aftermarket", options: ["OEM", "Aftermarket"], sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
+        { key: "condition", label: "Part Condition", isRequired: true, options: ["New", "Used", "Refurbished"], sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
       ],
       "Spare Parts & Accessories": [
-        { key: "partType", label: "Part Type", isRequired: true, options: ["Tires & Wheels", "Batteries", "Car Audio Systems", "Seat Covers", "GPS & Electronics", "Performance Parts", "Other"] },
-        { key: "compatibleModels", label: "Compatible Brands / Models" },
-        { key: "brand", label: "Brand" },
-        { key: "oemAftermarket", label: "OEM / Aftermarket", options: ["OEM", "Aftermarket"] },
-        { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"] },
-        { key: "warranty", label: "Warranty", options: ["No Warranty", "Seller Warranty", "Manufacturer Warranty"] },
+        { key: "partType", label: "Part Type", isRequired: true, options: ["Tires & Wheels", "Batteries", "Car Audio Systems", "Seat Covers", "GPS & Electronics", "Performance Parts", "Other"], sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
+        { key: "compatibleModels", label: "Compatible Brands / Models", isRequired: true, sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
+        { key: "oemAftermarket", label: "OEM / Aftermarket", options: ["OEM", "Aftermarket"], sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
+        { key: "condition", label: "Part Condition", isRequired: true, options: ["New", "Used", "Refurbished"], sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
       ],
       "Electric Vehicles (EV)": [
         ...vehicleCoreFields,
-        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true },
-        { key: "chargingTime", label: "Charging Time", isRequired: true },
-        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
-        { key: "chargingPortType", label: "Charging Port Type" },
+        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingTime", label: "Charging Time", isRequired: true, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingPortType", label: "Charging Port Type", sectionName: "EV-Specific Fields", sectionOrder: 9 },
       ],
       "Services & Repairs": [
         { key: "serviceType", label: "Service Type", options: ["Auto Repair Shop", "Car Wash & Detailing", "Oil Change Service", "Tire Service", "Body Shop", "Towing Service"], isRequired: true },
@@ -1256,39 +1333,35 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
     detailedCategories: {
       "Electric Cars": [
         ...vehicleCoreFields,
-        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true },
-        { key: "chargingTime", label: "Charging Time", isRequired: true },
-        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
-        { key: "chargingPortType", label: "Charging Port Type" },
-        { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
-        { key: "ownerCount", label: "Owner Count", type: "number" },
+        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingTime", label: "Charging Time", isRequired: true, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingPortType", label: "Charging Port Type", sectionName: "EV-Specific Fields", sectionOrder: 9 },
       ],
       "Electric Bikes": [
         ...vehicleCoreFields,
-        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true },
-        { key: "chargingTime", label: "Charging Time", isRequired: true },
-        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
-        { key: "chargingPortType", label: "Charging Port Type" },
+        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingTime", label: "Charging Time", isRequired: true, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingPortType", label: "Charging Port Type", sectionName: "EV-Specific Fields", sectionOrder: 9 },
       ],
       "Charging Stations": [
-        { key: "chargingStationType", label: "Charging Station Type" },
-        { key: "chargingPortType", label: "Charging Port Type" },
-        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
-        { key: "price", label: "Price (USD)", type: "number" },
+        { key: "chargingStationType", label: "Charging Station Type", sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingPortType", label: "Charging Port Type", sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "price", label: "Price (USD)", type: "number", isRequired: true, sectionName: "Pricing", sectionOrder: 4 },
       ],
       "EV Accessories": [
-        { key: "partType", label: "Part Type", isRequired: true },
-        { key: "compatibleModels", label: "Compatible Brands / Models" },
-        { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"] },
+        { key: "partType", label: "Part Type", isRequired: true, sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
+        { key: "compatibleModels", label: "Compatible Brands / Models", isRequired: true, sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
+        { key: "condition", label: "Part Condition", isRequired: true, options: ["New", "Used", "Refurbished"], sectionName: "Auto Parts & Accessories Fields", sectionOrder: 11 },
       ],
       "Electric Vehicles": [
         ...vehicleCoreFields,
-        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true },
-        { key: "chargingTime", label: "Charging Time", isRequired: true },
-        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions },
-        { key: "chargingPortType", label: "Charging Port Type" },
-        { key: "kilometersDriven", label: "Kilometers Driven", type: "number" },
-        { key: "ownerCount", label: "Owner Count", type: "number" },
+        { key: "batteryRange", label: "Battery Range (miles)", type: "number", isRequired: true, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingTime", label: "Charging Time", isRequired: true, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions, sectionName: "EV-Specific Fields", sectionOrder: 9 },
+        { key: "chargingPortType", label: "Charging Port Type", sectionName: "EV-Specific Fields", sectionOrder: 9 },
       ],
       "Tires & Wheels": [
         { key: "itemType", label: "Item Type", options: ["Tire", "Wheel"] },
@@ -1633,51 +1706,6 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   },
   Jobs: {
     default: categoryAttributeFieldsByCategory.Jobs,
-    subCategories: {
-      "Information Technology (IT)": [
-        { key: "companyName", label: "Company Name", isRequired: true },
-        { key: "jobType", label: "Job Type", options: ["Full Time", "Part Time", "Contract", "Internship"], isRequired: true },
-        { key: "experienceRequired", label: "Experience Required" },
-        { key: "qualification", label: "Qualification" },
-        { key: "salaryRange", label: "Salary Range" },
-        { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true },
-        { key: "lastDateToApply", label: "Last Date To Apply", type: "date" },
-      ],
-      Engineering: [
-        { key: "companyName", label: "Company Name", isRequired: true },
-        { key: "jobType", label: "Job Type", options: ["Full Time", "Part Time", "Contract", "Internship"], isRequired: true },
-        { key: "experienceRequired", label: "Experience Required" },
-        { key: "qualification", label: "Qualification" },
-        { key: "salaryRange", label: "Salary Range" },
-        { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true },
-        { key: "lastDateToApply", label: "Last Date To Apply", type: "date" },
-      ],
-      Healthcare: [
-        { key: "companyName", label: "Company Name", isRequired: true },
-        { key: "jobType", label: "Job Type", options: ["Full Time", "Part Time", "Contract", "Internship"], isRequired: true },
-        { key: "medicalLicenseNumber", label: "Medical License Number" },
-        { key: "certificationRequirements", label: "Certification Requirements" },
-        { key: "experienceRequired", label: "Experience Required" },
-        { key: "salaryRange", label: "Salary Range" },
-        { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true },
-      ],
-      "Freelance & Remote Jobs": [
-        { key: "companyName", label: "Company / Client Name", isRequired: true },
-        { key: "jobType", label: "Job Type", options: ["Freelance", "Contract", "Part Time"], isRequired: true },
-        { key: "workMode", label: "Work Mode", options: ["Remote", "Hybrid"], isRequired: true },
-        { key: "remoteWorkPolicy", label: "Remote Work Policy", type: "textarea" },
-        { key: "timeZoneRequirement", label: "Time Zone Requirement" },
-        { key: "hourlyRate", label: "Hourly Rate", type: "number" },
-      ],
-      "Internships & Entry-Level Jobs": [
-        { key: "companyName", label: "Company Name", isRequired: true },
-        { key: "jobType", label: "Job Type", options: ["Internship", "Entry Level"], isRequired: true },
-        { key: "internshipDuration", label: "Internship Duration" },
-        { key: "collegeRequirement", label: "College Requirement" },
-        { key: "stipendInformation", label: "Stipend Information" },
-        { key: "workMode", label: "Work Mode", options: ["Onsite", "Remote", "Hybrid"], isRequired: true },
-      ],
-    },
   },
   "Jobs / Services": {
     default: categoryAttributeFieldsByCategory["Jobs / Services"],
@@ -1783,12 +1811,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
   const [pricingPlans, setPricingPlans] = useState<PricingPlan[]>([]);
   const [isPlansModalOpen, setIsPlansModalOpen] = useState(false);
+  const [isPlansLoading, setIsPlansLoading] = useState(false);
   const [selectingPlanCode, setSelectingPlanCode] = useState("");
   const [plansModalMessage, setPlansModalMessage] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
   const [savedListingId, setSavedListingId] = useState<number | null>(null);
   const pricingSaveStartedRef = useRef(false);
   const planSelectionTouchedRef = useRef(false);
+  const pendingValidationScrollRef = useRef(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { listingId } = useParams();
@@ -1799,12 +1829,25 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const isEditMode = Boolean(editListingId);
   const isRealEstateListing = !isClassifiedMode && isRealEstateCategory(form.categoryName);
   const isRestaurantListing = !isClassifiedMode && form.categoryName === "Restaurants & Food";
+  const isRoommatesRentalListing = !isClassifiedMode && form.categoryName === "Roommates & Rentals";
+  const isJobsListing = !isClassifiedMode && form.categoryName === "Jobs";
+  const isElectronicsListing = !isClassifiedMode && isElectronicsCategoryName(form.categoryName);
+  const isPetsListing = !isClassifiedMode && form.categoryName === "Pets & Animals";
 
   useEffect(() => {
     if (isClassifiedMode) {
       setCurrentStep(getClassifiedListingStepIndex(location.pathname));
     }
   }, [isClassifiedMode, location.pathname]);
+
+  useEffect(() => {
+    if (!pendingValidationScrollRef.current || !Object.keys(fieldErrors).length) {
+      return;
+    }
+
+    pendingValidationScrollRef.current = false;
+    scrollToFirstValidationError();
+  }, [currentStep, fieldErrors]);
 
   useEffect(() => {
     let isActive = true;
@@ -1824,6 +1867,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   useEffect(() => {
     let isActive = true;
 
+    setIsPlansLoading(true);
     getPricingPlans()
       .then((plans) => {
         if (isActive) {
@@ -1834,6 +1878,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         if (isActive) {
           setPricingPlans([]);
         }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsPlansLoading(false);
+        }
       });
 
     return () => {
@@ -1842,7 +1891,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }, []);
 
   useEffect(() => {
-    const activePlanName = planUsage?.plan?.name;
+    const activePlanName = planUsage?.requiresPlanSelection || planUsage?.isPlanExpired ? "" : planUsage?.plan?.name;
     if (!activePlanName) {
       return;
     }
@@ -1854,7 +1903,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
       return currentForm.adType === activePlanName ? currentForm : { ...currentForm, adType: activePlanName };
     });
-  }, [isEditMode, planUsage?.plan?.name]);
+  }, [isEditMode, planUsage?.isPlanExpired, planUsage?.plan?.name, planUsage?.requiresPlanSelection]);
 
   useEffect(() => {
     if (!pricingPlans.length) {
@@ -1862,7 +1911,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     setForm((currentForm) => {
-      if (!isEditMode && !planSelectionTouchedRef.current && planUsage?.plan?.name) {
+      if (!isEditMode && !planSelectionTouchedRef.current && planUsage?.plan?.name && !planUsage.requiresPlanSelection && !planUsage.isPlanExpired) {
         const activePlan = getSelectedPricingPlan(pricingPlans, planUsage.plan.name);
         const activePlanName = activePlan?.name || planUsage.plan.name;
         return currentForm.adType === activePlanName ? currentForm : { ...currentForm, adType: activePlanName };
@@ -1879,7 +1928,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
       return currentForm;
     });
-  }, [isEditMode, planUsage?.plan?.name, pricingPlans]);
+  }, [isEditMode, planUsage?.isPlanExpired, planUsage?.plan?.name, planUsage?.requiresPlanSelection, pricingPlans]);
 
   const selectedCountry = useMemo(
     () => countries.find((country) => country.id === form.countryId) || countries.find((country) => country.name === form.country),
@@ -1898,7 +1947,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         if (isActive) {
           const supportedItems = items.filter((item) => supportedListingCategoryNameSet.has(item.name));
           if (supportedItems.length) {
-            setListingCategories(dedupeListingCategories(supportedItems));
+            setListingCategories(mergeListingCategoryOptions(
+              fallbackListingCategoryTree.filter((item) => supportedListingCategoryNameSet.has(item.name)),
+              supportedItems,
+            ));
           }
         }
       })
@@ -2018,6 +2070,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           email: currentContact.email || profile.email || "",
           mainPhone: currentContact.mainPhone || profile.mobileNumber || "",
         }));
+        setCategoryAttributes((currentAttributes) => applyCareContactDefaults(currentAttributes, {
+          name: profile.fullName || sellerName,
+          phone: profile.mobileNumber,
+          email: profile.email,
+        }));
         setSellerName(profile.fullName || sellerName);
       })
       .catch(() => {
@@ -2043,6 +2100,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
             localStorage.getItem("mobile_number") ||
             "",
         }));
+        setCategoryAttributes((currentAttributes) => applyCareContactDefaults(currentAttributes, {
+          name: storedSellerName,
+          phone: localStorage.getItem("mobileNumber") || localStorage.getItem("mobile_number") || "",
+          email: localStorage.getItem("email") || "",
+        }));
         setSellerName(storedSellerName);
       });
 
@@ -2050,6 +2112,19 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (form.categoryName !== "Care Services") {
+      return;
+    }
+
+    setCategoryAttributes((currentAttributes) => applyCareContactDefaults(currentAttributes, {
+      name: sellerName,
+      phone: form.mobileNumber,
+      email: form.email,
+      website: form.website,
+    }));
+  }, [form.categoryName, form.email, form.mobileNumber, form.website, sellerName]);
 
   useEffect(() => {
     if (!sourceListingId) {
@@ -2171,8 +2246,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   );
 
   const detailCategoryOptions = useMemo(
-    () => includeCurrentValue(selectedListingSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [], form.detailCategory),
-    [selectedListingSubCategory, form.detailCategory],
+    () => includeCurrentValue(
+      mergeStringOptions(
+        selectedListingSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [],
+        getFallbackDetailedCategoryOptions(form.categoryName, form.subCategory),
+      ),
+      form.detailCategory,
+    ),
+    [selectedListingSubCategory, form.categoryName, form.detailCategory, form.subCategory],
   );
   const effectiveDynamicCategoryFields = useMemo(
     () => mergeCategoryPostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
@@ -2180,7 +2261,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   );
   const hasDynamicCategoryFields = !isRealEstateListing && effectiveDynamicCategoryFields.length > 0;
   const hasDynamicPriceField = !isRealEstateListing && hasAnyFieldKey(effectiveDynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price");
-  const hasDynamicSellerTypeField = !isRealEstateListing && hasAnyFieldKey(effectiveDynamicCategoryFields, "seller_type", "sellerType");
+  const shouldRenderFallbackPriceField = !hasDynamicPriceField &&
+    form.categoryName !== "Restaurants & Food" &&
+    !isEventsListingCategory(form.categoryName) &&
+    !(form.categoryName === "Vehicles" && isVehicleRentalSubCategory(form.subCategory));
 
   useEffect(() => {
     let isActive = true;
@@ -2371,6 +2455,28 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
   }
 
+  async function openPlansModal() {
+    setPlansModalMessage("");
+    setIsPlansModalOpen(true);
+
+    if (pricingPlans.length || isPlansLoading) {
+      return;
+    }
+
+    setIsPlansLoading(true);
+    try {
+      const plans = await getPricingPlans();
+      setPricingPlans(plans);
+      if (!plans.length) {
+        setPlansModalMessage("Plans are not available right now.");
+      }
+    } catch {
+      setPlansModalMessage("Unable to load pricing plans. Please try again.");
+    } finally {
+      setIsPlansLoading(false);
+    }
+  }
+
   function clearFieldError(name: string) {
     setFieldErrors((currentErrors) => {
       if (!currentErrors[name]) {
@@ -2472,15 +2578,30 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
             return;
           }
 
+          const resolvedCityName = location.city || location.district;
           void ensureAndApplyResolvedLocation({
             countryName: location.country,
             countryCode: location.countryCode,
             stateName: location.state,
-            cityName: location.city || location.district,
+            cityName: resolvedCityName,
             pincode,
             latitude: location.latitude,
             longitude: location.longitude,
           }, pincode);
+
+          if (form.categoryName === "Restaurants & Food") {
+            setContactInfo((currentContactInfo) => {
+              if ((currentContactInfo.zipcode || form.pincode).trim() !== pincode) {
+                return currentContactInfo;
+              }
+
+              return {
+                ...currentContactInfo,
+                state: location.state || currentContactInfo.state,
+                city: resolvedCityName || currentContactInfo.city,
+              };
+            });
+          }
         })
         .catch((error) => {
           if (error instanceof DOMException && error.name === "AbortError") {
@@ -2493,7 +2614,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       controller.abort();
       window.clearTimeout(timeoutId);
     };
-  }, [cities, countries, form.country, form.pincode, states]);
+  }, [cities, countries, form.categoryName, form.country, form.pincode, states]);
 
   const handleAddressPlaceSelect = useCallback((addressDetails: ListingAddressDetails) => {
     void ensureAndApplyResolvedLocation({
@@ -2539,8 +2660,20 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }, [cities, countries, form.country, states]);
 
   function handleNext(skipValidation = false) {
-    if (!skipValidation && !validateStep(currentStep)) {
-      return;
+    if (!skipValidation) {
+      for (let stepToValidate = 0; stepToValidate <= currentStep; stepToValidate += 1) {
+        const isVisibleStep = stepToValidate === currentStep;
+        if (!validateStep(stepToValidate, isVisibleStep)) {
+          if (!isVisibleStep) {
+            pendingValidationScrollRef.current = true;
+            setCurrentStep(stepToValidate);
+            if (isClassifiedMode) {
+              window.history.pushState(null, "", getClassifiedListingFormPath(stepToValidate + 1, editListingId));
+            }
+          }
+          return;
+        }
+      }
     }
 
     setErrorMessage("");
@@ -2579,15 +2712,17 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function scrollToFirstValidationError() {
     window.setTimeout(() => {
-      const firstInvalidField = document.querySelector<HTMLElement>(".is-invalid, .listing-field-error");
+      const firstInvalidField = document.querySelector<HTMLElement>(".login-main .is-invalid, .login-main .listing-field-error");
       const target = firstInvalidField?.closest<HTMLElement>(".form-group") || firstInvalidField;
+      const focusTarget = target?.querySelector<HTMLElement>("input, select, textarea, button") ||
+        (firstInvalidField?.matches("input, select, textarea, button") ? firstInvalidField : null);
 
       target?.scrollIntoView({ behavior: "smooth", block: "center" });
-      firstInvalidField?.focus();
-    }, 0);
+      focusTarget?.focus();
+    }, 50);
   }
 
-  function validateStep(step: number) {
+  function validateStep(step: number, scrollOnError = true) {
     const nextFieldErrors: FieldErrors = {};
     const addFieldError = (name: string, message: string) => {
       if (!nextFieldErrors[name]) {
@@ -2597,8 +2732,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     const finishStepValidation = () => {
       if (Object.keys(nextFieldErrors).length) {
         setFieldErrors(nextFieldErrors);
-        setErrorMessage("");
-        scrollToFirstValidationError();
+        setErrorMessage("Please fix the required fields shown below.");
+        if (scrollOnError) {
+          pendingValidationScrollRef.current = true;
+        }
         return false;
       }
 
@@ -2627,6 +2764,19 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
             addFieldError("restaurantName", "Restaurant Name is required.");
           }
 
+          if (!restaurantInfo.description.trim()) {
+            addFieldError("restaurantDescription", "Description is required.");
+          }
+
+          if (!restaurantInfo.businessType.trim()) {
+            addFieldError("restaurantBusinessType", "Business Type is required.");
+          }
+
+          const yearEstablished = numberOrNull(restaurantInfo.yearEstablished);
+          if (!yearEstablished || yearEstablished < 1800 || yearEstablished > new Date().getFullYear()) {
+            addFieldError("restaurantYearEstablished", "Year Established must be a valid year.");
+          }
+
           if (!restaurantInfo.cuisine.trim()) {
             addFieldError("restaurantCuisine", "Cuisine Type is required.");
           }
@@ -2634,6 +2784,35 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           if (!restaurantInfo.foodTypes.length) {
             addFieldError("restaurantFoodTypes", "Food Type is required.");
           }
+        }
+
+        if (form.categoryName === "Vehicles") {
+          addRequiredVehicleCategoryFieldErrors(1, addFieldError);
+          addSharedListingLocationErrors(addFieldError);
+          return finishStepValidation();
+        }
+
+        if (form.categoryName === "Roommates & Rentals") {
+          addRequiredRoommatesRentalCategoryFieldErrors(1, addFieldError);
+          addSharedListingLocationErrors(addFieldError);
+          return finishStepValidation();
+        }
+
+        if (isElectronicsCategoryName(form.categoryName)) {
+          addRequiredElectronicsCategoryFieldErrors(1, addFieldError);
+          return finishStepValidation();
+        }
+
+        if (form.categoryName === "Jobs") {
+          addRequiredJobCategoryFieldErrors(1, addFieldError);
+          addSharedListingLocationErrors(addFieldError);
+          return finishStepValidation();
+        }
+
+        if (form.categoryName === "Pets & Animals") {
+          addRequiredPetCategoryFieldErrors(1, addFieldError);
+          addSharedListingLocationErrors(addFieldError);
+          return finishStepValidation();
         }
 
         const missingDetailField = hasDynamicCategoryFields || isClassifiedMode || isRestaurantListing
@@ -2644,7 +2823,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           addFieldError(missingDetailField[0], `${missingDetailField[1]} is required.`);
         }
 
-        if (!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && isVehicleRentalSubCategory(form.subCategory)) && !form.price.trim()) {
+        if (shouldRenderFallbackPriceField && !form.price.trim()) {
           addFieldError("price", "Price is required.");
         }
 
@@ -2699,6 +2878,32 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return finishStepValidation();
     }
 
+    if (step === 2 && form.categoryName === "Vehicles") {
+      addRequiredVehicleCategoryFieldErrors(2, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 2 && form.categoryName === "Roommates & Rentals") {
+      addRequiredRoommatesRentalCategoryFieldErrors(2, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 2 && isElectronicsCategoryName(form.categoryName)) {
+      addRequiredElectronicsCategoryFieldErrors(2, addFieldError);
+      addSharedListingLocationErrors(addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 2 && form.categoryName === "Jobs") {
+      addRequiredJobCategoryFieldErrors(2, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 2 && form.categoryName === "Pets & Animals") {
+      addRequiredPetCategoryFieldErrors(2, addFieldError);
+      return finishStepValidation();
+    }
+
     if (step === 2 && isRestaurantListing) {
       const restaurantZipcode = contactInfo.zipcode || form.pincode;
       const selectedRestaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
@@ -2733,6 +2938,51 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         addFieldError("restaurantServiceTypes", "At least one Service Type is required.");
       }
 
+      return finishStepValidation();
+    }
+
+    if (step === 3 && form.categoryName === "Vehicles") {
+      addRequiredVehicleCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 3 && form.categoryName === "Roommates & Rentals") {
+      addRequiredRoommatesRentalCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 3 && isElectronicsCategoryName(form.categoryName)) {
+      addRequiredElectronicsCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 3 && form.categoryName === "Jobs") {
+      addRequiredJobCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 3 && form.categoryName === "Pets & Animals") {
+      addRequiredPetCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && form.categoryName === "Roommates & Rentals") {
+      addRequiredRoommatesRentalCategoryFieldErrors(4, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && isElectronicsCategoryName(form.categoryName)) {
+      addRequiredElectronicsCategoryFieldErrors(4, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && form.categoryName === "Jobs") {
+      addRequiredJobCategoryFieldErrors(4, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && form.categoryName === "Pets & Animals") {
+      addRequiredPetCategoryFieldErrors(4, addFieldError);
       return finishStepValidation();
     }
 
@@ -2777,10 +3027,6 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       requiredFields.push(["detailCategory", "Detailed Category"]);
     }
 
-    if (form.categoryName === "Vehicles" && !hasDynamicSellerTypeField) {
-      requiredFields.push(["sellerType", "Seller Type"]);
-    }
-
     requiredFields.forEach(([name, label]) => {
       if (!form[name].trim()) {
         addFieldError(name, `${label} is required.`);
@@ -2819,11 +3065,23 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return false;
     }
 
-    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Electronics & Appliances" && !validateElectronicsFields()) {
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && isElectronicsCategoryName(form.categoryName) && !validateElectronicsFields()) {
       return false;
     }
 
     if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Care Services" && !validateCareServiceFields()) {
+      return false;
+    }
+
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Roommates & Rentals" && !validateRoommatesRentalFields()) {
+      return false;
+    }
+
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Jobs" && !validateJobFields()) {
+      return false;
+    }
+
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Pets & Animals" && !validatePetFields()) {
       return false;
     }
 
@@ -2875,7 +3133,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       const bathroomsValue = form.bathrooms.trim() || getAttributeValue(categoryAttributes, "bathrooms").trim();
       if (bathroomsValue && !isNonNegativeDecimalText(bathroomsValue)) {
         validationTargetStep = 2;
-        addFieldError("bathrooms", "Bathrooms must be a valid number.");
+        addFieldError(form.categoryName === "Roommates & Rentals" ? categoryFieldErrorKey("bathrooms") : "bathrooms", "Bathrooms must be a valid number.");
       }
     }
 
@@ -2886,7 +3144,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
     }
 
-    if (!isRealEstateListing) {
+    if (!isRealEstateListing && !isRestaurantListing) {
       effectiveDynamicCategoryFields
         .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
         .forEach((field) => {
@@ -2899,9 +3157,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (Object.keys(nextFieldErrors).length) {
       setFieldErrors(nextFieldErrors);
-      setErrorMessage("");
+      setErrorMessage("Please fix the required fields shown below.");
+      pendingValidationScrollRef.current = true;
       setCurrentStep(validationTargetStep);
-      scrollToFirstValidationError();
       return false;
     }
 
@@ -2918,6 +3176,57 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (!form.state.trim()) addFieldError("state", "State is required.");
     if (!form.city.trim()) addFieldError("city", "City is required.");
     if (!form.pincode.trim()) addFieldError("pincode", "ZIP Code is required.");
+  }
+
+  function addRequiredVehicleCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getVehicleStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+  }
+
+  function addRequiredRoommatesRentalCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getRoommatesRentalStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+
+  }
+
+  function addRequiredElectronicsCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getElectronicsStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+  }
+
+  function addRequiredJobCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getJobStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+  }
+
+  function addRequiredPetCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getPetStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
   }
 
   function validateRestaurantFields() {
@@ -2937,6 +3246,19 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (!restaurantInfo.restaurantName.trim()) {
       addFieldError("restaurantName", "Restaurant Name is required.", 1);
+    }
+
+    if (!restaurantInfo.description.trim()) {
+      addFieldError("restaurantDescription", "Description is required.", 1);
+    }
+
+    if (!restaurantInfo.businessType.trim()) {
+      addFieldError("restaurantBusinessType", "Business Type is required.", 1);
+    }
+
+    const yearEstablished = numberOrNull(restaurantInfo.yearEstablished);
+    if (!yearEstablished || yearEstablished < 1800 || yearEstablished > new Date().getFullYear()) {
+      addFieldError("restaurantYearEstablished", "Year Established must be a valid year.", 1);
     }
 
     if (!restaurantInfo.cuisine.trim()) {
@@ -3011,9 +3333,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (Object.keys(nextFieldErrors).length) {
       setFieldErrors(nextFieldErrors);
-      setErrorMessage("");
+      setErrorMessage("Please fix the required fields shown below.");
+      pendingValidationScrollRef.current = true;
       setCurrentStep(validationTargetStep);
-      scrollToFirstValidationError();
       return false;
     }
 
@@ -3051,10 +3373,152 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     setFieldErrors(nextFieldErrors);
-    setErrorMessage("");
-    setCurrentStep(1);
-    scrollToFirstValidationError();
+    setErrorMessage("Please fix the required fields shown below.");
+    pendingValidationScrollRef.current = true;
+    setCurrentStep(
+      form.categoryName === "Vehicles"
+        ? getVehicleValidationTargetStep(rules)
+        : isElectronicsCategoryName(form.categoryName)
+          ? getElectronicsValidationTargetStep(rules)
+          : 1
+    );
     return false;
+  }
+
+  function validateRoommatesRentalFields() {
+    const nextFieldErrors: FieldErrors = {};
+    let validationTargetStep = wizardSteps.length - 1;
+
+    effectiveDynamicCategoryFields
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (!field.isRequired || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          return;
+        }
+
+        nextFieldErrors[categoryFieldErrorKey(field.key)] = `${field.label} is required.`;
+        validationTargetStep = Math.min(validationTargetStep, getRoommatesRentalFormStepForSectionOrder(field.sectionOrder || 1));
+      });
+
+    const sharedLocationErrors: FieldErrors = {};
+    addSharedListingLocationErrors((name, message) => {
+      sharedLocationErrors[name] = message;
+    });
+
+    if (Object.keys(sharedLocationErrors).length) {
+      Object.assign(nextFieldErrors, sharedLocationErrors);
+      validationTargetStep = 1;
+    }
+
+    if (!Object.keys(nextFieldErrors).length) {
+      return true;
+    }
+
+    setFieldErrors(nextFieldErrors);
+    setErrorMessage("Please fix the required fields shown below.");
+    pendingValidationScrollRef.current = true;
+    setCurrentStep(validationTargetStep);
+    return false;
+  }
+
+  function validateJobFields() {
+    const nextFieldErrors: FieldErrors = {};
+    let validationTargetStep = wizardSteps.length - 1;
+
+    effectiveDynamicCategoryFields
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (!field.isRequired || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          return;
+        }
+
+        nextFieldErrors[categoryFieldErrorKey(field.key)] = `${field.label} is required.`;
+        validationTargetStep = Math.min(validationTargetStep, getJobFormStepForSectionOrder(field.sectionOrder || 1));
+      });
+
+    const sharedLocationErrors: FieldErrors = {};
+    addSharedListingLocationErrors((name, message) => {
+      sharedLocationErrors[name] = message;
+    });
+
+    if (Object.keys(sharedLocationErrors).length) {
+      Object.assign(nextFieldErrors, sharedLocationErrors);
+      validationTargetStep = 1;
+    }
+
+    if (!Object.keys(nextFieldErrors).length) {
+      return true;
+    }
+
+    setFieldErrors(nextFieldErrors);
+    setErrorMessage("Please fix the required fields shown below.");
+    pendingValidationScrollRef.current = true;
+    setCurrentStep(validationTargetStep);
+    return false;
+  }
+
+  function validatePetFields() {
+    const nextFieldErrors: FieldErrors = {};
+    let validationTargetStep = wizardSteps.length - 1;
+
+    effectiveDynamicCategoryFields
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (!field.isRequired || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          return;
+        }
+
+        nextFieldErrors[categoryFieldErrorKey(field.key)] = `${field.label} is required.`;
+        validationTargetStep = Math.min(validationTargetStep, getPetFormStepForSectionOrder(field.sectionOrder || 1));
+      });
+
+    const sharedLocationErrors: FieldErrors = {};
+    addSharedListingLocationErrors((name, message) => {
+      sharedLocationErrors[name] = message;
+    });
+
+    if (Object.keys(sharedLocationErrors).length) {
+      Object.assign(nextFieldErrors, sharedLocationErrors);
+      validationTargetStep = 1;
+    }
+
+    if (!Object.keys(nextFieldErrors).length) {
+      return true;
+    }
+
+    setFieldErrors(nextFieldErrors);
+    setErrorMessage("Please fix the required fields shown below.");
+    pendingValidationScrollRef.current = true;
+    setCurrentStep(validationTargetStep);
+    return false;
+  }
+
+  function getVehicleValidationTargetStep(rules: Array<{ keys: string[]; message: string; formKey?: string }>) {
+    const visibleFields = effectiveDynamicCategoryFields.filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form));
+    const matchingSteps = rules.flatMap((rule) => {
+      const field = visibleFields.find((item) => rule.keys.some((key) =>
+        areEquivalentCategoryFieldKeys(item.key, key) ||
+        normalizeFieldKey(item.label) === normalizeFieldKey(key)
+      ));
+
+      return field ? [getVehicleFormStepForSectionOrder(field.sectionOrder || 1)] : [];
+    });
+
+    return matchingSteps.length ? Math.min(...matchingSteps) : 1;
+  }
+
+  function getElectronicsValidationTargetStep(rules: Array<{ keys: string[]; message: string; formKey?: string }>) {
+    const visibleFields = effectiveDynamicCategoryFields.filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form));
+    const matchingSteps = rules.flatMap((rule) => {
+      const field = visibleFields.find((item) => rule.keys.some((key) =>
+        areEquivalentCategoryFieldKeys(item.key, key) ||
+        normalizeFieldKey(item.label) === normalizeFieldKey(key)
+      ));
+
+      return field ? [getElectronicsFormStepForSectionOrder(field.sectionOrder || 1)] : [];
+    });
+
+    return matchingSteps.length ? Math.min(...matchingSteps) : 1;
   }
 
   function validateVehicleFields() {
@@ -3064,7 +3528,6 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     const isEv = isVehicleEvSelection(form.subCategory, form.detailCategory);
     const isChargingStation = form.detailCategory === "Charging Stations";
     const condition = getAttributeValue(categoryAttributes, "vehicleCondition", "vehicle_condition", "condition");
-    const fuelType = getAttributeValue(categoryAttributes, "fuelType", "fuel_type");
 
     if (isChargingStation) {
       if (!getAttributeValue(categoryAttributes, "chargingStationType", "charging_station_type", "chargingPortType", "charging_port_type").trim()) {
@@ -3084,11 +3547,15 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     const requiredFields = isAccessories
       ? [
+          ["listing_title", "listingTitle", "Listing Title"],
+          ["description", "Description"],
           ["partType", "part_type", "Part Type"],
           ["compatibleModels", "compatible_models", "Compatible Models"],
           ["condition", "partCondition", "part_condition", "Condition"],
         ]
       : [
+          ["listing_title", "listingTitle", "Listing Title"],
+          ["description", "Description"],
           ["brand", "Brand"],
           ["model", "Model"],
           ["yearOfManufacture", "year_of_manufacture", "Year of Manufacture"],
@@ -3104,20 +3571,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (!isAccessories && isUsedVehicleCondition(condition)) {
       const usedMissing = [
-        ["registrationYear", "registration_year", "Registration Year"],
         ["kilometersDriven", "kilometers_driven", "kmDriven", "km_driven", "KM Driven"],
         ["ownerCount", "owner_count", "numberOfOwners", "number_of_owners", "Number of Owners"],
-        ["rcAvailable", "rc_available", "RC Available"],
-        ["loanStatus", "loan_status", "Loan Status"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (usedMissing) {
         return validateInlineCategoryRules([{ keys: usedMissing.slice(0, -1), message: `${usedMissing[usedMissing.length - 1]} is required for used vehicles.` }]);
       }
 
-      if (fuelType && !["Electric", "Other"].includes(fuelType) && !getAttributeValue(categoryAttributes, "pucAvailable", "puc_available").trim()) {
-        return validateInlineCategoryRules([{ keys: ["pucAvailable", "puc_available"], message: "PUC is required for used fuel-based vehicles." }]);
-      }
     }
 
     if (getAttributeValue(categoryAttributes, "insurance", "insuranceStatus", "insurance_status") === "Active" &&
@@ -3127,8 +3588,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (form.subCategory === "Cars") {
       const rules = [
-        ...(!getAttributeValue(categoryAttributes, "bodyType", "body_type").trim() ? [{ keys: ["bodyType", "body_type"], message: "Body Type is required for Cars." }] : []),
-        ...(!getAttributeValue(categoryAttributes, "seatingCapacity", "seating_capacity").trim() ? [{ keys: ["seatingCapacity", "seating_capacity"], message: "Seating Capacity is required for Cars." }] : []),
+        ...(!getAttributeValue(categoryAttributes, "kilometersDriven", "kilometers_driven", "kmDriven", "km_driven").trim() ? [{ keys: ["kilometersDriven", "kilometers_driven", "kmDriven", "km_driven"], message: "Mileage is required for Cars." }] : []),
+        ...(!getAttributeValue(categoryAttributes, "transmission").trim() ? [{ keys: ["transmission"], message: "Transmission is required for Cars." }] : []),
       ];
       if (rules.length) {
         return validateInlineCategoryRules(rules);
@@ -3147,10 +3608,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (isVehicleCommercialSubCategory(form.subCategory)) {
       const commercialMissing = [
-        ["vehicleType", "vehicle_type", "Vehicle Type"],
         ["loadCapacity", "load_capacity", "Load Capacity"],
-        ["numberOfWheels", "number_of_wheels", "Number of Wheels"],
-        ["permitType", "permit_type", "Permit Type"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (commercialMissing) {
@@ -3163,8 +3621,16 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         return validateInlineCategoryRules([{ keys: ["rentalType", "rental_type"], message: "Rental Type is required for Rentals." }]);
       }
 
-      if (!getAttributeValue(categoryAttributes, "pricePerHour", "price_per_hour").trim() && !getAttributeValue(categoryAttributes, "pricePerDay", "price_per_day", "daily_price").trim()) {
-        return validateInlineCategoryRules([{ keys: ["pricePerHour", "price_per_hour", "pricePerDay", "price_per_day", "daily_price"], message: "Price Per Hour or Daily Price is required." }]);
+      if (!getAttributeValue(categoryAttributes, "rentalDuration", "rental_duration").trim()) {
+        return validateInlineCategoryRules([{ keys: ["rentalDuration", "rental_duration"], message: "Rental Duration is required for Rentals." }]);
+      }
+
+      if (!getAttributeValue(categoryAttributes, "pricePerDay", "price_per_day", "daily_price").trim()) {
+        return validateInlineCategoryRules([{ keys: ["pricePerDay", "price_per_day", "daily_price"], message: "Daily Price is required for Rentals." }]);
+      }
+
+      if (!getAttributeValue(categoryAttributes, "securityDepositVehicle", "security_deposit_vehicle").trim()) {
+        return validateInlineCategoryRules([{ keys: ["securityDepositVehicle", "security_deposit_vehicle"], message: "Deposit Amount is required for Rentals." }]);
       }
     } else if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price", "sale_price", "vehicle_price").trim() && !form.price.trim()) {
       return validateInlineCategoryRules([{ keys: ["price", "listing_price", "total_price", "sale_price", "vehicle_price"], formKey: getVisibleCategoryFieldKey("price", "listing_price", "total_price", "sale_price", "vehicle_price") ? undefined : "price", message: "Price is required for vehicle sale listings." }]);
@@ -3180,12 +3646,18 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     const warranty = getAttributeValue(categoryAttributes, "warranty");
 
     const requiredFields = [
+      ["listing_title", "listingTitle", "Listing Title"],
       ["brand", "Brand"],
-      ["modelNameNumber", "model_name_number", "model", "Model Number"],
+      ["modelNameNumber", "model_name_number", "model", "Model"],
       ["productName", "product_name", "Product Name"],
+      ["description", "Description"],
       ["condition", "Condition"],
       ["sellerType", "seller_type", "Ownership"],
+      ["price", "listing_price", "total_price", "Selling Price"],
       ["warranty", "Warranty Available"],
+      ["seller_name", "sellerName", "Seller Name"],
+      ["phone", "contact_phone", "Phone"],
+      ["email", "contact_email", "Email"],
     ];
 
     const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
@@ -3204,8 +3676,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (subCategory === "Mobile Phones & Tablets" || ["Smartphones", "Feature Phones", "Tablets", "iPads"].includes(detailCategory)) {
       const mobileMissing = [
         ["ram", "RAM"],
-        ["storage", "Storage"],
-        ["carrierStatus", "carrier_status", "Carrier Status"],
+        ["storage", "Storage Capacity"],
+        ["carrierStatus", "carrier_status", "Carrier Locked / Unlocked"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (mobileMissing) {
@@ -3220,7 +3692,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (subCategory === "Computers & Laptops" || detailCategory === "Laptops") {
       const computerMissing = [
         ["ram", "RAM"],
-        ["storage", "Storage"],
+        ["storage_type", "storageType", "Storage Type (SSD/HDD)"],
         ["processor", "Processor"],
         ["operatingSystem", "operating_system", "Operating System"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
@@ -3242,7 +3714,6 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
     } else if (subCategory === "Home Appliances" || subCategory === "Kitchen Appliances") {
       const applianceMissing = [
-        ["applianceType", "appliance_type", "Appliance Type"],
         ["capacity", "Capacity"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
@@ -3274,14 +3745,12 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ["providerType", "provider_type", "Provider Type"],
       ["experienceYears", "experience_years", "Experience"],
       ["languagesSpoken", "languages_spoken", "Languages Spoken"],
-      ["serviceRadiusMiles", "service_radius_miles", "Service Radius"],
       ["willingToTravel", "willing_to_travel", "Willing to Travel"],
       ["availabilityType", "availability_type", "Availability Type"],
       ["availableDays", "available_days", "Available Days"],
       ["availableTimeSlots", "available_time_slots", "Available Time Slots"],
       ["startDate", "start_date", "Start Date"],
       ["rateType", "rate_type", "Pricing Type"],
-      ["price_negotiable", "priceNegotiable", "negotiable", "Negotiable"],
       ["cprCertified", "cpr_certified", "CPR Certified"],
       ["firstAidCertified", "first_aid_certified", "First Aid Certified"],
       ["backgroundCheck", "background_check", "Background Check"],
@@ -3289,16 +3758,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ["specialNeedsExperience", "special_needs_experience", "Special Needs Experience"],
       ["smokingAllowed", "smoking_allowed", "Smoking Allowed"],
       ["petFriendly", "pet_friendly", "Pet Friendly"],
-      ["chatEnabled", "chat_enabled", "Chat Enabled"],
-      ["callEnabled", "call_enabled", "Call Enabled"],
       ["identityVerification", "identity_verification", "Identity Verification"],
       ["backgroundVerification", "background_verification", "Background Check Status"],
-      ["scheduleInterview", "schedule_interview", "Appointment Booking Enabled"],
-      ["onlineConsultation", "online_consultation", "Online Consultation"],
-      ["emergencyAvailability", "emergency_availability", "Emergency Availability"],
-      ["ad_type", "listing_type", "adType", "Listing Type"],
-      ["sponsoredListing", "sponsored_listing", "Sponsored Listing"],
-      ["boostListing", "boost_listing", "Boost Listing"],
     ];
 
     const missing = requiredFields.find((field) => {
@@ -3386,7 +3847,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return true;
     }
 
-    if (!isRealEstateListing && form.categoryName !== "Vehicles" && form.categoryName !== "Electronics & Appliances" && form.categoryName !== "Care Services" && form.categoryName !== "Roommates & Rentals" && form.categoryName !== "Jobs" && !isFurnitureCategory(form.categoryName)) {
+    if (!isRealEstateListing && form.categoryName !== "Vehicles" && !isElectronicsCategoryName(form.categoryName) && form.categoryName !== "Care Services" && form.categoryName !== "Roommates & Rentals" && form.categoryName !== "Jobs" && !isFurnitureCategory(form.categoryName)) {
       return true;
     }
 
@@ -3398,15 +3859,20 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     const minImageCount = form.categoryName === "Care Services" ? 1 : form.categoryName === "Roommates & Rentals" || form.categoryName === "Jobs" ? 0 : 3;
     if (form.categoryName === "Care Services" && !form.profileImageName.trim()) {
-      setErrorMessage("Profile Photo is required for Care Services listings.");
+      const message = "Profile Photo is required for Care Services listings.";
+      setErrorMessage(message);
+      setFieldErrors((currentErrors) => ({ ...currentErrors, galleryMedia: message }));
       return false;
     }
 
     if (imageCount < minImageCount || imageCount > 15) {
-      setErrorMessage(`${form.categoryName} listings require minimum ${minImageCount} and maximum 15 images.`);
+      const message = `${form.categoryName} listings require minimum ${minImageCount} and maximum 15 images.`;
+      setErrorMessage(message);
+      setFieldErrors((currentErrors) => ({ ...currentErrors, galleryMedia: message }));
       return false;
     }
 
+    clearFieldError("galleryMedia");
     return true;
   }
 
@@ -3463,6 +3929,29 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         draft.categoryAttributes,
         mode,
       );
+      if (draft.profileImageFile) {
+        payload.media.logoUrl = profileImageUploadMarker;
+        payload.media.imageUrls = [
+          profileImageUploadMarker,
+          ...payload.media.imageUrls.filter((value) =>
+            value !== profileImageUploadMarker &&
+            value !== draft.form.profileImageName.trim()
+          ),
+        ];
+      }
+      if (draft.coverImageFile) {
+        payload.media.coverBannerUrl = coverImageUploadMarker;
+        const withoutCoverValues = payload.media.imageUrls.filter((value) =>
+          value !== coverImageUploadMarker &&
+          value !== draft.form.coverImageName.trim()
+        );
+        const insertIndex = draft.profileImageFile ? 1 : Math.min(1, withoutCoverValues.length);
+        payload.media.imageUrls = [
+          ...withoutCoverValues.slice(0, insertIndex),
+          coverImageUploadMarker,
+          ...withoutCoverValues.slice(insertIndex),
+        ];
+      }
       const galleryMarkers = new Set(draft.form.galleryMedia);
       if (draft.form.listingVideo.startsWith(galleryImageUploadMarkerPrefix)) {
         galleryMarkers.add(draft.form.listingVideo);
@@ -3509,8 +3998,12 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }
 
   async function handleFinish() {
-    if (!validateStep(0)) {
+    if (!validateStep(0, currentStep === 0)) {
+      pendingValidationScrollRef.current = true;
       setCurrentStep(0);
+      if (isClassifiedMode) {
+        window.history.pushState(null, "", getClassifiedListingFormPath(1, editListingId));
+      }
       return;
     }
 
@@ -3519,6 +4012,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     if (!validateMedia()) {
+      pendingValidationScrollRef.current = true;
       setCurrentStep(4);
       return;
     }
@@ -3554,10 +4048,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         updateCategoryAttributes={updateCategoryAttributes}
         handleAddressPlaceSelect={handleAddressPlaceSelect}
         setGalleryFiles={setGalleryFiles}
-        onViewPlans={() => {
-          setPlansModalMessage("");
-          setIsPlansModalOpen(true);
-        }}
+        onViewPlans={openPlansModal}
         formStep={formStep}
       />
     );
@@ -3570,22 +4061,55 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         restaurantInfo={restaurantInfo}
         categoryAttributes={categoryAttributes}
         pricingPlans={pricingPlans}
-        profileImageFile={profileImageFile}
-        coverImageFile={coverImageFile}
         galleryFiles={galleryFiles}
         fieldErrors={fieldErrors}
         updateField={updateField}
         updateRestaurantInfo={setRestaurantInfo}
         updateGalleryMedia={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
         updateCategoryAttributes={updateCategoryAttributes}
-        setProfileImageFile={setProfileImageFile}
-        setCoverImageFile={setCoverImageFile}
         setGalleryFiles={setGalleryFiles}
-        onViewPlans={() => {
-          setPlansModalMessage("");
-          setIsPlansModalOpen(true);
-        }}
+        onViewPlans={openPlansModal}
       />
+    );
+  }
+
+  function renderVehicleMediaAndPlanSections() {
+    const setAttribute = (key: string, value: string) => {
+      updateCategoryAttributes({ ...categoryAttributes, [key]: value });
+    };
+
+    return (
+      <>
+        <h4>Media Upload</h4>
+        <div className="form-group">
+          <label>Vehicle Images (multiple)</label>
+          <GalleryMediaEditor
+            items={form.galleryMedia}
+            files={galleryFiles}
+            onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
+            onFilesChange={setGalleryFiles}
+          />
+        </div>
+        <FileUpload
+          label="Interior Photos"
+          accept="image/*,.jpg,.jpeg,.png,.webp"
+          value={categoryAttributes.interior_photos || ""}
+          files={galleryFiles}
+          onFilesChange={setGalleryFiles}
+          onChange={(value) => setAttribute("interior_photos", value)}
+        />
+        <FileUpload
+          label="Engine Photos"
+          accept="image/*,.jpg,.jpeg,.png,.webp"
+          value={categoryAttributes.engine_photos || ""}
+          files={galleryFiles}
+          onFilesChange={setGalleryFiles}
+          onChange={(value) => setAttribute("engine_photos", value)}
+        />
+        <Textarea placeholder="Videos" value={form.listingVideo} onChange={(value) => updateField("listingVideo", value)} />
+        <Input placeholder="360 View (optional)" value={categoryAttributes.view_360 || ""} onChange={(value) => setAttribute("view_360", value)} />
+        {renderGenericListingVisibilityAndPromotions()}
+      </>
     );
   }
 
@@ -3611,10 +4135,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
               <button
                 type="button"
                 className="btn btn-primary listing-plan-action-btn"
-                onClick={() => {
-                  setPlansModalMessage("");
-                  setIsPlansModalOpen(true);
-                }}
+                onClick={openPlansModal}
               >
                 View Plans
               </button>
@@ -3627,6 +4148,84 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           options={yesNoOptions}
           onChange={(value) => updateCategoryAttributes({ ...categoryAttributes, boost_listing: value })}
         />
+        <Select
+          placeholder="Sponsored Listing"
+          value={categoryAttributes.sponsored_listing || ""}
+          options={yesNoOptions}
+          onChange={(value) => updateCategoryAttributes({ ...categoryAttributes, sponsored_listing: value })}
+        />
+      </>
+    );
+  }
+
+  function renderVehiclePostingSections(formStep: number) {
+    const vehicleStepFields = getVehicleStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const includeLocationSection = formStep === 1 && !isClassifiedMode && shouldUseSharedListingLocationSection(form.categoryName);
+
+    return (
+      <>
+        {formStep === 3 ? renderVehicleContactInformationFields() : null}
+        <CategoryAttributesFields
+          categoryName={form.categoryName}
+          subCategory={form.subCategory}
+          detailCategory={form.detailCategory}
+          form={form}
+          currencyCountry={currencyCountry}
+          dynamicFields={vehicleStepFields}
+          values={categoryAttributes}
+          fieldErrors={fieldErrors}
+          uploadFiles={galleryFiles}
+          omitLocationFields={includeLocationSection}
+          locationSection={includeLocationSection ? (
+            <SharedListingLocationFields
+              form={form}
+              countries={countries}
+              states={states}
+              cities={cities}
+              fieldErrors={fieldErrors}
+              updateField={updateField}
+              updateCountry={updateCountry}
+              updateState={updateState}
+              updateCity={updateCity}
+              onAddressPlaceSelect={handleAddressPlaceSelect}
+            />
+          ) : undefined}
+          locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+          onChange={updateCategoryAttributes}
+          onUploadFilesChange={setGalleryFiles}
+        />
+      </>
+    );
+  }
+
+  function renderVehicleContactInformationFields() {
+    const setAttribute = (key: string, value: string) => {
+      updateCategoryAttributes({ ...categoryAttributes, [key]: value });
+    };
+
+    return (
+      <>
+        <h5 className="mt-3 mb-3">Contact Information</h5>
+        <Input
+          placeholder="Seller Name*"
+          value={sellerName}
+          error={fieldErrors.sellerName}
+          onChange={(value) => {
+            clearFieldError("sellerName");
+            setSellerName(value);
+          }}
+        />
+        <div className="row">
+          <InputColumn placeholder="Phone (OTP verified)*" value={form.mobileNumber} error={fieldErrors.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
+          <InputColumn placeholder="Email*" type="email" value={form.email} error={fieldErrors.email} onChange={(value) => updateField("email", value)} />
+        </div>
+        <div className="row">
+          <InputColumn placeholder="Dealer Name" value={categoryAttributes.dealer_name || ""} onChange={(value) => setAttribute("dealer_name", value)} />
+          <InputColumn placeholder="Website (optional)" value={form.website || categoryAttributes.dealer_website || ""} onChange={(value) => {
+            updateField("website", value);
+            setAttribute("dealer_website", value);
+          }} />
+        </div>
       </>
     );
   }
@@ -3634,6 +4233,30 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   function renderCategoryDynamicFields() {
     if (!form.categoryName || isRealEstateListing) {
       return null;
+    }
+
+    if (isEventsListingCategory(form.categoryName)) {
+      return renderEventPostingSections(1);
+    }
+
+    if (isRoommatesRentalListing) {
+      return renderRoommatesRentalPostingSections(1);
+    }
+
+    if (isJobsListing) {
+      return renderJobPostingSections(1);
+    }
+
+    if (isElectronicsListing) {
+      return renderElectronicsPostingSections(1);
+    }
+
+    if (isPetsListing) {
+      return renderPetPostingSections(1);
+    }
+
+    if (form.categoryName === "Vehicles") {
+      return renderVehiclePostingSections(1);
     }
 
     if (!isClassifiedMode && form.categoryName === "Restaurants & Food") {
@@ -3650,7 +4273,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     return (
       <>
-        {!hasDynamicPriceField && form.categoryName !== "Restaurants & Food" && !(form.categoryName === "Vehicles" && isVehicleRentalSubCategory(form.subCategory)) ? (
+        {shouldRenderFallbackPriceField ? (
           <ListingPriceFields form={form} currencyCountry={currencyCountry} fieldErrors={fieldErrors} updateField={updateField} />
         ) : null}
         <CategoryAttributesFields
@@ -3686,6 +4309,282 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     );
   }
 
+  function renderEventPostingSections(formStep: number) {
+    const eventFields = getEventStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    return (
+      <>
+        <CategoryAttributesFields
+          categoryName={form.categoryName}
+          subCategory={form.subCategory}
+          detailCategory={form.detailCategory}
+          form={form}
+          currencyCountry={currencyCountry}
+          dynamicFields={eventFields}
+          values={categoryAttributes}
+          fieldErrors={fieldErrors}
+          uploadFiles={galleryFiles}
+          omitLocationFields={useSharedLocation}
+          locationSection={useSharedLocation ? (
+            <SharedListingLocationFields
+              form={form}
+              countries={countries}
+              states={states}
+              cities={cities}
+              fieldErrors={fieldErrors}
+              updateField={updateField}
+              updateCountry={updateCountry}
+              updateState={updateState}
+              updateCity={updateCity}
+              onAddressPlaceSelect={handleAddressPlaceSelect}
+            />
+          ) : undefined}
+          locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+          onChange={updateCategoryAttributes}
+          onUploadFilesChange={setGalleryFiles}
+        />
+        {formStep === 4 ? renderGenericListingVisibilityAndPromotions() : null}
+      </>
+    );
+  }
+
+  function renderRoommatesRentalPostingSections(formStep: number) {
+    const roommateFields = getRoommatesRentalStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    return (
+      <>
+        <CategoryAttributesFields
+          categoryName={form.categoryName}
+          subCategory={form.subCategory}
+          detailCategory={form.detailCategory}
+          form={form}
+          currencyCountry={currencyCountry}
+          dynamicFields={roommateFields}
+          values={categoryAttributes}
+          fieldErrors={fieldErrors}
+          uploadFiles={galleryFiles}
+          omitLocationFields={useSharedLocation}
+          locationSection={useSharedLocation ? (
+            <SharedListingLocationFields
+              form={form}
+              countries={countries}
+              states={states}
+              cities={cities}
+              fieldErrors={fieldErrors}
+              updateField={updateField}
+              updateCountry={updateCountry}
+              updateState={updateState}
+              updateCity={updateCity}
+              onAddressPlaceSelect={handleAddressPlaceSelect}
+            />
+          ) : undefined}
+          locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+          onChange={updateCategoryAttributes}
+          onUploadFilesChange={setGalleryFiles}
+        />
+        {formStep === 4 ? renderGenericListingVisibilityAndPromotions() : null}
+      </>
+    );
+  }
+
+  function renderJobPostingSections(formStep: number) {
+    const jobFields = getJobStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    const renderJobFields = (fields: CategoryAttributeField[]) => fields.length ? (
+      <CategoryAttributesFields
+        categoryName={form.categoryName}
+        subCategory={form.subCategory}
+        detailCategory={form.detailCategory}
+        form={form}
+        currencyCountry={currencyCountry}
+        dynamicFields={fields}
+        values={categoryAttributes}
+        fieldErrors={fieldErrors}
+        uploadFiles={galleryFiles}
+        omitLocationFields={useSharedLocation}
+        locationSection={useSharedLocation ? (
+          <SharedListingLocationFields
+            form={form}
+            countries={countries}
+            states={states}
+            cities={cities}
+            fieldErrors={fieldErrors}
+            updateField={updateField}
+            updateCountry={updateCountry}
+            updateState={updateState}
+            updateCity={updateCity}
+            onAddressPlaceSelect={handleAddressPlaceSelect}
+          />
+        ) : undefined}
+        locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+        onChange={updateCategoryAttributes}
+        onUploadFilesChange={setGalleryFiles}
+      />
+    ) : null;
+
+    if (formStep === 4) {
+      const mediaAndVerificationFields = jobFields.filter((field) => (field.sectionOrder || 1) <= 16);
+      const promotionFields = jobFields.filter((field) => (field.sectionOrder || 1) === 17);
+      const conditionalFields = jobFields.filter((field) => (field.sectionOrder || 1) > 17);
+
+      return (
+        <>
+          {renderJobFields(mediaAndVerificationFields)}
+          {renderGenericListingVisibilityAndPromotions()}
+          {renderJobFields(promotionFields)}
+          {renderJobFields(conditionalFields)}
+        </>
+      );
+    }
+
+    return (
+      <>
+        {renderJobFields(jobFields)}
+      </>
+    );
+  }
+
+  function renderElectronicsPostingSections(formStep: number) {
+    const electronicsFields = getElectronicsStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 2 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    const renderElectronicsFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
+      <CategoryAttributesFields
+        categoryName={form.categoryName}
+        subCategory={form.subCategory}
+        detailCategory={form.detailCategory}
+        form={form}
+        currencyCountry={currencyCountry}
+        dynamicFields={fields}
+        values={categoryAttributes}
+        fieldErrors={fieldErrors}
+        uploadFiles={galleryFiles}
+        omitLocationFields={useSharedLocation}
+        locationSection={useSharedLocation ? (
+          <SharedListingLocationFields
+            form={form}
+            countries={countries}
+            states={states}
+            cities={cities}
+            fieldErrors={fieldErrors}
+            updateField={updateField}
+            updateCountry={updateCountry}
+            updateState={updateState}
+            updateCity={updateCity}
+            onAddressPlaceSelect={handleAddressPlaceSelect}
+          />
+        ) : undefined}
+        locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+        onChange={updateCategoryAttributes}
+        onUploadFilesChange={setGalleryFiles}
+      />
+    ) : null;
+
+    if (formStep === 4) {
+      const mainFields = electronicsFields.filter((field) => (field.sectionOrder || 1) <= 11);
+      const promotionFields = electronicsFields.filter((field) => (field.sectionOrder || 1) >= 13);
+
+      return (
+        <>
+          <h5 className="mt-3 mb-3">Photo Gallery</h5>
+          <GalleryMediaEditor
+            items={form.galleryMedia}
+            files={galleryFiles}
+            error={fieldErrors.galleryMedia}
+            onChange={(items) => {
+              clearFieldError("galleryMedia");
+              setForm((currentForm) => ({ ...currentForm, galleryMedia: items }));
+            }}
+            onFilesChange={setGalleryFiles}
+          />
+          {renderElectronicsFields(mainFields)}
+          {renderGenericListingVisibilityAndPromotions()}
+          {renderElectronicsFields(promotionFields)}
+        </>
+      );
+    }
+
+    return <>{renderElectronicsFields(electronicsFields)}</>;
+  }
+
+  function renderPetPostingSections(formStep: number) {
+    const petFields = getPetStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    const renderPetFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
+      <CategoryAttributesFields
+        categoryName={form.categoryName}
+        subCategory={form.subCategory}
+        detailCategory={form.detailCategory}
+        form={form}
+        currencyCountry={currencyCountry}
+        dynamicFields={fields}
+        values={categoryAttributes}
+        fieldErrors={fieldErrors}
+        uploadFiles={galleryFiles}
+        omitLocationFields={useSharedLocation}
+        locationSection={useSharedLocation ? (
+          <SharedListingLocationFields
+            form={form}
+            countries={countries}
+            states={states}
+            cities={cities}
+            fieldErrors={fieldErrors}
+            updateField={updateField}
+            updateCountry={updateCountry}
+            updateState={updateState}
+            updateCity={updateCity}
+            onAddressPlaceSelect={handleAddressPlaceSelect}
+          />
+        ) : undefined}
+        locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+        onChange={updateCategoryAttributes}
+        onUploadFilesChange={setGalleryFiles}
+      />
+    ) : null;
+
+    if (formStep === 3) {
+      return (
+        <>
+          <h5 className="mt-3 mb-3">Pet Photos</h5>
+          <GalleryMediaEditor
+            items={form.galleryMedia}
+            files={galleryFiles}
+            error={fieldErrors.galleryMedia}
+            onChange={(items) => {
+              clearFieldError("galleryMedia");
+              setForm((currentForm) => ({ ...currentForm, galleryMedia: items }));
+            }}
+            onFilesChange={setGalleryFiles}
+          />
+          {renderPetFields(petFields)}
+        </>
+      );
+    }
+
+    if (formStep === 4) {
+      const mainFields = petFields.filter((field) => (field.sectionOrder || 1) <= 12);
+      const promotionFields = petFields.filter((field) => (field.sectionOrder || 1) === 13);
+      const conditionalFields = petFields.filter((field) => (field.sectionOrder || 1) > 13);
+
+      return (
+        <>
+          {renderPetFields(mainFields)}
+          {renderGenericListingVisibilityAndPromotions()}
+          {renderPetFields(promotionFields)}
+          {renderPetFields(conditionalFields)}
+        </>
+      );
+    }
+
+    return <>{renderPetFields(petFields)}</>;
+  }
+
+  const fieldErrorMessages = Array.from(new Set(Object.values(fieldErrors)));
+
   return (
     <>
       <UserHomeHeader />
@@ -3698,7 +4597,18 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
             <div className="login-main add-list">
               <div className="log-bor">&nbsp;</div>
               <span className="steps">{currentStep < wizardSteps.length ? wizardSteps[currentStep].title : "Done"}</span>
-              {errorMessage ? <div className="alert alert-danger listing-form-alert">{errorMessage}</div> : null}
+              {errorMessage ? (
+                <div className="alert alert-danger listing-form-alert">
+                  <div>{errorMessage}</div>
+                  {fieldErrorMessages.length ? (
+                    <ul className="listing-form-error-list">
+                      {fieldErrorMessages.map((message) => (
+                        <li key={message}>{message}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
               {editLockedMessage ? <div className="listing-form-locked">{editLockedMessage}</div> : null}
 
               {currentStep === 0 ? (
@@ -3721,9 +4631,6 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         <InputColumn placeholder="Phone Number" value={form.mobileNumber} error={fieldErrors.mobileNumber} onChange={(value) => updateField("mobileNumber", value)} />
                         <InputColumn placeholder="Email Id" type="email" value={form.email} error={fieldErrors.email} onChange={(value) => updateField("email", value)} />
                       </div>
-                      {form.categoryName === "Vehicles" && !hasDynamicSellerTypeField ? (
-                        <Select placeholder="Seller Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Dealer"]} onChange={(value) => updateField("sellerType", value)} />
-                      ) : null}
                       <h4>Category Selection</h4>
                       <Select placeholder="Select Category*" value={form.categoryName} error={fieldErrors.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} />
                       <Select
@@ -3784,7 +4691,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
               {wizardSteps.length > 2 && currentStep === 1 ? (
                 <div className="log">
                   <div className="login">
-                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : form.categoryName === "Care Services" ? "Care Service Details" : "Category Details"}</h4>
+                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : form.categoryName === "Vehicles" ? "Vehicle Details" : form.categoryName === "Care Services" ? "Care Service Details" : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? "Event Details" : isRoommatesRentalListing ? "Roommate & Rental Details" : form.categoryName === "Jobs" ? "Job Details" : isElectronicsListing ? "Electronics Details" : isPetsListing ? "Pet Details" : "Category Details"}</h4>
                     <form className="listing_form_2" noValidate autoComplete="off">
                       {isRealEstateListing ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={40} />
@@ -3819,6 +4726,18 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                             onCategoryAttributesChange={updateCategoryAttributes}
                             onAddressPlaceSelect={handleRestaurantAddressPlaceSelect}
                           />
+                        ) : form.categoryName === "Vehicles" ? (
+                          renderVehiclePostingSections(2)
+                        ) : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? (
+                          renderEventPostingSections(2)
+                        ) : isRoommatesRentalListing ? (
+                          renderRoommatesRentalPostingSections(2)
+                        ) : isJobsListing ? (
+                          renderJobPostingSections(2)
+                        ) : isElectronicsListing ? (
+                          renderElectronicsPostingSections(2)
+                        ) : isPetsListing ? (
+                          renderPetPostingSections(2)
                         ) : (
                           <ul className="listing-section-stack">
                             <li>
@@ -3861,6 +4780,18 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                             onUploadFilesChange={setGalleryFiles}
                             onFieldErrorClear={clearFieldError}
                           />
+                        ) : form.categoryName === "Vehicles" ? (
+                          renderVehiclePostingSections(3)
+                        ) : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? (
+                          renderEventPostingSections(3)
+                        ) : isRoommatesRentalListing ? (
+                          renderRoommatesRentalPostingSections(3)
+                        ) : isJobsListing ? (
+                          renderJobPostingSections(3)
+                        ) : isElectronicsListing ? (
+                          renderElectronicsPostingSections(3)
+                        ) : isPetsListing ? (
+                          renderPetPostingSections(3)
                         ) : (
                           <ul>
                             <li>
@@ -3889,6 +4820,32 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         </>
                       ) : isRestaurantListing ? (
                         renderRestaurantMediaAndPlanSections()
+                      ) : form.categoryName === "Vehicles" ? (
+                        renderVehicleMediaAndPlanSections()
+                      ) : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? (
+                        renderEventPostingSections(4)
+                      ) : isRoommatesRentalListing ? (
+                        renderRoommatesRentalPostingSections(4)
+                      ) : isJobsListing ? (
+                        renderJobPostingSections(4)
+                      ) : isElectronicsListing ? (
+                        renderElectronicsPostingSections(4)
+                      ) : isPetsListing ? (
+                        renderPetPostingSections(4)
+                      ) : form.categoryName === "Care Services" ? (
+                        <>
+                          <h4>Photo gallery</h4>
+                          <GalleryMediaEditor
+                            items={form.galleryMedia}
+                            files={galleryFiles}
+                            onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
+                            onFilesChange={setGalleryFiles}
+                          />
+                          <p></p>
+                          <h4>Video Gallery</h4>
+                          <Textarea placeholder="Paste Your Youtube iframe Code here" value={form.listingVideo} onChange={(value) => updateField("listingVideo", value)} />
+                          {renderGenericListingVisibilityAndPromotions()}
+                        </>
                       ) : (
                         <>
                           <h4>More Info</h4>
@@ -3971,6 +4928,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           selectedPlanName={form.adType}
           activePlanCode={planUsage?.requiresPlanSelection ? "" : planUsage?.plan?.code || ""}
           message={plansModalMessage}
+          isLoading={isPlansLoading}
           selectingPlanCode={selectingPlanCode}
           country={currencyCountry}
           onSelect={handleSelectPlan}
@@ -4123,6 +5081,7 @@ function AddressAutocompleteInput({
   country,
   state,
   city,
+  postalCode,
   onChange,
   onPostalCodeDetected,
   onPlaceSelect,
@@ -4130,6 +5089,7 @@ function AddressAutocompleteInput({
   country: string;
   state: string;
   city: string;
+  postalCode?: string;
   onPostalCodeDetected?: (postalCode: string) => void;
   onPlaceSelect: (addressDetails: ListingAddressDetails) => void;
 }) {
@@ -4140,29 +5100,34 @@ function AddressAutocompleteInput({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [suppressSuggestionsUntilClear, setSuppressSuggestionsUntilClear] = useState(false);
+  const [suppressedSuggestionValue, setSuppressedSuggestionValue] = useState("");
+  const isSelectingSuggestionRef = useRef(false);
 
   useEffect(() => {
     const query = value.trim();
+    const postalCodeContext = normalizePostalCodeSearchQuery(postalCode || "", country);
+    const searchQuery = query || postalCodeContext;
 
-    if (suppressSuggestionsUntilClear && query) {
+    if (suppressSuggestionsUntilClear && query && query === suppressedSuggestionValue) {
       setSuggestions([]);
       setIsOpen(false);
       setIsLoading(false);
       return undefined;
     }
 
-    if (suppressSuggestionsUntilClear && !query) {
+    if (suppressSuggestionsUntilClear && (!query || query !== suppressedSuggestionValue)) {
       setSuppressSuggestionsUntilClear(false);
+      setSuppressedSuggestionValue("");
     }
 
-    if (query.length < addressSearchMinLength) {
+    if (searchQuery.length < addressSearchMinLength) {
       setSuggestions([]);
       setIsOpen(false);
       setIsLoading(false);
       return undefined;
     }
 
-    if (isPostalCodeSearchQuery(query, country)) {
+    if (isPostalCodeSearchQuery(query, country) && !postalCodeContext) {
       setSuggestions([]);
       setIsOpen(false);
       setIsLoading(false);
@@ -4173,10 +5138,11 @@ function AddressAutocompleteInput({
     const timer = window.setTimeout(() => {
       setIsLoading(true);
       searchAddressSuggestions({
-        query,
+        query: searchQuery,
         country,
         state,
         city,
+        postalCode: postalCodeContext,
         signal: controller.signal,
       })
         .then((items) => {
@@ -4200,17 +5166,29 @@ function AddressAutocompleteInput({
       window.clearTimeout(timer);
       controller.abort();
     };
-  }, [city, country, state, suppressSuggestionsUntilClear, value]);
+  }, [city, country, postalCode, state, suppressedSuggestionValue, suppressSuggestionsUntilClear, value]);
 
   const handleSelectSuggestion = async (suggestion: AddressSuggestion) => {
+    if (isSelectingSuggestionRef.current) {
+      return;
+    }
+
+    isSelectingSuggestionRef.current = true;
+    onChange(suggestion.address);
+    setSuppressSuggestionsUntilClear(true);
+    setSuppressedSuggestionValue(suggestion.address.trim());
+    setSuggestions([]);
+    setIsOpen(false);
     setIsLoading(true);
+
     try {
       const details = suggestion.placeId
         ? await getAddressPlaceDetail(suggestion.placeId)
         : null;
 
+      const selectedAddress = details?.formattedAddress || suggestion.address;
       onPlaceSelect({
-        address: details?.formattedAddress || suggestion.address,
+        address: selectedAddress,
         pincode: details?.postalCode || suggestion.pincode,
         latitude: details?.latitude != null ? String(details.latitude) : suggestion.latitude,
         longitude: details?.longitude != null ? String(details.longitude) : suggestion.longitude,
@@ -4219,6 +5197,7 @@ function AddressAutocompleteInput({
         city: details?.city || suggestion.city,
       });
       setSuppressSuggestionsUntilClear(true);
+      setSuppressedSuggestionValue(selectedAddress.trim());
     } catch {
       onPlaceSelect({
         address: suggestion.address,
@@ -4230,10 +5209,12 @@ function AddressAutocompleteInput({
         city: suggestion.city,
       });
       setSuppressSuggestionsUntilClear(true);
+      setSuppressedSuggestionValue(suggestion.address.trim());
     } finally {
       setIsLoading(false);
       setSuggestions([]);
       setIsOpen(false);
+      isSelectingSuggestionRef.current = false;
     }
   };
 
@@ -4259,8 +5240,9 @@ function AddressAutocompleteInput({
             onChange={(event) => {
               const nextValue = event.target.value;
               const normalizedValue = nextValue.trim();
-              if (!normalizedValue) {
+              if (!normalizedValue || normalizedValue !== suppressedSuggestionValue) {
                 setSuppressSuggestionsUntilClear(false);
+                setSuppressedSuggestionValue("");
               }
               const postalCode = normalizePostalCodeSearchQuery(normalizedValue, country);
               if (onPostalCodeDetected && postalCode) {
@@ -4283,8 +5265,11 @@ function AddressAutocompleteInput({
                 <li key={suggestion.id}>
                   <button
                     type="button"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => handleSelectSuggestion(suggestion)}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                      void handleSelectSuggestion(suggestion);
+                    }}
+                    onClick={(event) => event.preventDefault()}
                   >
                     <strong>{suggestion.title}</strong>
                     <span>{suggestion.subtitle}</span>
@@ -4304,21 +5289,23 @@ async function searchAddressSuggestions({
   country,
   state,
   city,
+  postalCode,
   signal,
 }: {
   query: string;
   country: string;
   state: string;
   city: string;
+  postalCode?: string;
   signal: AbortSignal;
 }) {
-  const cacheKey = [query, country, state, city].map((part) => part.trim().toLowerCase()).join("|");
+  const cacheKey = [query, country, state, city, postalCode || ""].map((part) => part.trim().toLowerCase()).join("|");
   const cachedSuggestions = addressSuggestionCache.get(cacheKey);
   if (cachedSuggestions) {
     return cachedSuggestions;
   }
 
-  const googleSuggestions = await searchGoogleAddressSuggestions({ query, country, state, city, signal });
+  const googleSuggestions = await searchGoogleAddressSuggestions({ query, country, state, city, postalCode, signal });
   if (googleSuggestions.length) {
     addressSuggestionCache.set(cacheKey, googleSuggestions);
     return googleSuggestions;
@@ -4328,7 +5315,7 @@ async function searchAddressSuggestions({
     format: "jsonv2",
     addressdetails: "1",
     limit: "8",
-    q: [query, city, state, country].filter((part) => part.trim()).join(", "),
+    q: [query, query.trim() === (postalCode || "").trim() ? "" : postalCode || "", city, state, country].filter((part) => part.trim()).join(", "),
   });
   const countryCode = getCountryCode(country);
   if (countryCode) {
@@ -4360,16 +5347,24 @@ async function searchGoogleAddressSuggestions({
   country,
   state,
   city,
+  postalCode,
   signal,
 }: {
   query: string;
   country: string;
   state: string;
   city: string;
+  postalCode?: string;
   signal: AbortSignal;
 }) {
   try {
-    const predictions = await searchAddressPredictions(query, country, state, city, signal);
+    const normalizedQuery = query.trim();
+    const normalizedPostalCode = (postalCode || "").trim();
+    const searchQuery = [
+      normalizedQuery,
+      normalizedQuery === normalizedPostalCode ? "" : normalizedPostalCode,
+    ].filter((part) => part.trim()).join(" ");
+    const predictions = await searchAddressPredictions(searchQuery, country, state, city, signal);
     return predictions.map((item) => ({
       id: item.placeId,
       placeId: item.placeId,
@@ -4481,14 +5476,14 @@ type NominatimAddressResult = {
   };
 };
 
-function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password", step }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string; step?: string }) {
+function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password", step, min }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string; step?: string; min?: string }) {
   const inputId = useId();
 
   return (
     <div className={width}>
       <div className="form-group">
         <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
-          <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} onChange={(event) => onChange(event.target.value)} />
+          <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} min={min} onChange={(event) => onChange(event.target.value)} />
         <FieldError message={error} />
       </div>
     </div>
@@ -4533,7 +5528,9 @@ function SelectColumn({ placeholder, value, options, onChange, error, width = "c
 }
 
 function CheckboxField({ label, checked, onChange, error }: { label: string; checked: boolean; onChange: (value: boolean) => void; error?: string }) {
-  const inputId = `listing-checkbox-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+  const uniqueId = useId().replace(/[^a-z0-9]+/gi, "-");
+  const labelSlug = label.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  const inputId = `listing-checkbox-${labelSlug}-${uniqueId}`;
 
   return (
     <div className="form-group listing-checkbox-field">
@@ -4629,11 +5626,12 @@ function CategoryAttributesFields({
   const fields = baseFields
     .filter((field) => shouldShowCategoryAttributeField(field, values, form))
     .filter((field) => !omitLocationFields || !isSharedListingLocationAttributeField(field));
-  const careLocationFields = categoryName === "Care Services" && locationSection
-    ? fields.filter((field) => field.sectionName === "Service Location")
+  const sharedLocationSectionTitle = getSharedListingLocationSectionTitle(categoryName);
+  const attachedLocationFields = locationSection
+    ? fields.filter((field) => field.sectionName === sharedLocationSectionTitle)
     : [];
-  const fieldsForSections = careLocationFields.length
-    ? fields.filter((field) => field.sectionName !== "Service Location")
+  const fieldsForSections = attachedLocationFields.length
+    ? fields.filter((field) => field.sectionName !== sharedLocationSectionTitle)
     : fields;
   const sections = groupCategoryAttributeFields(fieldsForSections, categoryName);
   const sectionEntries = [
@@ -4645,11 +5643,11 @@ function CategoryAttributesFields({
     ...(locationSection ? [{
       key: "shared-listing-location",
       order: locationSectionOrder,
-      content: careLocationFields.length ? (
+      content: attachedLocationFields.length ? (
         <>
           {locationSection}
           <div className="row">
-            {careLocationFields.map((field) => renderCategoryAttributeField(field))}
+            {attachedLocationFields.map((field) => renderCategoryAttributeField(field))}
           </div>
         </>
       ) : locationSection,
@@ -4661,7 +5659,40 @@ function CategoryAttributesFields({
   }
 
   function updateAttribute(key: string, value: string) {
+    if (isEventsListingCategory(categoryName)) {
+      const normalizedKey = normalizeFieldKey(key);
+
+      if (["eventstartdate", "event_start_date"].includes(normalizedKey)) {
+        const nextValues = { ...values, [key]: value };
+        const currentEndDate = getAttributeValue(values, "event_end_date", "eventEndDate").trim();
+
+        if (value && (!currentEndDate || currentEndDate < value)) {
+          nextValues.event_end_date = value;
+          nextValues.eventEndDate = value;
+        }
+
+        onChange(nextValues);
+        return;
+      }
+
+      if (["eventenddate", "event_end_date"].includes(normalizedKey)) {
+        const startDate = getAttributeValue(values, "event_start_date", "eventStartDate").trim();
+        const nextEndDate = startDate && value && value < startDate ? startDate : value;
+        onChange({ ...values, [key]: nextEndDate });
+        return;
+      }
+    }
+
     onChange({ ...values, [key]: value });
+  }
+
+  function updateMultiSelectAttribute(key: string, option: string, checked: boolean) {
+    const selectedValues = splitCategoryAttributeValues(values[key]);
+    const nextValues = checked
+      ? [...selectedValues, option]
+      : selectedValues.filter((value) => !namesMatch(value, option));
+
+    updateAttribute(key, dedupeStringOptions(nextValues).join(", "));
   }
 
   function renderCategoryAttributeSection(section: { name: string; order: number; fields: CategoryAttributeField[] }) {
@@ -4678,6 +5709,31 @@ function CategoryAttributesFields({
   function renderCategoryAttributeField(field: CategoryAttributeField) {
     const displayLabel = labelWithCountryCurrency(field.isRequired ? `${field.label}*` : field.label, currencyCountry);
     const error = fieldErrors[categoryFieldErrorKey(field.key)];
+    const inputMin = getCategoryAttributeInputMin(field, categoryName, values);
+    const inputStep = getCategoryAttributeInputStep(field, categoryName);
+
+    if (isMultiSelectCategoryAttributeField(field, categoryName)) {
+      const selectedValues = splitCategoryAttributeValues(values[field.key]);
+      return (
+        <div className="col-md-12" key={field.key}>
+          <div className="form-group">
+            <label className="listing-field-label">{fieldLabelFromPlaceholder(displayLabel)}</label>
+            <div className="row">
+              {field.options?.map((option) => (
+                <div className="col-md-4 col-sm-6" key={option}>
+                  <CheckboxField
+                    label={option}
+                    checked={selectedValues.some((value) => namesMatch(value, option))}
+                    onChange={(checked) => updateMultiSelectAttribute(field.key, option, checked)}
+                  />
+                </div>
+              ))}
+            </div>
+            <FieldError message={error} />
+          </div>
+        </div>
+      );
+    }
 
     if (isUploadCategoryField(field)) {
       return (
@@ -4733,6 +5789,8 @@ function CategoryAttributesFields({
         type={field.type || "text"}
         value={values[field.key] || ""}
         error={error}
+        min={inputMin}
+        step={inputStep}
         onChange={(value) => updateAttribute(field.key, value)}
       />
     );
@@ -4768,11 +5826,67 @@ function SharedListingLocationFields({
   updateCity: (value: string) => void;
   onAddressPlaceSelect: (addressDetails: ListingAddressDetails) => void;
 }) {
+  const isZipFirstLocation = form.categoryName === "Vehicles" || form.categoryName === "Care Services" || isElectronicsCategoryName(form.categoryName) || form.categoryName === "Pets & Animals";
+  const isEventsLocation = form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events";
+  const useFullAddressLabel = isEventsLocation || form.categoryName === "Pets & Animals";
+
+  if (isZipFirstLocation) {
+    const updateZipFirstZipcode = (value: string) => {
+      const zipcodeChanged = value.trim() !== form.pincode.trim();
+
+      updateField("pincode", value);
+
+      if (zipcodeChanged) {
+        updateField("address", "");
+        updateField("latitude", "");
+        updateField("longitude", "");
+      }
+    };
+
+    const updateZipFirstAddress = (value: string) => {
+      if (value.trim() !== form.address.trim()) {
+        updateField("latitude", "");
+        updateField("longitude", "");
+      }
+
+      updateField("address", value);
+    };
+
+    return (
+      <div>
+        <h5 className="mt-3 mb-3">{getSharedListingLocationSectionTitle(form.categoryName)}</h5>
+        <div className="row">
+          <InputColumn placeholder="ZIP Code*" value={form.pincode} error={fieldErrors.pincode} onChange={updateZipFirstZipcode} />
+          <SelectColumn placeholder="Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
+        </div>
+        <div className="row">
+          <SelectColumn placeholder="State*" value={form.state} error={fieldErrors.state} options={includeCurrentValue(states.map((state) => state.name), form.state)} onChange={updateState} disabled={!form.country} />
+          <SelectColumn placeholder="City*" value={form.city} error={fieldErrors.city} options={includeCurrentValue(cities.map((city) => city.name), form.city)} onChange={updateCity} disabled={!form.state} />
+        </div>
+        <AddressAutocompleteInput
+          placeholder={form.categoryName === "Pets & Animals" ? "Full Address" : "Street Address"}
+          value={form.address}
+          country={form.country || "United States"}
+          state={form.state}
+          city={form.city}
+          postalCode={form.pincode}
+          onChange={updateZipFirstAddress}
+          onPostalCodeDetected={updateZipFirstZipcode}
+          onPlaceSelect={onAddressPlaceSelect}
+        />
+        <div className="row">
+          <InputColumn placeholder="Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
+          <InputColumn placeholder="Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h5 className="mt-3 mb-3">{getSharedListingLocationSectionTitle(form.categoryName)}</h5>
       <AddressAutocompleteInput
-        placeholder="Street Address"
+        placeholder={useFullAddressLabel ? "Full Address" : "Street Address"}
         value={form.address}
         country={form.country || "United States"}
         state={form.state}
@@ -5311,40 +6425,67 @@ function RestaurantOperationsFields({
     });
   }
 
+  const restaurantZipcode = contactInfo.zipcode || form.pincode;
+  const restaurantAddress = contactInfo.streetAddress || form.address;
+
+  function updateRestaurantZipcode(value: string) {
+    const zipcodeChanged = value.trim() !== restaurantZipcode.trim();
+
+    updateField("pincode", value);
+
+    if (zipcodeChanged) {
+      updateField("address", "");
+      updateField("latitude", "");
+      updateField("longitude", "");
+      onContactInfoChange({ ...contactInfo, zipcode: value, streetAddress: "" });
+      return;
+    }
+
+    onContactInfoChange({ ...contactInfo, zipcode: value });
+  }
+
+  function updateRestaurantAddress(value: string) {
+    if (value.trim() !== restaurantAddress.trim()) {
+      updateField("latitude", "");
+      updateField("longitude", "");
+    }
+
+    updateField("address", value);
+    onContactInfoChange({ ...contactInfo, streetAddress: value });
+  }
+
   return (
     <>
-      <h5 className="mt-3 mb-3">Location (US-Based)</h5>
+      <h5 className="mt-3 mb-3">Location</h5>
+      <div className="row">
+        <InputColumn placeholder="ZIP Code*" value={restaurantZipcode} error={fieldErrors.restaurantZipcode} onChange={updateRestaurantZipcode} />
+        <InputColumn placeholder="Country" value={form.country || "United States"} onChange={(value) => updateField("country", value || "United States")} />
+      </div>
+      <div className="row">
+        <InputColumn placeholder="State*" value={contactInfo.state || form.state} error={fieldErrors.restaurantState} onChange={(value) => {
+          updateField("state", value);
+          onContactInfoChange({ ...contactInfo, state: value });
+        }} />
+        <InputColumn placeholder="City*" value={contactInfo.city || form.city} error={fieldErrors.restaurantCity} onChange={(value) => {
+          updateField("city", value);
+          onContactInfoChange({ ...contactInfo, city: value });
+        }} />
+      </div>
       <AddressAutocompleteInput
         placeholder="Street Address"
-        value={contactInfo.streetAddress || form.address}
+        value={restaurantAddress}
         error={fieldErrors.restaurantStreetAddress}
         country={form.country || "United States"}
         state={contactInfo.state || form.state}
         city={contactInfo.city || form.city}
-        onChange={(value) => onContactInfoChange({ ...contactInfo, streetAddress: value })}
+        postalCode={restaurantZipcode}
+        onChange={updateRestaurantAddress}
         onPostalCodeDetected={(postalCode) => {
           updateField("pincode", postalCode);
           onContactInfoChange({ ...contactInfo, zipcode: postalCode });
         }}
         onPlaceSelect={onAddressPlaceSelect}
       />
-      <div className="row">
-        <InputColumn placeholder="Country" value={form.country || "United States"} onChange={(value) => updateField("country", value || "United States")} />
-        <InputColumn placeholder="State*" value={contactInfo.state || form.state} error={fieldErrors.restaurantState} onChange={(value) => {
-          updateField("state", value);
-          onContactInfoChange({ ...contactInfo, state: value });
-        }} />
-      </div>
-      <div className="row">
-        <InputColumn placeholder="City*" value={contactInfo.city || form.city} error={fieldErrors.restaurantCity} onChange={(value) => {
-          updateField("city", value);
-          onContactInfoChange({ ...contactInfo, city: value });
-        }} />
-        <InputColumn placeholder="ZIP Code*" value={contactInfo.zipcode || form.pincode} error={fieldErrors.restaurantZipcode} onChange={(value) => {
-          updateField("pincode", value);
-          onContactInfoChange({ ...contactInfo, zipcode: value });
-        }} />
-      </div>
       <div className="row">
         <InputColumn placeholder="Latitude" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
         <InputColumn placeholder="Longitude" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
@@ -5410,7 +6551,6 @@ function RestaurantMenuPricingFields({
   const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
   const isFoodTruck = form.subCategory === "Food Trucks & Pop-ups";
   const isGrocery = form.subCategory === "Grocery & Specialty Food Stores";
-  const showAlcohol = form.subCategory === "Bars & Beverages";
   const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || isCloudKitchen;
   const showCatering = restaurantInfo.serviceTypes.includes("Catering") || isCatering;
   const amenityOptions = [
@@ -5477,7 +6617,7 @@ function RestaurantMenuPricingFields({
       <Textarea placeholder="Offers / Discounts" value={restaurantInfo.discountsOffers} onChange={(value) => onChange({ ...restaurantInfo, discountsOffers: value })} />
       <div className="row">
         <InputColumn placeholder="Coupon Codes (optional)" value={restaurantInfo.couponCodes} onChange={(value) => onChange({ ...restaurantInfo, couponCodes: value })} />
-        {showAlcohol ? <InputColumn placeholder="Happy Hours" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} /> : null}
+        <InputColumn placeholder="Happy Hours" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} />
       </div>
 
       {showDeliveryFields ? (
@@ -5528,16 +6668,12 @@ function RestaurantMediaAndPlanSections({
   restaurantInfo,
   categoryAttributes,
   pricingPlans,
-  profileImageFile,
-  coverImageFile,
   galleryFiles,
   fieldErrors,
   updateField,
   updateRestaurantInfo,
   updateGalleryMedia,
   updateCategoryAttributes,
-  setProfileImageFile,
-  setCoverImageFile,
   setGalleryFiles,
   onViewPlans,
 }: {
@@ -5545,16 +6681,12 @@ function RestaurantMediaAndPlanSections({
   restaurantInfo: RestaurantInfo;
   categoryAttributes: CategoryAttributes;
   pricingPlans: PricingPlan[];
-  profileImageFile: File | null;
-  coverImageFile: File | null;
   galleryFiles: GalleryUploadFile[];
   fieldErrors: FieldErrors;
   updateField: (name: StringFormField, value: string) => void;
   updateRestaurantInfo: (value: RestaurantInfo) => void;
   updateGalleryMedia: (items: string[]) => void;
   updateCategoryAttributes: (value: CategoryAttributes) => void;
-  setProfileImageFile: (file: File | null) => void;
-  setCoverImageFile: (file: File | null) => void;
   setGalleryFiles: (files: GalleryUploadFile[]) => void;
   onViewPlans: () => void;
 }) {
@@ -5579,26 +6711,6 @@ function RestaurantMediaAndPlanSections({
   return (
     <>
       <h4>Media Upload</h4>
-      <div className="row">
-        <TemplateImageColumn
-          label="Logo"
-          value={form.profileImageName}
-          file={profileImageFile}
-          onFileChange={(file) => {
-            setProfileImageFile(file);
-            updateField("profileImageName", file ? profileImageUploadMarker : "");
-          }}
-        />
-        <TemplateImageColumn
-          label="Cover Banner"
-          value={form.coverImageName}
-          file={coverImageFile}
-          onFileChange={(file) => {
-            setCoverImageFile(file);
-            updateField("coverImageName", file ? coverImageUploadMarker : "");
-          }}
-        />
-      </div>
       <div className="form-group">
         <label>Restaurant Photos (multiple)</label>
         <GalleryMediaEditor
@@ -5632,13 +6744,6 @@ function RestaurantMediaAndPlanSections({
         onFilesChange={setGalleryFiles}
         onChange={(value) => setAttribute("menu_pdf_upload", value)}
       />
-
-      <h4>Reviews & Ratings</h4>
-      <div className="row">
-        <InputColumn placeholder="Average Rating (system-generated)" value={attribute("average_rating")} disabled onChange={() => undefined} />
-        <InputColumn placeholder="Customer Reviews" value={attribute("customer_reviews")} disabled onChange={() => undefined} />
-      </div>
-      <Textarea placeholder="Featured Reviews (admin optional)" value={attribute("featured_reviews")} onChange={(value) => setAttribute("featured_reviews", value)} />
 
       <h4>Compliance & Licensing</h4>
       <Input placeholder="Food License Number" value={restaurantInfo.foodLicenseNumber} onChange={(value) => updateRestaurantInfo({ ...restaurantInfo, foodLicenseNumber: value })} />
@@ -6031,6 +7136,10 @@ function TemplateImageColumn({
     onFileChange(file);
   }
 
+  function clearImage() {
+    onFileChange(null);
+  }
+
   return (
     <div className="col-md-6">
       <div className="form-group listing-image-upload">
@@ -6046,7 +7155,10 @@ function TemplateImageColumn({
           <label className="listing-image-upload-button" htmlFor={inputId}>Choose file</label>
           <div className="listing-image-upload-name">{fileName || "No file chosen"}</div>
           {previewUrl ? (
-            <img className="listing-image-upload-preview" src={previewUrl} alt={`${fieldLabelFromPlaceholder(label)} preview`} />
+            <div className="listing-image-upload-preview-wrap">
+              <img className="listing-image-upload-preview" src={previewUrl} alt={`${fieldLabelFromPlaceholder(label)} preview`} />
+              <button type="button" className="listing-image-upload-remove" onClick={clearImage}>Remove</button>
+            </div>
           ) : (
             <div className="listing-image-upload-placeholder">Preview</div>
           )}
@@ -6322,11 +7434,13 @@ function getUploadAcceptForField(field: CategoryAttributeField) {
 function GalleryMediaEditor({
   files,
   items,
+  error,
   onChange,
   onFilesChange,
 }: {
   files: GalleryUploadFile[];
   items: string[];
+  error?: string;
   onChange: (items: string[]) => void;
   onFilesChange: (files: GalleryUploadFile[]) => void;
 }) {
@@ -6364,7 +7478,7 @@ function GalleryMediaEditor({
   const existingImages = items.filter((item) => item && !item.startsWith(galleryImageUploadMarkerPrefix));
 
   return (
-    <div>
+    <div className="form-group">
       <input
         ref={inputRef}
         type="file"
@@ -6375,7 +7489,7 @@ function GalleryMediaEditor({
         onChange={(event) => handleFilesChange(event.target.files)}
       />
       <div
-        className="imageuploadify well listing-gallery-uploader"
+        className={`imageuploadify well listing-gallery-uploader${error ? " is-invalid" : ""}`}
         onDragOver={(event) => event.preventDefault()}
         onDrop={handleDrop}
       >
@@ -6408,6 +7522,7 @@ function GalleryMediaEditor({
           ) : null}
         </div>
       </div>
+      <FieldError message={error} />
     </div>
   );
 }
@@ -6487,9 +7602,13 @@ function RestaurantInfoFields({
         <InputColumn placeholder="Business Name (optional)" value={restaurantInfo.businessName} onChange={(value) => onChange({ ...restaurantInfo, businessName: value })} />
       </div>
       <div className="row">
+        <SelectColumn placeholder="Business Type*" value={restaurantInfo.businessType} error={fieldErrors.restaurantBusinessType} options={["Restaurant", "Cafe", "Bar", "Cloud Kitchen", "Catering", "Food Truck", "Grocery", "Bakery", "Other"]} onChange={(value) => onChange({ ...restaurantInfo, businessType: value })} />
+        <InputColumn placeholder="Year Established*" type="number" value={restaurantInfo.yearEstablished} error={fieldErrors.restaurantYearEstablished} onChange={(value) => onChange({ ...restaurantInfo, yearEstablished: value })} />
+      </div>
+      <div className="row">
         <InputColumn placeholder="Tagline (optional)" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
       </div>
-      <Textarea placeholder="Description (rich text)" value={restaurantInfo.description} onChange={(value) => onChange({ ...restaurantInfo, description: value })} />
+      <Textarea placeholder="Description*" value={restaurantInfo.description} error={fieldErrors.restaurantDescription} onChange={(value) => onChange({ ...restaurantInfo, description: value })} />
       <MultiSelectCheckboxes title="Cuisine Information" options={cuisineOptions} selected={selectedCuisines} error={fieldErrors.restaurantCuisine} onChange={toggleCuisine} />
       <MultiSelectCheckboxes title="Food Type" options={["Veg", "Non-Veg", "Vegan", "Halal", "Kosher", "Gluten-Free"]} selected={restaurantInfo.foodTypes} error={fieldErrors.restaurantFoodTypes} onChange={toggleFoodType} />
     </>
@@ -6932,6 +8051,7 @@ function PlansSelectionModal({
   selectedPlanName,
   activePlanCode,
   message,
+  isLoading,
   selectingPlanCode,
   country,
   onSelect,
@@ -6941,6 +8061,7 @@ function PlansSelectionModal({
   selectedPlanName: string;
   activePlanCode: string;
   message: string;
+  isLoading: boolean;
   selectingPlanCode: string;
   country: string;
   onSelect: (plan: PricingPlan) => void | Promise<void>;
@@ -6955,8 +8076,10 @@ function PlansSelectionModal({
         </div>
         {message ? <div className="listing-plan-modal-message">{message}</div> : null}
         <div className="listing-plan-modal-grid">
-          {plans.length ? plans.map((plan) => {
-            const isSelected = selectedPlanName === plan.name || activePlanCode === plan.code;
+          {isLoading ? (
+            <div className="listing-plan-modal-empty">Loading plans...</div>
+          ) : plans.length ? plans.map((plan) => {
+            const isSelected = Boolean(getSelectedPricingPlan([plan], selectedPlanName)) || normalizePlanValue(activePlanCode) === normalizePlanValue(plan.code);
             return (
               <article className={`listing-plan-modal-card${plan.isHighlighted ? " is-highlighted" : ""}`} key={plan.code}>
                 <div>
@@ -7005,7 +8128,22 @@ function buildListingPayload(
   const isClassifiedMode = mode === "classified";
   const careServiceTitle = form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "serviceTitle", "service_title").trim() : "";
   const careServiceDescription = form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "description", "serviceDescription", "service_description").trim() : "";
-  const listingDescription = careServiceDescription || form.description.trim() || form.businessDescription.trim();
+  const isEventsTicketsPayload = form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events";
+  const eventTitle = isEventsTicketsPayload ? getAttributeValue(categoryAttributes, "event_title", "eventTitle").trim() : "";
+  const eventDescription = isEventsTicketsPayload ? getAttributeValue(categoryAttributes, "event_description", "eventDescription").trim() : "";
+  const isRoommatesRentalsPayload = form.categoryName === "Roommates & Rentals";
+  const roommatesRentalTitle = isRoommatesRentalsPayload ? getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() : "";
+  const roommatesRentalDescription = isRoommatesRentalsPayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
+  const isJobsPayload = form.categoryName === "Jobs";
+  const jobTitle = isJobsPayload ? getAttributeValue(categoryAttributes, "job_title", "jobTitle").trim() : "";
+  const jobDescription = isJobsPayload ? getAttributeValue(categoryAttributes, "job_description", "jobDescription").trim() : "";
+  const isElectronicsPayload = isElectronicsCategoryName(form.categoryName);
+  const electronicsTitle = isElectronicsPayload ? getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() : "";
+  const electronicsDescription = isElectronicsPayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
+  const isPetsPayload = form.categoryName === "Pets & Animals";
+  const petTitle = isPetsPayload ? getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() : "";
+  const petDescription = isPetsPayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
+  const listingDescription = careServiceDescription || roommatesRentalDescription || jobDescription || electronicsDescription || petDescription || form.description.trim() || form.businessDescription.trim();
   const businessDescription = form.businessDescription.trim() || form.description.trim();
   const listingPrice =
     numberAttribute(categoryAttributes, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price") ??
@@ -7017,6 +8155,30 @@ function buildListingPayload(
   const vehicleAreaLocality = getAttributeValue(categoryAttributes, "area_locality", "areaLocality").trim();
   const isEvVehiclePayload = isVehicleEvSelection(form.subCategory, form.detailCategory);
   const isChargingStationPayload = form.detailCategory === "Charging Stations";
+  const isCarsVehiclePayload = form.subCategory === "Cars";
+  const isCareServicesPayload = form.categoryName === "Care Services";
+  const vehicleTitle = getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() || form.title.trim();
+  const vehicleDescription = getAttributeValue(categoryAttributes, "description").trim() || form.businessDescription.trim() || form.description.trim();
+  const careContactName = getAttributeValue(categoryAttributes, "contactName", "contact_name").trim();
+  const careContactPhone = getAttributeValue(categoryAttributes, "contactPhone", "contact_phone").trim();
+  const careContactEmail = getAttributeValue(categoryAttributes, "contactEmail", "contact_email").trim();
+  const careContactWebsite = getAttributeValue(categoryAttributes, "contactWebsite", "contact_website").trim();
+  const roommatesContactName = isRoommatesRentalsPayload ? getAttributeValue(categoryAttributes, "contact_name", "contactName").trim() : "";
+  const roommatesContactPhone = isRoommatesRentalsPayload ? getAttributeValue(categoryAttributes, "phone", "contact_phone", "contactPhone").trim() : "";
+  const roommatesContactEmail = isRoommatesRentalsPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
+  const jobContactName = isJobsPayload ? getAttributeValue(categoryAttributes, "contact_name", "contactName").trim() : "";
+  const jobContactPhone = isJobsPayload ? getAttributeValue(categoryAttributes, "phone", "contact_phone", "contactPhone").trim() : "";
+  const jobContactEmail = isJobsPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
+  const electronicsSellerName = isElectronicsPayload ? getAttributeValue(categoryAttributes, "seller_name", "sellerName").trim() : "";
+  const electronicsSellerPhone = isElectronicsPayload ? getAttributeValue(categoryAttributes, "phone", "contact_phone", "contactPhone").trim() : "";
+  const electronicsSellerEmail = isElectronicsPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
+  const electronicsSellerWebsite = isElectronicsPayload ? getAttributeValue(categoryAttributes, "website").trim() : "";
+  const electronicsVideoUrl = isElectronicsPayload ? getAttributeValue(categoryAttributes, "product_video_url", "productVideoUrl").trim() : "";
+  const petContactName = isPetsPayload ? getAttributeValue(categoryAttributes, "contact_name", "contactName").trim() : "";
+  const petContactPhone = isPetsPayload ? getAttributeValue(categoryAttributes, "phone", "contact_phone", "contactPhone").trim() : "";
+  const petContactEmail = isPetsPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
+  const petWebsite = isPetsPayload ? getAttributeValue(categoryAttributes, "website").trim() : "";
+  const petVideoUrl = isPetsPayload ? getAttributeValue(categoryAttributes, "pet_video_url", "petVideoUrl").trim() : "";
   const adDurationDays =
     numberAttribute(categoryAttributes, "ad_duration_days", "adDurationDays", "ad_duration") ??
     numberOrNull(form.adDurationDays) ??
@@ -7024,6 +8186,8 @@ function buildListingPayload(
   const sellerType = getAttributeValue(categoryAttributes, "seller_type", "sellerType").trim() || form.sellerType.trim();
   const restaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
   const isRestaurantCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
+  const restaurantTitle = restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "restaurant_name", "restaurantName").trim() || form.title.trim();
+  const restaurantDescription = restaurantInfo.description.trim() || getAttributeValue(categoryAttributes, "description").trim();
   const restaurantAmenities = [
     ["WiFi", "wifi"],
     ["Parking", "parking"],
@@ -7037,15 +8201,15 @@ function buildListingPayload(
     .map(([label]) => label);
 
   return {
-    title: careServiceTitle || form.title.trim(),
-    description: listingDescription,
+    title: form.categoryName === "Restaurants & Food" ? restaurantTitle : form.categoryName === "Vehicles" ? vehicleTitle : eventTitle || roommatesRentalTitle || jobTitle || electronicsTitle || petTitle || careServiceTitle || form.title.trim(),
+    description: form.categoryName === "Restaurants & Food" ? restaurantDescription : form.categoryName === "Vehicles" ? vehicleDescription : eventDescription || listingDescription,
     categoryName: isClassifiedMode ? "Classifieds" : form.categoryName.trim(),
     subCategory: isClassifiedMode ? form.categoryName.trim() : form.subCategory.trim(),
     detailCategory: isClassifiedMode ? form.detailCategory.trim() : form.detailCategory.trim() || form.subCategory.trim(),
     propertyDetails: {
       listingKind: isClassifiedMode ? "Classified" : getListingKind(form.categoryName, form.subCategory, form.detailCategory),
       propertyType: isClassifiedMode ? form.categoryName.trim() : form.propertyType.trim() || getAttributeValue(categoryAttributes, "property_type", "propertyType", "commercial_property_type", "commercialPropertyType").trim() || form.detailCategory.trim(),
-      bhk: form.bhk.trim() || getAttributeValue(categoryAttributes, "bhk").trim(),
+      bhk: form.bhk.trim() || getAttributeValue(categoryAttributes, "bhk", "bedrooms", "number_of_bedrooms").trim(),
       bathrooms: numberOrNull(form.bathrooms) ?? numberAttribute(categoryAttributes, "bathrooms"),
       balconies: numberOrNull(form.balconies) ?? numberAttribute(categoryAttributes, "balconies"),
       furnishingType: form.furnishingType.trim() || getAttributeValue(categoryAttributes, "furnishing_type", "furnishingType", "commercial_furnishing").trim(),
@@ -7056,19 +8220,19 @@ function buildListingPayload(
       propertyAge: form.propertyAge.trim() || getAttributeValue(categoryAttributes, "property_age", "propertyAge").trim(),
       facing: form.facing.trim() || getAttributeValue(categoryAttributes, "facing", "facing_detail").trim(),
       availability: form.availabilityType.trim() || getAttributeValue(categoryAttributes, "availability", "availability_type").trim(),
-      availabilityDate: form.availabilityDate.trim() || getAttributeValue(categoryAttributes, "availability_date", "availabilityDate").trim() || null,
+      availabilityDate: form.availabilityDate.trim() || getAttributeValue(categoryAttributes, "availability_date", "availabilityDate", "available_from", "availableFrom").trim() || null,
       plotArea: numberOrNull(form.plotArea) ?? numberAttribute(categoryAttributes, "plot_area", "plot_area_detail", "plotArea"),
       length: numberOrNull(form.length) ?? numberAttribute(categoryAttributes, "length", "length_detail"),
       breadth: numberOrNull(form.breadth) ?? numberAttribute(categoryAttributes, "breadth", "breadth_detail"),
       boundaryWall: boolOrNull(form.boundaryWall) ?? boolAttribute(categoryAttributes, "boundary_wall", "boundary_wall_detail", "boundaryWall"),
       approvalType: form.approvalType.trim() || getAttributeValue(categoryAttributes, "approval_type", "approval_type_detail", "approvalType").trim(),
       roadWidth: numberOrNull(form.roadWidth) ?? numberAttribute(categoryAttributes, "road_width", "road_width_detail", "roadWidth"),
-      area: numberOrNull(form.area) ?? numberAttribute(categoryAttributes, "area", "commercial_area"),
+      area: numberOrNull(form.area) ?? numberAttribute(categoryAttributes, "area", "commercial_area", "room_size_sqft", "roomSizeSqft", "room_size"),
       washrooms: numberOrNull(form.washrooms) ?? numberAttribute(categoryAttributes, "washrooms"),
       parking: boolOrNull(form.parking) ?? boolAttribute(categoryAttributes, "parking", "parking_available"),
-      suitableFor: form.suitableFor.trim() || getAttributeValue(categoryAttributes, "suitable_for", "suitableFor").trim(),
+      suitableFor: form.suitableFor.trim() || getAttributeValue(categoryAttributes, "suitable_for", "suitableFor", "preferred_occupation", "preferredOccupation").trim(),
       roomType: form.roomType.trim() || getAttributeValue(categoryAttributes, "room_type", "room_type_detail", "roomType").trim(),
-      genderPreference: form.genderPreference.trim() || getAttributeValue(categoryAttributes, "gender_preference", "gender_preference_detail", "genderPreference").trim(),
+      genderPreference: form.genderPreference.trim() || getAttributeValue(categoryAttributes, "gender_preference", "gender_preference_detail", "genderPreference", "preferred_gender", "preferredGender").trim(),
       foodIncluded: form.foodIncluded ? form.foodIncluded === "Yes" : boolAttribute(categoryAttributes, "food_included", "food_included_detail", "foodIncluded"),
       pgAmenities: form.pgAmenities.trim() || getAttributeValue(categoryAttributes, "pg_amenities", "pg_amenities_detail", "pgAmenities").trim(),
       services: JSON.stringify(services.filter((item) => item.name.trim())),
@@ -7131,16 +8295,16 @@ function buildListingPayload(
         form.coverImageName,
         ...form.galleryMedia,
       ].map((value) => value.trim()).filter((value) => value && !isVideoValue(value)),
-      videoUrl: form.listingVideo.trim() || form.galleryMedia.find(isVideoValue) || "",
+      videoUrl: electronicsVideoUrl || petVideoUrl || form.listingVideo.trim() || form.galleryMedia.find(isVideoValue) || "",
       logoUrl: form.profileImageName.trim(),
       coverBannerUrl: form.coverImageName.trim(),
     },
     sellerInformation: {
-      name: sellerName.trim() || form.title.trim(),
-      mobileNumber: (form.categoryName === "Restaurants & Food" ? contactInfo.mainPhone || form.mobileNumber : form.mobileNumber).trim(),
-      email: (form.categoryName === "Restaurants & Food" ? contactInfo.email || form.email : form.email).trim(),
+      name: (isCareServicesPayload ? careContactName || sellerName : isRoommatesRentalsPayload ? roommatesContactName || sellerName : isJobsPayload ? jobContactName || sellerName : isElectronicsPayload ? electronicsSellerName || sellerName : isPetsPayload ? petContactName || sellerName : sellerName).trim() || form.title.trim(),
+      mobileNumber: (form.categoryName === "Restaurants & Food" ? contactInfo.mainPhone || form.mobileNumber : isCareServicesPayload ? careContactPhone || form.mobileNumber : isRoommatesRentalsPayload ? roommatesContactPhone || form.mobileNumber : isJobsPayload ? jobContactPhone || form.mobileNumber : isElectronicsPayload ? electronicsSellerPhone || form.mobileNumber : isPetsPayload ? petContactPhone || form.mobileNumber : form.mobileNumber).trim(),
+      email: (form.categoryName === "Restaurants & Food" ? contactInfo.email || form.email : isCareServicesPayload ? careContactEmail || form.email : isRoommatesRentalsPayload ? roommatesContactEmail || form.email : isJobsPayload ? jobContactEmail || form.email : isElectronicsPayload ? electronicsSellerEmail || form.email : isPetsPayload ? petContactEmail || form.email : form.email).trim(),
       whatsAppNumber: form.whatsapp.trim(),
-      websiteUrl: (form.categoryName === "Restaurants & Food" ? webLinks.mainWebsite || form.website : form.website).trim(),
+      websiteUrl: (form.categoryName === "Restaurants & Food" ? webLinks.mainWebsite || form.website : isCareServicesPayload ? careContactWebsite || form.website : isElectronicsPayload ? electronicsSellerWebsite || form.website : isPetsPayload ? petWebsite || form.website : form.website).trim(),
       sellerType,
       isMobileOtpVerified: false,
       reraNumber: form.reraNumber.trim() || getAttributeValue(categoryAttributes, "rera_number", "reraNumber").trim(),
@@ -7173,14 +8337,14 @@ function buildListingPayload(
       careBoostListing: form.categoryName === "Care Services" ? getAttributeValue(categoryAttributes, "boostListing", "boost_listing").trim() : "",
     },
     restaurantFoodDetails: {
-      restaurantName: restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "restaurant_name", "restaurantName").trim() || form.title.trim(),
-      businessName: restaurantInfo.businessName.trim() || restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "business_name", "restaurant_name", "restaurantName").trim() || form.title.trim(),
+      restaurantName: restaurantTitle,
+      businessName: restaurantInfo.businessName.trim() || restaurantTitle,
       tagline: restaurantInfo.tagline.trim(),
-      description: restaurantInfo.description.trim(),
+      description: restaurantDescription,
       cuisineType: restaurantInfo.cuisine.trim() || getAttributeValue(categoryAttributes, "cuisine_type", "cuisine").trim(),
-      businessType: "",
-      yearEstablished: null,
-      numberOfStaff: null,
+      businessType: restaurantInfo.businessType.trim() || getAttributeValue(categoryAttributes, "business_type", "businessType").trim(),
+      yearEstablished: numberOrNull(restaurantInfo.yearEstablished) ?? numberAttribute(categoryAttributes, "year_established", "yearEstablished"),
+      numberOfStaff: numberOrNull(restaurantInfo.staffCount) ?? numberAttribute(categoryAttributes, "number_of_staff", "staff_count", "staffCount"),
       serviceTypes: restaurantServiceTypes,
       serviceRadiusMiles: numberOrNull(restaurantInfo.serviceRadiusMiles) ?? numberAttribute(categoryAttributes, "delivery_radius", "service_radius", "service_radius_miles", "serviceRadiusMiles"),
       instagramUrl: socialLinks.instagram.trim() || getAttributeValue(categoryAttributes, "instagram_url", "instagram").trim(),
@@ -7227,8 +8391,8 @@ function buildListingPayload(
       registrationState: getAttributeValue(categoryAttributes, "registrationState", "registration_state").trim(),
       rto: getAttributeValue(categoryAttributes, "rto").trim(),
       color: getAttributeValue(categoryAttributes, "color").trim() || (isChargingStationPayload ? "N/A" : ""),
-      bodyType: getAttributeValue(categoryAttributes, "bodyType", "body_type").trim(),
-      seatingCapacity: numberAttribute(categoryAttributes, "seatingCapacity", "seating_capacity"),
+      bodyType: getAttributeValue(categoryAttributes, "bodyType", "body_type").trim() || (isCarsVehiclePayload ? "Car" : ""),
+      seatingCapacity: numberAttribute(categoryAttributes, "seatingCapacity", "seating_capacity") ?? (isCarsVehiclePayload ? 5 : null),
       bootSpace: getAttributeValue(categoryAttributes, "bootSpace", "boot_space").trim(),
       mileage: numberAttribute(categoryAttributes, "mileage"),
       engineCapacityCc: numberAttribute(categoryAttributes, "engineCapacity", "engine_capacity", "engineCapacityCc", "engine_capacity_cc"),
@@ -7251,6 +8415,9 @@ function buildListingPayload(
       features: vehicleFeatureValues(categoryAttributes),
     },
     electronicsDetails: {
+      listingTitle: electronicsTitle,
+      productName: getAttributeValue(categoryAttributes, "product_name", "productName").trim(),
+      description: electronicsDescription,
       brand: getAttributeValue(categoryAttributes, "brand").trim(),
       modelNameNumber: getAttributeValue(categoryAttributes, "modelNameNumber", "model_name_number", "model").trim(),
       condition: getAttributeValue(categoryAttributes, "condition").trim(),
@@ -7261,7 +8428,7 @@ function buildListingPayload(
       color: getAttributeValue(categoryAttributes, "color").trim(),
       usageDuration: getAttributeValue(categoryAttributes, "usageDuration", "usage_duration").trim(),
       ram: getAttributeValue(categoryAttributes, "ram").trim(),
-      storage: getAttributeValue(categoryAttributes, "storage").trim(),
+      storage: getAttributeValue(categoryAttributes, "storage", "storage_type", "storageType").trim(),
       processor: getAttributeValue(categoryAttributes, "processor").trim(),
       screenSize: getAttributeValue(categoryAttributes, "screenSize", "screen_size").trim(),
       batteryHealth: getAttributeValue(categoryAttributes, "batteryHealth", "battery_health").trim(),
@@ -7299,7 +8466,7 @@ function buildListingPayload(
       rnLpn: boolAttribute(categoryAttributes, "rnLpn", "rn_lpn"),
       licenseNumber: getAttributeValue(categoryAttributes, "licenseNumber", "license_number").trim(),
       backgroundCheck: boolAttribute(categoryAttributes, "backgroundCheck", "background_check"),
-      referencesAvailable: boolAttribute(categoryAttributes, "referencesAvailable", "references_available"),
+      referencesAvailable: null,
       specialSkills: getAttributeValue(categoryAttributes, "specialSkills", "special_skills").trim(),
       previousEmployer: getAttributeValue(categoryAttributes, "previousEmployer", "previous_employer").trim(),
       education: getAttributeValue(categoryAttributes, "education").trim(),
@@ -7349,7 +8516,9 @@ function mapListingToForm(listing: ListingSummary, currentForm: FormState, isDup
   const sellerInformation = listing.sellerInformation || {};
   const settings = listing.settings || {};
   const imageUrls = listing.imageUrls || [];
-  const [profileImageName = "", coverImageName = "", ...galleryMedia] = imageUrls;
+  const profileImageName = stringValue(listing.logoUrl) || imageUrls[0] || "";
+  const coverImageName = stringValue(listing.coverBannerUrl) || imageUrls.find((url) => url !== profileImageName) || "";
+  const galleryMedia = imageUrls.filter((url) => url && url !== profileImageName && url !== coverImageName);
   const otherInformation = parseJsonObject<Record<string, unknown>>(propertyDetails.otherInformation, {});
   const isClassifiedMode = mode === "classified";
   const classifiedCategory = stringValue(otherInformation.classifiedCategory) || listing.subCategory || stringValue(propertyDetails.propertyType);
@@ -7586,10 +8755,14 @@ function mapRestaurantAttributesFromListing(listing: ListingSummary): CategoryAt
 
 function mapVehicleAttributesFromListing(listing: ListingSummary): CategoryAttributes {
   const details = listing.vehicleDetails || {};
+  const propertyDetails = listing.propertyDetails || {};
   const priceDetails = listing.priceDetails || {};
   const locationDetails = listing.locationDetails || {};
   const settings = listing.settings || {};
   const values: CategoryAttributes = {
+    listing_title: stringValue(listing.title),
+    listingTitle: stringValue(listing.title),
+    description: stringValue(listing.description || propertyDetails.businessDescription),
     brand: stringValue(details.brand),
     model: stringValue(details.model),
     variant: stringValue(details.variant),
@@ -7773,6 +8946,7 @@ function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryA
   const details = listing.careServiceDetails || {};
   const priceDetails = listing.priceDetails || {};
   const locationDetails = listing.locationDetails || {};
+  const sellerInformation = listing.sellerInformation || {};
   const settings = listing.settings || {};
   const values: CategoryAttributes = {
     serviceTitle: stringValue(listing.title),
@@ -7836,6 +9010,14 @@ function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryA
     video_introduction_url: stringValue(details.videoIntroductionUrl),
     businessLogo: stringValue(settings.careBusinessLogo),
     business_logo: stringValue(settings.careBusinessLogo),
+    contactName: stringValue(sellerInformation.name),
+    contact_name: stringValue(sellerInformation.name),
+    contactPhone: stringValue(sellerInformation.mobileNumber),
+    contact_phone: stringValue(sellerInformation.mobileNumber),
+    contactEmail: stringValue(sellerInformation.email),
+    contact_email: stringValue(sellerInformation.email),
+    contactWebsite: stringValue(sellerInformation.websiteUrl),
+    contact_website: stringValue(sellerInformation.websiteUrl),
     chatEnabled: booleanSelectValue(details.chatEnabled),
     chat_enabled: booleanSelectValue(details.chatEnabled),
     callEnabled: booleanSelectValue(details.callEnabled),
@@ -7906,6 +9088,35 @@ function mapCareServiceAttributesFromListing(listing: ListingSummary): CategoryA
   }
 
   return trimCategoryAttributes(values);
+}
+
+function applyCareContactDefaults(
+  attributes: CategoryAttributes,
+  defaults: { name?: string; phone?: string; email?: string; website?: string },
+) {
+  const nextAttributes = { ...attributes };
+  const fieldDefaults = [
+    [["contactName", "contact_name"], defaults.name],
+    [["contactPhone", "contact_phone"], defaults.phone],
+    [["contactEmail", "contact_email"], defaults.email],
+    [["contactWebsite", "contact_website"], defaults.website],
+  ] as Array<[string[], string | undefined]>;
+
+  for (const [keys, value] of fieldDefaults) {
+    if (!value?.trim()) {
+      continue;
+    }
+
+    if (keys.some((key) => nextAttributes[key]?.trim())) {
+      continue;
+    }
+
+    for (const key of keys) {
+      nextAttributes[key] = value;
+    }
+  }
+
+  return nextAttributes;
 }
 
 function mapRestaurantMenuItemsFromListing(listing: ListingSummary): RestaurantMenuItem[] {
@@ -8312,11 +9523,15 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
 }
 
 function shouldUseSharedListingLocationSection(categoryName: string) {
-  return sharedListingLocationCategories.includes(categoryName);
+  return sharedListingLocationCategories.includes(categoryName) || isElectronicsCategoryName(categoryName);
+}
+
+function isEventsListingCategory(categoryName: string) {
+  return categoryName === "Events & Tickets" || categoryName === "Tickets & Events";
 }
 
 function shouldDefaultCountryToUsa(categoryName: string) {
-  return usaDefaultLocationCategories.includes(categoryName);
+  return usaDefaultLocationCategories.includes(categoryName) || isElectronicsCategoryName(categoryName);
 }
 
 function getSharedListingLocationSectionOrder(categoryName: string) {
@@ -8333,13 +9548,134 @@ function getSharedListingLocationSectionOrder(categoryName: string) {
     "Furniture & Home Decor": 4,
   };
 
-  return orderByCategory[categoryName] || 4;
+  return isElectronicsCategoryName(categoryName) ? 5 : orderByCategory[categoryName] || 4;
+}
+
+function getVehicleStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getVehicleFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getEventStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getEventFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getRoommatesRentalStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getRoommatesRentalFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getJobStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getJobFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getElectronicsStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getElectronicsFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getPetStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getPetFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getVehicleFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 4) {
+    return 1;
+  }
+
+  if (sectionOrder <= 11) {
+    return 2;
+  }
+
+  if (sectionOrder <= 16) {
+    return 3;
+  }
+
+  return 1;
+}
+
+function getEventFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 5) {
+    return 1;
+  }
+
+  if (sectionOrder <= 8) {
+    return 2;
+  }
+
+  if (sectionOrder <= 11) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getRoommatesRentalFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 4) {
+    return 1;
+  }
+
+  if (sectionOrder <= 8) {
+    return 2;
+  }
+
+  if (sectionOrder <= 11) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getJobFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 4) {
+    return 1;
+  }
+
+  if (sectionOrder <= 9) {
+    return 2;
+  }
+
+  if (sectionOrder <= 14) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getElectronicsFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 4) {
+    return 1;
+  }
+
+  if (sectionOrder <= 6) {
+    return 2;
+  }
+
+  if (sectionOrder <= 9) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getPetFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 3) {
+    return 1;
+  }
+
+  if (sectionOrder <= 6) {
+    return 2;
+  }
+
+  if (sectionOrder <= 9) {
+    return 3;
+  }
+
+  return 4;
 }
 
 function getSharedListingLocationSectionTitle(categoryName: string) {
   if (categoryName === "Care Services") return "Service Location";
   if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") return "Event Location";
   if (categoryName === "Jobs") return "Job Location";
+  if (categoryName === "Vehicles") return "Location";
   return "Location Information";
 }
 
@@ -8356,6 +9692,7 @@ function isSharedListingLocationAttributeField(field: CategoryAttributeField) {
     "address",
     "streetaddress",
     "streetaddresslocality",
+    "fulladdress",
     "arealocality",
     "maplatlong",
     "googlemaplatlong",
@@ -8370,6 +9707,7 @@ function isSharedListingLocationAttributeField(field: CategoryAttributeField) {
     "zip",
     "address",
     "streetaddress",
+    "fulladdress",
     "latitudelongitude",
     "maplocationlatlong",
     "pickuplatlong",
@@ -8378,8 +9716,13 @@ function isSharedListingLocationAttributeField(field: CategoryAttributeField) {
 
 function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryName: string, subCategory: string, detailCategory: string) {
   const shouldMergeCommonFields = categoryName === "Vehicles" ||
-    categoryName === "Electronics & Appliances" ||
+    isElectronicsCategoryName(categoryName) ||
     categoryName === "Care Services" ||
+    categoryName === "Events & Tickets" ||
+    categoryName === "Tickets & Events" ||
+    categoryName === "Roommates & Rentals" ||
+    categoryName === "Jobs" ||
+    categoryName === "Pets & Animals" ||
     isFurnitureCategory(categoryName);
 
   if (!shouldMergeCommonFields) {
@@ -8389,12 +9732,35 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
   const commonFields =
     categoryName === "Vehicles"
       ? vehiclePostingCommonFields
-      : categoryName === "Electronics & Appliances"
+      : isElectronicsCategoryName(categoryName)
         ? electronicsPostingCommonFields
         : categoryName === "Care Services"
           ? careServiceFields
-          : furniturePostingCommonFields;
-  const requiredFields = categoryName === "Care Services"
+          : categoryName === "Events & Tickets" || categoryName === "Tickets & Events"
+            ? categoryAttributeFieldsByCategory["Events & Tickets"]
+            : categoryName === "Roommates & Rentals"
+              ? categoryAttributeFieldsByCategory["Roommates & Rentals"]
+              : categoryName === "Jobs"
+                ? categoryAttributeFieldsByCategory.Jobs
+                : categoryName === "Pets & Animals"
+                  ? categoryAttributeFieldsByCategory["Pets & Animals"]
+                  : furniturePostingCommonFields;
+  if (categoryName === "Vehicles") {
+    return dedupeCategoryPostingFields([
+      ...commonFields,
+      ...getCategoryAttributeFields(categoryName, subCategory, detailCategory),
+    ]);
+  }
+
+  if (isElectronicsCategoryName(categoryName)) {
+    return dedupeCategoryPostingFields(getCategoryAttributeFields("Electronics & Appliances", subCategory, detailCategory));
+  }
+
+  if (categoryName === "Roommates & Rentals" || categoryName === "Jobs" || categoryName === "Pets & Animals") {
+    return dedupeCategoryPostingFields(categoryName === "Pets & Animals" ? getCategoryAttributeFields(categoryName, subCategory, detailCategory) : commonFields);
+  }
+
+  const requiredFields = categoryName === "Care Services" || categoryName === "Events & Tickets" || categoryName === "Tickets & Events" || categoryName === "Roommates & Rentals" || categoryName === "Jobs"
     ? [...commonFields, ...fields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)]
     : [...fields, ...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
 
@@ -8615,17 +9981,30 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isPaidEvent = getAttributeValue(values, "ticket_type", "ticketType").trim() === "Paid";
   const isTwentyOnePlusEvent = getAttributeValue(values, "age_restriction", "ageRestriction").trim() === "21+";
   const isTicketResale = eventSubCategory === "ticket resale & exchange";
+  const roommatesSubCategory = form.subCategory.toLowerCase();
+  const roommatesDetailCategory = form.detailCategory.toLowerCase();
+  const isRoommateWantedListing = roommatesSubCategory === "roommates wanted";
+  const isStudentHousingListing = roommatesSubCategory === "student housing";
+  const isSubleaseListing = roommatesSubCategory === "sublease & lease transfer";
+  const isVacationCorporateListing = roommatesSubCategory === "vacation & corporate housing";
+  const isCorporateHousingListing = isVacationCorporateListing && (
+    roommatesDetailCategory.includes("corporate") ||
+    roommatesDetailCategory.includes("executive") ||
+    roommatesDetailCategory.includes("business")
+  );
+  const isVacationRentalListing = isVacationCorporateListing && roommatesDetailCategory.includes("vacation");
   const jobsWorkMode = getAttributeValue(values, "work_mode", "workMode").trim();
   const jobsEmploymentType = getAttributeValue(values, "employment_type", "employmentType").trim();
   const jobsSubCategory = form.subCategory.toLowerCase();
   const jobsDetailCategory = form.detailCategory.toLowerCase();
+  const isRemoteJob = jobsWorkMode === "Remote" || jobsSubCategory === "freelance & remote jobs" || jobsDetailCategory.includes("remote");
   const isHealthcareJob = jobsSubCategory === "healthcare";
   const isDriverJob = jobsDetailCategory.includes("driver") || jobsSubCategory === "logistics & transportation";
   const normalizedElectronicsCondition = electronicsCondition.trim().toLowerCase();
   const electronicsSellerType = getAttributeValue(values, "seller_type", "sellerType").trim();
   const isUsedElectronics = normalizedElectronicsCondition === "used";
   const isDealerElectronics = electronicsSellerType === "Dealer / Retailer" || electronicsSellerType === "Dealer";
-  const isShippingElectronics = getAttributeValue(values, "shipping_available", "shippingAvailable").trim() === "Yes";
+  const isShippingElectronics = getAttributeValue(values, "shipping_available", "shippingAvailable", "shipping_available_delivery", "shippingAvailableDelivery").trim() === "Yes";
   const hasElectronicsWarranty = electronicsWarranty.trim() === "Yes";
   const petSubCategory = form.subCategory.toLowerCase();
   const petDetailCategory = form.detailCategory.toLowerCase();
@@ -8637,6 +10016,10 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isPetServiceListing = petSubCategory === "pet services" || petSubCategory === "pet boarding & daycare";
 
   if (form.categoryName === "Care Services") {
+    if (["additional details", "media upload", "reviews & ratings", "listing visibility & promotions"].includes(field.sectionName?.trim().toLowerCase() || "")) {
+      return false;
+    }
+
     if (["referencesavailable", "references_available", "ad_duration_days", "addurationdays", "ad_duration"].includes(key)) {
       return false;
     }
@@ -8667,6 +10050,14 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   }
 
   if (isEventsCategory) {
+    if (["price details", "additional details", "listing visibility & promotions"].includes(field.sectionName?.trim().toLowerCase() || "")) {
+      return false;
+    }
+
+    if (["price", "pricetype", "price_type", "condition", "additionalspecifications", "additional_specifications", "adtype", "ad_type", "boostevent", "boost_event", "sponsoredlisting", "sponsored_listing"].includes(key)) {
+      return false;
+    }
+
     if (isVirtualEvent && ["venuename", "venue_name", "fulladdress", "full_address", "maplatlong", "map_lat_long"].includes(key)) {
       return false;
     }
@@ -8688,12 +10079,42 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     }
   }
 
-  if (form.categoryName === "Jobs") {
-    if (jobsWorkMode === "Remote" && ["detailedofficeaddress", "detailed_office_address"].includes(key)) {
+  if (form.categoryName === "Roommates & Rentals") {
+    if (["additional details", "category details", "reviews & ratings"].includes(field.sectionName?.trim().toLowerCase() || "")) {
       return false;
     }
 
-    if (jobsWorkMode !== "Remote" && ["remoteworkpolicy", "remote_work_policy", "timezonerequirement", "time_zone_requirement"].includes(key)) {
+    if (["condition", "additionalspecifications", "additional_specifications", "propertyrating", "property_rating", "landlordrating", "landlord_rating", "roommatereviews", "roommate_reviews"].includes(key) || key.endsWith("details")) {
+      return false;
+    }
+
+    if (!isRoommateWantedListing && ["preferredgender", "preferred_gender", "preferredoccupation", "preferred_occupation", "preferredagerange", "preferred_age_range", "smokingallowed", "smoking_allowed", "petsallowed", "pets_allowed", "couplesallowed", "couples_allowed"].includes(key)) {
+      return false;
+    }
+
+    if (!isStudentHousingListing && ["universityname", "university_name", "distancefromcampus", "distance_from_campus", "studentonly", "student_only"].includes(key)) {
+      return false;
+    }
+
+    if (!isSubleaseListing && ["originalleaseenddate", "original_lease_end_date", "landlordapprovalrequired", "landlord_approval_required"].includes(key)) {
+      return false;
+    }
+
+    if (!isCorporateHousingListing && ["corporaterates", "corporate_rates", "businesstraveleramenities", "business_traveler_amenities"].includes(key)) {
+      return false;
+    }
+
+    if (!isVacationRentalListing && ["dailyrate", "daily_rate", "checkindate", "check_in_date", "checkoutdate", "check_out_date", "cleaningfee", "cleaning_fee"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (form.categoryName === "Jobs") {
+    if (isRemoteJob && ["detailedofficeaddress", "detailed_office_address"].includes(key)) {
+      return false;
+    }
+
+    if (!isRemoteJob && ["remoteworkpolicy", "remote_work_policy", "timezonerequirement", "time_zone_requirement"].includes(key)) {
       return false;
     }
 
@@ -8714,7 +10135,7 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     }
   }
 
-  if (form.categoryName === "Electronics & Appliances") {
+  if (isElectronicsCategoryName(form.categoryName)) {
     if (!isUsedElectronics && ["purchasedate", "purchase_date", "usageduration", "usage_duration", "conditionnotes", "condition_notes"].includes(key)) {
       return false;
     }
@@ -8775,6 +10196,25 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     return false;
   }
 
+  if (form.categoryName === "Vehicles" && [
+    "bodytype", "body_type", "seatingcapacity", "seating_capacity", "bootspace", "boot_space", "mileage",
+    "airconditioning", "air_conditioning", "powersteering", "power_steering", "abs", "airbags", "alloywheels",
+    "alloy_wheels", "bluetoothgps", "bluetooth_gps", "reversecamera", "reverse_camera", "cruisecontrol",
+    "cruise_control", "biketype", "bike_type", "rvtype", "rv_type", "sleepingcapacity", "sleeping_capacity",
+    "lengthfeet", "length_feet", "watercrafttype", "watercraft_type", "enginehours", "engine_hours",
+    "vehicletype", "vehicle_type", "commercialvehicletype", "commercial_vehicle_type", "numberofwheels",
+    "number_of_wheels", "permittype", "permit_type", "priceperhour", "price_per_hour", "registrationyear",
+    "registration_year", "registrationstate", "registration_state", "rto", "rcavailable", "rc_available",
+    "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status",
+    "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till",
+    "itemtype", "item_type", "sizeorcapacity", "size_or_capacity", "manufacturingdate", "manufacturing_date",
+    "warranty", "sellertype", "seller_type",
+    "adtype", "ad_type", "listingtype", "listing_type", "boostlisting", "boost_listing",
+    "sponsoredlisting", "sponsored_listing", "addurationdays", "ad_duration_days", "ad_duration"
+  ].includes(key)) {
+    return false;
+  }
+
   if (form.categoryName === "Vehicles" && isEvVehicle && ["fueltype", "fuel_type"].includes(key)) {
     return false;
   }
@@ -8789,7 +10229,7 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && isNewVehicle && ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "ownercount", "owner_count", "numberofowners", "number_of_owners", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
+  if (form.categoryName === "Vehicles" && isNewVehicle && ["ownercount", "owner_count", "numberofowners", "number_of_owners", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status"].includes(key)) {
     return false;
   }
 
@@ -8805,7 +10245,7 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && isAccessories && ["model", "variant", "yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vin", "vehiclecondition", "vehicle_condition", "ownershiptypevehicle", "ownership_type_vehicle", "fueltype", "fuel_type", "transmission", "drivetype", "drive_type", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "mileage", "ownercount", "owner_count", "numberofowners", "number_of_owners", "accidenthistory", "accident_history", "cleantitle", "clean_title", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "color", "interiorcolor", "interior_color", "enginecapacity", "engine_capacity", "horsepower", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status", "titlestatus", "title_status", "registrationstatus", "registration_status", "emissionstestpassed", "emissions_test_passed"].includes(key)) {
+  if (form.categoryName === "Vehicles" && isAccessories && ["brand", "model", "variant", "yearofmanufacture", "year_of_manufacture", "registrationyear", "registration_year", "vin", "vehiclecondition", "vehicle_condition", "ownershiptypevehicle", "ownership_type_vehicle", "fueltype", "fuel_type", "transmission", "drivetype", "drive_type", "kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "mileage", "ownercount", "owner_count", "numberofowners", "number_of_owners", "accidenthistory", "accident_history", "cleantitle", "clean_title", "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till", "registrationstate", "registration_state", "rto", "color", "interiorcolor", "interior_color", "enginecapacity", "engine_capacity", "horsepower", "rcavailable", "rc_available", "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status", "titlestatus", "title_status", "registrationstatus", "registration_status", "emissionstestpassed", "emissions_test_passed"].includes(key)) {
     return false;
   }
 
@@ -8951,11 +10391,88 @@ function groupCategoryAttributeFields(fields: CategoryAttributeField[], category
 }
 
 function includeCurrentValue(options: string[], currentValue: string) {
-  if (!currentValue || options.includes(currentValue)) {
-    return options;
+  const dedupedOptions = dedupeStringOptions(options);
+
+  if (!currentValue || dedupedOptions.some((option) => namesMatch(option, currentValue))) {
+    return dedupedOptions;
   }
 
-  return [currentValue, ...options];
+  return [currentValue, ...dedupedOptions];
+}
+
+function splitCategoryAttributeValues(value?: string) {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getCategoryAttributeInputMin(field: CategoryAttributeField, categoryName: string, values: CategoryAttributes) {
+  if (isEventsListingCategory(categoryName) && ["event_end_date", "eventEndDate"].includes(field.key)) {
+    return getAttributeValue(values, "event_start_date", "eventStartDate").trim() || undefined;
+  }
+
+  if (categoryName === "Roommates & Rentals" && ["security_deposit"].includes(field.key)) {
+    return "0";
+  }
+
+  if (categoryName === "Roommates & Rentals" && ["bedrooms", "number_of_bedrooms", "bathrooms", "room_size_sqft", "roomSizeSqft", "room_size", "monthly_rent"].includes(field.key)) {
+    return "1";
+  }
+
+  return undefined;
+}
+
+function getCategoryAttributeInputStep(field: CategoryAttributeField, categoryName: string) {
+  if (categoryName === "Roommates & Rentals" && ["bedrooms", "number_of_bedrooms"].includes(field.key)) {
+    return "0.5";
+  }
+
+  return undefined;
+}
+
+function isMultiSelectCategoryAttributeField(field: CategoryAttributeField, categoryName: string) {
+  if (categoryName === "Care Services" && ["languagesSpoken", "languages_spoken", "availableDays", "available_days", "availableTimeSlots", "available_time_slots"].includes(field.key)) {
+    return true;
+  }
+
+  if ((categoryName === "Events & Tickets" || categoryName === "Tickets & Events") && ["ticket_categories", "ticketCategories"].includes(field.key)) {
+    return true;
+  }
+
+  if (categoryName === "Jobs" && ["technical_skills", "technicalSkills", "soft_skills", "softSkills", "required_documents", "requiredDocuments"].includes(field.key)) {
+    return true;
+  }
+
+  return false;
+}
+
+function mergeStringOptions(...optionGroups: string[][]) {
+  return dedupeStringOptions(optionGroups.flat());
+}
+
+function getFallbackDetailedCategoryOptions(categoryName: string, subCategoryName: string) {
+  const fallbackCategory = fallbackListingCategoryTree.find((category) => namesMatch(category.name, categoryName));
+  const fallbackSubCategory = fallbackCategory?.subCategories.find((subCategory) => namesMatch(subCategory.name, subCategoryName));
+  return fallbackSubCategory?.detailedCategories.map((detailCategory) => detailCategory.name) || [];
+}
+
+function dedupeStringOptions(options: string[]) {
+  const seen = new Set<string>();
+
+  return options.filter((option) => {
+    const key = normalizeLocationName(option);
+    if (!key || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
 }
 
 function dedupeListingCategories(items: ListingCategoryOption[]) {
@@ -8969,6 +10486,76 @@ function dedupeListingCategories(items: ListingCategoryOption[]) {
     seen.add(key);
     return true;
   });
+}
+
+function mergeListingCategoryOptions(fallbackItems: ListingCategoryOption[], apiItems: ListingCategoryOption[]) {
+  const apiByName = new Map(apiItems.map((item) => [categoryOptionKey(item.name), item]));
+  const fallbackByName = new Map(fallbackItems.map((item) => [categoryOptionKey(item.name), item]));
+  const merged = fallbackItems.map((fallbackCategory) => {
+    const apiCategory = apiByName.get(categoryOptionKey(fallbackCategory.name));
+    return apiCategory ? mergeListingCategoryOption(fallbackCategory, apiCategory) : fallbackCategory;
+  });
+
+  for (const apiCategory of apiItems) {
+    if (!fallbackByName.has(categoryOptionKey(apiCategory.name))) {
+      merged.push(apiCategory);
+    }
+  }
+
+  return dedupeListingCategories(merged);
+}
+
+function mergeListingCategoryOption(fallbackCategory: ListingCategoryOption, apiCategory: ListingCategoryOption): ListingCategoryOption {
+  return {
+    ...fallbackCategory,
+    ...apiCategory,
+    subCategories: mergeListingSubCategoryOptions(fallbackCategory.subCategories, apiCategory.subCategories),
+  };
+}
+
+function mergeListingSubCategoryOptions(fallbackItems: ListingCategoryOption["subCategories"], apiItems: ListingCategoryOption["subCategories"]) {
+  const apiByName = new Map(apiItems.map((item) => [categoryOptionKey(item.name), item]));
+  const fallbackByName = new Map(fallbackItems.map((item) => [categoryOptionKey(item.name), item]));
+  const merged = fallbackItems.map((fallbackSubCategory) => {
+    const apiSubCategory = apiByName.get(categoryOptionKey(fallbackSubCategory.name));
+    return apiSubCategory ? {
+      ...fallbackSubCategory,
+      ...apiSubCategory,
+      detailedCategories: mergeListingDetailedCategoryOptions(fallbackSubCategory.detailedCategories, apiSubCategory.detailedCategories),
+    } : fallbackSubCategory;
+  });
+
+  for (const apiSubCategory of apiItems) {
+    if (!fallbackByName.has(categoryOptionKey(apiSubCategory.name))) {
+      merged.push(apiSubCategory);
+    }
+  }
+
+  return merged;
+}
+
+function mergeListingDetailedCategoryOptions(
+  fallbackItems: ListingCategoryOption["subCategories"][number]["detailedCategories"],
+  apiItems: ListingCategoryOption["subCategories"][number]["detailedCategories"],
+) {
+  const apiByName = new Map(apiItems.map((item) => [categoryOptionKey(item.name), item]));
+  const fallbackByName = new Map(fallbackItems.map((item) => [categoryOptionKey(item.name), item]));
+  const merged = fallbackItems.map((fallbackDetailedCategory) => {
+    const apiDetailedCategory = apiByName.get(categoryOptionKey(fallbackDetailedCategory.name));
+    return apiDetailedCategory ? { ...fallbackDetailedCategory, ...apiDetailedCategory } : fallbackDetailedCategory;
+  });
+
+  for (const apiDetailedCategory of apiItems) {
+    if (!fallbackByName.has(categoryOptionKey(apiDetailedCategory.name))) {
+      merged.push(apiDetailedCategory);
+    }
+  }
+
+  return merged;
+}
+
+function categoryOptionKey(value: string) {
+  return value.trim().toLowerCase();
 }
 
 function getClassifiedListingStepIndex(pathname: string) {
