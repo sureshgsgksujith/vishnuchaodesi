@@ -5977,7 +5977,7 @@ function RealEstatePostingSections({
   const propertyTypeGroup = attribute("property_type_group");
   const isCommercial = propertyTypeGroup === "Commercial";
   const isResidential = propertyTypeGroup === "Residential";
-  const isPg = ["PG", "PG / Co-living"].includes(form.subCategory);
+  const isPg = isPgRealEstateCategory(form.subCategory, detailCategory);
   const isService = form.subCategory === "Real Estate Services";
   const isPlot = isPlotRealEstateCategory(form.subCategory, detailCategory);
   const showPlotDetails = isPlot && Boolean(propertyTypeGroup);
@@ -6193,6 +6193,17 @@ function RealEstatePostingSections({
           <InputColumn placeholder="License Number" value={attribute("license_number")} onChange={(value) => setAttribute("license_number", value)} />
         </div>
       ) : null}
+      {isPg && isResidential ? (
+        <>
+          <h4>PG / Co-living Details</h4>
+          <div className="row">
+            <SelectColumn placeholder="Room Type*" value={form.roomType} error={fieldErrors.roomType} options={["Single", "Shared", "Co-living"]} onChange={(value) => updateField("roomType", value)} />
+            <SelectColumn placeholder="Gender Preference*" value={form.genderPreference} error={fieldErrors.genderPreference} options={["Male", "Female", "Any"]} onChange={(value) => updateField("genderPreference", value)} />
+          </div>
+          <Select placeholder="Food Included" value={form.foodIncluded} options={["Yes", "No"]} onChange={(value) => updateField("foodIncluded", value)} />
+          <PgAmenitiesCheckboxes value={form.pgAmenities} onChange={(value) => updateField("pgAmenities", value)} />
+        </>
+      ) : null}
 
       {isRentListing ? (
         <>
@@ -6203,13 +6214,15 @@ function RealEstatePostingSections({
               setAttributes({ lease_terms: value, lease_duration: "" });
             }} />
           </div>
-          <div className="row">
-            <SelectColumn placeholder="Preferred Tenant" value={attribute("preferred_tenant")} options={["Family", "Students", "Professionals"]} onChange={(value) => setAttribute("preferred_tenant", value)} />
-            <SelectColumn placeholder="Occupancy" value={form.roomType || attribute("occupancy")} options={["Single", "Shared"]} onChange={(value) => {
-              updateField("roomType", value);
-              setAttribute("occupancy", value);
-            }} />
-          </div>
+          {!isPg ? (
+            <div className="row">
+              <SelectColumn placeholder="Preferred Tenant" value={attribute("preferred_tenant")} options={["Family", "Students", "Professionals"]} onChange={(value) => setAttribute("preferred_tenant", value)} />
+              <SelectColumn placeholder="Occupancy" value={form.roomType || attribute("occupancy")} options={["Single", "Shared"]} onChange={(value) => {
+                updateField("roomType", value);
+                setAttribute("occupancy", value);
+              }} />
+            </div>
+          ) : null}
           <div className="row listing-amenity-row">
             <div className="col-md-4"><CheckboxField label="Water" checked={booleanAttributeValue("utilities_water")} onChange={(value) => setBooleanAttribute("utilities_water", value)} /></div>
             <div className="col-md-4"><CheckboxField label="Electricity" checked={booleanAttributeValue("utilities_electricity")} onChange={(value) => setBooleanAttribute("utilities_electricity", value)} /></div>
@@ -6892,7 +6905,7 @@ function DetailCategoryFields({
     );
   }
 
-  if (["PG", "PG / Co-living"].includes(subCategory)) {
+  if (isPgRealEstateCategory(subCategory, detailCategory)) {
     return (
       <>
         <h5 className="mt-3 mb-3">PG / Co-living</h5>
@@ -10623,7 +10636,7 @@ function isCommercialRealEstateSubCategory(subCategory: string) {
 }
 
 function isRentRealEstateSubCategory(subCategory: string) {
-  return ["Rent", "Residential Rent", "Commercial Rent", "For Rent", "Vacation Rentals", "PG", "PG / Co-living"].includes(subCategory);
+  return ["Rent", "Residential Rent", "Commercial Rent", "For Rent", "Vacation Rentals"].includes(subCategory) || isPgRealEstateCategory(subCategory);
 }
 
 function isSaleRealEstateSubCategory(subCategory: string) {
@@ -10640,11 +10653,42 @@ function isPlotRealEstateCategory(subCategory: string, detailCategory = "") {
   return ["Plot", "Plots", "Land / Plot", "Land / Plots", "Land", "Lands & Plots"].includes(subCategory) || ["Land / Plot", "Land / Plots", "Commercial Land", "Lands & Plots"].includes(detailCategory);
 }
 
+function isPgRealEstateCategory(subCategory: string, detailCategory = "") {
+  const subCategoryName = normalizeCategoryName(subCategory);
+  const detailCategoryName = normalizeCategoryName(detailCategory);
+  const compactSubCategoryName = normalizeFieldKey(subCategory);
+  const compactDetailCategoryName = normalizeFieldKey(detailCategory);
+  return subCategoryName === "pg" ||
+    compactSubCategoryName === "pg" ||
+    compactSubCategoryName.includes("pgcoliving") ||
+    compactSubCategoryName.includes("pgcoloving") ||
+    compactSubCategoryName.includes("payingguest") ||
+    subCategoryName.includes("pg / co-living") ||
+    subCategoryName.includes("pg/ co-living") ||
+    subCategoryName.includes("pg /co-living") ||
+    subCategoryName.includes("pg/co-living") ||
+    subCategoryName.includes("pg / co living") ||
+    subCategoryName.includes("pg/co living") ||
+    subCategoryName.includes("pg co-living") ||
+    subCategoryName.includes("pg co living") ||
+    subCategoryName.includes("paying guest") ||
+    compactDetailCategoryName.includes("pgaccommodation") ||
+    compactDetailCategoryName.includes("sharedaccommodation") ||
+    compactDetailCategoryName.includes("colivingspaces") ||
+    compactDetailCategoryName.includes("colivingspace") ||
+    compactDetailCategoryName.includes("studenthousing") ||
+    compactDetailCategoryName.includes("workingprofessionalshousing") ||
+    detailCategoryName.includes("pg accommodation") ||
+    detailCategoryName.includes("shared accommodation") ||
+    detailCategoryName.includes("co-living") ||
+    detailCategoryName.includes("co living");
+}
+
 function getListingKind(categoryName: string, subCategory: string, detailCategory: string) {
   if (isRealEstateCategory(categoryName)) {
     if (isPlotRealEstateCategory(subCategory, detailCategory)) return "Plot";
     if (isCommercialRealEstateSubCategory(subCategory)) return "Commercial";
-    if (["PG", "PG / Co-living"].includes(subCategory)) return "PG";
+    if (isPgRealEstateCategory(subCategory, detailCategory)) return "PG";
     return "Residential";
   }
 
@@ -10676,7 +10720,7 @@ function getRequiredDetailFields(subCategory: string, detailCategory: string): A
     return [["propertyType", "Office Type"]];
   }
 
-  if (["PG", "PG / Co-living"].includes(subCategory)) {
+  if (isPgRealEstateCategory(subCategory, detailCategory)) {
     return [["roomType", "Room Type"], ["genderPreference", "Gender Preference"], ["foodIncluded", "Food Included"], ["pgAmenities", "Amenities"]];
   }
 
