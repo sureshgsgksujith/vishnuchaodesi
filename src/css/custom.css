@@ -1272,13 +1272,21 @@
 }
 
 /* TAGS */
-.chao-jobs .job-tags span {
+.chao-jobs .job-tags span,
+.chao-jobs .job-tags a {
     display: inline-block;
     border: 1px solid #ddd;
     padding: 6px 12px;
     border-radius: 20px;
     margin: 5px;
     font-size: 13px;
+    color: #111;
+    text-decoration: none;
+}
+
+.chao-jobs .job-tags a:hover {
+    border-color: #2b6cb0;
+    color: #2b6cb0;
 }
 
 /* VIEW MORE */

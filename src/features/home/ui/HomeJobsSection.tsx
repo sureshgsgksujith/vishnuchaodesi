@@ -1,7 +1,43 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { getListingCategoryTree, type ListingCategoryOption } from "../../dashboard/api/listingCategoriesApi";
+import { fallbackListingCategoryTree } from "../../dashboard/config/listingCategoryTree";
+
+type JobRoleLink = {
+  id: number;
+  name: string;
+  href: string;
+};
+
+const FEATURED_JOB_ROLE_LIMIT = 6;
 
 export default function HomeJobsSection() {
   const [activeTab, setActiveTab] = useState<"jobseeker" | "recruiter">("jobseeker");
+  const [categoryTree, setCategoryTree] = useState<ListingCategoryOption[]>(fallbackListingCategoryTree);
+
+  useEffect(() => {
+    let isActive = true;
+
+    getListingCategoryTree()
+      .then((items) => {
+        if (isActive && items.length) {
+          setCategoryTree(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setCategoryTree(fallbackListingCategoryTree);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const jobRoleLinks = useMemo(() => {
+    const roles = buildFeaturedJobRoleLinks(categoryTree);
+    return roles.length ? roles : buildFeaturedJobRoleLinks(fallbackListingCategoryTree);
+  }, [categoryTree]);
 
   return (
     <section className="chao-jobs">
@@ -95,15 +131,12 @@ export default function HomeJobsSection() {
                   <h4>Discover Jobs by Role</h4>
 
                   <div className="job-tags">
-                    <span>Restaurant Manager</span>
-                    <span>Delivery Driver</span>
-                    <span>Chef</span>
-                    <span>Caregiver</span>
-                    <span>Account Assistant</span>
-                    <span>Pharmacy Technician</span>
+                    {jobRoleLinks.map((role) => (
+                      <a href={role.href} key={role.id}>{role.name}</a>
+                    ))}
                   </div>
 
-                  <a href="#" className="view-more">View More →</a>
+                  <a href="/all-listing?category=jobs" className="view-more">View More →</a>
                 </div>
               </div>
             </div>
@@ -195,4 +228,59 @@ export default function HomeJobsSection() {
       </div>
     </section>
   );
+}
+
+function buildFeaturedJobRoleLinks(categoryTree: ListingCategoryOption[]): JobRoleLink[] {
+  const jobsCategory = categoryTree.find((category) => category.slug === "jobs" || category.name === "Jobs");
+  if (!jobsCategory) {
+    return [];
+  }
+
+  const subCategories = jobsCategory.subCategories || [];
+  const maxDetailCount = Math.max(
+    0,
+    ...subCategories.map((subCategory) => subCategory.detailedCategories?.length || 0),
+  );
+  const roles: JobRoleLink[] = [];
+  const seenRoleIds = new Set<number>();
+
+  for (let detailIndex = 0; detailIndex < maxDetailCount && roles.length < FEATURED_JOB_ROLE_LIMIT; detailIndex += 1) {
+    for (const subCategory of subCategories) {
+      const role = subCategory.detailedCategories?.[detailIndex];
+      if (!role || seenRoleIds.has(role.id)) {
+        continue;
+      }
+
+      seenRoleIds.add(role.id);
+      roles.push({
+        id: role.id,
+        name: role.name,
+        href: buildJobRoleHref(subCategory.name, role.name),
+      });
+
+      if (roles.length >= FEATURED_JOB_ROLE_LIMIT) {
+        break;
+      }
+    }
+  }
+
+  if (roles.length) {
+    return roles;
+  }
+
+  return subCategories.slice(0, FEATURED_JOB_ROLE_LIMIT).map((subCategory) => ({
+    id: subCategory.id,
+    name: subCategory.name,
+    href: buildJobRoleHref(subCategory.name),
+  }));
+}
+
+function buildJobRoleHref(subCategory: string, detailCategory?: string) {
+  const params = new URLSearchParams({ category: "jobs", subCategory });
+
+  if (detailCategory) {
+    params.set("detailCategory", detailCategory);
+  }
+
+  return `/all-listing?${params.toString()}`;
 }

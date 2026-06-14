@@ -88,6 +88,7 @@ export default function AllListingPage() {
   const categoryName = searchParams.get("categoryName") || "";
   const category = getCategory(searchParams.get("category")) || categorySlugFromLabel(categoryName) || undefined;
   const subCategory = searchParams.get("subCategory") || "";
+  const detailCategory = searchParams.get("detailCategory") || "";
   const city = searchParams.get("city") || "";
   const search = searchParams.get("search") || "";
   const sort = getSort(searchParams.get("sort"));
@@ -178,6 +179,7 @@ export default function AllListingPage() {
           category,
           categoryName: category ? undefined : categoryName || undefined,
           subCategory,
+          detailCategory,
           city,
           search,
           page,
@@ -204,7 +206,7 @@ export default function AllListingPage() {
     return () => {
       isActive = false;
     };
-  }, [category, categoryName, city, page, search, subCategory]);
+  }, [category, categoryName, city, detailCategory, page, search, subCategory]);
 
   useEffect(() => {
     let isActive = true;
