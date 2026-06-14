@@ -94,7 +94,7 @@ export default function HomeEventsSection() {
       category: "events-tickets",
       city: activeCity || undefined,
       page: 1,
-      pageSize: 6,
+      pageSize: 10,
       forceRefresh: locationRevision > 0,
     })
       .then((result) => {
@@ -144,27 +144,32 @@ export default function HomeEventsSection() {
           </div>
         ) : (
           <>
-            <div className="row">
+            <div className="row home-events-scroll">
               {events.map((event) => {
                 const image = resolveListingImageUrl(event.primaryImageUrl || event.imageUrls?.[0]);
                 const eventLocation = getEventLocation(event);
+                const detailHref = `/listing/${event.id}`;
                 const meta =
                   event.subCategory ||
                   getDetailValue(event, ["propertyDetails"], ["lineup", "eventType", "tags"]) ||
                   "Event";
 
                 return (
-                  <div className="col-lg-4 col-md-6 mb-4" key={event.id}>
+                  <div className="col-lg-4 col-md-6 mb-4 home-event-slide" key={event.id}>
                     <div className="event-card">
                       {event.userPlanName ? <span className="promoted">Promoted</span> : null}
 
                       <div className="card-main-content">
                         <div className="event-left">
-                          <img src={image} alt={event.title} onError={setFallbackListingImage} />
+                          <a href={detailHref} aria-label={`View ${event.title}`}>
+                            <img src={image} alt={event.title} onError={setFallbackListingImage} />
+                          </a>
                         </div>
 
                         <div className="event-right">
-                          <h4>{event.title}</h4>
+                          <h4>
+                            <a href={detailHref}>{event.title}</a>
+                          </h4>
                           <div className="meta">
                             <span>
                               <i className="material-icons">{meta.toLowerCase().includes("lineup") ? "mic" : "local_offer"}</i>
@@ -194,7 +199,7 @@ export default function HomeEventsSection() {
                           Available
                         </span>
                         <span className="price">{getEventPrice(event, currentCountry)}</span>
-                        <a href={`/listing/${event.id}`} className="btn-ticket">
+                        <a href={detailHref} className="btn-ticket">
                           Buy Tickets
                         </a>
                       </div>

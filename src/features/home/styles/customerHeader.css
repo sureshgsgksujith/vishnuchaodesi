@@ -16,6 +16,10 @@
   flex: 0 0 auto;
 }
 
+.chaodesi-customer-header .menu h4 {
+  font-size: 15px;
+}
+
 .chaodesi-customer-header .chaodesi-pop-menu {
   position: absolute;
   top: calc(100% + 1px);
@@ -244,6 +248,14 @@
   margin: 0;
 }
 
+.chaodesi-customer-header .top-ser input {
+  font-size: 15px;
+}
+
+.chaodesi-customer-header .top-ser button i {
+  font-size: 22px;
+}
+
 .chaodesi-customer-header .chaodesi-header-actions {
   float: none;
   display: flex;
@@ -280,6 +292,7 @@
   float: none;
   display: inline-flex;
   align-items: center;
+  font-size: 14px;
   min-height: 39px;
   margin: 0;
   padding: 8px 15px;

@@ -27,6 +27,8 @@ const doneStepIndex = wizardSteps.length;
 const supportedListingCategoryNameSet = new Set<string>(supportedListingCategoryNames);
 const defaultRealEstatePriceTypeOptions = ["Total Price", "Monthly Rent", "Lease", "Per Sq Ft"];
 const saleRealEstatePriceTypeOptions = ["Total Price", "Per Sq Ft"];
+const rentOnlyRealEstatePriceTypeOptions = ["Monthly Rent"];
+const realEstateBhkOptions = ["1 BHK", "2 BHK", "3 BHK", "4 BHK", "5+ BHK"];
 
 const profileImageUploadMarker = "__profileImageFile__";
 const coverImageUploadMarker = "__coverImageFile__";
@@ -2847,7 +2849,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         addFieldError("price", isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
       }
 
-      if (!getAttributeValue(categoryAttributes, "price_type").trim()) {
+      if (!isRentOnlyRealEstatePriceTypeCategory(form.subCategory, form.detailCategory) && !getAttributeValue(categoryAttributes, "price_type").trim()) {
         addFieldError(categoryFieldErrorKey("price_type"), "Price Type is required.");
       }
 
@@ -3106,7 +3108,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       addFieldError("price", isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
     }
 
-    if (!hasDynamicCategoryFields && isRealEstateListing && !getAttributeValue(categoryAttributes, "price_type").trim()) {
+    if (!hasDynamicCategoryFields && isRealEstateListing && !isRentOnlyRealEstatePriceTypeCategory(form.subCategory, form.detailCategory) && !getAttributeValue(categoryAttributes, "price_type").trim()) {
       validationTargetStep = 2;
       addFieldError(categoryFieldErrorKey("price_type"), "Price Type is required.");
     }
@@ -5983,7 +5985,10 @@ function RealEstatePostingSections({
   const showPlotDetails = isPlot && Boolean(propertyTypeGroup);
   const showResidential = isResidential && !isPg && !isService;
   const isRentListing = isRentRealEstateSubCategory(form.subCategory) && !isCommercial && !isPlot;
-  const priceTypeOptions = getRealEstatePriceTypeOptions(form.subCategory);
+  const priceTypeOptions = getRealEstatePriceTypeOptions(form.subCategory, detailCategory);
+  const showPriceTypeField = priceTypeOptions.length > 1;
+  const showRecurringPropertyFees = !isRentOnlyRealEstatePriceTypeCategory(form.subCategory, detailCategory);
+  const realEstatePricePlaceholder = getRealEstatePricePlaceholder(form.subCategory, detailCategory);
   const selectedPriceType = attribute("price_type");
   const listingPlanOptions = includeCurrentValue(
     pricingPlans.length ? pricingPlans.map((plan) => plan.name) : listingTypeOptions,
@@ -6010,8 +6015,13 @@ function RealEstatePostingSections({
   const propertyImageFiles = galleryFiles.filter((item) => form.galleryMedia.includes(item.marker));
 
   useEffect(() => {
+    if (!selectedPriceType && priceTypeOptions.length === 1) {
+      setAttribute("price_type", priceTypeOptions[0]);
+      return;
+    }
+
     if (selectedPriceType && !priceTypeOptions.includes(selectedPriceType)) {
-      setAttribute("price_type", "");
+      setAttribute("price_type", priceTypeOptions.length === 1 ? priceTypeOptions[0] : "");
     }
   }, [form.subCategory, selectedPriceType, priceTypeOptions]);
 
@@ -6066,16 +6076,20 @@ function RealEstatePostingSections({
         <>
       <h4>Pricing</h4>
       <div className="row">
-        <SelectColumn placeholder="Price Type*" value={attribute("price_type")} error={fieldErrors[categoryFieldErrorKey("price_type")]} options={priceTypeOptions} onChange={(value) => setAttribute("price_type", value)} />
-        <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry || "United States")} type="number" value={form.price} error={fieldErrors.price} onChange={(value) => updateField("price", value)} />
+        {showPriceTypeField ? (
+          <SelectColumn placeholder="Price Type*" value={attribute("price_type")} error={fieldErrors[categoryFieldErrorKey("price_type")]} options={priceTypeOptions} onChange={(value) => setAttribute("price_type", value)} />
+        ) : null}
+        <InputColumn width={showPriceTypeField ? "col-md-6" : "col-md-12"} placeholder={labelWithCountryCurrency(realEstatePricePlaceholder, currencyCountry || "United States")} type="number" value={form.price} error={fieldErrors.price} onChange={(value) => updateField("price", value)} />
       </div>
       {isRentListing ? (
         <Input placeholder={labelWithCountryCurrency("Security Deposit", currencyCountry || "United States")} type="number" value={form.securityDeposit} error={fieldErrors.securityDeposit} onChange={(value) => updateField("securityDeposit", value)} />
       ) : null}
-      <div className="row">
-        <InputColumn placeholder={labelWithCountryCurrency("HOA Fees", currencyCountry || "United States")} type="number" value={attribute("hoa_fees")} onChange={(value) => setAttribute("hoa_fees", value)} />
-        <InputColumn placeholder={labelWithCountryCurrency("Property Tax", currencyCountry || "United States")} type="number" value={attribute("property_tax")} onChange={(value) => setAttribute("property_tax", value)} />
-      </div>
+      {showRecurringPropertyFees ? (
+        <div className="row">
+          <InputColumn placeholder={labelWithCountryCurrency("HOA Fees", currencyCountry || "United States")} type="number" value={attribute("hoa_fees")} onChange={(value) => setAttribute("hoa_fees", value)} />
+          <InputColumn placeholder={labelWithCountryCurrency("Property Tax", currencyCountry || "United States")} type="number" value={attribute("property_tax")} onChange={(value) => setAttribute("property_tax", value)} />
+        </div>
+      ) : null}
       <Select placeholder="Negotiable" value={form.priceNegotiable === "Fixed" ? "No" : "Yes"} options={yesNoOptions} onChange={updateNegotiable} />
 
       <h4>Property Details</h4>
@@ -6104,7 +6118,7 @@ function RealEstatePostingSections({
         <>
           {!isPlot ? (
             <div className="row">
-              <InputColumn placeholder="Bedrooms*" value={form.bhk} error={fieldErrors.bhk} onChange={(value) => updateField("bhk", value)} />
+              <SelectColumn placeholder="BHK*" value={form.bhk} error={fieldErrors.bhk} options={includeCurrentValue(realEstateBhkOptions, form.bhk)} onChange={(value) => updateField("bhk", value)} />
               <InputColumn placeholder="Bathrooms*" type="number" step="0.5" value={form.bathrooms} error={fieldErrors.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
             </div>
           ) : null}
@@ -6837,7 +6851,7 @@ function DetailCategoryFields({
         <h5 className="mt-3 mb-3">Residential Details</h5>
         <Select placeholder="Property Type*" value={form.propertyType || form.detailCategory} options={includeCurrentValue(["Apartment", "Villa", "House"], form.detailCategory)} onChange={(value) => updateField("propertyType", value)} />
         <div className="row">
-          <SelectColumn placeholder="BHK*" value={form.bhk} options={["1", "2", "3", "4+"]} onChange={(value) => updateField("bhk", value)} />
+          <SelectColumn placeholder="BHK*" value={form.bhk} options={includeCurrentValue(realEstateBhkOptions, form.bhk)} onChange={(value) => updateField("bhk", value)} />
           <InputColumn placeholder="Bathrooms*" type="number" step="0.5" value={form.bathrooms} onChange={(value) => updateField("bathrooms", value)} />
         </div>
         <div className="row">
@@ -10643,10 +10657,49 @@ function isSaleRealEstateSubCategory(subCategory: string) {
   return ["Sale", "Residential Sale", "Commercial Sale", "For Sale", "New Projects / New Construction"].includes(subCategory);
 }
 
-function getRealEstatePriceTypeOptions(subCategory: string) {
+function getRealEstatePriceTypeOptions(subCategory: string, detailCategory = "") {
+  if (isRentOnlyRealEstatePriceTypeCategory(subCategory, detailCategory)) {
+    return rentOnlyRealEstatePriceTypeOptions;
+  }
+
   return isSaleRealEstateSubCategory(subCategory)
     ? saleRealEstatePriceTypeOptions
     : defaultRealEstatePriceTypeOptions;
+}
+
+function isRentOnlyRealEstatePriceTypeCategory(subCategory: string, detailCategory = "") {
+  return isPgRealEstateCategory(subCategory, detailCategory) ||
+    isVacationRealEstateCategory(subCategory, detailCategory);
+}
+
+function isVacationRealEstateCategory(subCategory: string, detailCategory = "") {
+  const subCategoryName = normalizeFieldKey(subCategory);
+  const detailCategoryName = normalizeFieldKey(detailCategory);
+
+  return subCategoryName.includes("vacationrentals") ||
+    subCategoryName.includes("vacationrental") ||
+    detailCategoryName.includes("vacationhomes") ||
+    detailCategoryName.includes("vacationhome") ||
+    detailCategoryName.includes("airbnbrentals") ||
+    detailCategoryName.includes("airbnbrental") ||
+    detailCategoryName.includes("beachhouses") ||
+    detailCategoryName.includes("beachhouse") ||
+    detailCategoryName.includes("cabinscottages") ||
+    detailCategoryName.includes("cabincottage") ||
+    detailCategoryName.includes("resortsretreats") ||
+    detailCategoryName.includes("resortretreat");
+}
+
+function getRealEstatePricePlaceholder(subCategory: string, detailCategory = "") {
+  if (isPgRealEstateCategory(subCategory, detailCategory)) {
+    return "Monthly Rent*";
+  }
+
+  if (isVacationRealEstateCategory(subCategory, detailCategory)) {
+    return "Rental Price*";
+  }
+
+  return "Price*";
 }
 
 function isPlotRealEstateCategory(subCategory: string, detailCategory = "") {

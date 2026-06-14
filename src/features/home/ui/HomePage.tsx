@@ -101,6 +101,9 @@ export default function HomePage() {
         <HomeCareFeaturedListingsSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
+        <HomeFeaturedListingsSection />
+      </ViewportDeferredSection>
+      <ViewportDeferredSection>
         <HomeRoommatesSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
@@ -132,9 +135,6 @@ export default function HomePage() {
       </ViewportDeferredSection>
       <ViewportDeferredSection>
         <HomeBannerSliderSection />
-      </ViewportDeferredSection>
-      <ViewportDeferredSection>
-        <HomeFeaturedListingsSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
         <HomePlansSection />

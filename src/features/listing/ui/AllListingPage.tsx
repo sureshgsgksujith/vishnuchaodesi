@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import HomeHeader from "../../home/ui/HomeHeader";
+import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
@@ -328,7 +328,7 @@ export default function AllListingPage() {
 
   return (
     <>
-      <HomeHeader />
+      <CustomerHeader />
       <main className="public-listing-page public-template-page">
         <section className="public-listing-content">
           <div className="container public-listing-shell">
@@ -339,7 +339,6 @@ export default function AllListingPage() {
                   <Link to="/">Home</Link>
                   <span>All Category</span>
                   {activeCategoryName ? <span>{activeCategoryName}</span> : null}
-                  {city ? <span>{city}</span> : null}
                   {subCategory ? <span>{subCategory}</span> : null}
                 </nav>
               </div>
@@ -498,7 +497,6 @@ export default function AllListingPage() {
                 <div className="public-filter-tags">
                   {activeCategoryName ? <span>{activeCategoryName} <button type="button" onClick={() => updateQuery({ category: null, categoryName: null, subCategory: null, page: 1 })}>x</button></span> : null}
                   {subCategory ? <span>{subCategory} <button type="button" onClick={() => updateQuery({ subCategory: null, page: 1 })}>x</button></span> : null}
-                  {city ? <span>{city} <button type="button" onClick={() => updateQuery({ city: null, page: 1 })}>x</button></span> : null}
                   {search ? <span>{search} <button type="button" onClick={() => updateQuery({ search: null, page: 1 })}>x</button></span> : null}
                   {feature ? <span>{feature} <button type="button" onClick={() => updateQuery({ feature: null, page: 1 })}>x</button></span> : null}
                   {rating ? <span>{rating} Star <button type="button" onClick={() => updateQuery({ rating: null, page: 1 })}>x</button></span> : null}
