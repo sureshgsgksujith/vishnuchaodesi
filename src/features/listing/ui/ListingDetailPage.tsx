@@ -18,6 +18,7 @@ import {
 } from "../../dashboard/utils/listingImages";
 import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import { shouldShowQuoteAction } from "../utils/quoteVisibility";
 import "../styles/publicListings.css";
 
 type LooseValue = string | number | boolean | string[] | null | undefined;
@@ -192,6 +193,7 @@ function ListingDetail({
   const currentUserId = getCurrentCustomerUserId();
   const isOwnerViewing = currentUserId === listing.userId;
   const isRealEstateListing = listing.categoryName === "Real Estate";
+  const showQuoteAction = shouldShowQuoteAction(listing);
   const nearbyLocation = getNearbyLocation(listing);
   const savedNearbyServices = getSavedNearbyServices(listing);
   const postedDetailSections = getPostedDetailSections(listing);
@@ -564,7 +566,9 @@ function ListingDetail({
                     <div className="list-ban-btn">
                       <ul className="row">
                         <li>{phone ? <a href={`tel:${phone}`} className="cta cta-call">Call Now</a> : <span className="cta cta-call">Call Now</span>}</li>
-                        <li>{email ? <a href={`mailto:${email}`} className="pulse cta cta-get">Get quote</a> : <span className="pulse cta cta-get">Get quote</span>}</li>
+                        {showQuoteAction ? (
+                          <li>{email ? <a href={`mailto:${email}`} className="pulse cta cta-get">Get quote</a> : <span className="pulse cta cta-get">Get quote</span>}</li>
+                        ) : null}
                       </ul>
                     </div>
                     <div className="pg-list-oths">

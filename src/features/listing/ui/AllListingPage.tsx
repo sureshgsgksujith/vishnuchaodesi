@@ -16,6 +16,7 @@ import {
   resolveListingImageUrl,
 } from "../../dashboard/utils/listingImages";
 import { submitRequirement } from "../api/requirementsApi";
+import { shouldShowQuoteAction } from "../utils/quoteVisibility";
 import "../styles/publicListings.css";
 
 const PAGE_SIZE = 12;
@@ -646,6 +647,7 @@ function ListingCard({ listing, onQuoteClick }: { listing: ListingSummary; onQuo
   const openLabel = getOpenStatusLabel(listing);
   const phoneNumber = getListingPhone(listing);
   const whatsAppNumber = getListingWhatsApp(listing) || phoneNumber;
+  const showQuoteAction = shouldShowQuoteAction(listing);
 
   async function openContactAction(action: "call" | "whatsapp") {
     let contactListing = listing;
@@ -714,9 +716,11 @@ function ListingCard({ listing, onQuoteClick }: { listing: ListingSummary; onQuo
         <h2>
           <Link to={href}>{listing.title}</Link>
         </h2>
-        <div className="public-listing-actions">
-          <button type="button" onClick={() => onQuoteClick(listing)}>Get quote</button>
-        </div>
+        {showQuoteAction ? (
+          <div className="public-listing-actions">
+            <button type="button" onClick={() => onQuoteClick(listing)}>Get quote</button>
+          </div>
+        ) : null}
       </div>
       <div className="public-card-hover-actions">
         <button className="public-card-call-action" type="button" onClick={() => void openContactAction("call")}>Call Now</button>

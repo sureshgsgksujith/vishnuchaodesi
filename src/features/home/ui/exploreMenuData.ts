@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getListingCategoryTree, type ListingCategoryOption } from "../../dashboard/api/listingCategoriesApi";
 import { fallbackListingCategoryTree, supportedListingCategoryNames } from "../../dashboard/config/listingCategoryTree";
 import { getPublicListings } from "../../dashboard/api/listingsApi";
+import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 
 export type ExploreMenuLink = {
   label: string;
@@ -39,15 +41,27 @@ export const categoryLinks: ExploreMenuLink[] = [
 ];
 
 export function useExploreCategories(): ExploreCategoryLink[] {
+  const [searchParams] = useSearchParams();
+  const { activeCity, currentLocation, locationRevision, selectedCity } = useHomeSelectedLocation();
   const [categoryTree, setCategoryTree] = useState<ListingCategoryOption[]>(fallbackListingCategoryTree);
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
   const [countsLoaded, setCountsLoaded] = useState(false);
+  const urlCity = searchParams.get("city")?.trim() || "";
+  const countCity = urlCity || activeCity.trim();
+  const isWaitingForCurrentCity = !urlCity &&
+    !selectedCity &&
+    !activeCity &&
+    (currentLocation.status === "idle" || currentLocation.status === "loading");
 
   useEffect(() => {
     let isActive = true;
     setCountsLoaded(false);
 
     async function loadCategories() {
+      if (isWaitingForCurrentCity) {
+        return;
+      }
+
       const nextTree = await getListingCategoryTree()
         .then((items) => (items.length ? items : fallbackListingCategoryTree))
         .catch(() => fallbackListingCategoryTree);
@@ -61,6 +75,7 @@ export function useExploreCategories(): ExploreCategoryLink[] {
           const totalCount = await getPublicListings({
             category: publicCategorySlugFromName(category.name),
             categoryName: publicCategorySlugFromName(category.name) ? undefined : category.name,
+            city: countCity || undefined,
             page: 1,
             pageSize: 1,
           })
@@ -82,34 +97,35 @@ export function useExploreCategories(): ExploreCategoryLink[] {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [countCity, isWaitingForCurrentCity, locationRevision]);
 
   return useMemo(
     () =>
       categoryTree
         .map((category) => ({
           label: category.name,
-          href: buildCategoryHref(category.name),
+          href: buildCategoryHref(category.name, countCity),
           count: formatCategoryCount(categoryCounts[category.name] || 0),
         })),
-    [categoryCounts, categoryTree, countsLoaded],
+    [categoryCounts, categoryTree, countCity, countsLoaded],
   );
 }
 
-function buildCategoryHref(categoryName: string) {
-  if (categoryName === "Roommates & Rentals") {
-    return "/all-listing?category=roommates-rentals";
+function buildCategoryHref(categoryName: string, city: string) {
+  const params = new URLSearchParams();
+  const publicSlug = publicCategorySlugFromName(categoryName);
+
+  if (publicSlug) {
+    params.set("category", publicSlug);
+  } else {
+    params.set("categoryName", categoryName);
   }
 
-  if (categoryName === "Jobs") {
-    return "/all-listing?category=jobs";
+  if (city) {
+    params.set("city", city);
   }
 
-  if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") {
-    return "/all-listing?category=events-tickets";
-  }
-
-  return `/all-listing?categoryName=${encodeURIComponent(categoryName)}`;
+  return `/all-listing?${params.toString()}`;
 }
 
 function publicCategorySlugFromName(categoryName: string) {
