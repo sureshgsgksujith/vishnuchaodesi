@@ -2845,6 +2845,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     if (step === 2 && isRealEstateListing) {
+      const isPgListing = isPgRealEstateCategory(form.subCategory, form.detailCategory);
+
       if (!form.price.trim()) {
         addFieldError("price", isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
       }
@@ -2853,11 +2855,28 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         addFieldError(categoryFieldErrorKey("price_type"), "Price Type is required.");
       }
 
-      if (!getAttributeValue(categoryAttributes, "property_type_group").trim()) {
+      if (!isPgListing && !getAttributeValue(categoryAttributes, "property_type_group").trim()) {
         addFieldError(categoryFieldErrorKey("property_type_group"), "Property Type is required.");
       }
 
-      if (getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
+      if (isPgListing) {
+        if (!form.superBuiltUpArea.trim()) {
+          addFieldError("superBuiltUpArea", "Room Size is required.");
+        }
+
+        ([
+          ["roomType", "Room Type"],
+          ["genderPreference", "Gender Preference"],
+          ["foodIncluded", "Food Included"],
+          ["pgAmenities", "Amenities"],
+        ] as Array<[StringFormField, string]>).forEach(([name, label]) => {
+          if (!form[name].trim()) {
+            addFieldError(name, `${label} is required.`);
+          }
+        });
+      }
+
+      if (!isPgListing && getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
         const areaUnit = getAttributeValue(categoryAttributes, "area_unit").trim();
         if (!areaUnit) {
           addFieldError(categoryFieldErrorKey("area_unit"), "Area is required.");
@@ -3113,12 +3132,32 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       addFieldError(categoryFieldErrorKey("price_type"), "Price Type is required.");
     }
 
-    if (!hasDynamicCategoryFields && isRealEstateListing && !getAttributeValue(categoryAttributes, "property_type_group").trim()) {
+    const isPgListing = isRealEstateListing && isPgRealEstateCategory(form.subCategory, form.detailCategory);
+
+    if (!hasDynamicCategoryFields && isRealEstateListing && !isPgListing && !getAttributeValue(categoryAttributes, "property_type_group").trim()) {
       validationTargetStep = 2;
       addFieldError(categoryFieldErrorKey("property_type_group"), "Property Type is required.");
     }
 
-    if (!hasDynamicCategoryFields && isRealEstateListing && getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
+    if (!hasDynamicCategoryFields && isPgListing) {
+      validationTargetStep = 2;
+      if (!form.superBuiltUpArea.trim()) {
+        addFieldError("superBuiltUpArea", "Room Size is required.");
+      }
+
+      ([
+        ["roomType", "Room Type"],
+        ["genderPreference", "Gender Preference"],
+        ["foodIncluded", "Food Included"],
+        ["pgAmenities", "Amenities"],
+      ] as Array<[StringFormField, string]>).forEach(([name, label]) => {
+        if (!form[name].trim()) {
+          addFieldError(name, `${label} is required.`);
+        }
+      });
+    }
+
+    if (!hasDynamicCategoryFields && isRealEstateListing && !isPgListing && getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
       validationTargetStep = 2;
       const areaUnit = getAttributeValue(categoryAttributes, "area_unit").trim();
       if (!areaUnit) {
@@ -6092,17 +6131,21 @@ function RealEstatePostingSections({
       ) : null}
       <Select placeholder="Negotiable" value={form.priceNegotiable === "Fixed" ? "No" : "Yes"} options={yesNoOptions} onChange={updateNegotiable} />
 
-      <h4>Property Details</h4>
-      <Select
-        placeholder="Property Type*"
-        value={propertyTypeGroup}
-        error={fieldErrors[categoryFieldErrorKey("property_type_group")]}
-        options={["Residential", "Commercial"]}
-        onChange={(value) => {
-          setAttribute("property_type_group", value);
-          updateField("propertyType", "");
-        }}
-      />
+      {!isPg ? (
+        <>
+          <h4>Property Details</h4>
+          <Select
+            placeholder="Property Type*"
+            value={propertyTypeGroup}
+            error={fieldErrors[categoryFieldErrorKey("property_type_group")]}
+            options={["Residential", "Commercial"]}
+            onChange={(value) => {
+              setAttribute("property_type_group", value);
+              updateField("propertyType", "");
+            }}
+          />
+        </>
+      ) : null}
       {showPlotDetails ? (
         <>
           <div className="row">
@@ -6207,9 +6250,19 @@ function RealEstatePostingSections({
           <InputColumn placeholder="License Number" value={attribute("license_number")} onChange={(value) => setAttribute("license_number", value)} />
         </div>
       ) : null}
-      {isPg && isResidential ? (
+      {isPg ? (
         <>
           <h4>PG / Co-living Details</h4>
+          <Input
+            placeholder="Room Size (sq ft)*"
+            type="number"
+            value={form.superBuiltUpArea}
+            error={fieldErrors.superBuiltUpArea}
+            onChange={(value) => {
+              updateField("superBuiltUpArea", value);
+              updateField("area", value);
+            }}
+          />
           <div className="row">
             <SelectColumn placeholder="Room Type*" value={form.roomType} error={fieldErrors.roomType} options={["Single", "Shared", "Co-living"]} onChange={(value) => updateField("roomType", value)} />
             <SelectColumn placeholder="Gender Preference*" value={form.genderPreference} error={fieldErrors.genderPreference} options={["Male", "Female", "Any"]} onChange={(value) => updateField("genderPreference", value)} />
