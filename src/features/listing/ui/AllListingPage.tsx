@@ -801,7 +801,8 @@ function getCategory(value: string | null): PublicListingQuery["category"] {
     value === "furniture-home-decor" ||
     value === "roommates-rentals" ||
     value === "jobs" ||
-    value === "events-tickets"
+    value === "events-tickets" ||
+    value === "chao-tv"
     ? value
     : undefined;
 }
@@ -943,6 +944,7 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Roommates & Rentals") return "roommates-rentals";
   if (label === "Jobs") return "jobs";
   if (label === "Events & Tickets" || label === "Tickets & Events") return "events-tickets";
+  if (label === "Chao TV") return "chao-tv";
   return "";
 }
 
@@ -957,6 +959,7 @@ function buildCategoryLabel(category: PublicCategory) {
   if (category === "roommates-rentals") return "Roommates & Rentals";
   if (category === "jobs") return "Jobs";
   if (category === "events-tickets") return "Events & Tickets";
+  if (category === "chao-tv") return "Chao TV";
   return "Listings";
 }
 

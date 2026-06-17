@@ -26,6 +26,7 @@ export const categoryLinks: ExploreMenuLink[] = [
   { label: "Vehicles", href: "/all-listing?category=vehicles", icon: "/template-17/images/icon/vehicles.png" },
   { label: "Care Services", href: "/all-listing?category=care-services", icon: "/template-17/images/icon/public-service.png" },
   { label: "Events & Tickets", href: "/all-listing?category=events-tickets", icon: "/template-17/images/icon/calendar.png" },
+  { label: "Chao TV", href: "/chao-tv", icon: "/template-17/images/icon/calendar.png" },
   { label: "Roommates & Rentals", href: "/all-listing?category=roommates-rentals", icon: "/template-17/images/icon/home.png" },
   { label: "Jobs", href: "/all-listing?category=jobs", icon: "/template-17/images/icon/employee.png" },
   { label: "Electronics & Appliances", href: "/all-listing?category=electronics-appliances", icon: "/template-17/images/icon/cart.png" },
@@ -137,6 +138,7 @@ function publicCategorySlugFromName(categoryName: string) {
   if (categoryName === "Roommates & Rentals") return "roommates-rentals";
   if (categoryName === "Jobs") return "jobs";
   if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") return "events-tickets";
+  if (categoryName === "Chao TV") return "chao-tv";
   return undefined;
 }
 

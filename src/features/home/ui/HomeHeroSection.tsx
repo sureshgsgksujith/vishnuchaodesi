@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getPublicListings,
@@ -27,6 +27,7 @@ const quickLinks = [
   { title: "Vehicles", image: "/template-17/images/icon/vehicles.png", category: "vehicles" },
   { title: "Care Services", image: "/template-17/images/icon/public-service.png", category: "care-services" },
   { title: "Events & Tickets", image: "/template-17/images/icon/calendar.png", category: "events-tickets" },
+  { title: "Chao TV", image: "/template-17/images/icon/calendar.png", category: "chao-tv" },
   { title: "Roommates & Rentals", image: "/template-17/images/icon/home.png", category: "roommates-rentals" },
   { title: "Jobs", image: "/template-17/images/icon/employee.png", category: "jobs" },
   { title: "Electronics & Appliances", image: "/template-17/images/icon/electronics.png", category: "electronics-appliances" },
@@ -39,6 +40,7 @@ const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> 
   { label: "Vehicles", value: "vehicles" },
   { label: "Care Services", value: "care-services" },
   { label: "Events & Tickets", value: "events-tickets" },
+  { label: "Chao TV", value: "chao-tv" },
   { label: "Roommates & Rentals", value: "roommates-rentals" },
   { label: "Jobs", value: "jobs" },
   { label: "Electronics & Appliances", value: "electronics-appliances" },
@@ -61,6 +63,7 @@ const searchKeywordOptions = [
   "Roommates & Rentals",
   "Jobs",
   "Events & Tickets",
+  "Chao TV",
   "Care Services",
   "Real Estate",
   "Vehicles",
@@ -89,6 +92,10 @@ function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
     return "/all-category";
   }
 
+  if (item.category === "chao-tv") {
+    return "/chao-tv";
+  }
+
   const params = new URLSearchParams({ category: item.category });
 
   if (city) {
@@ -96,20 +103,6 @@ function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
   }
 
   return `/all-listing?${params.toString()}`;
-}
-
-function buildListingsHref(category: HomeCategorySlug | "", city: string) {
-  const params = new URLSearchParams();
-
-  if (category) {
-    params.set("category", category);
-  }
-
-  if (city) {
-    params.set("city", city);
-  }
-
-  return `/all-listing${params.toString() ? `?${params.toString()}` : ""}`;
 }
 
 function uniqueSorted(values: Array<string | null | undefined>) {
@@ -142,16 +135,13 @@ function findCountryByName(countries: CountryOption[], countryName?: string | nu
   });
 }
 
-function formatCount(count: number) {
-  return count > 99 ? "99+" : String(count).padStart(2, "0");
-}
-
 function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
   const value = keyword.trim().toLowerCase();
   if (value.includes("restaurant")) return "restaurants-food";
   if (value.includes("roommate") || value.includes("rental")) return "roommates-rentals";
   if (value.includes("job") || value.includes("career") || value.includes("hiring")) return "jobs";
   if (value.includes("event") || value.includes("ticket")) return "events-tickets";
+  if (value.includes("chao tv") || value.includes("video") || value.includes("news")) return "chao-tv";
   if (value.includes("real estate")) return "real-estate";
   if (value.includes("care")) return "care-services";
   if (value.includes("furniture") || value.includes("home")) return "furniture-home-decor";
@@ -162,6 +152,7 @@ function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
 }
 
 export default function HomeHeroSection() {
+  const quickLinksRef = useRef<HTMLUListElement | null>(null);
   const navigate = useNavigate();
   const {
     currentLocation,
@@ -202,18 +193,6 @@ export default function HomeHeroSection() {
       pendingCityName,
     ]),
     [cities, cityOptions, draftCityName, pendingCityName],
-  );
-  const topCounts = useMemo(
-    () => [
-      { title: "All Listings", count: formatCount(listingSummary.totalCount), image: "/template-17/images/icon/listing.png", href: buildListingsHref("", activeCity) },
-      ...listingCategoryOptions.map((category) => ({
-        title: category.label,
-        count: formatCount(listingSummary.categoryCounts[category.value] || 0),
-        image: quickLinks.find((item) => item.category === category.value)?.image || "/template-17/images/icon/listing.png",
-        href: buildListingsHref(category.value, activeCity),
-      })),
-    ],
-    [activeCity, listingSummary.categoryCounts, listingSummary.totalCount],
   );
   const heroLocationText =
     activeLocationLabel
@@ -431,6 +410,31 @@ export default function HomeHeroSection() {
     };
   }, [activeCity, locationReloadKey]);
 
+  useEffect(() => {
+    if (quickLinks.length <= 10) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      const track = quickLinksRef.current;
+      if (!track) {
+        return;
+      }
+
+      const nextLeft = track.scrollLeft + 128;
+      const isAtEnd = nextLeft + track.clientWidth >= track.scrollWidth - 8;
+
+      if (isAtEnd) {
+        track.scrollTo({ left: 0, behavior: "auto" });
+        return;
+      }
+
+      track.scrollTo({ left: nextLeft, behavior: "smooth" });
+    }, 2600);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
   function applyLocationSelection() {
     const country = countries.find((item) => String(item.id) === draftCountryId);
     const state = states.find((item) => String(item.id) === draftStateId);
@@ -507,13 +511,13 @@ export default function HomeHeroSection() {
           <div className="ban-tit">
             <h1>
               <b>
-                Find your
+                Find your{" "}
                 <span>
                   Local needs
                   <i></i>
                 </span>
               </b>
-              Restaurants, cafe&apos;s, and bars in {heroLocationText}
+              Browse Local Businesses, Services, Professionals, Jobs, Events & More in {heroLocationText}
             </h1>
           </div>
 
@@ -706,12 +710,13 @@ export default function HomeHeroSection() {
           ) : null}
 
           <div className="ban-short-links ani">
-            <ul>
+            <ul ref={quickLinksRef}>
               {quickLinks.map((item) => (
                 <li key={item.title}>
                   <div>
                     <img src={item.image} alt={item.title} />
                     <h4>{item.title}</h4>
+                    <span className="quick-link-tooltip">{item.title}</span>
                     <a href={buildQuickLinkHref(item, activeCity)} className="fclick"></a>
                   </div>
                 </li>
@@ -719,22 +724,6 @@ export default function HomeHeroSection() {
             </ul>
           </div>
 
-          <div className="h2-ban-ql">
-            <ul>
-              {topCounts.map((item) => (
-                <li key={item.title}>
-                  <div>
-                    <img src={item.image} alt={item.title} />
-                    <h5>
-                      <span className="count1">{item.count}</span>
-                      {item.title}
-                    </h5>
-                    <a href={item.href}></a>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       </div>
     </div>

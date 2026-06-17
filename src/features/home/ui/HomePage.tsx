@@ -4,6 +4,7 @@ import HomeHeroSection from "./HomeHeroSection";
 import "../styles/home.css";
 
 const HomePromoCards = lazy(() => import("./HomePromoCards"));
+const HomeChaoTvSection = lazy(() => import("./HomeChaoTvSection"));
 const HomeArtistToursSection = lazy(() => import("./HomeArtistToursSection"));
 const HomeRoommatesSection = lazy(() => import("./HomeRoommatesSection"));
 const HomeEventsSection = lazy(() => import("./HomeEventsSection"));
@@ -144,6 +145,9 @@ export default function HomePage() {
       </ViewportDeferredSection>
       <ViewportDeferredSection minHeight={160}>
         <HomeAdsSection />
+      </ViewportDeferredSection>
+      <ViewportDeferredSection minHeight={360}>
+        <HomeChaoTvSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
         <HomeListBusinessSection />

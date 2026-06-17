@@ -29,6 +29,7 @@ const ListingStartPage = lazy(() => import("../../features/dashboard/ui/ListingS
 const PricingDetailsPage = lazy(() => import("../../features/pricing/ui/PricingDetailsPage"));
 const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPage"));
 const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
+const ChaoTvPage = lazy(() => import("../../features/chaoTv/ChaoTvPage"));
 const ClassifiedsHomePage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
 );
@@ -122,6 +123,7 @@ export function AppRouter() {
     "/classifieds/ads-all",
     "/classifieds/ads-details",
     "/all-listing",
+    "/chao-tv",
     "/listing-details",
     "/listing/:listingId",
     "/pricing-details",
@@ -178,6 +180,7 @@ export function AppRouter() {
       <Route path="/classifieds/ads-all" element={<ClassifiedAdsAllPage />} />
       <Route path="/classifieds/ads-details" element={<ClassifiedAdDetailsPage />} />
       <Route path="/all-listing" element={<AllListingPage />} />
+      <Route path="/chao-tv" element={<ChaoTvPage />} />
       <Route path="/listing-details" element={<ListingDetailPage />} />
       <Route path="/listing/:listingId" element={<ListingDetailPage />} />
       <Route path="/pricing-details" element={<PricingDetailsPage />} />
