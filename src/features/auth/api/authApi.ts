@@ -1,4 +1,6 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL + "/Auth"; //"https://localhost:7152/api/Auth";
+import { env } from "../../../app/config/env";
+
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL || env.apiBaseUrl}/Auth`;
 
 export type AuthApiResponse = {
   success: boolean;

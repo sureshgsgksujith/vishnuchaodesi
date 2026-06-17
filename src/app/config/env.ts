@@ -1,5 +1,5 @@
 export const env = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api",
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "https://api.chaodesi.com/api",
   appName: import.meta.env.VITE_APP_NAME || "ChaoDesi Customer",
   mapsApiBaseUrl: import.meta.env.VITE_MAPS_API_BASE_URL || "https://maps.mapthrust.io/maps/api",
   mapsApiKey: import.meta.env.VITE_MAPS_API_KEY || "",

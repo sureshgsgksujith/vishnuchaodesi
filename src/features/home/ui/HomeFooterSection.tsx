@@ -161,9 +161,9 @@ export default function HomeFooterSection() {
             <div className="row">
               <p>
                 Copyright © 2025
-                <a href="https://chaodesi.com/" target="_blank" rel="noreferrer">ChaoDesi</a>.
+                <a href="https://dev.chaodesi.com/" target="_blank" rel="noreferrer">ChaoDesi</a>.
                 Proudly powered by
-                <a href="https://chaodesi.com/" target="_blank" rel="noreferrer">Symplore</a>
+                <a href="https://dev.chaodesi.com/" target="_blank" rel="noreferrer">Symplore</a>
               </p>
             </div>
           </div>

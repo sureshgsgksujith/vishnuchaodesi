@@ -195,7 +195,7 @@ export default function DashboardFooter({
               <p>
                 Copyright © 2025{" "}
                 <a
-                  href="https://chaodesi.com/"
+                  href="https://dev.chaodesi.com/"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -203,7 +203,7 @@ export default function DashboardFooter({
                 </a>
                 . Proudly powered by{" "}
                 <a
-                  href="https://chaodesi.com/"
+                  href="https://dev.chaodesi.com/"
                   target="_blank"
                   rel="noreferrer"
                 >
