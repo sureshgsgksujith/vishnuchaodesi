@@ -1172,55 +1172,80 @@
 
 
 .chao-jobs {
-    padding: 60px 0;
-    background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
-	border-top: solid 1px #e4e4e4;
-    border-bottom: solid 1px #e4e4e4;
+    padding: 34px 0 42px;
+    background: #eef3f8;
+    border-top: 1px solid #e5ebf2;
+    border-bottom: 1px solid #e5ebf2;
 }
 
 .chao-jobs .jobs-header h2 {
-    font-size: 32px;
-    font-weight: 700;
+    margin: 0 0 10px;
+    color: #141821;
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.1;
 }
 
 .chao-jobs .subtitle {
-    color: #777;
-    margin-bottom: 30px;
+    margin: 0 0 32px;
+    color: #667085;
+    font-size: 16px;
+    font-style: italic;
+    line-height: 1.45;
 }
 
 /* STATS */
+.chao-jobs .jobs-stats {
+    max-width: 1240px;
+    margin: 0 auto 36px;
+}
+
 .chao-jobs .stat-box {
-    padding: 20px;
-    border-right: 1px solid #eee;
+    min-height: 118px;
+    padding: 22px 18px 18px;
+    border-right: 1px solid #dde5ef;
 }
 
 .chao-jobs .stat-box h3 {
-    color: #2b6cb0;
-    font-weight: 700;
+    margin: 0 0 10px;
+    color: #246bb6;
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1;
 }
 
 .chao-jobs .stat-box p {
+    margin: 0;
+    color: #445269;
     font-size: 14px;
-    color: #666;
+    line-height: 1.4;
 }
 
 /* TABS */
 .chao-jobs .jobs-tabs {
-    margin: 30px 0;
+    margin: 0 0 34px;
 }
 
 .chao-jobs .tab-btn {
-    border: 1px solid #ddd;
-    padding: 8px 20px;
+    min-width: 118px;
+    border: 1px solid #d6dee8;
+    padding: 9px 22px;
     border-radius: 25px;
     background: #fff;
-    margin: 5px;
+    margin: 0 6px;
+    color: #111827;
     cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
 
 .chao-jobs .tab-btn.active {
-    background: #2b6cb0;
+    border-color: #246bb6;
+    background: #246bb6;
     color: #fff;
+    box-shadow: 0 8px 18px rgba(36, 107, 182, 0.22);
 }
 
 /* CONTENT */
@@ -1233,23 +1258,68 @@
 }
 
 .chao-jobs .desc {
-    color: #666;
-    margin-bottom: 30px;
+    margin: 0 0 30px;
+    color: #4b5565;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 /* BOX */
 .chao-jobs .job-box {
     background: #fff;
-    padding: 20px;
+    min-height: 136px;
+    padding: 24px 26px;
     border-radius: 12px;
     margin-bottom: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border: 1px solid #e7edf4;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.chao-jobs .job-box h4 {
+    margin: 0 0 10px;
+    color: #101828;
+    font-size: 25px;
+    font-weight: 500;
+    line-height: 1.22;
+}
+
+.chao-jobs .job-box p {
+    margin: 0 0 18px;
+    color: #111827;
+    font-size: 15px;
+    line-height: 1.5;
 }
 
 /* LINKS */
+.chao-jobs .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
 .chao-jobs .links a {
-    margin-right: 15px;
-    color: #2b6cb0;
+    margin-right: 0;
+    color: #1f66b1;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.chao-jobs .links a:hover,
+.chao-jobs .view-more:hover {
+    color: #164f8d;
+    text-decoration: underline;
+}
+
+.chao-jobs .btns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.chao-jobs .btns span {
+    color: #111827;
     font-size: 14px;
 }
 
@@ -1257,43 +1327,71 @@
 .chao-jobs .btn-outline {
     border: 1px solid #ff3b3b;
     color: #ff3b3b;
-    padding: 6px 14px;
+    padding: 8px 17px;
     border-radius: 20px;
-    margin: 5px;
+    margin: 0;
     display: inline-block;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+
+.chao-jobs .btn-outline:hover {
+    background: #ff3b3b;
+    color: #fff;
 }
 
 .chao-jobs .btn-solid {
     background: #ff3b3b;
     color: #fff;
-    padding: 6px 14px;
+    padding: 9px 17px;
     border-radius: 20px;
     display: inline-block;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 18px rgba(255, 59, 59, 0.18);
 }
 
 /* TAGS */
+.chao-jobs .job-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    margin: 2px 0 16px;
+}
+
 .chao-jobs .job-tags span,
 .chao-jobs .job-tags a {
     display: inline-block;
-    border: 1px solid #ddd;
-    padding: 6px 12px;
+    border: 1px solid #d8dee8;
+    padding: 7px 14px;
     border-radius: 20px;
-    margin: 5px;
-    font-size: 13px;
+    margin: 0;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 500;
     color: #111;
     text-decoration: none;
+    line-height: 1.2;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
 
 .chao-jobs .job-tags a:hover {
-    border-color: #2b6cb0;
-    color: #2b6cb0;
+    border-color: #246bb6;
+    color: #246bb6;
+    box-shadow: 0 4px 12px rgba(36, 107, 182, 0.12);
 }
 
 /* VIEW MORE */
 .chao-jobs .view-more {
     display: inline-block;
-    margin-top: 10px;
-    color: #2b6cb0;
+    margin-top: 0;
+    color: #1f66b1;
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
 }
 .chao-jobs .jobs-tags {
     margin-bottom: 25px;
@@ -1370,6 +1468,73 @@
     border-radius: 25px;
     text-decoration: none;
     font-size: 14px;
+}
+
+@media (max-width: 991px) {
+    .chao-jobs {
+        padding: 30px 0 36px;
+    }
+
+    .chao-jobs .jobs-stats {
+        margin-bottom: 28px;
+    }
+
+    .chao-jobs .stat-box {
+        border-right: 0;
+        border-bottom: 1px solid #dde5ef;
+    }
+
+    .chao-jobs .jobs-content > .row {
+        row-gap: 0;
+    }
+
+    .chao-jobs .job-box {
+        min-height: 0;
+    }
+}
+
+@media (max-width: 767px) {
+    .chao-jobs .jobs-header h2 {
+        font-size: 30px;
+    }
+
+    .chao-jobs .subtitle {
+        margin-bottom: 22px;
+        font-size: 14px;
+    }
+
+    .chao-jobs .jobs-tabs {
+        margin-bottom: 24px;
+    }
+
+    .chao-jobs .tab-btn {
+        min-width: 0;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .chao-jobs .desc {
+        margin-bottom: 20px;
+        font-size: 14px;
+    }
+
+    .chao-jobs .job-box {
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    .chao-jobs .job-box h4 {
+        font-size: 22px;
+    }
+
+    .chao-jobs .links,
+    .chao-jobs .job-tags {
+        gap: 10px;
+    }
+
+    .chao-jobs .btns {
+        gap: 8px;
+    }
 }
 
 .chao-astro {

@@ -67,7 +67,13 @@ function mapListingsToCards(
   selectedCity?: string,
   subCategory?: string,
 ) {
-  return listings.slice(0, 10).map((listing) => ({
+  return [...listings]
+    .sort(
+      (first, second) =>
+        new Date(second.createdAt || 0).getTime() - new Date(first.createdAt || 0).getTime()
+    )
+    .slice(0, 10)
+    .map((listing) => ({
     title: listing.title,
     image: resolveListingImageUrl(listing.primaryImageUrl || listing.imageUrls?.[0]),
     location: getListingLocationLabel(listing, selectedCity),
@@ -240,7 +246,8 @@ function FeaturedListingGroup({ group }: { group: FeaturedListingGroup }) {
     return null;
   }
 
-  const scrollingItems = [...group.items, ...group.items];
+  const shouldScroll = group.items.length > 4;
+  const displayItems = shouldScroll ? [...group.items, ...group.items] : group.items;
 
   return (
     <section>
@@ -256,9 +263,9 @@ function FeaturedListingGroup({ group }: { group: FeaturedListingGroup }) {
             </div>
 
             <div className={`plac-hom-all-pla ${group.wrapperClass || ""}`.trim()}>
-              <ul className="travel-sliser home-featured-listings-slider">
-                {scrollingItems.map((item, index) => (
-                  <li key={`${group.titleLead}-${item.title}-${index}`} aria-hidden={index >= group.items.length}>
+              <ul className={`travel-sliser home-featured-listings-slider ${shouldScroll ? "is-scrolling" : "is-static"}`}>
+                {displayItems.map((item, index) => (
+                  <li key={`${group.titleLead}-${item.title}-${index}`} aria-hidden={shouldScroll && index >= group.items.length}>
                     <div className="plac-hom-box">
                       <div className="plac-hom-box-im">
                         <img src={item.image} alt={item.title} loading="lazy" onError={setFallbackListingImage} />

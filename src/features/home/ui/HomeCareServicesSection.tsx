@@ -154,7 +154,7 @@ export default function HomeCareServicesSection() {
             <div className="col-md-3">
               <div className="service-card">
                 <div className="service-left">
-                  <h5>Find<br />Job</h5>
+                  <h5>Find Job</h5>
                 </div>
 
                 <div className="service-content">
@@ -170,7 +170,7 @@ export default function HomeCareServicesSection() {
             <div className="col-md-3">
               <div className="service-card">
                 <div className="service-left">
-                  <h5>Find a<br />Caregiver</h5>
+                  <h5>Find a Caregiver</h5>
                 </div>
 
                 <div className="service-content">
@@ -186,7 +186,7 @@ export default function HomeCareServicesSection() {
             <div className="col-md-3">
               <div className="service-card">
                 <div className="service-left">
-                  <h5>Own a<br />Center</h5>
+                  <h5>Own a Center</h5>
                 </div>
 
                 <div className="service-content">
@@ -202,7 +202,7 @@ export default function HomeCareServicesSection() {
             <div className="col-md-3">
               <div className="service-card">
                 <div className="service-left">
-                  <h5>Need a<br />Center</h5>
+                  <h5>Need a Center</h5>
                 </div>
 
                 <div className="service-content">

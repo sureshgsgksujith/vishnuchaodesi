@@ -1,14 +1,25 @@
+.chaodesi-customer-header {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
 .chaodesi-customer-header .hom-nav.db-open {
   display: flex;
   align-items: center;
-  gap: 18px;
-  min-height: 76px;
+  gap: 16px;
+  min-height: 58px;
   position: relative;
 }
 
 .chaodesi-customer-header .top-log {
   float: none;
   flex: 0 0 auto;
+}
+
+.chaodesi-customer-header .top-log img,
+.chaodesi-customer-header .top-log .ic-logo {
+  max-height: 50px;
+  width: auto;
 }
 
 .chaodesi-customer-header .menu {
@@ -248,6 +259,23 @@
   margin: 0;
 }
 
+.chaodesi-customer-header .top-ser form ul {
+  min-height: 42px;
+}
+
+.chaodesi-customer-header .top-ser form ul li input {
+  height: 42px;
+  min-height: 42px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.chaodesi-customer-header .top-ser form ul li.sbtn,
+.chaodesi-customer-header .top-ser form ul li.sbtn button {
+  height: 42px;
+  min-height: 42px;
+}
+
 .chaodesi-customer-header .top-ser input {
   font-size: 15px;
 }
@@ -261,7 +289,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 18px;
+  gap: 14px;
   margin-left: auto;
   padding-top: 0;
   white-space: nowrap;
@@ -273,7 +301,7 @@
   float: none;
   display: flex !important;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
   margin: 0;
   padding: 0;
   position: relative;
@@ -293,9 +321,9 @@
   display: inline-flex;
   align-items: center;
   font-size: 14px;
-  min-height: 39px;
+  min-height: 34px;
   margin: 0;
-  padding: 8px 15px;
+  padding: 7px 13px;
   line-height: 1;
 }
 

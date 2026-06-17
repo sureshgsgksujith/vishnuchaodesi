@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { lazy, Suspense, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { customerTemplateRoutes } from "./customerTemplateRoutes";
 import { clearCustomerSession, isCustomerAuthenticated } from "../../features/auth/utils/customerSession";
 
@@ -46,6 +46,18 @@ function RouteSuspense({ children }: { children: ReactNode }) {
       {children}
     </Suspense>
   );
+}
+
+function ScrollToTop() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [location.pathname, location.search]);
+
+  return null;
 }
 
 function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
@@ -132,6 +144,7 @@ export function AppRouter() {
 
   return (
     <RouteSuspense>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/home" element={<HomePage />} />

@@ -480,12 +480,23 @@
   gap: 18px;
   width: max-content;
   min-width: 100%;
-  animation: chao-home-slide-left 28s linear infinite;
   will-change: transform;
 }
 
-.chao-home-page .home-featured-listings-slider {
+.chao-home-page .artist-sliser-auto,
+.chao-home-page .home-featured-listings-slider.is-scrolling {
+  animation: chao-home-slide-left 28s linear infinite;
+}
+
+.chao-home-page .home-featured-listings-slider.is-scrolling {
   animation-duration: 34s;
+}
+
+.chao-home-page .home-featured-listings-slider.is-static {
+  width: 100%;
+  justify-content: center;
+  animation: none;
+  will-change: auto;
 }
 
 .chao-home-page .plac-hom-all-pla {
@@ -766,90 +777,124 @@
 }
 
 .chao-home-page .home-events {
-  padding: 22px 0 24px;
+  padding: 46px 0 52px;
+  background: #fff8f4;
+  border-top: 1px solid #e6edf5;
+  border-bottom: 1px solid #e6edf5;
 }
 
 .chao-home-page .home-events .events-header {
-  margin-bottom: 12px;
+  margin-bottom: 28px;
 }
 
 .chao-home-page .home-events .events-header h2 {
-  margin-bottom: 3px;
-  font-size: 24px;
+  margin: 0 0 8px;
+  color: #111827;
+  font-size: 34px;
+  font-weight: 800;
   line-height: 1.2;
 }
 
 .chao-home-page .home-events .subtitle {
-  margin-bottom: 6px;
-  font-size: 13px;
+  margin-bottom: 14px;
+  color: #4b5563;
+  font-size: 17px;
+  font-style: italic;
   line-height: 1.3;
 }
 
 .chao-home-page .home-events .browse-title {
-  margin-bottom: 12px;
-  font-size: 14px;
+  margin-bottom: 0;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 1.3;
 }
 
 .chao-home-page .home-events .location-pill {
-  padding: 3px 9px;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 3px 12px;
+  border-radius: 7px;
+  background: #e9edff;
+  color: #4b3cff;
+  font-size: 15px;
+  font-weight: 700;
   line-height: 1.2;
 }
 
 .chao-home-page .home-events .location-pill i {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .chao-home-page .home-events-scroll {
-  flex-wrap: nowrap;
-  gap: 14px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  padding: 0 2px 8px;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 22px;
+  max-width: 1040px;
+  margin: 0 auto;
+  overflow: visible;
+  padding: 0;
 }
 
 .chao-home-page .home-events-scroll.home-events-scroll {
-  margin-left: 0;
-  margin-right: 0;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .chao-home-page .home-events-scroll .home-event-slide {
-  flex: 0 0 320px;
-  width: 320px;
-  max-width: 320px;
+  width: auto;
+  max-width: none;
   padding-left: 0;
   padding-right: 0;
   margin-bottom: 0 !important;
-  scroll-snap-align: start;
 }
 
 .chao-home-page .home-events .event-card {
+  position: relative;
+  display: flex;
+  min-height: 170px;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #d7dee8;
   border-radius: 7px;
+  background: #fff;
+  box-shadow: none;
 }
 
 .chao-home-page .home-events .card-main-content {
-  gap: 10px;
-  padding: 12px;
+  display: flex;
+  flex: 1;
+  gap: 14px;
+  padding: 14px 14px 13px;
 }
 
 .chao-home-page .home-events .event-left img {
-  width: 62px;
-  height: 62px;
+  width: 66px;
+  height: 66px;
   border-radius: 5px;
+  object-fit: cover;
 }
 
 .chao-home-page .home-events .event-right {
-  margin-top: 4px;
+  min-width: 0;
+  margin-top: 2px;
 }
 
 .chao-home-page .home-events .event-right h4 {
-  min-height: 32px;
-  margin-bottom: 7px;
-  font-size: 13px;
+  display: -webkit-box;
+  min-height: 36px;
+  margin: 0 0 8px;
+  overflow: hidden;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 800;
   line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .chao-home-page .home-events .event-right h4 a {
@@ -858,57 +903,98 @@
 }
 
 .chao-home-page .home-events .meta span {
-  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin-bottom: 5px;
+  color: #667085;
   font-size: 11px;
   line-height: 1.25;
 }
 
 .chao-home-page .home-events .meta i {
-  margin-right: 5px;
+  flex: 0 0 auto;
+  margin-right: 6px;
+  color: #8a8f98;
   font-size: 13px;
 }
 
 .chao-home-page .home-events .bottom {
-  padding: 9px 12px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-top: 1px solid #e7ebf0;
 }
 
 .chao-home-page .home-events .available {
-  gap: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #02b976;
   font-size: 11px;
+  font-weight: 800;
 }
 
 .chao-home-page .home-events .available i {
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .chao-home-page .home-events .price {
+  color: #1f2937;
   font-size: 12px;
+  font-weight: 800;
 }
 
 .chao-home-page .home-events .btn-ticket {
-  padding: 5px 12px;
+  padding: 7px 17px;
+  border: 1px solid #ff3131;
   border-radius: 5px;
+  color: #ff3131;
+  background: #fff;
   font-size: 11px;
+  font-weight: 700;
   line-height: 1.2;
+  text-decoration: none;
 }
 
 .chao-home-page .home-events .promoted {
-  padding: 3px 9px;
-  font-size: 9px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  padding: 4px 10px;
+  border-radius: 0 6px 0 5px;
+  background: #07c483;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
 }
 
 .chao-home-page .home-events .btn-view-more {
-  padding: 10px 24px;
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+  padding: 14px 34px;
+  border: 1px solid #d8e0ea;
+  border-radius: 999px;
+  background: #fff;
+  color: #4b3cff;
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.08);
+  font-size: 16px;
+  font-weight: 800;
   line-height: 1.2;
+  text-decoration: none;
 }
 
 .chao-home-page .home-events .mt-4 {
-  margin-top: 10px !important;
+  margin-top: 24px !important;
 }
 
 .chao-home-page .home-events .btn-view-more i {
-  font-size: 16px;
+  font-size: 21px;
 }
 
 .chao-home-page .artist-sliser-auto:hover,
@@ -922,6 +1008,12 @@
   flex: 0 0 360px;
   width: 360px;
   padding: 10px;
+}
+
+.chao-home-page .home-featured-listings-slider.is-static > li {
+  flex: 0 1 25%;
+  width: 25%;
+  max-width: 320px;
 }
 
 .chao-home-page .home-featured-listings-slider .plac-hom-box {
@@ -958,6 +1050,73 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+}
+
+.chao-home-page .home-care-section .care-services-section {
+  margin: 32px 0 26px;
+}
+
+.chao-home-page .home-care-section .care-services {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 36px;
+}
+
+.chao-home-page .home-care-section .care-services::before,
+.chao-home-page .home-care-section .care-services::after {
+  display: none;
+}
+
+.chao-home-page .home-care-section .care-services > [class*="col-"] {
+  float: none;
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+
+.chao-home-page .home-care-section .service-card {
+  display: flex;
+  min-height: 178px;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  padding: 22px 24px;
+  border: 1px solid #edf1f5;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+  text-align: center;
+}
+
+.chao-home-page .home-care-section .service-left h5 {
+  margin: 0;
+  color: #101828;
+  font-size: 23px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.chao-home-page .home-care-section .service-content p {
+  margin: 0;
+  color: #101828;
+  font-size: 15px;
+  line-height: 1.42;
+  text-align: center;
+}
+
+.chao-home-page .home-care-section .service-action a {
+  color: #ff2d2d;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+.chao-home-page .home-care-section .service-action a:hover {
+  color: #d71920;
+  text-decoration: underline;
 }
 
 .chao-home-page .chaodesi-header-actions {
@@ -1014,6 +1173,289 @@
   width: 39px;
   height: 39px;
   margin: 0;
+}
+
+.chao-home-page .chao-jobs {
+  padding: 34px 0 42px;
+  background: #eef3f8;
+  border-top: 1px solid #e5ebf2;
+  border-bottom: 1px solid #e5ebf2;
+}
+
+.chao-home-page .chao-jobs .jobs-header h2 {
+  margin: 0 0 10px;
+  color: #141821;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.chao-home-page .chao-jobs .subtitle {
+  margin: 0 0 32px;
+  color: #667085;
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.chao-home-page .chao-jobs .jobs-stats {
+  max-width: 1240px;
+  margin: 0 auto 36px;
+}
+
+.chao-home-page .chao-jobs .stat-box {
+  min-height: 118px;
+  padding: 22px 18px 18px;
+  border-right: 1px solid #dde5ef;
+}
+
+.chao-home-page .chao-jobs .stat-box h3 {
+  margin: 0 0 10px;
+  color: #246bb6;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.chao-home-page .chao-jobs .stat-box p {
+  margin: 0;
+  color: #445269;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.chao-home-page .chao-jobs .jobs-tabs {
+  margin: 0 0 34px;
+}
+
+.chao-home-page .chao-jobs .tab-btn {
+  min-width: 118px;
+  margin: 0 6px;
+  padding: 9px 22px;
+  border: 1px solid #d6dee8;
+  border-radius: 25px;
+  background: #fff;
+  color: #111827;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.chao-home-page .chao-jobs .tab-btn.active {
+  border-color: #246bb6;
+  background: #246bb6;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(36, 107, 182, 0.22);
+}
+
+.chao-home-page .chao-jobs .jobs-content {
+  display: none;
+}
+
+.chao-home-page .chao-jobs .jobs-content.active {
+  display: block;
+}
+
+.chao-home-page .chao-jobs .desc {
+  margin: 0 0 30px;
+  color: #4b5565;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.chao-home-page .chao-jobs .job-box {
+  min-height: 136px;
+  margin-bottom: 20px;
+  padding: 24px 26px;
+  border: 1px solid #e7edf4;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.chao-home-page .chao-jobs .job-box h4 {
+  margin: 0 0 10px;
+  color: #101828;
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 1.22;
+}
+
+.chao-home-page .chao-jobs .job-box p {
+  margin: 0 0 18px;
+  color: #111827;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.chao-home-page .chao-jobs .links,
+.chao-home-page .chao-jobs .btns,
+.chao-home-page .chao-jobs .job-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.chao-home-page .chao-jobs .links {
+  gap: 16px;
+}
+
+.chao-home-page .chao-jobs .btns,
+.chao-home-page .chao-jobs .job-tags {
+  gap: 10px 12px;
+}
+
+.chao-home-page .chao-jobs .job-tags {
+  margin: 2px 0 16px;
+}
+
+.chao-home-page .chao-jobs .links a,
+.chao-home-page .chao-jobs .view-more {
+  color: #1f66b1;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.chao-home-page .chao-jobs .links a {
+  font-size: 14px;
+}
+
+.chao-home-page .chao-jobs .links a:hover,
+.chao-home-page .chao-jobs .view-more:hover {
+  color: #164f8d;
+  text-decoration: underline;
+}
+
+.chao-home-page .chao-jobs .btns span {
+  color: #111827;
+  font-size: 14px;
+}
+
+.chao-home-page .chao-jobs .btn-outline,
+.chao-home-page .chao-jobs .btn-solid {
+  display: inline-block;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.chao-home-page .chao-jobs .btn-outline {
+  padding: 8px 17px;
+  border: 1px solid #ff3b3b;
+  color: #ff3b3b;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.chao-home-page .chao-jobs .btn-outline:hover {
+  background: #ff3b3b;
+  color: #fff;
+}
+
+.chao-home-page .chao-jobs .btn-solid {
+  padding: 9px 17px;
+  background: #ff3b3b;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(255, 59, 59, 0.18);
+}
+
+.chao-home-page .chao-jobs .job-tags span,
+.chao-home-page .chao-jobs .job-tags a {
+  display: inline-block;
+  margin: 0;
+  padding: 7px 14px;
+  border: 1px solid #d8dee8;
+  border-radius: 20px;
+  background: #fff;
+  color: #111;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
+}
+
+.chao-home-page .chao-jobs .job-tags a:hover {
+  border-color: #246bb6;
+  color: #246bb6;
+  box-shadow: 0 4px 12px rgba(36, 107, 182, 0.12);
+}
+
+.chao-home-page .chao-jobs .view-more {
+  display: inline-block;
+  margin-top: 0;
+  font-size: 16px;
+}
+
+.chao-home-page .chao-jobs .jobs-tags {
+  margin-bottom: 25px;
+}
+
+.chao-home-page .chao-jobs .jobs-tags span {
+  display: inline-block;
+  margin: 6px;
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.3s;
+}
+
+.chao-home-page .chao-jobs .jobs-tags span:hover {
+  border-color: #ff3b3b;
+  color: #ff3b3b;
+}
+
+.chao-home-page .chao-jobs .jobs-tags .highlight {
+  color: #2b6cb0;
+  font-weight: 600;
+}
+
+.chao-home-page .chao-jobs .jobs-recruiter-box {
+  padding: 25px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.chao-home-page .chao-jobs .recruiter-left h4 {
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.chao-home-page .chao-jobs .recruiter-left p,
+.chao-home-page .chao-jobs .recruiter-right p {
+  color: #555;
+  font-size: 14px;
+}
+
+.chao-home-page .chao-jobs .more-info a {
+  color: #2b6cb0;
+  font-weight: 600;
+}
+
+.chao-home-page .chao-jobs .recruiter-right .feature {
+  margin-bottom: 15px;
+}
+
+.chao-home-page .chao-jobs .recruiter-right h5 {
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.chao-home-page .chao-jobs .btn-post-job {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 8px 18px;
+  border-radius: 25px;
+  background: #ff3b3b;
+  color: #fff;
+  font-size: 14px;
+  text-decoration: none;
 }
 
 .home-chao-tv,
@@ -1387,6 +1829,136 @@ html {
     width: 285px;
   }
 
+  .chao-home-page .home-featured-listings-slider.is-static {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .chao-home-page .home-featured-listings-slider.is-static > li {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .chao-home-page .chao-jobs {
+    padding: 30px 0 36px;
+  }
+
+  .chao-home-page .chao-jobs .jobs-header h2 {
+    font-size: 30px;
+  }
+
+  .chao-home-page .chao-jobs .subtitle {
+    margin-bottom: 22px;
+    font-size: 14px;
+  }
+
+  .chao-home-page .chao-jobs .jobs-stats {
+    margin-bottom: 28px;
+  }
+
+  .chao-home-page .chao-jobs .stat-box {
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid #dde5ef;
+  }
+
+  .chao-home-page .chao-jobs .jobs-tabs {
+    margin-bottom: 24px;
+  }
+
+  .chao-home-page .chao-jobs .tab-btn {
+    min-width: 0;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .chao-home-page .chao-jobs .desc {
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+
+  .chao-home-page .chao-jobs .job-box {
+    min-height: 0;
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  .chao-home-page .chao-jobs .job-box h4 {
+    font-size: 22px;
+  }
+
+  .chao-home-page .chao-jobs .links,
+  .chao-home-page .chao-jobs .job-tags {
+    gap: 10px;
+  }
+
+  .chao-home-page .home-care-section .care-services {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .chao-home-page .home-care-section .service-card {
+    min-height: 0;
+    gap: 12px;
+    padding: 22px;
+    text-align: center;
+  }
+
+  .chao-home-page .home-care-section .service-left h5 {
+    font-size: 21px;
+  }
+
+  .chao-home-page .home-care-section .service-content p {
+    font-size: 14px;
+  }
+
+  .chao-home-page .home-care-section .service-action a {
+    font-size: 14px;
+  }
+
+  .chao-home-page .home-events {
+    padding: 34px 0 38px;
+  }
+
+  .chao-home-page .home-events .events-header h2 {
+    font-size: 28px;
+  }
+
+  .chao-home-page .home-events .subtitle {
+    font-size: 14px;
+  }
+
+  .chao-home-page .home-events .browse-title {
+    font-size: 14px;
+  }
+
+  .chao-home-page .home-events .location-pill {
+    margin-top: 8px;
+    margin-left: 0;
+    font-size: 13px;
+  }
+
+  .chao-home-page .home-events-scroll {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .chao-home-page .home-events .card-main-content {
+    padding: 14px;
+  }
+
+  .chao-home-page .home-events .bottom {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .chao-home-page .home-events .btn-view-more {
+    margin-top: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+
   .home-chao-tv,
   .chao-tv-page-body {
     padding: 24px 0;
@@ -1430,6 +2002,45 @@ html {
   .chao-home-page .home-featured-listings-slider > li {
     flex-basis: 320px;
     width: 320px;
+  }
+
+  .chao-home-page .home-featured-listings-slider.is-static {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .chao-home-page .home-featured-listings-slider.is-static > li {
+    flex: 1 1 50%;
+    width: 50%;
+    max-width: 340px;
+  }
+
+  .chao-home-page .chao-jobs .stat-box {
+    border-right: 0;
+    border-bottom: 1px solid #dde5ef;
+  }
+
+  .chao-home-page .chao-jobs .job-box {
+    min-height: 0;
+  }
+
+  .chao-home-page .home-care-section .care-services {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .chao-home-page .home-care-section .service-card {
+    min-height: 0;
+    text-align: center;
+  }
+
+  .chao-home-page .home-care-section .service-content p {
+    font-size: 15px;
+  }
+
+  .chao-home-page .home-events-scroll {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: 760px;
   }
 }
 

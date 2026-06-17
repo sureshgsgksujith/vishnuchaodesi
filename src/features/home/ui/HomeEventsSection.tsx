@@ -99,7 +99,14 @@ export default function HomeEventsSection() {
     })
       .then((result) => {
         if (isActive) {
-          setEvents(result.items);
+          setEvents(
+            [...(result.items || [])]
+              .sort(
+                (first, second) =>
+                  new Date(second.createdAt || 0).getTime() - new Date(first.createdAt || 0).getTime()
+              )
+              .slice(0, 6)
+          );
         }
       })
       .catch(() => {

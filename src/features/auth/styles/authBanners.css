@@ -1,17 +1,93 @@
 .side-ads a {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 170px;
+  margin-bottom: 0;
+  overflow: hidden;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.login-reg.login-reg-pg {
+  padding: 100px 0 36px;
 }
 
 .login-reg-pg .side-ads {
-  padding-top: 0;
+  display: grid;
+  gap: 14px;
+  padding-top: 14px;
 }
 
 .side-ads .ad-img {
   display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+  margin-bottom: 0;
+}
+
+.login-reg-pg .login-main {
+  max-width: 410px;
+}
+
+.login-reg-pg .login-new {
+  max-width: 410px;
+  padding: 38px 28px 26px;
+  margin-bottom: 12px;
+  border-radius: 24px;
+}
+
+.login-reg-pg .login-hero img {
+  height: 104px;
+  margin-bottom: 16px !important;
+  object-fit: contain;
+}
+
+.login-reg-pg .log h4 {
+  margin-bottom: 18px;
+  font-size: 18px;
+}
+
+.login-reg-pg .log .form-group {
+  margin-bottom: 12px !important;
+}
+
+.login-reg-pg .log div input,
+.login-reg-pg .log div select {
+  height: 42px;
+  font-size: 14px;
+}
+
+.login-reg-pg .log div button.btn {
+  min-height: 42px;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.login-reg-pg .log-bot.mt-3 {
+  margin-top: 10px !important;
+}
+
+.login-reg-pg .tit-tag {
+  line-height: 18px;
+  margin-top: -10px;
+  margin-bottom: -8px;
+  padding: 2px 12px;
+  font-size: 11px;
 }
 
 @media (max-width: 768px) {
   .side-ads {
     display: none;
+  }
+
+  .login-reg.login-reg-pg {
+    padding: 34px 0 30px;
+  }
+
+  .login-reg-pg .login-new {
+    padding: 22px;
   }
 }
