@@ -429,11 +429,11 @@ const restaurantServiceTypeOptions = [
   { key: "catering_available", label: "Catering" },
   { key: "reservations_accepted", label: "Reservations Accepted" },
 ];
-const vehicleConditionOptions = ["New", "Used", "Certified Pre-Owned"];
+const vehicleConditionOptions = ["New", "Certified Pre-Owned", "Used"];
 const vehicleFuelOptions = ["Gasoline", "Diesel", "Hybrid", "Electric"];
 const vehicleBrandOptions = ["Acura", "Audi", "BMW", "Chevrolet", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Jeep", "Kia", "Lexus", "Mercedes-Benz", "Nissan", "Subaru", "Tesla", "Toyota", "Volkswagen", "Yamaha", "Harley-Davidson", "Royal Enfield", "Other"];
-const transmissionOptions = ["Automatic", "Manual"];
-const vehicleDriveTypeOptions = ["FWD", "AWD", "4WD"];
+const transmissionOptions = ["Automatic", "Manual", "CVT"];
+const vehicleDriveTypeOptions = ["FWD", "RWD", "AWD", "4WD"];
 const listingTypeOptions = ["Free", "Featured", "Premium"];
 const vehiclePriceNegotiableOptions = ["Yes", "No"];
 const nearbyServiceTypes = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
@@ -463,83 +463,116 @@ function isElectronicsCategoryName(categoryName: string) {
     normalizedCategory === "electronics";
 }
 
-const furnitureConditionOptions = ["New", "Like New", "Good", "Fair", "Salvage"];
-const furnitureMaterialOptions = ["Wood", "Metal", "Plastic", "Glass", "Fabric", "Leather"];
+const furnitureConditionOptions = ["New", "Like New", "Excellent", "Good", "Fair", "Used"];
+const furnitureSellerTypeOptions = ["Individual", "Furniture Store", "Manufacturer", "Interior Designer"];
+const furnitureMaterialOptions = ["Wood", "Solid Wood", "Engineered Wood", "Metal", "Plastic", "Glass", "Fabric", "Leather", "Faux Leather", "Rattan / Wicker", "Marble", "Laminate", "Other"];
 const furniturePostingCommonFields: CategoryAttributeField[] = [
-  { key: "brand", label: "Brand", sectionName: "Item Details", sectionOrder: 2 },
-  { key: "product_name_model", label: "Product Name / Model", sectionName: "Item Details", sectionOrder: 2 },
-  { key: "condition", label: "Condition", options: furnitureConditionOptions, isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
-  { key: "material", label: "Material", options: furnitureMaterialOptions, isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
-  { key: "color_finish", label: "Color / Finish", isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
+  { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "product_name_model", label: "Product Name", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "brand", label: "Brand", sectionName: "Product Information", sectionOrder: 2 },
+  { key: "furniture_type", label: "Furniture Type", sectionName: "Product Information", sectionOrder: 2 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "condition", label: "Condition", options: furnitureConditionOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "seller_type", label: "Seller Type", options: furnitureSellerTypeOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "material", label: "Material", options: furnitureMaterialOptions, isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "color_finish", label: "Color", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "age_of_item", label: "Age of Item", options: ["< 6 months", "6-12 months", "1-3 yrs", "3+ yrs"], isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
-  { key: "quantity", label: "Quantity", type: "number", isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
+  { key: "quantity", label: "Quantity", type: "number", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "length_inches", label: "Length (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
   { key: "width_inches", label: "Width (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
   { key: "height_inches", label: "Height (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
   { key: "weight_lbs", label: "Weight (lbs)", type: "number", sectionName: "Dimensions & Specifications", sectionOrder: 3 },
   { key: "assembly_required", label: "Assembly Required", options: yesNoOptions, isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
   { key: "assembly_included", label: "Assembly Included", options: yesNoOptions, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
-  { key: "price", label: "Price (USD)", type: "number", isRequired: true, sectionName: "Price & Sale Details", sectionOrder: 5 },
-  { key: "price_negotiable", label: "Price Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Price & Sale Details", sectionOrder: 5 },
-  { key: "original_price", label: "Original Price", type: "number", sectionName: "Price & Sale Details", sectionOrder: 5 },
-  { key: "reason_for_selling", label: "Reason for Selling", type: "textarea", sectionName: "Price & Sale Details", sectionOrder: 5 },
+  { key: "foldable", label: "Foldable", options: yesNoOptions, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
+  { key: "adjustable", label: "Adjustable", options: yesNoOptions, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
+  { key: "price", label: "Selling Price (USD)", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 5 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 5 },
+  { key: "original_price", label: "Original Price", type: "number", sectionName: "Pricing Information", sectionOrder: 5 },
+  { key: "bulk_purchase_available", label: "Bulk Purchase Available", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 5 },
+  { key: "reason_for_selling", label: "Reason for Selling", type: "textarea", sectionName: "Pricing Information", sectionOrder: 5 },
+  { key: "delivery_option", label: "Delivery Options", options: ["Pickup Only", "Local Delivery", "Nationwide Shipping"], sectionName: "Delivery & Installation", sectionOrder: 7 },
   { key: "pickup_location", label: "Pickup Location (lat-long)", sectionName: "Delivery & Logistics", sectionOrder: 7 },
   { key: "pickup_only", label: "Pickup Only", options: yesNoOptions, isRequired: true, sectionName: "Delivery & Logistics", sectionOrder: 7 },
   { key: "delivery_available", label: "Delivery Available", options: yesNoOptions, isRequired: true, sectionName: "Delivery & Logistics", sectionOrder: 7 },
   { key: "delivery_charges", label: "Delivery Charges", type: "number", sectionName: "Delivery & Logistics", sectionOrder: 7 },
   { key: "shipping_available", label: "Shipping Available", options: yesNoOptions, sectionName: "Delivery & Logistics", sectionOrder: 7 },
+  { key: "installation_available", label: "Installation Available", options: yesNoOptions, sectionName: "Delivery & Installation", sectionOrder: 7 },
   { key: "assembly_service", label: "Assembly Service", options: yesNoOptions, sectionName: "Delivery & Logistics", sectionOrder: 7 },
-  { key: "pet_free_home", label: "Pet-Free Home", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
+  { key: "product_video_url", label: "Product Videos", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
+  { key: "room_setup_images", label: "Room Setup Images", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
+  { key: "product_brochure", label: "Product Brochure", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
+  { key: "pet_friendly_materials", label: "Pet Friendly Materials", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
+  { key: "child_safe_design", label: "Child Safe Design", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
+  { key: "eco_friendly", label: "Eco-Friendly Materials", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
+  { key: "waterproof", label: "Waterproof", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
+  { key: "scratch_resistant", label: "Scratch Resistant", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
+  { key: "pet_free_home", label: "Pet-Free Home", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
   { key: "smoke_free_home", label: "Smoke-Free Home", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
   { key: "scratch_free", label: "No Damage / Scratch-Free", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
   { key: "recently_purchased", label: "Recently Purchased", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
   { key: "custom_made", label: "Custom Made", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
-  { key: "eco_friendly", label: "Eco-Friendly", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
   { key: "video_url", label: "Video URL", sectionName: "Media Upload", sectionOrder: 9 },
-  { key: "seller_type", label: "Seller Type", options: ["Owner", "Dealer", "Store"], isRequired: true, sectionName: "Seller Information", sectionOrder: 10 },
-  { key: "ad_type", label: "Ad Type", options: listingTypeOptions, sectionName: "Listing Settings", sectionOrder: 11 },
-  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Settings", sectionOrder: 11 },
-  { key: "auto_renew", label: "Auto-renew", options: yesNoOptions, sectionName: "Listing Settings", sectionOrder: 11 },
+  { key: "store_name", label: "Store Name", sectionName: "Seller Information", sectionOrder: 10 },
+  { key: "website", label: "Website", sectionName: "Seller Information", sectionOrder: 10 },
+  { key: "authentic_product_verification", label: "Authentic Product Verification", options: yesNoOptions, sectionName: "Verification & Warranty", sectionOrder: 12 },
+  { key: "warranty_available", label: "Warranty Available", options: yesNoOptions, sectionName: "Verification & Warranty", sectionOrder: 12 },
+  { key: "warranty_period", label: "Warranty Period", sectionName: "Verification & Warranty", sectionOrder: 12 },
+  { key: "purchase_invoice_available", label: "Purchase Invoice Available", options: yesNoOptions, sectionName: "Verification & Warranty", sectionOrder: 12 },
+  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
+  { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
+  { key: "top_placement", label: "Top Placement", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
+  { key: "furniture_deal_badge", label: "Furniture Deal Badge", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
 ];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
   { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "brand", label: "Vehicle Brand / Make", options: vehicleBrandOptions, isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "vehicle_type", label: "Vehicle Type", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "brand", label: "Make", options: vehicleBrandOptions, isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "model", label: "Model", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "variant", label: "Variant / Trim", sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "yearOfManufacture", label: "Year", type: "number", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "vin", label: "VIN (optional/private)", sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "kilometersDriven", label: "Mileage (miles)", type: "number", isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "fuelType", label: "Fuel Type", options: vehicleFuelOptions, isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "transmission", label: "Transmission", options: transmissionOptions, isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "driveType", label: "Drive Type", options: vehicleDriveTypeOptions, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "engineCapacity", label: "Engine Capacity", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "horsepower", label: "Horsepower", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "color", label: "Exterior Color", isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "interiorColor", label: "Interior Color", sectionName: "Vehicle Specifications", sectionOrder: 2 },
-  { key: "vehicleCondition", label: "Condition", options: vehicleConditionOptions, isRequired: true, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
-  { key: "ownershipTypeVehicle", label: "Ownership Type", options: ["Owner", "Dealer"], sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
-  { key: "ownerCount", label: "Number of Owners", type: "number", sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
-  { key: "accidentHistory", label: "Accident History", options: yesNoOptions, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
-  { key: "cleanTitle", label: "Clean Title", options: yesNoOptions, sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
-  { key: "vin", label: "VIN Number (optional/private)", sectionName: "Vehicle Condition & Ownership", sectionOrder: 5 },
+  { key: "vehicleCondition", label: "Condition", options: vehicleConditionOptions, isRequired: true, sectionName: "Vehicle Condition", sectionOrder: 3 },
+  { key: "ownershipTypeVehicle", label: "Ownership", options: ["First Owner", "Second Owner", "Multiple Owners"], sectionName: "Vehicle Condition", sectionOrder: 3 },
+  { key: "ownerCount", label: "Number of Owners", type: "number", sectionName: "Vehicle History", sectionOrder: 9 },
+  { key: "fuelType", label: "Fuel Type", options: vehicleFuelOptions, isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "engineCapacity", label: "Engine Size", sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "horsepower", label: "Horsepower", type: "number", sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "torque", label: "Torque", sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "transmission", label: "Transmission", options: transmissionOptions, isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "kilometersDriven", label: "Odometer Reading", type: "number", isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "driveType", label: "Drivetrain", options: vehicleDriveTypeOptions, sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "color", label: "Exterior Color", isRequired: true, sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "interiorColor", label: "Interior Color", sectionName: "Vehicle Specifications", sectionOrder: 6 },
+  { key: "accidentHistory", label: "Accident History", options: yesNoOptions, sectionName: "Vehicle History", sectionOrder: 9 },
+  { key: "serviceHistory", label: "Service History", type: "textarea", sectionName: "Vehicle History", sectionOrder: 9 },
+  { key: "cleanTitle", label: "Clean Title", options: yesNoOptions, sectionName: "Vehicle History", sectionOrder: 9 },
+  { key: "salvageTitle", label: "Salvage Title", options: yesNoOptions, sectionName: "Vehicle History", sectionOrder: 9 },
   { key: "registrationStatus", label: "Registration Status", sectionName: "Legal & Compliance", sectionOrder: 16 },
   { key: "emissionsTestPassed", label: "Emissions Test Passed", options: yesNoOptions, sectionName: "Legal & Compliance", sectionOrder: 16 },
   { key: "titleStatus", label: "Title Status", options: ["Clean", "Salvage", "Rebuilt"], sectionName: "Legal & Compliance", sectionOrder: 16 },
-  { key: "dealerLicenseNumber", label: "Dealer License Number", sectionName: "Legal & Compliance", sectionOrder: 16 },
+  { key: "dealerName", label: "Dealer Name", sectionName: "Seller Information", sectionOrder: 12 },
+  { key: "dealerLicenseNumber", label: "Dealer License Number", sectionName: "Seller Information", sectionOrder: 12 },
 ];
 
 const vehiclePriceFields: CategoryAttributeField[] = [
-  { key: "price", label: "Price (USD)", type: "number", isRequired: true, sectionName: "Pricing", sectionOrder: 4 },
-  { key: "price_negotiable", label: "Negotiable", options: vehiclePriceNegotiableOptions, sectionName: "Pricing", sectionOrder: 4 },
-  { key: "financing_available", label: "Financing Available", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 4 },
-  { key: "lease_option", label: "Lease Option", options: yesNoOptions, sectionName: "Pricing", sectionOrder: 4 },
+  { key: "price", label: "Asking Price", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "price_negotiable", label: "Negotiable", options: vehiclePriceNegotiableOptions, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "financing_available", label: "Financing Available", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "lease_option", label: "Lease Transfer Available", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 4 },
 ];
 
 const vehicleDocumentFields: CategoryAttributeField[] = [
-  { key: "warrantyAvailable", label: "Warranty Available", options: yesNoOptions, sectionName: "Insurance & Warranty", sectionOrder: 6 },
-  { key: "insuranceIncluded", label: "Insurance Included", options: yesNoOptions, sectionName: "Insurance & Warranty", sectionOrder: 6 },
-  { key: "extendedWarranty", label: "Extended Warranty", sectionName: "Insurance & Warranty", sectionOrder: 6 },
+  { key: "manufacturerWarranty", label: "Manufacturer Warranty", options: yesNoOptions, sectionName: "Warranty & Certification", sectionOrder: 13 },
+  { key: "extendedWarranty", label: "Extended Warranty", options: yesNoOptions, sectionName: "Warranty & Certification", sectionOrder: 13 },
+  { key: "certifiedPreOwned", label: "Certified Pre-Owned", options: yesNoOptions, sectionName: "Warranty & Certification", sectionOrder: 13 },
+  { key: "vehicleInspectionCertificate", label: "Vehicle Inspection Certificate", options: yesNoOptions, sectionName: "Warranty & Certification", sectionOrder: 13 },
+  { key: "warrantyAvailable", label: "Warranty Available", options: yesNoOptions, sectionName: "Warranty & Certification", sectionOrder: 13 },
+  { key: "insuranceIncluded", label: "Insurance Included", options: yesNoOptions, sectionName: "Warranty & Certification", sectionOrder: 13 },
 ];
 
 const vehicleAvailabilityFields: CategoryAttributeField[] = [
@@ -549,15 +582,69 @@ const vehicleAvailabilityFields: CategoryAttributeField[] = [
 ];
 
 const vehicleFeatureFields: CategoryAttributeField[] = [
-  { key: "sunroof", label: "Sunroof", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
-  { key: "leatherSeats", label: "Leather Seats", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
-  { key: "navigationSystem", label: "Navigation System", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
-  { key: "bluetooth", label: "Bluetooth", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
-  { key: "backupCamera", label: "Backup Camera", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
-  { key: "heatedSeats", label: "Heated Seats", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
-  { key: "appleCarplayAndroidAuto", label: "Apple CarPlay / Android Auto", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
-  { key: "parkingSensors", label: "Parking Sensors", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
-  { key: "remoteStart", label: "Remote Start", type: "checkbox", sectionName: "Features & Amenities", sectionOrder: 7 },
+  { key: "airbags", label: "Airbags", type: "checkbox", sectionName: "Safety Features", sectionOrder: 8 },
+  { key: "abs", label: "ABS", type: "checkbox", sectionName: "Safety Features", sectionOrder: 8 },
+  { key: "blindSpotMonitoring", label: "Blind Spot Monitoring", type: "checkbox", sectionName: "Safety Features", sectionOrder: 8 },
+  { key: "laneAssist", label: "Lane Assist", type: "checkbox", sectionName: "Safety Features", sectionOrder: 8 },
+  { key: "adaptiveCruiseControl", label: "Adaptive Cruise Control", type: "checkbox", sectionName: "Safety Features", sectionOrder: 8 },
+  { key: "parkingSensors", label: "Parking Sensors", type: "checkbox", sectionName: "Safety Features", sectionOrder: 8 },
+  { key: "backupCamera", label: "Backup Camera", type: "checkbox", sectionName: "Safety Features", sectionOrder: 8 },
+  { key: "sunroof", label: "Sunroof", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+  { key: "leatherSeats", label: "Leather Seats", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+  { key: "navigationSystem", label: "Navigation System", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+  { key: "heatedSeats", label: "Heated Seats", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+  { key: "appleCarplay", label: "Apple CarPlay", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+  { key: "androidAuto", label: "Android Auto", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+  { key: "appleCarplayAndroidAuto", label: "Apple CarPlay / Android Auto", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+  { key: "bluetooth", label: "Bluetooth", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+  { key: "remoteStart", label: "Remote Start", type: "checkbox", sectionName: "Additional Features", sectionOrder: 10 },
+];
+
+const vehicleMediaFields: CategoryAttributeField[] = [
+  { key: "exterior_photos", label: "Exterior Photos", type: "file", sectionName: "Media Upload", sectionOrder: 11 },
+  { key: "interior_photos", label: "Interior Photos", type: "file", sectionName: "Media Upload", sectionOrder: 11 },
+  { key: "engine_photos", label: "Engine Photos", type: "file", sectionName: "Media Upload", sectionOrder: 11 },
+  { key: "walkaround_video", label: "Walkaround Video", type: "file", sectionName: "Media Upload", sectionOrder: 11 },
+  { key: "vehicle_inspection_report", label: "Vehicle Inspection Report", type: "file", sectionName: "Media Upload", sectionOrder: 11 },
+];
+
+const vehicleSmartFields: CategoryAttributeField[] = [
+  { key: "battery_capacity", label: "Battery Capacity", sectionName: "EV-Specific Fields", sectionOrder: 7 },
+  { key: "charging_type", label: "Charging Type", options: ["Level 1", "Level 2", "DC Fast Charging", "Other"], sectionName: "EV-Specific Fields", sectionOrder: 7 },
+  { key: "batteryRange", label: "Range", type: "number", sectionName: "EV-Specific Fields", sectionOrder: 7 },
+  { key: "chargingTime", label: "Charging Time", sectionName: "EV-Specific Fields", sectionOrder: 7 },
+  { key: "fastChargingSupport", label: "Fast Charging Support", options: yesNoOptions, sectionName: "EV-Specific Fields", sectionOrder: 7 },
+  { key: "battery_warranty", label: "Battery Warranty", sectionName: "EV-Specific Fields", sectionOrder: 7 },
+  { key: "engine_cc", label: "Engine CC", type: "number", sectionName: "Motorcycle Details", sectionOrder: 7 },
+  { key: "bikeType", label: "Bike Type", options: ["Sport Bike", "Cruiser", "Touring Bike", "Electric Scooter", "Scooter", "Other"], sectionName: "Motorcycle Details", sectionOrder: 7 },
+  { key: "abs_availability", label: "ABS Availability", options: yesNoOptions, sectionName: "Motorcycle Details", sectionOrder: 7 },
+  { key: "rvType", label: "RV Type", options: ["Motorhome", "Travel Trailer", "Fifth Wheel", "Camper Van"], sectionName: "RV Details", sectionOrder: 7 },
+  { key: "sleepingCapacity", label: "Sleeping Capacity", type: "number", sectionName: "RV Details", sectionOrder: 7 },
+  { key: "lengthFeet", label: "Length", type: "number", sectionName: "RV Details", sectionOrder: 7 },
+  { key: "water_tank_capacity", label: "Water Tank Capacity", sectionName: "RV Details", sectionOrder: 7 },
+  { key: "watercraftType", label: "Watercraft Type", options: ["Fishing Boat", "Pontoon Boat", "Jet Ski", "Yacht", "Other"], sectionName: "Boat Details", sectionOrder: 7 },
+  { key: "boat_length", label: "Boat Length", type: "number", sectionName: "Boat Details", sectionOrder: 7 },
+  { key: "engineHours", label: "Engine Hours", type: "number", sectionName: "Boat Details", sectionOrder: 7 },
+  { key: "trailer_included", label: "Trailer Included", options: yesNoOptions, sectionName: "Boat Details", sectionOrder: 7 },
+  { key: "rentalDuration", label: "Rental Duration", isRequired: true, sectionName: "Rental Details", sectionOrder: 7 },
+  { key: "pricePerDay", label: "Daily Rate", type: "number", isRequired: true, sectionName: "Rental Details", sectionOrder: 7 },
+  { key: "securityDepositVehicle", label: "Security Deposit", type: "number", isRequired: true, sectionName: "Rental Details", sectionOrder: 7 },
+  { key: "serviceType", label: "Service Type", options: ["Oil Change", "Brake Service", "Tire Service", "Body Repair", "Car Wash & Detailing", "Other"], isRequired: true, sectionName: "Auto Service Details", sectionOrder: 7 },
+  { key: "serviceArea", label: "Service Area", sectionName: "Auto Service Details", sectionOrder: 7 },
+  { key: "businessHours", label: "Business Hours", sectionName: "Auto Service Details", sectionOrder: 7 },
+  { key: "certifications", label: "Certifications", sectionName: "Auto Service Details", sectionOrder: 7 },
+  { key: "emergency_assistance", label: "Emergency Assistance", options: yesNoOptions, sectionName: "Auto Service Details", sectionOrder: 7 },
+  { key: "partType", label: "Part Type", options: ["Engine Parts", "Batteries", "Audio Systems", "Floor Mats", "Performance Parts", "Tires", "Wheels", "Other"], sectionName: "Auto Parts Details", sectionOrder: 7 },
+  { key: "compatibleModels", label: "Compatible Brands / Models", sectionName: "Auto Parts Details", sectionOrder: 7 },
+  { key: "condition", label: "Part Condition", options: ["New", "Used", "Refurbished"], sectionName: "Auto Parts Details", sectionOrder: 7 },
+];
+
+const vehiclePromotionFields: CategoryAttributeField[] = [
+  { key: "ad_type", label: "Listing Type", options: listingTypeOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 14 },
+  { key: "top_ad", label: "Top Ad", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 14 },
+  { key: "sponsored_vehicle", label: "Sponsored Vehicle", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 14 },
+  { key: "urgent_sale_badge", label: "Urgent Sale Badge", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 14 },
+  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Visibility & Promotions", sectionOrder: 14 },
 ];
 
 const vehiclePostingCommonFields: CategoryAttributeField[] = [
@@ -565,6 +652,9 @@ const vehiclePostingCommonFields: CategoryAttributeField[] = [
   ...vehiclePriceFields,
   ...vehicleDocumentFields,
   ...vehicleFeatureFields,
+  ...vehicleSmartFields,
+  ...vehicleMediaFields,
+  ...vehiclePromotionFields,
   ...vehicleAvailabilityFields,
 ];
 
@@ -1520,53 +1610,166 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Furniture & Home": {
     default: categoryAttributeFieldsByCategory["Furniture & Home"],
     subCategories: {
-      "Living Room": [
+      "Living Room Furniture": [
         ...furniturePostingCommonFields,
-        { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3", "5+"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "upholstery_type", label: "Upholstery Type", options: ["Fabric", "Leather", "Faux Leather"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "recliner", label: "Recliner", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3", "4", "5+"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "upholstery_type", label: "Upholstery Type", options: ["Fabric", "Leather", "Faux Leather", "Velvet", "Microfiber"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
       ],
-      Bedroom: [
+      "Bedroom Furniture": [
         ...furniturePostingCommonFields,
-        { key: "bed_size", label: "Bed Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "mattress_included", label: "Mattress Included", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "storage", label: "Storage", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "bed_size", label: "Bed Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "mattress_included", label: "Mattress Included", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "storage", label: "Storage", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
       ],
-      Dining: [
+      "Dining Room Furniture": [
         ...furniturePostingCommonFields,
-        { key: "dining_seating_capacity", label: "Seating Capacity", options: ["2", "4", "6", "8+"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "table_shape", label: "Table Shape", options: ["Round", "Rectangle", "Square"], sectionName: "Subcategory Details", sectionOrder: 4 },
-      ],
-      Office: [
-        ...furniturePostingCommonFields,
-        { key: "desk_type", label: "Desk Type", options: ["Standing", "Regular"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "chair_type", label: "Chair Type", options: ["Ergonomic", "Executive"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "adjustable_height", label: "Adjustable Height", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "number_of_chairs_included", label: "Number of Chairs Included", type: "number", sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "dining_seating_capacity", label: "Seating Capacity", options: ["2", "4", "6", "8+"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "table_shape", label: "Table Shape", options: ["Round", "Rectangle", "Square", "Oval"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "extendable_option", label: "Extendable Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
       ],
       "Office Furniture": [
         ...furniturePostingCommonFields,
-        { key: "desk_type", label: "Desk Type", options: ["Standing", "Regular"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "chair_type", label: "Chair Type", options: ["Ergonomic", "Executive"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "adjustable_height", label: "Adjustable Height", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "desk_type", label: "Desk Type", options: ["Standing", "Regular", "Computer", "Executive", "Conference"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "chair_type", label: "Chair Type", options: ["Ergonomic", "Executive", "Task", "Conference"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "adjustable_height", label: "Adjustable Height", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
       ],
-      Outdoor: [
+      "Outdoor & Patio Furniture": [
         ...furniturePostingCommonFields,
-        { key: "weather_resistant", label: "Weather Resistant", options: yesNoOptions, sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "outdoor_usage", label: "Usage", options: ["Patio", "Garden", "Balcony"], sectionName: "Subcategory Details", sectionOrder: 4 },
-      ],
-      Decor: [
-        ...furniturePostingCommonFields,
-        { key: "decor_type", label: "Decor Type", options: ["Wall Art", "Lighting", "Rugs", "Curtains"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "style", label: "Style", options: ["Modern", "Traditional", "Vintage", "Minimalist"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "weather_resistant", label: "Weather Resistant", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "outdoor_usage", label: "Indoor/Outdoor Use", options: ["Outdoor", "Indoor", "Both"], sectionName: "Furniture Specific", sectionOrder: 4 },
       ],
       "Home Decor": [
         ...furniturePostingCommonFields,
-        { key: "decor_type", label: "Decor Type", options: ["Wall Art", "Lighting", "Rugs", "Curtains"], sectionName: "Subcategory Details", sectionOrder: 4 },
-        { key: "style", label: "Style", options: ["Modern", "Traditional", "Vintage", "Minimalist"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "decor_type", label: "Decor Type", options: ["Wall Art", "Mirrors", "Rugs & Carpets", "Curtains", "Decorative Items", "Clocks"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "style", label: "Style", options: ["Modern", "Traditional", "Vintage", "Minimalist", "Contemporary", "Industrial"], sectionName: "Furniture Specific", sectionOrder: 4 },
       ],
-      Kitchen: [
+      "Lighting & Fixtures": [
         ...furniturePostingCommonFields,
-        { key: "kitchen_item_type", label: "Kitchen Item Type", options: ["Cabinet", "Island", "Storage", "Bar Stool", "Dining Table"], sectionName: "Subcategory Details", sectionOrder: 4 },
+        { key: "power_source", label: "Power Source", options: ["Hardwired", "Plug-in", "Battery", "Solar"], sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+      ],
+      "Storage & Organization": [
+        ...furniturePostingCommonFields,
+        { key: "storage_type", label: "Storage Type", options: ["Bookshelf", "Cabinet", "Shoe Rack", "Closet Organizer", "Shelving Unit"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "shelf_count", label: "Shelf Count", type: "number", sectionName: "Furniture Specific", sectionOrder: 4 },
+      ],
+      "Mattresses & Bedding": [
+        ...furniturePostingCommonFields,
+        { key: "mattress_size", label: "Mattress Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Mattress Specific", sectionOrder: 4 },
+        { key: "firmness_level", label: "Firmness Level", options: ["Soft", "Medium", "Firm", "Extra Firm"], sectionName: "Mattress Specific", sectionOrder: 4 },
+        { key: "mattress_type", label: "Mattress Type", options: ["Memory Foam", "Spring", "Hybrid", "Latex", "Pillow Top"], sectionName: "Mattress Specific", sectionOrder: 4 },
+      ],
+      "Kitchen & Dining Essentials": [
+        ...furniturePostingCommonFields,
+        { key: "kitchen_item_type", label: "Kitchen Item Type", options: ["Cookware", "Dinnerware", "Kitchen Storage", "Small Kitchen Furniture"], sectionName: "Furniture Specific", sectionOrder: 4 },
+      ],
+      "Home Improvement Materials": [
+        ...furniturePostingCommonFields,
+        { key: "home_improvement_material_type", label: "Material Type", options: ["Doors", "Windows", "Flooring", "Cabinets", "Countertops"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "coverage_area", label: "Coverage Area", sectionName: "Furniture Specific", sectionOrder: 4 },
+      ],
+      "Antique & Vintage Furniture": [
+        ...furniturePostingCommonFields,
+        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+      ],
+      "Living Room": categoryAttributeFieldsByCategory["Furniture & Home"],
+      Bedroom: categoryAttributeFieldsByCategory["Furniture & Home"],
+      Dining: categoryAttributeFieldsByCategory["Furniture & Home"],
+      Office: categoryAttributeFieldsByCategory["Furniture & Home"],
+      Outdoor: categoryAttributeFieldsByCategory["Furniture & Home"],
+      Decor: categoryAttributeFieldsByCategory["Furniture & Home"],
+      Kitchen: categoryAttributeFieldsByCategory["Furniture & Home"],
+    },
+    detailedCategories: {
+      Sofas: [
+        ...furniturePostingCommonFields,
+        { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3", "4", "5+"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+      ],
+      "Sectional Sofas": [
+        ...furniturePostingCommonFields,
+        { key: "seating_capacity", label: "Seating Capacity", options: ["3", "4", "5", "6+"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+      ],
+      Recliners: [
+        ...furniturePostingCommonFields,
+        { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+      ],
+      "Dining Tables": [
+        ...furniturePostingCommonFields,
+        { key: "number_of_chairs_included", label: "Number of Chairs Included", type: "number", sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "table_shape", label: "Table Shape", options: ["Round", "Rectangle", "Square", "Oval"], sectionName: "Furniture Specific", sectionOrder: 4 },
+        { key: "extendable_option", label: "Extendable Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+      ],
+      Mattresses: [
+        ...furniturePostingCommonFields,
+        { key: "mattress_size", label: "Mattress Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Mattress Specific", sectionOrder: 4 },
+        { key: "firmness_level", label: "Firmness", options: ["Soft", "Medium", "Firm", "Extra Firm"], sectionName: "Mattress Specific", sectionOrder: 4 },
+        { key: "mattress_type", label: "Mattress Type", options: ["Memory Foam", "Spring", "Hybrid", "Latex", "Pillow Top"], sectionName: "Mattress Specific", sectionOrder: 4 },
+      ],
+      Chandeliers: [
+        ...furniturePostingCommonFields,
+        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+      ],
+      "Ceiling Lights": [
+        ...furniturePostingCommonFields,
+        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+      ],
+      "Floor Lamps": [
+        ...furniturePostingCommonFields,
+        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+      ],
+      "Table Lamps": [
+        ...furniturePostingCommonFields,
+        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+      ],
+      "Outdoor Lighting": [
+        ...furniturePostingCommonFields,
+        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
+        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+      ],
+      "Antique Tables": [
+        ...furniturePostingCommonFields,
+        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+      ],
+      "Vintage Chairs": [
+        ...furniturePostingCommonFields,
+        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+      ],
+      "Collectible Furniture": [
+        ...furniturePostingCommonFields,
+        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+      ],
+      "Restoration Pieces": [
+        ...furniturePostingCommonFields,
+        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
+        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
       ],
     },
   },
@@ -1834,6 +2037,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const isRoommatesRentalListing = !isClassifiedMode && form.categoryName === "Roommates & Rentals";
   const isJobsListing = !isClassifiedMode && form.categoryName === "Jobs";
   const isElectronicsListing = !isClassifiedMode && isElectronicsCategoryName(form.categoryName);
+  const isFurnitureListing = !isClassifiedMode && isFurnitureCategory(form.categoryName);
   const isPetsListing = !isClassifiedMode && form.categoryName === "Pets & Animals";
 
   useEffect(() => {
@@ -2817,6 +3021,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           return finishStepValidation();
         }
 
+        if (isFurnitureCategory(form.categoryName)) {
+          addRequiredFurnitureCategoryFieldErrors(1, addFieldError);
+          return finishStepValidation();
+        }
+
         const missingDetailField = hasDynamicCategoryFields || isClassifiedMode || isRestaurantListing
           ? undefined
           : getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
@@ -2925,6 +3134,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return finishStepValidation();
     }
 
+    if (step === 2 && isFurnitureCategory(form.categoryName)) {
+      addRequiredFurnitureCategoryFieldErrors(2, addFieldError);
+      return finishStepValidation();
+    }
+
     if (step === 2 && isRestaurantListing) {
       const restaurantZipcode = contactInfo.zipcode || form.pincode;
       const selectedRestaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
@@ -2987,6 +3201,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return finishStepValidation();
     }
 
+    if (step === 3 && isFurnitureCategory(form.categoryName)) {
+      addRequiredFurnitureCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
     if (step === 4 && form.categoryName === "Roommates & Rentals") {
       addRequiredRoommatesRentalCategoryFieldErrors(4, addFieldError);
       return finishStepValidation();
@@ -3004,6 +3223,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (step === 4 && form.categoryName === "Pets & Animals") {
       addRequiredPetCategoryFieldErrors(4, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && isFurnitureCategory(form.categoryName)) {
+      addRequiredFurnitureCategoryFieldErrors(4, addFieldError);
       return finishStepValidation();
     }
 
@@ -3262,6 +3486,16 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function addRequiredPetCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
     getPetStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+  }
+
+  function addRequiredFurnitureCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getFurnitureStepCategoryFields(effectiveDynamicCategoryFields, formStep)
       .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
       .forEach((field) => {
         if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
@@ -3640,7 +3874,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (isVehicleMotorcycleSubCategory(form.subCategory)) {
       const bikeType = deriveVehicleBikeType(form.subCategory, form.detailCategory, categoryAttributes);
       const rules = [
-        ...(!getAttributeValue(categoryAttributes, "engineCapacity", "engine_capacity").trim() ? [{ keys: ["engineCapacity", "engine_capacity"], message: "Engine Capacity is required for Motorcycles & Scooters." }] : []),
+        ...(!getAttributeValue(categoryAttributes, "engineCapacity", "engine_capacity", "engine_cc").trim() ? [{ keys: ["engineCapacity", "engine_capacity", "engine_cc"], message: "Engine CC is required for Motorcycles & Scooters." }] : []),
         ...(!bikeType ? [{ keys: ["bikeType", "bike_type"], message: "Bike Type is required for Motorcycles & Scooters." }] : []),
       ];
       if (rules.length) {
@@ -3667,8 +3901,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         return validateInlineCategoryRules([{ keys: ["rentalDuration", "rental_duration"], message: "Rental Duration is required for Rentals." }]);
       }
 
-      if (!getAttributeValue(categoryAttributes, "pricePerDay", "price_per_day", "daily_price").trim()) {
-        return validateInlineCategoryRules([{ keys: ["pricePerDay", "price_per_day", "daily_price"], message: "Daily Price is required for Rentals." }]);
+      if (!getAttributeValue(categoryAttributes, "pricePerDay", "price_per_day", "daily_price", "daily_rate").trim()) {
+        return validateInlineCategoryRules([{ keys: ["pricePerDay", "price_per_day", "daily_price", "daily_rate"], message: "Daily Rate is required for Rentals." }]);
       }
 
       if (!getAttributeValue(categoryAttributes, "securityDepositVehicle", "security_deposit_vehicle").trim()) {
@@ -4297,6 +4531,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return renderPetPostingSections(1);
     }
 
+    if (isFurnitureListing) {
+      return renderFurniturePostingSections(1);
+    }
+
     if (form.categoryName === "Vehicles") {
       return renderVehiclePostingSections(1);
     }
@@ -4625,6 +4863,76 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     return <>{renderPetFields(petFields)}</>;
   }
 
+  function renderFurniturePostingSections(formStep: number) {
+    const furnitureFields = getFurnitureStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 3 && shouldUseSharedListingLocationSection(form.categoryName);
+    const renderFurnitureFields = (fields: CategoryAttributeField[]) => (
+      <CategoryAttributesFields
+        categoryName={form.categoryName}
+        subCategory={form.subCategory}
+        detailCategory={form.detailCategory}
+        form={form}
+        currencyCountry={currencyCountry}
+        dynamicFields={fields}
+        values={categoryAttributes}
+        fieldErrors={fieldErrors}
+        uploadFiles={galleryFiles}
+        omitLocationFields={useSharedLocation}
+        locationSection={useSharedLocation ? (
+          <SharedListingLocationFields
+            form={form}
+            countries={countries}
+            states={states}
+            cities={cities}
+            fieldErrors={fieldErrors}
+            updateField={updateField}
+            updateCountry={updateCountry}
+            updateState={updateState}
+            updateCity={updateCity}
+            onAddressPlaceSelect={handleAddressPlaceSelect}
+          />
+        ) : undefined}
+        locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+        onChange={updateCategoryAttributes}
+        onUploadFilesChange={setGalleryFiles}
+      />
+    );
+
+    if (formStep === 3) {
+      return (
+        <>
+          <h4>Product Photos</h4>
+          <div className="form-group">
+            <label>Product Photos (multiple)</label>
+            <GalleryMediaEditor
+              items={form.galleryMedia}
+              files={galleryFiles}
+              onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
+              onFilesChange={setGalleryFiles}
+            />
+          </div>
+          {renderFurnitureFields(furnitureFields)}
+        </>
+      );
+    }
+
+    if (formStep === 4) {
+      const fieldsBeforePromotions = furnitureFields.filter((field) => (field.sectionOrder || 1) < 13);
+      const genericPromotionKeys = new Set(["adtype", "ad_type", "listingtype", "listing_type", "sponsoredlisting", "sponsored_listing"]);
+      const promotionFields = furnitureFields.filter((field) => (field.sectionOrder || 1) >= 13 && !genericPromotionKeys.has(normalizeFieldKey(field.key)));
+
+      return (
+        <>
+          {renderFurnitureFields(fieldsBeforePromotions)}
+          {renderGenericListingVisibilityAndPromotions()}
+          {renderFurnitureFields(promotionFields)}
+        </>
+      );
+    }
+
+    return <>{renderFurnitureFields(furnitureFields)}</>;
+  }
+
   const fieldErrorMessages = Array.from(new Set(Object.values(fieldErrors)));
 
   return (
@@ -4733,7 +5041,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
               {wizardSteps.length > 2 && currentStep === 1 ? (
                 <div className="log">
                   <div className="login">
-                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : form.categoryName === "Vehicles" ? "Vehicle Details" : form.categoryName === "Care Services" ? "Care Service Details" : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? "Event Details" : isRoommatesRentalListing ? "Roommate & Rental Details" : form.categoryName === "Jobs" ? "Job Details" : isElectronicsListing ? "Electronics Details" : isPetsListing ? "Pet Details" : "Category Details"}</h4>
+                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : form.categoryName === "Vehicles" ? "Vehicle Details" : form.categoryName === "Care Services" ? "Care Service Details" : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? "Event Details" : isRoommatesRentalListing ? "Roommate & Rental Details" : form.categoryName === "Jobs" ? "Job Details" : isElectronicsListing ? "Electronics Details" : isPetsListing ? "Pet Details" : isFurnitureListing ? "Furniture & Home Details" : "Category Details"}</h4>
                     <form className="listing_form_2" noValidate autoComplete="off">
                       {isRealEstateListing ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={40} />
@@ -4780,6 +5088,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           renderElectronicsPostingSections(2)
                         ) : isPetsListing ? (
                           renderPetPostingSections(2)
+                        ) : isFurnitureListing ? (
+                          renderFurniturePostingSections(2)
                         ) : (
                           <ul className="listing-section-stack">
                             <li>
@@ -4834,6 +5144,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           renderElectronicsPostingSections(3)
                         ) : isPetsListing ? (
                           renderPetPostingSections(3)
+                        ) : isFurnitureListing ? (
+                          renderFurniturePostingSections(3)
                         ) : (
                           <ul>
                             <li>
@@ -4874,6 +5186,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         renderElectronicsPostingSections(4)
                       ) : isPetsListing ? (
                         renderPetPostingSections(4)
+                      ) : isFurnitureListing ? (
+                        renderFurniturePostingSections(4)
                       ) : form.categoryName === "Care Services" ? (
                         <>
                           <h4>Photo gallery</h4>
@@ -8224,7 +8538,10 @@ function buildListingPayload(
   const isPetsPayload = form.categoryName === "Pets & Animals";
   const petTitle = isPetsPayload ? getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() : "";
   const petDescription = isPetsPayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
-  const listingDescription = careServiceDescription || roommatesRentalDescription || jobDescription || electronicsDescription || petDescription || form.description.trim() || form.businessDescription.trim();
+  const isFurniturePayload = isFurnitureCategory(form.categoryName);
+  const furnitureTitle = isFurniturePayload ? getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() : "";
+  const furnitureDescription = isFurniturePayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
+  const listingDescription = careServiceDescription || roommatesRentalDescription || jobDescription || electronicsDescription || petDescription || furnitureDescription || form.description.trim() || form.businessDescription.trim();
   const businessDescription = form.businessDescription.trim() || form.description.trim();
   const listingPrice =
     numberAttribute(categoryAttributes, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price") ??
@@ -8261,6 +8578,7 @@ function buildListingPayload(
   const petContactEmail = isPetsPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
   const petWebsite = isPetsPayload ? getAttributeValue(categoryAttributes, "website").trim() : "";
   const petVideoUrl = isPetsPayload ? getAttributeValue(categoryAttributes, "pet_video_url", "petVideoUrl").trim() : "";
+  const vehicleVideoUrl = form.categoryName === "Vehicles" ? getAttributeValue(categoryAttributes, "walkaround_video", "walkaroundVideo", "vehicle_video_url", "vehicleVideoUrl").trim() : "";
   const adDurationDays =
     numberAttribute(categoryAttributes, "ad_duration_days", "adDurationDays", "ad_duration") ??
     numberOrNull(form.adDurationDays) ??
@@ -8283,7 +8601,7 @@ function buildListingPayload(
     .map(([label]) => label);
 
   return {
-    title: form.categoryName === "Restaurants & Food" ? restaurantTitle : form.categoryName === "Vehicles" ? vehicleTitle : eventTitle || roommatesRentalTitle || jobTitle || electronicsTitle || petTitle || careServiceTitle || form.title.trim(),
+    title: form.categoryName === "Restaurants & Food" ? restaurantTitle : form.categoryName === "Vehicles" ? vehicleTitle : eventTitle || roommatesRentalTitle || jobTitle || electronicsTitle || petTitle || furnitureTitle || careServiceTitle || form.title.trim(),
     description: form.categoryName === "Restaurants & Food" ? restaurantDescription : form.categoryName === "Vehicles" ? vehicleDescription : eventDescription || listingDescription,
     categoryName: isClassifiedMode ? "Classifieds" : form.categoryName.trim(),
     subCategory: isClassifiedMode ? form.categoryName.trim() : form.subCategory.trim(),
@@ -8377,7 +8695,7 @@ function buildListingPayload(
         form.coverImageName,
         ...form.galleryMedia,
       ].map((value) => value.trim()).filter((value) => value && !isVideoValue(value)),
-      videoUrl: electronicsVideoUrl || petVideoUrl || form.listingVideo.trim() || form.galleryMedia.find(isVideoValue) || "",
+      videoUrl: electronicsVideoUrl || petVideoUrl || vehicleVideoUrl || form.listingVideo.trim() || form.galleryMedia.find(isVideoValue) || "",
       logoUrl: form.profileImageName.trim(),
       coverBannerUrl: form.coverImageName.trim(),
     },
@@ -8458,15 +8776,15 @@ function buildListingPayload(
       ageRestrictedNotice: restaurantInfo.ageRestrictedNotice.trim() || getAttributeValue(categoryAttributes, "age_restricted_notice", "age_restriction", "ageRestrictedNotice").trim(),
     },
     vehicleDetails: {
-      brand: getAttributeValue(categoryAttributes, "brand").trim() || (isChargingStationPayload ? "Charging Station" : ""),
+      brand: getAttributeValue(categoryAttributes, "brand", "make").trim() || (isChargingStationPayload ? "Charging Station" : ""),
       model: getAttributeValue(categoryAttributes, "model").trim() || getAttributeValue(categoryAttributes, "chargingStationType", "charging_station_type").trim(),
       variant: getAttributeValue(categoryAttributes, "variant").trim(),
-      yearOfManufacture: numberAttribute(categoryAttributes, "yearOfManufacture", "year_of_manufacture") ?? (isChargingStationPayload ? new Date().getFullYear() : null),
+      yearOfManufacture: numberAttribute(categoryAttributes, "yearOfManufacture", "year_of_manufacture", "year") ?? (isChargingStationPayload ? new Date().getFullYear() : null),
       registrationYear: numberAttribute(categoryAttributes, "registrationYear", "registration_year"),
       vehicleCondition: getAttributeValue(categoryAttributes, "vehicleCondition", "vehicle_condition", "condition").trim() || (isChargingStationPayload ? "New" : ""),
       fuelType: getAttributeValue(categoryAttributes, "fuelType", "fuel_type").trim() || (isEvVehiclePayload ? "Electric" : ""),
       transmission: getAttributeValue(categoryAttributes, "transmission").trim(),
-      kmDriven: numberAttribute(categoryAttributes, "kilometersDriven", "kilometers_driven", "kmDriven", "km_driven"),
+      kmDriven: numberAttribute(categoryAttributes, "kilometersDriven", "kilometers_driven", "kmDriven", "km_driven", "odometer_reading"),
       numberOfOwners: numberAttribute(categoryAttributes, "ownerCount", "owner_count", "numberOfOwners", "number_of_owners"),
       insuranceStatus: getAttributeValue(categoryAttributes, "insurance", "insuranceStatus", "insurance_status").trim(),
       insuranceValidTill: getAttributeValue(categoryAttributes, "insuranceValidTill", "insurance_valid_till").trim() || null,
@@ -8477,7 +8795,7 @@ function buildListingPayload(
       seatingCapacity: numberAttribute(categoryAttributes, "seatingCapacity", "seating_capacity") ?? (isCarsVehiclePayload ? 5 : null),
       bootSpace: getAttributeValue(categoryAttributes, "bootSpace", "boot_space").trim(),
       mileage: numberAttribute(categoryAttributes, "mileage"),
-      engineCapacityCc: numberAttribute(categoryAttributes, "engineCapacity", "engine_capacity", "engineCapacityCc", "engine_capacity_cc"),
+      engineCapacityCc: numberAttribute(categoryAttributes, "engineCapacity", "engine_capacity", "engineCapacityCc", "engine_capacity_cc", "engine_cc"),
       bikeType: vehicleBikeType,
       commercialVehicleType: getAttributeValue(categoryAttributes, "vehicleType", "vehicle_type", "commercialVehicleType", "commercial_vehicle_type").trim(),
       loadCapacity: numberAttribute(categoryAttributes, "loadCapacity", "load_capacity"),
@@ -8485,8 +8803,8 @@ function buildListingPayload(
       permitType: getAttributeValue(categoryAttributes, "permitType", "permit_type").trim(),
       rentalType: getAttributeValue(categoryAttributes, "rentalType", "rental_type").trim(),
       pricePerHour: numberAttribute(categoryAttributes, "pricePerHour", "price_per_hour"),
-      pricePerDay: numberAttribute(categoryAttributes, "pricePerDay", "price_per_day", "daily_price"),
-      securityDeposit: numberAttribute(categoryAttributes, "securityDepositVehicle", "security_deposit_vehicle"),
+      pricePerDay: numberAttribute(categoryAttributes, "pricePerDay", "price_per_day", "daily_price", "daily_rate"),
+      securityDeposit: numberAttribute(categoryAttributes, "securityDepositVehicle", "security_deposit_vehicle", "security_deposit"),
       partType: getAttributeValue(categoryAttributes, "partType", "part_type", "itemType", "item_type").trim(),
       compatibleModels: getAttributeValue(categoryAttributes, "compatibleModels", "compatible_models", "compatible_brands_models").trim(),
       partCondition: getAttributeValue(categoryAttributes, "partCondition", "part_condition", "condition").trim(),
@@ -9537,7 +9855,12 @@ function vehicleFeatureValues(values: CategoryAttributes) {
     ["Navigation System", ["navigationSystem", "navigation_system"]],
     ["Bluetooth", ["bluetooth"]],
     ["Backup Camera", ["backupCamera", "backup_camera"]],
+    ["Blind Spot Monitoring", ["blindSpotMonitoring", "blind_spot_monitoring"]],
+    ["Lane Assist", ["laneAssist", "lane_assist"]],
+    ["Adaptive Cruise Control", ["adaptiveCruiseControl", "adaptive_cruise_control"]],
     ["Heated Seats", ["heatedSeats", "heated_seats"]],
+    ["Apple CarPlay", ["appleCarplay", "apple_carplay"]],
+    ["Android Auto", ["androidAuto", "android_auto"]],
     ["Apple CarPlay / Android Auto", ["appleCarplayAndroidAuto", "apple_carplay_android_auto"]],
     ["Parking Sensors", ["parkingSensors", "parking_sensors"]],
     ["Remote Start", ["remoteStart", "remote_start"]],
@@ -9657,6 +9980,10 @@ function getPetStepCategoryFields(fields: CategoryAttributeField[], formStep: nu
   return fields.filter((field) => getPetFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
 }
 
+function getFurnitureStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getFurnitureFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
 function getVehicleFormStepForSectionOrder(sectionOrder: number) {
   if (sectionOrder <= 4) {
     return 1;
@@ -9743,6 +10070,22 @@ function getPetFormStepForSectionOrder(sectionOrder: number) {
   }
 
   if (sectionOrder <= 6) {
+    return 2;
+  }
+
+  if (sectionOrder <= 9) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getFurnitureFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 2) {
+    return 1;
+  }
+
+  if (sectionOrder <= 5) {
     return 2;
   }
 
@@ -9842,6 +10185,14 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
     return dedupeCategoryPostingFields(categoryName === "Pets & Animals" ? getCategoryAttributeFields(categoryName, subCategory, detailCategory) : commonFields);
   }
 
+  if (isFurnitureCategory(categoryName)) {
+    return dedupeCategoryPostingFields([
+      ...commonFields,
+      ...getCategoryAttributeFields(categoryName, subCategory, detailCategory),
+      ...fields,
+    ]);
+  }
+
   const requiredFields = categoryName === "Care Services" || categoryName === "Events & Tickets" || categoryName === "Tickets & Events" || categoryName === "Roommates & Rentals" || categoryName === "Jobs"
     ? [...commonFields, ...fields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)]
     : [...fields, ...commonFields, ...getCategoryAttributeFields(categoryName, subCategory, detailCategory)];
@@ -9853,12 +10204,56 @@ function dedupeCategoryPostingFields(fields: CategoryAttributeField[]) {
   const nextFields: CategoryAttributeField[] = [];
 
   for (const field of fields) {
+    if (isReviewsRatingsCategoryAttributeField(field)) {
+      continue;
+    }
+
     if (!nextFields.some((item) => areEquivalentCategoryFields(item, field))) {
       nextFields.push(field);
     }
   }
 
   return nextFields;
+}
+
+function isReviewsRatingsCategoryAttributeField(field: CategoryAttributeField) {
+  const sectionName = field.sectionName?.trim().toLowerCase() || "";
+  const key = normalizeFieldKey(field.key);
+  const label = normalizeFieldKey(field.label);
+
+  return sectionName === "reviews & ratings" ||
+    sectionName === "reviews and ratings" ||
+    [
+      "productrating",
+      "product_rating",
+      "sellerrating",
+      "seller_rating",
+      "customerreviews",
+      "customer_reviews",
+      "shelterrating",
+      "shelter_rating",
+      "breederrating",
+      "breeder_rating",
+      "serviceproviderrating",
+      "service_provider_rating",
+      "propertyrating",
+      "property_rating",
+      "landlordrating",
+      "landlord_rating",
+      "roommatereviews",
+      "roommate_reviews",
+    ].includes(key) ||
+    [
+      "productrating",
+      "sellerrating",
+      "customerreviews",
+      "shelterrating",
+      "breederrating",
+      "serviceproviderrating",
+      "propertyrating",
+      "landlordrating",
+      "roommatereviews",
+    ].includes(label);
 }
 
 function areEquivalentCategoryFields(firstField: CategoryAttributeField, secondField: CategoryAttributeField) {
@@ -9880,7 +10275,7 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["registrationyear", "registration_year"],
     ["vehiclecondition", "vehicle_condition", "condition"],
     ["fueltype", "fuel_type"],
-    ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven"],
+    ["kilometersdriven", "kilometers_driven", "kmdriven", "km_driven", "odometerreading", "odometer_reading"],
     ["ownercount", "owner_count", "numberofowners", "number_of_owners"],
     ["insurancevalidtill", "insurance_valid_till"],
     ["registrationstate", "registration_state"],
@@ -9915,8 +10310,9 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["bodytype", "body_type"],
     ["seatingcapacity", "seating_capacity"],
     ["bootspace", "boot_space"],
-    ["enginecapacity", "engine_capacity", "enginecapacitycc", "engine_capacity_cc"],
+    ["enginecapacity", "engine_capacity", "enginecapacitycc", "engine_capacity_cc", "enginecc", "engine_cc"],
     ["biketype", "bike_type"],
+    ["absavailability", "abs_availability"],
     ["vehicletype", "vehicle_type", "commercialvehicletype", "commercial_vehicle_type"],
     ["loadcapacity", "load_capacity"],
     ["cargodimensions", "cargo_dimensions"],
@@ -9928,11 +10324,14 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["watercrafttype", "watercraft_type"],
     ["sleepingcapacity", "sleeping_capacity"],
     ["lengthfeet", "length_feet"],
+    ["watertankcapacity", "water_tank_capacity"],
+    ["boatlength", "boat_length"],
     ["enginehours", "engine_hours"],
+    ["trailerincluded", "trailer_included"],
     ["rentaltype", "rental_type"],
     ["rentalduration", "rental_duration"],
     ["priceperhour", "price_per_hour"],
-    ["priceperday", "price_per_day", "dailyprice", "daily_price"],
+    ["priceperday", "price_per_day", "dailyprice", "daily_price", "dailyrate", "daily_rate"],
     ["securitydepositvehicle", "security_deposit_vehicle", "depositamount", "deposit_amount"],
     ["parttype", "part_type"],
     ["compatiblemodels", "compatible_models", "compatiblebrandsmodels", "compatible_brands_models"],
@@ -9940,14 +10339,19 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["partcondition", "part_condition"],
     ["batteryrange", "battery_range", "rangepercharge", "range_per_charge"],
     ["batterycapacity", "battery_capacity"],
+    ["chargingtype", "charging_type"],
     ["chargingtime", "charging_time"],
     ["fastchargingsupport", "fast_charging_support"],
+    ["batterywarranty", "battery_warranty"],
     ["chargingporttype", "charging_port_type"],
     ["chargingstationtype", "charging_station_type"],
     ["servicetype", "service_type"],
     ["serviceradiusmiles", "service_radius_miles"],
     ["appointmentrequired", "appointment_required"],
     ["emergencyservice", "emergency_service"],
+    ["servicearea", "service_area"],
+    ["businesshours", "business_hours"],
+    ["emergencyassistance", "emergency_assistance"],
     ["modelnamenumber", "model_name_number", "model"],
     ["purchaseyear", "purchase_year"],
     ["billavailable", "bill_available"],
@@ -10036,8 +10440,14 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const electronicsWarranty = getAttributeValue(values, "warranty");
   const isAccessories = isVehiclePartsSubCategory(form.subCategory) || form.detailCategory === "EV Accessories";
   const isRental = isVehicleRentalSubCategory(form.subCategory);
+  const isMotorcycle = isVehicleMotorcycleSubCategory(form.subCategory);
   const isVehicleService = isVehicleServicesSubCategory(form.subCategory);
   const isEvVehicle = isVehicleEvSelection(form.subCategory, form.detailCategory);
+  const vehicleSubCategoryLower = form.subCategory.toLowerCase();
+  const vehicleDetailCategoryLower = form.detailCategory.toLowerCase();
+  const isRvVehicle = vehicleSubCategoryLower === "rvs & campers";
+  const isBoatVehicle = vehicleSubCategoryLower === "boats & watercraft";
+  const isTruckVehicle = vehicleSubCategoryLower === "commercial vehicles";
   const isChargingStation = form.detailCategory === "Charging Stations";
   const insurance = getAttributeValue(values, "insurance", "insuranceStatus", "insurance_status");
   const furnitureCondition = getAttributeValue(values, "condition", "item_condition");
@@ -10273,31 +10683,55 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     "seating_capacity", "bootspace", "boot_space", "mileage", "bike_type", "biketype", "vehicletype", "vehicle_type",
     "loadcapacity", "load_capacity", "numberofwheels", "number_of_wheels", "permittype", "permit_type", "rentaltype",
     "rental_type", "priceperhour", "price_per_hour", "priceperday", "price_per_day", "securitydepositvehicle",
-    "security_deposit_vehicle", "parttype", "part_type", "compatiblemodels", "compatible_models"
+    "security_deposit_vehicle", "parttype", "part_type", "compatiblemodels", "compatible_models", "torque",
+    "batterycapacity", "battery_capacity", "chargingtype", "charging_type", "batteryrange", "battery_range",
+    "chargingtime", "charging_time", "fastchargingsupport", "fast_charging_support", "batterywarranty", "battery_warranty",
+    "enginecc", "engine_cc", "absavailability", "abs_availability", "rvtype", "rv_type", "sleepingcapacity",
+    "sleeping_capacity", "lengthfeet", "length_feet", "watertankcapacity", "water_tank_capacity", "watercrafttype",
+    "watercraft_type", "boatlength", "boat_length", "enginehours", "engine_hours", "trailerincluded", "trailer_included",
+    "manufacturerwarranty", "manufacturer_warranty", "certifiedpreowned", "certified_pre_owned", "vehicleinspectioncertificate",
+    "vehicle_inspection_certificate"
   ].includes(key)) {
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && [
-    "bodytype", "body_type", "seatingcapacity", "seating_capacity", "bootspace", "boot_space", "mileage",
-    "airconditioning", "air_conditioning", "powersteering", "power_steering", "abs", "airbags", "alloywheels",
-    "alloy_wheels", "bluetoothgps", "bluetooth_gps", "reversecamera", "reverse_camera", "cruisecontrol",
-    "cruise_control", "biketype", "bike_type", "rvtype", "rv_type", "sleepingcapacity", "sleeping_capacity",
-    "lengthfeet", "length_feet", "watercrafttype", "watercraft_type", "enginehours", "engine_hours",
-    "vehicletype", "vehicle_type", "commercialvehicletype", "commercial_vehicle_type", "numberofwheels",
-    "number_of_wheels", "permittype", "permit_type", "priceperhour", "price_per_hour", "registrationyear",
-    "registration_year", "registrationstate", "registration_state", "rto", "rcavailable", "rc_available",
-    "pucavailable", "puc_available", "servicehistory", "service_history", "loanstatus", "loan_status",
-    "insurance", "insurancestatus", "insurance_status", "insurancevalidtill", "insurance_valid_till",
-    "itemtype", "item_type", "sizeorcapacity", "size_or_capacity", "manufacturingdate", "manufacturing_date",
-    "warranty", "sellertype", "seller_type",
-    "adtype", "ad_type", "listingtype", "listing_type", "boostlisting", "boost_listing",
-    "sponsoredlisting", "sponsored_listing", "addurationdays", "ad_duration_days", "ad_duration"
+  if (form.categoryName === "Vehicles" && !isEvVehicle && [
+    "batterycapacity", "battery_capacity", "chargingtype", "charging_type", "batteryrange", "battery_range",
+    "rangepercharge", "range_per_charge", "chargingtime", "charging_time", "fastchargingsupport", "fast_charging_support",
+    "chargingporttype", "charging_port_type", "batterywarranty", "battery_warranty"
   ].includes(key)) {
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && isEvVehicle && ["fueltype", "fuel_type"].includes(key)) {
+  if (form.categoryName === "Vehicles" && !isMotorcycle && ["enginecc", "engine_cc", "biketype", "bike_type", "absavailability", "abs_availability"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && !isRvVehicle && ["rvtype", "rv_type", "sleepingcapacity", "sleeping_capacity", "watertankcapacity", "water_tank_capacity"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && !isRvVehicle && !isBoatVehicle && ["lengthfeet", "length_feet"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && !isBoatVehicle && ["watercrafttype", "watercraft_type", "boatlength", "boat_length", "enginehours", "engine_hours", "trailerincluded", "trailer_included"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && !isTruckVehicle && ["loadcapacity", "load_capacity", "commercialvehicletype", "commercial_vehicle_type", "numberofwheels", "number_of_wheels", "permittype", "permit_type"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && !isAccessories && ["parttype", "part_type", "compatiblemodels", "compatible_models", "oemaftermarket", "oem_aftermarket", "partcondition", "part_condition", "condition"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && !isVehicleService && ["servicetype", "service_type", "serviceradiusmiles", "service_radius_miles", "appointmentrequired", "appointment_required", "emergencyservice", "emergency_service", "servicearea", "service_area", "businesshours", "business_hours", "certifications", "emergencyassistance", "emergency_assistance"].includes(key)) {
+    return false;
+  }
+
+  if (form.categoryName === "Vehicles" && isEvVehicle && ["fueltype", "fuel_type"].includes(key) && !vehicleDetailCategoryLower.includes("hybrid")) {
     return false;
   }
 
@@ -10315,7 +10749,7 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     return false;
   }
 
-  if (form.categoryName === "Vehicles" && !isRental && ["rentaltype", "rental_type", "rentalduration", "rental_duration", "priceperhour", "price_per_hour", "priceperday", "price_per_day", "dailyprice", "daily_price", "priceperhourday", "price_per_hour_day", "securitydepositvehicle", "security_deposit_vehicle"].includes(key)) {
+  if (form.categoryName === "Vehicles" && !isRental && ["rentaltype", "rental_type", "rentalduration", "rental_duration", "priceperhour", "price_per_hour", "priceperday", "price_per_day", "dailyrate", "daily_rate", "dailyprice", "daily_price", "priceperhourday", "price_per_hour_day", "securitydepositvehicle", "security_deposit_vehicle"].includes(key)) {
     return false;
   }
 
@@ -10371,11 +10805,14 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
 
   if (isFurnitureCategory(form.categoryName)) {
     const isBed = furnitureDetailCategory.includes("bed") || furnitureDetailCategory.includes("mattress");
-    const isLivingRoom = furnitureSubCategory.includes("living") || furnitureDetailCategory.includes("sofa") || furnitureDetailCategory.includes("chair");
+    const isMattress = furnitureSubCategory.includes("mattress") || furnitureDetailCategory.includes("mattress");
+    const isLighting = furnitureSubCategory.includes("lighting") || ["chandelier", "ceiling light", "floor lamp", "table lamp", "outdoor lighting"].some((item) => furnitureDetailCategory.includes(item));
+    const isAntique = furnitureSubCategory.includes("antique") || furnitureSubCategory.includes("vintage") || furnitureDetailCategory.includes("antique") || furnitureDetailCategory.includes("vintage") || furnitureDetailCategory.includes("collectible") || furnitureDetailCategory.includes("restoration");
+    const isLivingRoom = furnitureSubCategory.includes("living") || furnitureDetailCategory.includes("sofa") || furnitureDetailCategory.includes("recliner") || furnitureDetailCategory.includes("chair");
     const isDining = furnitureSubCategory.includes("dining") || furnitureDetailCategory.includes("dining");
     const isOffice = furnitureSubCategory.includes("office") || furnitureDetailCategory.includes("desk") || furnitureDetailCategory.includes("office chair");
     const isOutdoor = furnitureSubCategory.includes("outdoor") || furnitureDetailCategory.includes("patio") || furnitureDetailCategory.includes("garden");
-    const isDecor = furnitureSubCategory.includes("decor") || ["wall art", "lighting", "rugs", "curtains"].some((item) => furnitureDetailCategory.includes(item));
+    const isDecor = furnitureSubCategory.includes("decor") || ["wall art", "mirror", "rug", "carpet", "curtain", "decorative", "clock"].some((item) => furnitureDetailCategory.includes(item));
 
     if (furnitureCondition === "New" && ["ageofitem", "age_of_item", "age"].includes(key)) {
       return false;
@@ -10393,11 +10830,23 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
       return false;
     }
 
-    if (!isLivingRoom && ["seatingcapacity", "seating_capacity", "upholsterytype", "upholstery_type", "recliner"].includes(key)) {
+    if (!isMattress && ["mattresssize", "mattress_size", "firmnesslevel", "firmness_level", "firmness", "mattresstype", "mattress_type"].includes(key)) {
       return false;
     }
 
-    if (!isDining && ["diningseatingcapacity", "dining_seating_capacity", "tableshape", "table_shape"].includes(key)) {
+    if (!isLighting && ["powersource", "power_source", "wattage", "smartenabled", "smart_enabled", "smartcontrolsupport", "smart_control_support", "indooroutdooruse", "indoor_outdoor_use"].includes(key)) {
+      return false;
+    }
+
+    if (!isAntique && ["yearofmanufacture", "year_of_manufacture", "restorationstatus", "restoration_status", "authenticitycertificate", "authenticity_certificate"].includes(key)) {
+      return false;
+    }
+
+    if (!isLivingRoom && ["seatingcapacity", "seating_capacity", "upholsterytype", "upholstery_type", "recliner", "reclineroption", "recliner_option"].includes(key)) {
+      return false;
+    }
+
+    if (!isDining && ["diningseatingcapacity", "dining_seating_capacity", "numberofchairsincluded", "number_of_chairs_included", "tableshape", "table_shape", "extendableoption", "extendable_option"].includes(key)) {
       return false;
     }
 
@@ -10663,7 +11112,7 @@ function isFurnitureCategory(categoryName: string) {
 }
 
 function isVehiclePartsSubCategory(subCategory: string) {
-  return ["Auto Parts & Accessories", "Spare Parts & Accessories"].includes(subCategory);
+  return ["Auto Parts & Accessories", "Spare Parts & Accessories", "Tires & Wheels"].includes(subCategory);
 }
 
 function isVehicleRentalSubCategory(subCategory: string) {
@@ -10699,7 +11148,7 @@ function isVehicleCommercialSubCategory(subCategory: string) {
 }
 
 function isVehicleServicesSubCategory(subCategory: string) {
-  return subCategory === "Services & Repairs";
+  return ["Services & Repairs", "Auto Services & Repair"].includes(subCategory);
 }
 
 function isVehicleEvSelection(subCategory: string, detailCategory: string) {

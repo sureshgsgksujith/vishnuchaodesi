@@ -23,7 +23,8 @@ export const categoryLinks: ExploreMenuLink[] = [
   { label: "All Services", href: "/all-category", icon: "/template-17/images/icon/shop.png" },
   { label: "Real Estate", href: "/all-listing?category=real-estate", icon: "/template-17/images/icon/real-estate.png" },
   { label: "Restaurants & Food", href: "/all-listing?category=restaurants-food", icon: "/template-17/images/icon/restaurant.png" },
-  { label: "Vehicles", href: "/all-listing?category=vehicles", icon: "/template-17/images/icon/vehicles.png" },
+  { label: "Automobiles", href: "/all-listing?category=vehicles", icon: "/template-17/images/icon/vehicles.png" },
+  { label: "Furniture & Home", href: "/all-listing?category=furniture-home-decor", icon: "/template-17/images/icon/home.png" },
   { label: "Care Services", href: "/all-listing?category=care-services", icon: "/template-17/images/icon/public-service.png" },
   { label: "Events & Tickets", href: "/all-listing?category=events-tickets", icon: "/template-17/images/icon/calendar.png" },
   { label: "Chao TV", href: "/chao-tv", icon: "/template-17/images/icon/calendar.png" },
@@ -104,7 +105,7 @@ export function useExploreCategories(): ExploreCategoryLink[] {
     () =>
       categoryTree
         .map((category) => ({
-          label: category.name,
+          label: publicCategoryLabel(category.name),
           href: buildCategoryHref(category.name, countCity),
           count: formatCategoryCount(categoryCounts[category.name] || 0),
         })),
@@ -133,6 +134,8 @@ function publicCategorySlugFromName(categoryName: string) {
   if (categoryName === "Real Estate") return "real-estate";
   if (categoryName === "Restaurants & Food") return "restaurants-food";
   if (categoryName === "Vehicles") return "vehicles";
+  if (categoryName === "Automobiles") return "vehicles";
+  if (categoryName === "Furniture & Home" || categoryName === "Furniture & Home Decor") return "furniture-home-decor";
   if (categoryName === "Electronics & Appliances") return "electronics-appliances";
   if (categoryName === "Care Services") return "care-services";
   if (categoryName === "Roommates & Rentals") return "roommates-rentals";
@@ -140,6 +143,10 @@ function publicCategorySlugFromName(categoryName: string) {
   if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") return "events-tickets";
   if (categoryName === "Chao TV") return "chao-tv";
   return undefined;
+}
+
+function publicCategoryLabel(categoryName: string) {
+  return categoryName === "Vehicles" ? "Automobiles" : categoryName;
 }
 
 function formatCategoryCount(count: number) {

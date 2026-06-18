@@ -27,7 +27,13 @@ type FeaturedListingGroup = {
   items: FeaturedListingCard[];
 };
 
-type FeaturedListingCategory = "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "care-services";
+type FeaturedListingCategory =
+  "real-estate" |
+  "restaurants-food" |
+  "vehicles" |
+  "furniture-home-decor" |
+  "electronics-appliances" |
+  "care-services";
 
 function buildListingGroupHref(
   category: FeaturedListingCategory,
@@ -86,6 +92,7 @@ function useFeaturedListingGroups() {
   const [realEstateItems, setRealEstateItems] = useState<FeaturedListingCard[]>([]);
   const [restaurantItems, setRestaurantItems] = useState<FeaturedListingCard[]>([]);
   const [vehicleItems, setVehicleItems] = useState<FeaturedListingCard[]>([]);
+  const [furnitureItems, setFurnitureItems] = useState<FeaturedListingCard[]>([]);
   const [electronicsItems, setElectronicsItems] = useState<FeaturedListingCard[]>([]);
   const { currentLocation, selectedCity, activeCity, locationRevision } = useHomeSelectedLocation();
 
@@ -104,14 +111,16 @@ function useFeaturedListingGroups() {
     setRealEstateItems([]);
     setRestaurantItems([]);
     setVehicleItems([]);
+    setFurnitureItems([]);
     setElectronicsItems([]);
 
     Promise.allSettled([
       getPublicListings({ category: "real-estate", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
       getPublicListings({ category: "restaurants-food", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
       getPublicListings({ category: "vehicles", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
+      getPublicListings({ category: "furniture-home-decor", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
       getPublicListings({ category: "electronics-appliances", city: cityFilter, page: 1, pageSize: 10, forceRefresh }),
-    ]).then(([realEstateResult, restaurantResult, vehicleResult, electronicsResult]) => {
+    ]).then(([realEstateResult, restaurantResult, vehicleResult, furnitureResult, electronicsResult]) => {
       if (!isActive) {
         return;
       }
@@ -131,6 +140,12 @@ function useFeaturedListingGroups() {
       if (vehicleResult.status === "fulfilled") {
         setVehicleItems(
           mapListingsToCards(vehicleResult.value.items, "vehicles", activeCity),
+        );
+      }
+
+      if (furnitureResult.status === "fulfilled") {
+        setFurnitureItems(
+          mapListingsToCards(furnitureResult.value.items, "furniture-home-decor", activeCity),
         );
       }
 
@@ -167,12 +182,20 @@ function useFeaturedListingGroups() {
       items: restaurantItems,
     },
     {
-      titleLead: "Featured Vehicles",
+      titleLead: "Featured Automobiles",
       titleRest: activeCity ? `in ${activeCity}` : "in your city",
       description: "Browse cars, bikes, rentals, commercial vehicles, and parts from local sellers.",
       iconClass: "plac-hom-tit-ic-ser",
       showDetails: true,
       items: vehicleItems,
+    },
+    {
+      titleLead: "Furniture & Home",
+      titleRest: activeCity ? `in ${activeCity}` : "near you",
+      description: "Browse sofas, bedroom sets, dining furniture, lighting, decor, bedding, and home essentials.",
+      iconClass: "plac-hom-tit-ic-ser",
+      showDetails: true,
+      items: furnitureItems,
     },
     {
       titleLead: "Electronics & Appliances",

@@ -1,5 +1,7 @@
 const categoryCards = [
   { title: "Real Estate", image: "/template-17/images/services/8.jpg" },
+  { title: "Automobiles", image: "/template-17/images/icon/vehicles.png" },
+  { title: "Furniture & Home", image: "/template-17/images/icon/home.png" },
   { title: "Financial", image: "/template-17/images/services/7.jpg" },
   { title: "Legal", image: "/template-17/images/services/1.jpg" },
   { title: "Education", image: "/template-17/images/services/4.jpg" },
