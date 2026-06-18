@@ -703,7 +703,7 @@ progress {
   color: #6c757d;
 }
 .blockquote-footer::before {
-  content: "— ";
+  content: "\2014 ";
 }
 
 .img-fluid {

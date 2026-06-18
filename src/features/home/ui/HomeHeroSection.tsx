@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getPublicListings,
@@ -152,7 +152,6 @@ function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
 }
 
 export default function HomeHeroSection() {
-  const quickLinksRef = useRef<HTMLUListElement | null>(null);
   const navigate = useNavigate();
   const {
     currentLocation,
@@ -409,31 +408,6 @@ export default function HomeHeroSection() {
       isActive = false;
     };
   }, [activeCity, locationReloadKey]);
-
-  useEffect(() => {
-    if (quickLinks.length <= 10) {
-      return;
-    }
-
-    const timer = window.setInterval(() => {
-      const track = quickLinksRef.current;
-      if (!track) {
-        return;
-      }
-
-      const nextLeft = track.scrollLeft + 128;
-      const isAtEnd = nextLeft + track.clientWidth >= track.scrollWidth - 8;
-
-      if (isAtEnd) {
-        track.scrollTo({ left: 0, behavior: "auto" });
-        return;
-      }
-
-      track.scrollTo({ left: nextLeft, behavior: "smooth" });
-    }, 2600);
-
-    return () => window.clearInterval(timer);
-  }, []);
 
   function applyLocationSelection() {
     const country = countries.find((item) => String(item.id) === draftCountryId);
@@ -710,7 +684,7 @@ export default function HomeHeroSection() {
           ) : null}
 
           <div className="ban-short-links ani">
-            <ul ref={quickLinksRef}>
+            <ul>
               {quickLinks.map((item) => (
                 <li key={item.title}>
                   <div>

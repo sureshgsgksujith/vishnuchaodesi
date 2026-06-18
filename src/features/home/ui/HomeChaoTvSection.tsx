@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { getPublicListings, type ListingSummary } from "../../dashboard/api/listingsApi";
-import { getChaoTvHref, getChaoTvThumbnail, isExternalVideoUrl } from "../../chaoTv/chaoTvUtils";
+import { getChaoTvHref, getChaoTvThumbnail, getChaoTvVideoSource } from "../../chaoTv/chaoTvUtils";
 
 export default function HomeChaoTvSection() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [playingId, setPlayingId] = useState<number | null>(null);
   const orderedItems = useMemo(
     () =>
       [...items].sort(
@@ -45,7 +46,7 @@ export default function HomeChaoTvSection() {
   }, []);
 
   useEffect(() => {
-    if (orderedItems.length <= 3) {
+    if (playingId || orderedItems.length <= 3) {
       return;
     }
 
@@ -67,7 +68,7 @@ export default function HomeChaoTvSection() {
     }, 3500);
 
     return () => window.clearInterval(timer);
-  }, [orderedItems.length]);
+  }, [orderedItems.length, playingId]);
 
   function scroll(direction: "left" | "right") {
     scrollRef.current?.scrollBy({
@@ -100,7 +101,12 @@ export default function HomeChaoTvSection() {
               <div className="home-chao-tv-empty">No Chao TV videos published yet.</div>
             ) : null}
             {orderedItems.map((item) => (
-              <ChaoTvCard item={item} key={item.id} />
+              <ChaoTvCard
+                item={item}
+                key={item.id}
+                isPlaying={playingId === item.id}
+                onPlay={() => setPlayingId(item.id)}
+              />
             ))}
           </div>
           <button type="button" className="home-chao-tv-arrow is-right" onClick={() => scroll("right")} aria-label="Next videos">
@@ -112,9 +118,18 @@ export default function HomeChaoTvSection() {
   );
 }
 
-function ChaoTvCard({ item }: { item: ListingSummary }) {
+function ChaoTvCard({
+  item,
+  isPlaying,
+  onPlay,
+}: {
+  item: ListingSummary;
+  isPlaying: boolean;
+  onPlay: () => void;
+}) {
   const href = getChaoTvHref(item);
-  const content = (
+  const videoSource = getChaoTvVideoSource(item);
+  const preview = (
     <>
       <img src={getChaoTvThumbnail(item)} alt={item.title} loading="lazy" />
       <span className="home-chao-tv-shade" />
@@ -123,13 +138,48 @@ function ChaoTvCard({ item }: { item: ListingSummary }) {
     </>
   );
 
-  return isExternalVideoUrl(href) ? (
-    <a className="home-chao-tv-card" href={href} target="_blank" rel="noreferrer">
-      {content}
-    </a>
-  ) : (
-    <Link className="home-chao-tv-card" to={href}>
-      {content}
-    </Link>
+  if (!videoSource) {
+    return (
+      <Link className="home-chao-tv-card" to={href}>
+        {preview}
+      </Link>
+    );
+  }
+
+  if (isPlaying) {
+    return (
+      <article className="home-chao-tv-card is-playing">
+        <ChaoTvInlinePlayer title={item.title} source={videoSource} />
+      </article>
+    );
+  }
+
+  return (
+    <button type="button" className="home-chao-tv-card" onClick={onPlay} aria-label={`Play ${item.title}`}>
+      {preview}
+    </button>
+  );
+}
+
+function ChaoTvInlinePlayer({
+  title,
+  source,
+}: {
+  title: string;
+  source: NonNullable<ReturnType<typeof getChaoTvVideoSource>>;
+}) {
+  return (
+    <span className="home-chao-tv-player">
+      {source.kind === "youtube" ? (
+        <iframe
+          src={source.src}
+          title={title}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowFullScreen
+        />
+      ) : (
+        <video src={source.src} controls autoPlay playsInline />
+      )}
+    </span>
   );
 }

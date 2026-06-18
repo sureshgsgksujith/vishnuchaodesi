@@ -3638,9 +3638,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     if (isVehicleMotorcycleSubCategory(form.subCategory)) {
+      const bikeType = deriveVehicleBikeType(form.subCategory, form.detailCategory, categoryAttributes);
       const rules = [
         ...(!getAttributeValue(categoryAttributes, "engineCapacity", "engine_capacity").trim() ? [{ keys: ["engineCapacity", "engine_capacity"], message: "Engine Capacity is required for Motorcycles & Scooters." }] : []),
-        ...(!getAttributeValue(categoryAttributes, "bikeType", "bike_type").trim() ? [{ keys: ["bikeType", "bike_type"], message: "Bike Type is required for Motorcycles & Scooters." }] : []),
+        ...(!bikeType ? [{ keys: ["bikeType", "bike_type"], message: "Bike Type is required for Motorcycles & Scooters." }] : []),
       ];
       if (rules.length) {
         return validateInlineCategoryRules(rules);
@@ -8236,6 +8237,7 @@ function buildListingPayload(
   const isEvVehiclePayload = isVehicleEvSelection(form.subCategory, form.detailCategory);
   const isChargingStationPayload = form.detailCategory === "Charging Stations";
   const isCarsVehiclePayload = form.subCategory === "Cars";
+  const vehicleBikeType = deriveVehicleBikeType(form.subCategory, form.detailCategory, categoryAttributes);
   const isCareServicesPayload = form.categoryName === "Care Services";
   const vehicleTitle = getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() || form.title.trim();
   const vehicleDescription = getAttributeValue(categoryAttributes, "description").trim() || form.businessDescription.trim() || form.description.trim();
@@ -8476,7 +8478,7 @@ function buildListingPayload(
       bootSpace: getAttributeValue(categoryAttributes, "bootSpace", "boot_space").trim(),
       mileage: numberAttribute(categoryAttributes, "mileage"),
       engineCapacityCc: numberAttribute(categoryAttributes, "engineCapacity", "engine_capacity", "engineCapacityCc", "engine_capacity_cc"),
-      bikeType: getAttributeValue(categoryAttributes, "bikeType", "bike_type").trim(),
+      bikeType: vehicleBikeType,
       commercialVehicleType: getAttributeValue(categoryAttributes, "vehicleType", "vehicle_type", "commercialVehicleType", "commercial_vehicle_type").trim(),
       loadCapacity: numberAttribute(categoryAttributes, "loadCapacity", "load_capacity"),
       numberOfWheels: numberAttribute(categoryAttributes, "numberOfWheels", "number_of_wheels"),
@@ -10670,6 +10672,26 @@ function isVehicleRentalSubCategory(subCategory: string) {
 
 function isVehicleMotorcycleSubCategory(subCategory: string) {
   return ["Motorcycles & Scooters", "Bikes"].includes(subCategory);
+}
+
+function deriveVehicleBikeType(subCategory: string, detailCategory: string, values: CategoryAttributes) {
+  const explicitBikeType = getAttributeValue(values, "bikeType", "bike_type").trim();
+
+  if (explicitBikeType || !isVehicleMotorcycleSubCategory(subCategory)) {
+    return explicitBikeType;
+  }
+
+  const detailCategoryName = normalizeCategoryName(detailCategory);
+
+  if (detailCategoryName.includes("scooter")) return "Scooter";
+  if (detailCategoryName.includes("sport")) return "Sport Bike";
+  if (detailCategoryName.includes("cruiser")) return "Cruiser";
+  if (detailCategoryName.includes("touring")) return "Touring Bike";
+  if (detailCategoryName.includes("dirt")) return "Dirt Bike";
+  if (detailCategoryName.includes("electric")) return "Electric Bike";
+  if (detailCategoryName.includes("bike") || detailCategoryName.includes("motorcycle")) return "Other";
+
+  return "";
 }
 
 function isVehicleCommercialSubCategory(subCategory: string) {

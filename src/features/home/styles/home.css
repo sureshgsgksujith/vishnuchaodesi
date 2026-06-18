@@ -341,28 +341,19 @@
 
 .chao-home-page .ban-short-links ul {
   display: grid;
-  grid-auto-columns: 118px;
-  grid-auto-flow: column;
-  grid-template-rows: 1fr;
-  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  grid-auto-flow: row;
+  gap: 8px;
   width: min(82%, 1360px);
-  overflow-x: auto;
-  overflow-y: visible;
-  padding: 0 2px 8px;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.chao-home-page .ban-short-links ul::-webkit-scrollbar {
-  display: none;
+  max-width: calc(100% - 24px);
+  overflow: visible;
+  padding: 0 2px;
 }
 
 .chao-home-page .ban-short-links ul li {
-  min-width: 118px;
+  min-width: 0;
   padding: 0;
   overflow: visible;
-  scroll-snap-align: start;
 }
 
 .chao-home-page .ban-short-links ul li:hover {
@@ -1539,6 +1530,7 @@
 .home-chao-tv-card {
   position: relative;
   display: block;
+  width: 100%;
   min-height: 245px;
   overflow: hidden;
   border: 1px solid #dfe6f1;
@@ -1546,7 +1538,11 @@
   background: #14171d;
   box-shadow: 0 8px 22px rgba(23, 30, 45, 0.12);
   color: #fff;
+  font: inherit;
+  padding: 0;
   scroll-snap-align: start;
+  text-align: left;
+  cursor: pointer;
 }
 
 .home-chao-tv-card img {
@@ -1590,6 +1586,27 @@
   font-size: 22px;
   font-weight: 800;
   line-height: 1.2;
+}
+
+.home-chao-tv-card.is-playing {
+  cursor: default;
+}
+
+.home-chao-tv-player {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: #000;
+}
+
+.home-chao-tv-player iframe,
+.home-chao-tv-player video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+  object-fit: contain;
 }
 
 .home-chao-tv-arrow {
@@ -1661,13 +1678,22 @@
 
 .chao-tv-page-card {
   display: block;
+  width: 100%;
   overflow: hidden;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
   color: inherit;
+  font: inherit;
+  padding: 0;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
+}
+
+.chao-tv-page-card.is-playing {
+  cursor: default;
 }
 
 .chao-tv-page-card-media {
@@ -1680,6 +1706,16 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.chao-tv-page-card-media iframe,
+.chao-tv-page-card-media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #000;
+  object-fit: contain;
 }
 
 .chao-tv-page-card-media span {
@@ -1802,16 +1838,14 @@ html {
   }
 
   .chao-home-page .ban-short-links ul {
-    display: grid;
-    grid-auto-columns: 108px;
-    grid-auto-flow: column;
-    grid-template-rows: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+    grid-auto-flow: row;
     gap: 8px;
     width: 90%;
   }
 
   .chao-home-page .ban-short-links ul li {
-    min-width: 108px;
+    min-width: 0;
   }
 
   .chao-home-page .ban-short-links ul li div {

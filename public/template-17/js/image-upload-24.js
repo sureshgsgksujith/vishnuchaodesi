@@ -15,7 +15,7 @@ document.getElementById('fileInput').addEventListener('change', function(event) 
 
                 // Create a close button for removing the image
                 var closeButton = document.createElement('button');
-                closeButton.innerHTML = '×'; // Close symbol
+                closeButton.innerHTML = '&times;'; // Close symbol
                 closeButton.addEventListener('click', function() {
                     // Remove the image from the preview
                     this.parentNode.remove();
