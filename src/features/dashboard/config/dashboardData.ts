@@ -234,13 +234,11 @@ export const dashboardTopCategories: FooterLinkItem[] = [
   { label: "Sports", href: "/all-listing" },
   { label: "Education", href: "/all-listing" },
   { label: "Electricals", href: "/all-listing" },
-  { label: "Automobiles", href: "/all-listing" },
   { label: "Transportation", href: "/all-listing" },
 ];
 
 export const dashboardTrendingCategories: FooterLinkItem[] = [
   { label: "Hospitals", href: "/all-listing" },
-  { label: "Automobiles", href: "/all-listing" },
   { label: "Real Estate", href: "/all-listing" },
   { label: "Sports", href: "/all-listing" },
   { label: "Education", href: "/all-listing" },
@@ -285,7 +283,6 @@ export const dashboardSupportCategories = [
   "Sports",
   "Education",
   "Electricals",
-  "Automobiles",
   "Transportation",
   "Hospitals",
 ];

@@ -468,54 +468,49 @@ const furnitureSellerTypeOptions = ["Individual", "Furniture Store", "Manufactur
 const furnitureMaterialOptions = ["Wood", "Solid Wood", "Engineered Wood", "Metal", "Plastic", "Glass", "Fabric", "Leather", "Faux Leather", "Rattan / Wicker", "Marble", "Laminate", "Other"];
 const furniturePostingCommonFields: CategoryAttributeField[] = [
   { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
-  { key: "product_name_model", label: "Product Name", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "product_name", label: "Product Name", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
   { key: "brand", label: "Brand", sectionName: "Product Information", sectionOrder: 2 },
   { key: "furniture_type", label: "Furniture Type", sectionName: "Product Information", sectionOrder: 2 },
   { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
   { key: "condition", label: "Condition", options: furnitureConditionOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
   { key: "seller_type", label: "Seller Type", options: furnitureSellerTypeOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
-  { key: "material", label: "Material", options: furnitureMaterialOptions, isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "color_finish", label: "Color", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "age_of_item", label: "Age of Item", options: ["< 6 months", "6-12 months", "1-3 yrs", "3+ yrs"], isRequired: true, sectionName: "Item Details", sectionOrder: 2 },
-  { key: "quantity", label: "Quantity", type: "number", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "length_inches", label: "Length (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
-  { key: "width_inches", label: "Width (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
-  { key: "height_inches", label: "Height (inches)", type: "number", isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
-  { key: "weight_lbs", label: "Weight (lbs)", type: "number", sectionName: "Dimensions & Specifications", sectionOrder: 3 },
-  { key: "assembly_required", label: "Assembly Required", options: yesNoOptions, isRequired: true, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
-  { key: "assembly_included", label: "Assembly Included", options: yesNoOptions, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
-  { key: "foldable", label: "Foldable", options: yesNoOptions, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
-  { key: "adjustable", label: "Adjustable", options: yesNoOptions, sectionName: "Dimensions & Specifications", sectionOrder: 3 },
   { key: "price", label: "Selling Price (USD)", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 5 },
-  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 5 },
   { key: "original_price", label: "Original Price", type: "number", sectionName: "Pricing Information", sectionOrder: 5 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 5 },
   { key: "bulk_purchase_available", label: "Bulk Purchase Available", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 5 },
-  { key: "reason_for_selling", label: "Reason for Selling", type: "textarea", sectionName: "Pricing Information", sectionOrder: 5 },
-  { key: "delivery_option", label: "Delivery Options", options: ["Pickup Only", "Local Delivery", "Nationwide Shipping"], sectionName: "Delivery & Installation", sectionOrder: 7 },
-  { key: "pickup_location", label: "Pickup Location (lat-long)", sectionName: "Delivery & Logistics", sectionOrder: 7 },
-  { key: "pickup_only", label: "Pickup Only", options: yesNoOptions, isRequired: true, sectionName: "Delivery & Logistics", sectionOrder: 7 },
-  { key: "delivery_available", label: "Delivery Available", options: yesNoOptions, isRequired: true, sectionName: "Delivery & Logistics", sectionOrder: 7 },
-  { key: "delivery_charges", label: "Delivery Charges", type: "number", sectionName: "Delivery & Logistics", sectionOrder: 7 },
-  { key: "shipping_available", label: "Shipping Available", options: yesNoOptions, sectionName: "Delivery & Logistics", sectionOrder: 7 },
-  { key: "installation_available", label: "Installation Available", options: yesNoOptions, sectionName: "Delivery & Installation", sectionOrder: 7 },
-  { key: "assembly_service", label: "Assembly Service", options: yesNoOptions, sectionName: "Delivery & Logistics", sectionOrder: 7 },
-  { key: "product_video_url", label: "Product Videos", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
-  { key: "room_setup_images", label: "Room Setup Images", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
-  { key: "product_brochure", label: "Product Brochure", type: "file", sectionName: "Media Upload", sectionOrder: 9 },
-  { key: "pet_friendly_materials", label: "Pet Friendly Materials", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
-  { key: "child_safe_design", label: "Child Safe Design", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
-  { key: "eco_friendly", label: "Eco-Friendly Materials", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
-  { key: "waterproof", label: "Waterproof", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
-  { key: "scratch_resistant", label: "Scratch Resistant", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
-  { key: "pet_free_home", label: "Pet-Free Home", type: "checkbox", sectionName: "Product Features", sectionOrder: 8 },
-  { key: "smoke_free_home", label: "Smoke-Free Home", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
-  { key: "scratch_free", label: "No Damage / Scratch-Free", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
-  { key: "recently_purchased", label: "Recently Purchased", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
-  { key: "custom_made", label: "Custom Made", type: "checkbox", sectionName: "Features / Highlights", sectionOrder: 8 },
-  { key: "video_url", label: "Video URL", sectionName: "Media Upload", sectionOrder: 9 },
-  { key: "store_name", label: "Store Name", sectionName: "Seller Information", sectionOrder: 10 },
-  { key: "website", label: "Website", sectionName: "Seller Information", sectionOrder: 10 },
+  { key: "material", label: "Material", options: furnitureMaterialOptions, isRequired: true, sectionName: "Product Specifications", sectionOrder: 6 },
+  { key: "color", label: "Color", isRequired: true, sectionName: "Product Specifications", sectionOrder: 6 },
+  { key: "weight", label: "Weight", sectionName: "Product Specifications", sectionOrder: 6 },
+  { key: "length", label: "Length", type: "number", isRequired: true, sectionName: "Product Specifications", sectionOrder: 6 },
+  { key: "width", label: "Width", type: "number", isRequired: true, sectionName: "Product Specifications", sectionOrder: 6 },
+  { key: "height", label: "Height", type: "number", isRequired: true, sectionName: "Product Specifications", sectionOrder: 6 },
+  { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3", "4", "5+"], sectionName: "Furniture Specific", sectionOrder: 6 },
+  { key: "assembly_required", label: "Assembly Required", options: yesNoOptions, isRequired: true, sectionName: "Furniture Specific", sectionOrder: 6 },
+  { key: "foldable", label: "Foldable", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 6 },
+  { key: "adjustable", label: "Adjustable", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 6 },
+  { key: "mattress_size", label: "Mattress Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Mattress Specific", sectionOrder: 6 },
+  { key: "firmness_level", label: "Firmness Level", options: ["Soft", "Medium", "Firm", "Extra Firm"], sectionName: "Mattress Specific", sectionOrder: 6 },
+  { key: "power_source", label: "Power Source", options: ["Hardwired", "Plug-in", "Battery", "Solar"], sectionName: "Lighting Specific", sectionOrder: 6 },
+  { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 6 },
+  { key: "smart_enabled", label: "Smart Enabled", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 6 },
+  { key: "product_video_url", label: "Product Videos", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "room_setup_images", label: "Room Setup Images", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "product_brochure", label: "Product Brochure", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "delivery_option", label: "Delivery Options", options: ["Pickup Only", "Local Delivery", "Nationwide Shipping"], sectionName: "Delivery & Installation", sectionOrder: 8 },
+  { key: "delivery_available", label: "Delivery Available", options: yesNoOptions, isRequired: true, sectionName: "Delivery & Installation", sectionOrder: 8 },
+  { key: "installation_available", label: "Installation Available", options: yesNoOptions, sectionName: "Delivery & Installation", sectionOrder: 8 },
+  { key: "assembly_service", label: "Assembly Service Available", options: yesNoOptions, sectionName: "Delivery & Installation", sectionOrder: 8 },
+  { key: "delivery_charges", label: "Delivery Charges", type: "number", sectionName: "Delivery & Installation", sectionOrder: 8 },
+  { key: "seller_name", label: "Seller Name", isRequired: true, sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "phone", label: "Phone", isRequired: true, sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "email", label: "Email", isRequired: true, sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "store_name", label: "Store Name", sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "website", label: "Website", sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "pet_friendly_materials", label: "Pet Friendly Materials", type: "checkbox", sectionName: "Product Features", sectionOrder: 11 },
+  { key: "child_safe_design", label: "Child Safe Design", type: "checkbox", sectionName: "Product Features", sectionOrder: 11 },
+  { key: "eco_friendly", label: "Eco-Friendly Materials", type: "checkbox", sectionName: "Product Features", sectionOrder: 11 },
+  { key: "waterproof", label: "Waterproof", type: "checkbox", sectionName: "Product Features", sectionOrder: 11 },
+  { key: "scratch_resistant", label: "Scratch Resistant", type: "checkbox", sectionName: "Product Features", sectionOrder: 11 },
   { key: "authentic_product_verification", label: "Authentic Product Verification", options: yesNoOptions, sectionName: "Verification & Warranty", sectionOrder: 12 },
   { key: "warranty_available", label: "Warranty Available", options: yesNoOptions, sectionName: "Verification & Warranty", sectionOrder: 12 },
   { key: "warranty_period", label: "Warranty Period", sectionName: "Verification & Warranty", sectionOrder: 12 },
@@ -524,7 +519,31 @@ const furniturePostingCommonFields: CategoryAttributeField[] = [
   { key: "sponsored_listing", label: "Sponsored Listing", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
   { key: "top_placement", label: "Top Placement", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
   { key: "furniture_deal_badge", label: "Furniture Deal Badge", options: yesNoOptions, sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
-  { key: "ad_duration_days", label: "Ad Duration", options: ["7", "15", "30"], sectionName: "Listing Visibility & Promotions", sectionOrder: 13 },
+];
+const furnitureSofaFields: CategoryAttributeField[] = [
+  { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3", "4", "5+"], sectionName: "Furniture Specific", sectionOrder: 6 },
+  { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Furniture Specific", sectionOrder: 6 },
+  { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 6 },
+];
+const furnitureDiningTableFields: CategoryAttributeField[] = [
+  { key: "number_of_chairs_included", label: "Number of Chairs Included", type: "number", sectionName: "Furniture Specific", sectionOrder: 6 },
+  { key: "table_shape", label: "Table Shape", options: ["Round", "Rectangle", "Square", "Oval"], sectionName: "Furniture Specific", sectionOrder: 6 },
+  { key: "extendable_option", label: "Extendable Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 6 },
+];
+const furnitureMattressFields: CategoryAttributeField[] = [
+  { key: "mattress_size", label: "Mattress Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Mattress Specific", sectionOrder: 6 },
+  { key: "firmness_level", label: "Firmness", options: ["Soft", "Medium", "Firm", "Extra Firm"], sectionName: "Mattress Specific", sectionOrder: 6 },
+  { key: "mattress_type", label: "Mattress Type", options: ["Memory Foam", "Spring", "Hybrid", "Latex", "Pillow Top"], sectionName: "Mattress Specific", sectionOrder: 6 },
+];
+const furnitureLightingFields: CategoryAttributeField[] = [
+  { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 6 },
+  { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 6 },
+  { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 6 },
+];
+const furnitureAntiqueFields: CategoryAttributeField[] = [
+  { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 6 },
+  { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 6 },
+  { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 6 },
 ];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
@@ -1610,166 +1629,78 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Furniture & Home": {
     default: categoryAttributeFieldsByCategory["Furniture & Home"],
     subCategories: {
-      "Living Room Furniture": [
-        ...furniturePostingCommonFields,
-        { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3", "4", "5+"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "upholstery_type", label: "Upholstery Type", options: ["Fabric", "Leather", "Faux Leather", "Velvet", "Microfiber"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
-      "Bedroom Furniture": [
-        ...furniturePostingCommonFields,
-        { key: "bed_size", label: "Bed Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "mattress_included", label: "Mattress Included", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "storage", label: "Storage", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
-      "Dining Room Furniture": [
-        ...furniturePostingCommonFields,
-        { key: "number_of_chairs_included", label: "Number of Chairs Included", type: "number", sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "dining_seating_capacity", label: "Seating Capacity", options: ["2", "4", "6", "8+"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "table_shape", label: "Table Shape", options: ["Round", "Rectangle", "Square", "Oval"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "extendable_option", label: "Extendable Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
-      "Office Furniture": [
-        ...furniturePostingCommonFields,
-        { key: "desk_type", label: "Desk Type", options: ["Standing", "Regular", "Computer", "Executive", "Conference"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "chair_type", label: "Chair Type", options: ["Ergonomic", "Executive", "Task", "Conference"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "adjustable_height", label: "Adjustable Height", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
-      "Outdoor & Patio Furniture": [
-        ...furniturePostingCommonFields,
-        { key: "weather_resistant", label: "Weather Resistant", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "outdoor_usage", label: "Indoor/Outdoor Use", options: ["Outdoor", "Indoor", "Both"], sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
-      "Home Decor": [
-        ...furniturePostingCommonFields,
-        { key: "decor_type", label: "Decor Type", options: ["Wall Art", "Mirrors", "Rugs & Carpets", "Curtains", "Decorative Items", "Clocks"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "style", label: "Style", options: ["Modern", "Traditional", "Vintage", "Minimalist", "Contemporary", "Industrial"], sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
-      "Lighting & Fixtures": [
-        ...furniturePostingCommonFields,
-        { key: "power_source", label: "Power Source", options: ["Hardwired", "Plug-in", "Battery", "Solar"], sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
-      ],
-      "Storage & Organization": [
-        ...furniturePostingCommonFields,
-        { key: "storage_type", label: "Storage Type", options: ["Bookshelf", "Cabinet", "Shoe Rack", "Closet Organizer", "Shelving Unit"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "shelf_count", label: "Shelf Count", type: "number", sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
-      "Mattresses & Bedding": [
-        ...furniturePostingCommonFields,
-        { key: "mattress_size", label: "Mattress Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Mattress Specific", sectionOrder: 4 },
-        { key: "firmness_level", label: "Firmness Level", options: ["Soft", "Medium", "Firm", "Extra Firm"], sectionName: "Mattress Specific", sectionOrder: 4 },
-        { key: "mattress_type", label: "Mattress Type", options: ["Memory Foam", "Spring", "Hybrid", "Latex", "Pillow Top"], sectionName: "Mattress Specific", sectionOrder: 4 },
-      ],
-      "Kitchen & Dining Essentials": [
-        ...furniturePostingCommonFields,
-        { key: "kitchen_item_type", label: "Kitchen Item Type", options: ["Cookware", "Dinnerware", "Kitchen Storage", "Small Kitchen Furniture"], sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
-      "Home Improvement Materials": [
-        ...furniturePostingCommonFields,
-        { key: "home_improvement_material_type", label: "Material Type", options: ["Doors", "Windows", "Flooring", "Cabinets", "Countertops"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "coverage_area", label: "Coverage Area", sectionName: "Furniture Specific", sectionOrder: 4 },
-      ],
+      "Living Room Furniture": furniturePostingCommonFields,
+      "Bedroom Furniture": furniturePostingCommonFields,
+      "Dining Room Furniture": furniturePostingCommonFields,
+      "Office Furniture": furniturePostingCommonFields,
+      "Outdoor & Patio Furniture": furniturePostingCommonFields,
+      "Home Decor": furniturePostingCommonFields,
+      "Lighting & Fixtures": furniturePostingCommonFields,
+      "Storage & Organization": furniturePostingCommonFields,
+      "Mattresses & Bedding": furniturePostingCommonFields,
+      "Kitchen & Dining Essentials": furniturePostingCommonFields,
+      "Home Improvement Materials": furniturePostingCommonFields,
       "Antique & Vintage Furniture": [
         ...furniturePostingCommonFields,
-        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+        ...furnitureAntiqueFields,
       ],
-      "Living Room": categoryAttributeFieldsByCategory["Furniture & Home"],
-      Bedroom: categoryAttributeFieldsByCategory["Furniture & Home"],
-      Dining: categoryAttributeFieldsByCategory["Furniture & Home"],
-      Office: categoryAttributeFieldsByCategory["Furniture & Home"],
-      Outdoor: categoryAttributeFieldsByCategory["Furniture & Home"],
-      Decor: categoryAttributeFieldsByCategory["Furniture & Home"],
-      Kitchen: categoryAttributeFieldsByCategory["Furniture & Home"],
     },
     detailedCategories: {
       Sofas: [
         ...furniturePostingCommonFields,
-        { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3", "4", "5+"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        ...furnitureSofaFields,
       ],
       "Sectional Sofas": [
         ...furniturePostingCommonFields,
-        { key: "seating_capacity", label: "Seating Capacity", options: ["3", "4", "5", "6+"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        ...furnitureSofaFields,
       ],
       Recliners: [
         ...furniturePostingCommonFields,
-        { key: "seating_capacity", label: "Seating Capacity", options: ["1", "2", "3"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "material_type", label: "Material Type", options: furnitureMaterialOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "recliner_option", label: "Recliner Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        ...furnitureSofaFields,
       ],
       "Dining Tables": [
         ...furniturePostingCommonFields,
-        { key: "number_of_chairs_included", label: "Number of Chairs Included", type: "number", sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "table_shape", label: "Table Shape", options: ["Round", "Rectangle", "Square", "Oval"], sectionName: "Furniture Specific", sectionOrder: 4 },
-        { key: "extendable_option", label: "Extendable Option", options: yesNoOptions, sectionName: "Furniture Specific", sectionOrder: 4 },
+        ...furnitureDiningTableFields,
       ],
       Mattresses: [
         ...furniturePostingCommonFields,
-        { key: "mattress_size", label: "Mattress Size", options: ["Twin", "Full", "Queen", "King"], sectionName: "Mattress Specific", sectionOrder: 4 },
-        { key: "firmness_level", label: "Firmness", options: ["Soft", "Medium", "Firm", "Extra Firm"], sectionName: "Mattress Specific", sectionOrder: 4 },
-        { key: "mattress_type", label: "Mattress Type", options: ["Memory Foam", "Spring", "Hybrid", "Latex", "Pillow Top"], sectionName: "Mattress Specific", sectionOrder: 4 },
+        ...furnitureMattressFields,
       ],
       Chandeliers: [
         ...furniturePostingCommonFields,
-        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+        ...furnitureLightingFields,
       ],
       "Ceiling Lights": [
         ...furniturePostingCommonFields,
-        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+        ...furnitureLightingFields,
       ],
       "Floor Lamps": [
         ...furniturePostingCommonFields,
-        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+        ...furnitureLightingFields,
       ],
       "Table Lamps": [
         ...furniturePostingCommonFields,
-        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+        ...furnitureLightingFields,
       ],
       "Outdoor Lighting": [
         ...furniturePostingCommonFields,
-        { key: "wattage", label: "Wattage", type: "number", sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "smart_control_support", label: "Smart Control Support", options: yesNoOptions, sectionName: "Lighting Specific", sectionOrder: 4 },
-        { key: "indoor_outdoor_use", label: "Indoor/Outdoor Use", options: ["Indoor", "Outdoor", "Both"], sectionName: "Lighting Specific", sectionOrder: 4 },
+        ...furnitureLightingFields,
       ],
       "Antique Tables": [
         ...furniturePostingCommonFields,
-        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+        ...furnitureAntiqueFields,
       ],
       "Vintage Chairs": [
         ...furniturePostingCommonFields,
-        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+        ...furnitureAntiqueFields,
       ],
       "Collectible Furniture": [
         ...furniturePostingCommonFields,
-        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+        ...furnitureAntiqueFields,
       ],
       "Restoration Pieces": [
         ...furniturePostingCommonFields,
-        { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 4 },
-        { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 4 },
+        ...furnitureAntiqueFields,
       ],
     },
   },
@@ -3234,13 +3165,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (step === 3 && isRestaurantListing) {
       const isCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
       const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
+      const requireFoodType = shouldShowRestaurantFoodStyleMenuFields(form.subCategory, form.detailCategory);
       const selectedRestaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
       const isDeliveryListing = restaurantInfo.deliveryAvailable || selectedRestaurantServiceTypes.includes("Delivery") || isCloudKitchen;
       restaurantMenuItems.forEach((item, index) => {
         if (!item.itemName.trim()) addFieldError(restaurantMenuItemErrorKey(index, "itemName"), "Item Name is required.");
         if (!item.menuCategory.trim()) addFieldError(restaurantMenuItemErrorKey(index, "menuCategory"), "Category is required.");
         if (numberOrNull(item.price) === null) addFieldError(restaurantMenuItemErrorKey(index, "price"), "Price is required.");
-        if (!item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.");
+        if (requireFoodType && !item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.");
       });
 
       if ((isDeliveryListing || selectedRestaurantServiceTypes.includes("Catering") || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
@@ -3590,11 +3522,12 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       addFieldError("restaurantAlcoholLicenseNumber", "Alcohol License is required for Bars & Beverages.", 4);
     }
 
+    const requireFoodType = shouldShowRestaurantFoodStyleMenuFields(form.subCategory, form.detailCategory);
     restaurantMenuItems.forEach((item, index) => {
       if (!item.itemName.trim()) addFieldError(restaurantMenuItemErrorKey(index, "itemName"), "Item Name is required.", 3);
       if (!item.menuCategory.trim()) addFieldError(restaurantMenuItemErrorKey(index, "menuCategory"), "Category is required.", 3);
       if (numberOrNull(item.price) === null) addFieldError(restaurantMenuItemErrorKey(index, "price"), "Price is required.", 3);
-      if (!item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.", 3);
+      if (requireFoodType && !item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.", 3);
     });
 
     const invalidHours = businessHours.find((hour) => hour.status !== "Closed" && !hour.is24Hours && (!hour.open || !hour.close));
@@ -3945,10 +3878,6 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return validateInlineCategoryRules([{ keys: ["manufacturerWarranty", "manufacturer_warranty", "extendedWarranty", "extended_warranty", "warrantyExpiryDate", "warranty_expiry_date"], message: "Warranty details are required when Warranty Available is Yes." }]);
     }
 
-    if (condition === "Used" && !getAttributeValue(categoryAttributes, "usageDuration", "usage_duration").trim()) {
-      return validateInlineCategoryRules([{ keys: ["usageDuration", "usage_duration"], message: "Usage Duration is required for used products." }]);
-    }
-
     if (subCategory === "Mobile Phones & Tablets" || ["Smartphones", "Feature Phones", "Tablets", "iPads"].includes(detailCategory)) {
       const mobileMissing = [
         ["ram", "RAM"],
@@ -4077,34 +4006,27 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function validateFurnitureFields() {
     const requiredFields = [
+      ["listing_title", "listingTitle", "Listing Title"],
+      ["product_name", "productName", "Product Name"],
+      ["description", "Description"],
       ["condition", "item_condition", "Condition"],
-      ["material", "Material"],
-      ["color_finish", "color", "Color / Finish"],
-      ["quantity", "Quantity"],
-      ["length_inches", "Length"],
-      ["width_inches", "Width"],
-      ["height_inches", "Height"],
-      ["assembly_required", "Assembly Required"],
-      ["price", "listing_price", "total_price", "Price"],
-      ["price_negotiable", "priceNegotiable", "Price Negotiable"],
-      ["pickup_only", "Pickup Only"],
-      ["delivery_available", "Delivery Available"],
       ["seller_type", "sellerType", "Seller Type"],
+      ["price", "listing_price", "total_price", "Selling Price"],
+      ["price_negotiable", "priceNegotiable", "Negotiable"],
+      ["material", "Material"],
+      ["color", "Color"],
+      ["length", "Length"],
+      ["width", "Width"],
+      ["height", "Height"],
+      ["assembly_required", "Assembly Required"],
+      ["delivery_available", "Delivery Available"],
+      ["seller_name", "sellerName", "Seller Name"],
+      ["phone", "Phone"],
+      ["email", "Email"],
     ];
-    const condition = getAttributeValue(categoryAttributes, "condition", "item_condition");
-    const deliveryAvailable = getAttributeValue(categoryAttributes, "delivery_available", "deliveryAvailable");
-
-    if (condition !== "New") {
-      requiredFields.push(["age_of_item", "age", "Age of Item"]);
-    }
-
     const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
     if (missing) {
       return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
-    }
-
-    if (deliveryAvailable === "Yes" && !getAttributeValue(categoryAttributes, "delivery_charges", "deliveryCharges").trim()) {
-      return validateInlineCategoryRules([{ keys: ["delivery_charges", "deliveryCharges"], message: "Delivery Charges are required when delivery is available." }]);
     }
 
     if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
@@ -6946,6 +6868,7 @@ function RestaurantMenuPricingFields({
   const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
   const isFoodTruck = form.subCategory === "Food Trucks & Pop-ups";
   const isGrocery = form.subCategory === "Grocery & Specialty Food Stores";
+  const showFoodStyleMenuFields = shouldShowRestaurantFoodStyleMenuFields(form.subCategory, form.detailCategory);
   const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || isCloudKitchen;
   const showCatering = restaurantInfo.serviceTypes.includes("Catering") || isCatering;
   const amenityOptions = [
@@ -6985,10 +6908,12 @@ function RestaurantMenuPricingFields({
             <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry)} type="number" value={item.price} error={fieldErrors[restaurantMenuItemErrorKey(index, "price")]} onChange={(value) => updateMenuItem(index, { ...item, price: value }, "price")} />
             <InputColumn placeholder="Calories (optional)" type="number" value={item.calories} onChange={(value) => updateMenuItem(index, { ...item, calories: value }, "calories")} />
           </div>
-          <div className="row">
-            <SelectColumn placeholder="Veg / Non-Veg*" value={item.foodType} error={fieldErrors[restaurantMenuItemErrorKey(index, "foodType")]} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => updateMenuItem(index, { ...item, foodType: value }, "foodType")} />
-            <SelectColumn placeholder="Spice Level (optional)" value={item.spiceLevel} options={["Mild", "Medium", "Hot", "Extra Hot"]} onChange={(value) => updateMenuItem(index, { ...item, spiceLevel: value }, "spiceLevel")} />
-          </div>
+          {showFoodStyleMenuFields ? (
+            <div className="row">
+              <SelectColumn placeholder="Veg / Non-Veg*" value={item.foodType} error={fieldErrors[restaurantMenuItemErrorKey(index, "foodType")]} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => updateMenuItem(index, { ...item, foodType: value }, "foodType")} />
+              <SelectColumn placeholder="Spice Level (optional)" value={item.spiceLevel} options={["Mild", "Medium", "Hot", "Extra Hot"]} onChange={(value) => updateMenuItem(index, { ...item, spiceLevel: value }, "spiceLevel")} />
+            </div>
+          ) : null}
           <FileUploadColumn
             label="Item Image"
             accept="image/*,.jpg,.jpeg,.png,.webp"
@@ -10186,11 +10111,7 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
   }
 
   if (isFurnitureCategory(categoryName)) {
-    return dedupeCategoryPostingFields([
-      ...commonFields,
-      ...getCategoryAttributeFields(categoryName, subCategory, detailCategory),
-      ...fields,
-    ]);
+    return dedupeCategoryPostingFields(getCategoryAttributeFields(categoryName, subCategory, detailCategory));
   }
 
   const requiredFields = categoryName === "Care Services" || categoryName === "Events & Tickets" || categoryName === "Tickets & Events" || categoryName === "Roommates & Rentals" || categoryName === "Jobs"
@@ -10450,8 +10371,6 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isTruckVehicle = vehicleSubCategoryLower === "commercial vehicles";
   const isChargingStation = form.detailCategory === "Charging Stations";
   const insurance = getAttributeValue(values, "insurance", "insuranceStatus", "insurance_status");
-  const furnitureCondition = getAttributeValue(values, "condition", "item_condition");
-  const pickupOnly = getAttributeValue(values, "pickup_only", "pickupOnly");
   const furnitureDeliveryAvailable = getAttributeValue(values, "delivery_available", "deliveryAvailable");
   const furnitureSubCategory = form.subCategory.toLowerCase();
   const furnitureDetailCategory = form.detailCategory.toLowerCase();
@@ -10804,29 +10723,13 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   }
 
   if (isFurnitureCategory(form.categoryName)) {
-    const isBed = furnitureDetailCategory.includes("bed") || furnitureDetailCategory.includes("mattress");
     const isMattress = furnitureSubCategory.includes("mattress") || furnitureDetailCategory.includes("mattress");
     const isLighting = furnitureSubCategory.includes("lighting") || ["chandelier", "ceiling light", "floor lamp", "table lamp", "outdoor lighting"].some((item) => furnitureDetailCategory.includes(item));
     const isAntique = furnitureSubCategory.includes("antique") || furnitureSubCategory.includes("vintage") || furnitureDetailCategory.includes("antique") || furnitureDetailCategory.includes("vintage") || furnitureDetailCategory.includes("collectible") || furnitureDetailCategory.includes("restoration");
-    const isLivingRoom = furnitureSubCategory.includes("living") || furnitureDetailCategory.includes("sofa") || furnitureDetailCategory.includes("recliner") || furnitureDetailCategory.includes("chair");
-    const isDining = furnitureSubCategory.includes("dining") || furnitureDetailCategory.includes("dining");
-    const isOffice = furnitureSubCategory.includes("office") || furnitureDetailCategory.includes("desk") || furnitureDetailCategory.includes("office chair");
-    const isOutdoor = furnitureSubCategory.includes("outdoor") || furnitureDetailCategory.includes("patio") || furnitureDetailCategory.includes("garden");
-    const isDecor = furnitureSubCategory.includes("decor") || ["wall art", "mirror", "rug", "carpet", "curtain", "decorative", "clock"].some((item) => furnitureDetailCategory.includes(item));
-
-    if (furnitureCondition === "New" && ["ageofitem", "age_of_item", "age"].includes(key)) {
-      return false;
-    }
-
-    if (pickupOnly === "Yes" && ["shippingavailable", "shipping_available"].includes(key)) {
-      return false;
-    }
+    const isSofa = furnitureDetailCategory.includes("sofa") || furnitureDetailCategory.includes("recliner");
+    const isDiningTable = furnitureDetailCategory.includes("dining table");
 
     if (furnitureDeliveryAvailable !== "Yes" && ["deliverycharges", "delivery_charges"].includes(key)) {
-      return false;
-    }
-
-    if (!isBed && ["bedsize", "bed_size", "mattressincluded", "mattress_included"].includes(key)) {
       return false;
     }
 
@@ -10842,23 +10745,11 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
       return false;
     }
 
-    if (!isLivingRoom && ["seatingcapacity", "seating_capacity", "upholsterytype", "upholstery_type", "recliner", "reclineroption", "recliner_option"].includes(key)) {
+    if (!isSofa && ["seatingcapacity", "seating_capacity", "materialtype", "material_type", "reclineroption", "recliner_option"].includes(key)) {
       return false;
     }
 
-    if (!isDining && ["diningseatingcapacity", "dining_seating_capacity", "numberofchairsincluded", "number_of_chairs_included", "tableshape", "table_shape", "extendableoption", "extendable_option"].includes(key)) {
-      return false;
-    }
-
-    if (!isOffice && ["desktype", "desk_type", "chairtype", "chair_type", "adjustableheight", "adjustable_height"].includes(key)) {
-      return false;
-    }
-
-    if (!isOutdoor && ["weatherresistant", "weather_resistant", "outdoorusage", "outdoor_usage"].includes(key)) {
-      return false;
-    }
-
-    if (!isDecor && ["decortype", "decor_type", "style"].includes(key)) {
+    if (!isDiningTable && ["numberofchairsincluded", "number_of_chairs_included", "tableshape", "table_shape", "extendableoption", "extendable_option"].includes(key)) {
       return false;
     }
   }
@@ -10872,6 +10763,26 @@ function normalizeFieldKey(key: string) {
 
 function normalizeCategoryName(value?: string | null) {
   return value?.trim().toLowerCase() || "";
+}
+
+function shouldShowRestaurantFoodStyleMenuFields(subCategory?: string | null, detailCategory?: string | null) {
+  const subCategoryName = normalizeCategoryName(subCategory);
+  const detailCategoryName = normalizeCategoryName(detailCategory);
+  const combined = `${subCategoryName} ${detailCategoryName}`;
+
+  return ![
+    "cafe",
+    "coffee",
+    "bakery",
+    "bakeries",
+    "beverage",
+    "bar",
+    "juice",
+    "smoothie",
+    "tea",
+    "grocery",
+    "specialty food store",
+  ].some((keyword) => combined.includes(keyword));
 }
 
 function isChildCareSubCategory(value?: string | null) {

@@ -21,7 +21,7 @@ export default function HomeFooterSection() {
                 <li><a href="#">Sports</a></li>
                 <li><a href="#">Education</a></li>
                 <li><a href="#">Electricals</a></li>
-                <li><a href="#">Automobiles</a></li>
+                <li><a href="#">Vehicles</a></li>
                 <li><a href="#">Transportation</a></li>
               </ul>
             </div>
@@ -31,7 +31,7 @@ export default function HomeFooterSection() {
               <ul>
                 <li><a href="#">Hospitals</a></li>
                 <li><a href="#"></a></li>
-                <li><a href="#">Automobiles</a></li>
+                <li><a href="#">Vehicles</a></li>
                 <li><a href="#"></a></li>
                 <li><a href="#">Real Estate</a></li>
                 <li><a href="#">Sports</a></li>

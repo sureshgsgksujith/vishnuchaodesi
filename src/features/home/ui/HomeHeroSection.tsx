@@ -24,7 +24,7 @@ const quickLinks = [
   { title: "Classified Listings", image: "/template-17/images/icon/ads.png", href: "/classifieds/index" },
   { title: "Real Estate", image: "/template-17/images/icon/real-estate.png", category: "real-estate" },
   { title: "Restaurants & Food", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
-  { title: "Automobiles", image: "/template-17/images/icon/vehicles.png", category: "vehicles" },
+  { title: "Vehicles", image: "/template-17/images/icon/vehicles.png", category: "vehicles" },
   { title: "Furniture & Home", image: "/template-17/images/icon/home.png", category: "furniture-home-decor" },
   { title: "Care Services", image: "/template-17/images/icon/public-service.png", category: "care-services" },
   { title: "Events & Tickets", image: "/template-17/images/icon/calendar.png", category: "events-tickets" },
@@ -38,7 +38,7 @@ const quickLinks = [
 const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> = [
   { label: "Real Estate", value: "real-estate" },
   { label: "Restaurants & Food", value: "restaurants-food" },
-  { label: "Automobiles", value: "vehicles" },
+  { label: "Vehicles", value: "vehicles" },
   { label: "Furniture & Home", value: "furniture-home-decor" },
   { label: "Care Services", value: "care-services" },
   { label: "Events & Tickets", value: "events-tickets" },
@@ -68,7 +68,7 @@ const searchKeywordOptions = [
   "Chao TV",
   "Care Services",
   "Real Estate",
-  "Automobiles",
+  "Vehicles",
   "Furniture & Home",
   "Electronics & Appliances",
   "Pets & Animals",
@@ -148,7 +148,7 @@ function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
   if (value.includes("real estate")) return "real-estate";
   if (value.includes("care")) return "care-services";
   if (value.includes("furniture") || value.includes("home")) return "furniture-home-decor";
-  if (value.includes("vehicle") || value.includes("automobile")) return "vehicles";
+  if (value.includes("vehicle")) return "vehicles";
   if (value.includes("electronic")) return "electronics-appliances";
   if (value.includes("pet") || value.includes("animal")) return "pets-animals";
   return "";

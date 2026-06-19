@@ -23,7 +23,7 @@ export const categoryLinks: ExploreMenuLink[] = [
   { label: "All Services", href: "/all-category", icon: "/template-17/images/icon/shop.png" },
   { label: "Real Estate", href: "/all-listing?category=real-estate", icon: "/template-17/images/icon/real-estate.png" },
   { label: "Restaurants & Food", href: "/all-listing?category=restaurants-food", icon: "/template-17/images/icon/restaurant.png" },
-  { label: "Automobiles", href: "/all-listing?category=vehicles", icon: "/template-17/images/icon/vehicles.png" },
+  { label: "Vehicles", href: "/all-listing?category=vehicles", icon: "/template-17/images/icon/vehicles.png" },
   { label: "Furniture & Home", href: "/all-listing?category=furniture-home-decor", icon: "/template-17/images/icon/home.png" },
   { label: "Care Services", href: "/all-listing?category=care-services", icon: "/template-17/images/icon/public-service.png" },
   { label: "Events & Tickets", href: "/all-listing?category=events-tickets", icon: "/template-17/images/icon/calendar.png" },
@@ -134,7 +134,6 @@ function publicCategorySlugFromName(categoryName: string) {
   if (categoryName === "Real Estate") return "real-estate";
   if (categoryName === "Restaurants & Food") return "restaurants-food";
   if (categoryName === "Vehicles") return "vehicles";
-  if (categoryName === "Automobiles") return "vehicles";
   if (categoryName === "Furniture & Home" || categoryName === "Furniture & Home Decor") return "furniture-home-decor";
   if (categoryName === "Electronics & Appliances") return "electronics-appliances";
   if (categoryName === "Care Services") return "care-services";
@@ -146,7 +145,7 @@ function publicCategorySlugFromName(categoryName: string) {
 }
 
 function publicCategoryLabel(categoryName: string) {
-  return categoryName === "Vehicles" ? "Automobiles" : categoryName;
+  return categoryName;
 }
 
 function formatCategoryCount(count: number) {

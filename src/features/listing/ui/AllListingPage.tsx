@@ -937,7 +937,6 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Real Estate") return "real-estate";
   if (label === "Restaurants & Food") return "restaurants-food";
   if (label === "Vehicles") return "vehicles";
-  if (label === "Automobiles") return "vehicles";
   if (label === "Electronics & Appliances") return "electronics-appliances";
   if (label === "Pets & Animals") return "pets-animals";
   if (label === "Care Services") return "care-services";
@@ -952,7 +951,7 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
 function buildCategoryLabel(category: PublicCategory) {
   if (category === "real-estate") return "Real Estate";
   if (category === "restaurants-food") return "Restaurants & Food";
-  if (category === "vehicles") return "Automobiles";
+  if (category === "vehicles") return "Vehicles";
   if (category === "electronics-appliances") return "Electronics & Appliances";
   if (category === "pets-animals") return "Pets & Animals";
   if (category === "care-services") return "Care Services";

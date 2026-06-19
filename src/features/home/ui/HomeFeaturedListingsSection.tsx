@@ -182,7 +182,7 @@ function useFeaturedListingGroups() {
       items: restaurantItems,
     },
     {
-      titleLead: "Featured Automobiles",
+      titleLead: "Featured Vehicles",
       titleRest: activeCity ? `in ${activeCity}` : "in your city",
       description: "Browse cars, bikes, rentals, commercial vehicles, and parts from local sellers.",
       iconClass: "plac-hom-tit-ic-ser",
