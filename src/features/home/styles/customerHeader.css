@@ -1,6 +1,7 @@
 .chaodesi-customer-header {
   padding-top: 8px;
   padding-bottom: 8px;
+  z-index: 5000;
 }
 
 .chaodesi-customer-header .hom-nav.db-open {
@@ -36,7 +37,7 @@
   top: calc(100% + 1px);
   left: 0;
   right: 0;
-  z-index: 1200;
+  z-index: 5001;
   width: min(100%, 1180px);
   max-height: min(560px, calc(100vh - 110px));
   overflow: auto;

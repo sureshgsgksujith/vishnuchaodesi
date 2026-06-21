@@ -1353,9 +1353,13 @@ function getCategorySlug(listing: ListingSummary): PublicListingQuery["category"
   if (listing.categoryName === "Electronics & Appliances") return "electronics-appliances";
   if (listing.categoryName === "Care Services") return "care-services";
   if (listing.categoryName === "Furniture & Home" || listing.categoryName === "Furniture & Home Decor") return "furniture-home-decor";
+  if (listing.categoryName === "Fashion & Lifestyle") return "fashion-lifestyle";
+  if (listing.categoryName === "Beauty Services") return "beauty-services";
+  if (listing.categoryName === "Books, Sports & Hobbies") return "books-sports-hobbies";
   if (listing.categoryName === "Roommates & Rentals") return "roommates-rentals";
   if (listing.categoryName === "Jobs") return "jobs";
   if (listing.categoryName === "Events & Tickets" || listing.categoryName === "Tickets & Events") return "events-tickets";
+  if (listing.categoryName === "Groups & Communities") return "groups-communities";
   if (listing.categoryName === "Real Estate") return "real-estate";
   return undefined;
 }

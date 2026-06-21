@@ -25,6 +25,9 @@ export const categoryLinks: ExploreMenuLink[] = [
   { label: "Restaurants & Food", href: "/all-listing?category=restaurants-food", icon: "/template-17/images/icon/restaurant.png" },
   { label: "Vehicles", href: "/all-listing?category=vehicles", icon: "/template-17/images/icon/vehicles.png" },
   { label: "Furniture & Home", href: "/all-listing?category=furniture-home-decor", icon: "/template-17/images/icon/home.png" },
+  { label: "Fashion & Lifestyle", href: "/all-listing?category=fashion-lifestyle", icon: "/template-17/images/icon/cart.png" },
+  { label: "Beauty Services", href: "/all-listing?category=beauty-services", icon: "/template-17/images/icon/expert.png" },
+  { label: "Books, Sports & Hobbies", href: "/all-listing?category=books-sports-hobbies", icon: "/template-17/images/icon/news.png" },
   { label: "Care Services", href: "/all-listing?category=care-services", icon: "/template-17/images/icon/public-service.png" },
   { label: "Events & Tickets", href: "/all-listing?category=events-tickets", icon: "/template-17/images/icon/calendar.png" },
   { label: "Chao TV", href: "/chao-tv", icon: "/template-17/images/icon/calendar.png" },
@@ -32,6 +35,7 @@ export const categoryLinks: ExploreMenuLink[] = [
   { label: "Jobs", href: "/all-listing?category=jobs", icon: "/template-17/images/icon/employee.png" },
   { label: "Electronics & Appliances", href: "/all-listing?category=electronics-appliances", icon: "/template-17/images/icon/cart.png" },
   { label: "Pets & Animals", href: "/all-listing?category=pets-animals", icon: "/template-17/classifieds/images/pets-1.jpg" },
+  { label: "Groups & Communities", href: "/all-listing?category=groups-communities", icon: "/template-17/images/icon/11.png" },
   { label: "Classified Ads", href: "/classifieds/index", icon: "/template-17/images/icon/ads.png" },
   { label: "Service Experts", href: "/service-experts/index", icon: "/template-17/images/icon/expert.png" },
   { label: "Explore Travel", href: "/places/index", icon: "/template-17/images/places/icons/hot-air-balloon.png" },
@@ -69,7 +73,9 @@ export function useExploreCategories(): ExploreCategoryLink[] {
         .catch(() => fallbackListingCategoryTree);
 
       if (!isActive) return;
-      const supportedTree = nextTree.filter((category) => supportedListingCategoryNameSet.has(category.name));
+      const supportedTree = dedupeExploreCategoryTree(
+        nextTree.filter((category) => supportedListingCategoryNameSet.has(category.name)),
+      );
       setCategoryTree(supportedTree);
 
       const counts = await Promise.all(
@@ -113,6 +119,21 @@ export function useExploreCategories(): ExploreCategoryLink[] {
   );
 }
 
+function dedupeExploreCategoryTree(categories: ListingCategoryOption[]) {
+  const seen = new Set<string>();
+
+  return categories.filter((category) => {
+    const key = publicCategorySlugFromName(category.name) || category.name.trim().toLowerCase();
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+}
+
 function buildCategoryHref(categoryName: string, city: string) {
   const params = new URLSearchParams();
   const publicSlug = publicCategorySlugFromName(categoryName);
@@ -135,11 +156,15 @@ function publicCategorySlugFromName(categoryName: string) {
   if (categoryName === "Restaurants & Food") return "restaurants-food";
   if (categoryName === "Vehicles") return "vehicles";
   if (categoryName === "Furniture & Home" || categoryName === "Furniture & Home Decor") return "furniture-home-decor";
+  if (categoryName === "Fashion & Lifestyle") return "fashion-lifestyle";
+  if (categoryName === "Beauty Services") return "beauty-services";
+  if (categoryName === "Books, Sports & Hobbies") return "books-sports-hobbies";
   if (categoryName === "Electronics & Appliances") return "electronics-appliances";
   if (categoryName === "Care Services") return "care-services";
   if (categoryName === "Roommates & Rentals") return "roommates-rentals";
   if (categoryName === "Jobs") return "jobs";
   if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") return "events-tickets";
+  if (categoryName === "Groups & Communities") return "groups-communities";
   if (categoryName === "Chao TV") return "chao-tv";
   return undefined;
 }

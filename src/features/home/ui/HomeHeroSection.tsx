@@ -26,6 +26,9 @@ const quickLinks = [
   { title: "Restaurants & Food", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
   { title: "Vehicles", image: "/template-17/images/icon/vehicles.png", category: "vehicles" },
   { title: "Furniture & Home", image: "/template-17/images/icon/home.png", category: "furniture-home-decor" },
+  { title: "Fashion & Lifestyle", image: "/template-17/images/icon/cart.png", category: "fashion-lifestyle" },
+  { title: "Beauty Services", image: "/template-17/images/icon/expert.png", category: "beauty-services" },
+  { title: "Books, Sports & Hobbies", image: "/template-17/images/icon/news.png", category: "books-sports-hobbies" },
   { title: "Care Services", image: "/template-17/images/icon/public-service.png", category: "care-services" },
   { title: "Events & Tickets", image: "/template-17/images/icon/calendar.png", category: "events-tickets" },
   { title: "Chao TV", image: "/template-17/images/icon/calendar.png", category: "chao-tv" },
@@ -33,6 +36,7 @@ const quickLinks = [
   { title: "Jobs", image: "/template-17/images/icon/employee.png", category: "jobs" },
   { title: "Electronics & Appliances", image: "/template-17/images/icon/electronics.png", category: "electronics-appliances" },
   { title: "Pets & Animals", image: "/template-17/classifieds/images/pets-1.jpg", category: "pets-animals" },
+  { title: "Groups & Communities", image: "/template-17/images/icon/11.png", category: "groups-communities" },
 ];
 
 const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> = [
@@ -40,6 +44,9 @@ const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> 
   { label: "Restaurants & Food", value: "restaurants-food" },
   { label: "Vehicles", value: "vehicles" },
   { label: "Furniture & Home", value: "furniture-home-decor" },
+  { label: "Fashion & Lifestyle", value: "fashion-lifestyle" },
+  { label: "Beauty Services", value: "beauty-services" },
+  { label: "Books, Sports & Hobbies", value: "books-sports-hobbies" },
   { label: "Care Services", value: "care-services" },
   { label: "Events & Tickets", value: "events-tickets" },
   { label: "Chao TV", value: "chao-tv" },
@@ -47,6 +54,7 @@ const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> 
   { label: "Jobs", value: "jobs" },
   { label: "Electronics & Appliances", value: "electronics-appliances" },
   { label: "Pets & Animals", value: "pets-animals" },
+  { label: "Groups & Communities", value: "groups-communities" },
 ];
 
 const defaultCityOptions = [
@@ -70,8 +78,12 @@ const searchKeywordOptions = [
   "Real Estate",
   "Vehicles",
   "Furniture & Home",
+  "Fashion & Lifestyle",
+  "Beauty Services",
+  "Books, Sports & Hobbies",
   "Electronics & Appliances",
   "Pets & Animals",
+  "Groups & Communities",
 ];
 
 type HomeListingSummary = {
@@ -148,9 +160,13 @@ function getCategoryForSearchKeyword(keyword: string): HomeCategorySlug | "" {
   if (value.includes("real estate")) return "real-estate";
   if (value.includes("care")) return "care-services";
   if (value.includes("furniture") || value.includes("home")) return "furniture-home-decor";
+  if (value.includes("fashion") || value.includes("lifestyle") || value.includes("clothing") || value.includes("jewelry") || value.includes("footwear")) return "fashion-lifestyle";
+  if (value.includes("beauty") || value.includes("makeup") || value.includes("salon") || value.includes("spa") || value.includes("nail")) return "beauty-services";
+  if (value.includes("book") || value.includes("sport") || value.includes("hobby") || value.includes("music") || value.includes("instrument") || value.includes("photography") || value.includes("gaming")) return "books-sports-hobbies";
   if (value.includes("vehicle")) return "vehicles";
   if (value.includes("electronic")) return "electronics-appliances";
   if (value.includes("pet") || value.includes("animal")) return "pets-animals";
+  if (value.includes("group") || value.includes("community") || value.includes("communities")) return "groups-communities";
   return "";
 }
 

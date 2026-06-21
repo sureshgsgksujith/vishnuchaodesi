@@ -799,9 +799,13 @@ function getCategory(value: string | null): PublicListingQuery["category"] {
     value === "pets-animals" ||
     value === "care-services" ||
     value === "furniture-home-decor" ||
+    value === "fashion-lifestyle" ||
+    value === "beauty-services" ||
+    value === "books-sports-hobbies" ||
     value === "roommates-rentals" ||
     value === "jobs" ||
     value === "events-tickets" ||
+    value === "groups-communities" ||
     value === "chao-tv"
     ? value
     : undefined;
@@ -941,9 +945,13 @@ function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Pets & Animals") return "pets-animals";
   if (label === "Care Services") return "care-services";
   if (label === "Furniture & Home" || label === "Furniture & Home Decor") return "furniture-home-decor";
+  if (label === "Fashion & Lifestyle") return "fashion-lifestyle";
+  if (label === "Beauty Services") return "beauty-services";
+  if (label === "Books, Sports & Hobbies") return "books-sports-hobbies";
   if (label === "Roommates & Rentals") return "roommates-rentals";
   if (label === "Jobs") return "jobs";
   if (label === "Events & Tickets" || label === "Tickets & Events") return "events-tickets";
+  if (label === "Groups & Communities") return "groups-communities";
   if (label === "Chao TV") return "chao-tv";
   return "";
 }
@@ -956,9 +964,13 @@ function buildCategoryLabel(category: PublicCategory) {
   if (category === "pets-animals") return "Pets & Animals";
   if (category === "care-services") return "Care Services";
   if (category === "furniture-home-decor") return "Furniture & Home";
+  if (category === "fashion-lifestyle") return "Fashion & Lifestyle";
+  if (category === "beauty-services") return "Beauty Services";
+  if (category === "books-sports-hobbies") return "Books, Sports & Hobbies";
   if (category === "roommates-rentals") return "Roommates & Rentals";
   if (category === "jobs") return "Jobs";
   if (category === "events-tickets") return "Events & Tickets";
+  if (category === "groups-communities") return "Groups & Communities";
   if (category === "chao-tv") return "Chao TV";
   return "Listings";
 }

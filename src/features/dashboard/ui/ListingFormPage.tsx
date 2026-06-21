@@ -450,7 +450,9 @@ const sharedListingLocationCategories = [
   "Pets & Animals",
   "Furniture & Home",
   "Furniture & Home Decor",
+  "Groups & Communities",
   "Fashion & Lifestyle",
+  "Beauty Services",
   "Books, Sports & Hobbies",
   "Business & Industrial",
 ];
@@ -470,7 +472,7 @@ const furniturePostingCommonFields: CategoryAttributeField[] = [
   { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
   { key: "product_name", label: "Product Name", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
   { key: "brand", label: "Brand", sectionName: "Product Information", sectionOrder: 2 },
-  { key: "furniture_type", label: "Furniture Type", sectionName: "Product Information", sectionOrder: 2 },
+  { key: "furniture_type", label: "Furniture Type", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
   { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
   { key: "condition", label: "Condition", options: furnitureConditionOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
   { key: "seller_type", label: "Seller Type", options: furnitureSellerTypeOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
@@ -544,6 +546,302 @@ const furnitureAntiqueFields: CategoryAttributeField[] = [
   { key: "year_of_manufacture", label: "Year of Manufacture", type: "number", sectionName: "Antique Specific", sectionOrder: 6 },
   { key: "restoration_status", label: "Restoration Status", options: ["Original", "Restored", "Needs Restoration", "Partially Restored"], sectionName: "Antique Specific", sectionOrder: 6 },
   { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Antique Specific", sectionOrder: 6 },
+];
+
+const groupPostingCommonFields: CategoryAttributeField[] = [
+  { key: "group_name", label: "Group Name", isRequired: true, sectionName: "Group Information", sectionOrder: 2 },
+  { key: "group_type", label: "Group Type", options: ["Public", "Private", "Invite Only", "Non-Profit", "Professional", "Online"], isRequired: true, sectionName: "Group Information", sectionOrder: 2 },
+  { key: "community_category", label: "Community Category", isRequired: true, sectionName: "Group Information", sectionOrder: 2 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Group Information", sectionOrder: 2 },
+  { key: "mission_statement", label: "Mission Statement", type: "textarea", sectionName: "Group Information", sectionOrder: 2 },
+  { key: "group_goals", label: "Group Goals", type: "textarea", sectionName: "Group Information", sectionOrder: 2 },
+  { key: "group_coverage", label: "Group Coverage", options: ["National", "State", "City", "Neighborhood", "Online Only"], isRequired: true, sectionName: "Location Information", sectionOrder: 3 },
+  { key: "meeting_venue", label: "Meeting Venue", sectionName: "Location Information", sectionOrder: 3 },
+  { key: "membership_type", label: "Membership Type", options: ["Public", "Private", "Invite Only"], isRequired: true, sectionName: "Membership Information", sectionOrder: 4 },
+  { key: "membership_fees", label: "Membership Fees", options: ["Free", "Paid Membership"], isRequired: true, sectionName: "Membership Information", sectionOrder: 4 },
+  { key: "eligibility_criteria", label: "Eligibility Criteria", type: "textarea", sectionName: "Membership Information", sectionOrder: 4 },
+  { key: "membership_benefits", label: "Membership Benefits", type: "textarea", sectionName: "Membership Information", sectionOrder: 4 },
+  { key: "member_capacity", label: "Member Capacity", type: "number", sectionName: "Membership Information", sectionOrder: 4 },
+  { key: "regular_meetings", label: "Regular Meetings", type: "checkbox", sectionName: "Events & Activities", sectionOrder: 5 },
+  { key: "workshops", label: "Workshops", type: "checkbox", sectionName: "Events & Activities", sectionOrder: 5 },
+  { key: "networking_sessions", label: "Networking Sessions", type: "checkbox", sectionName: "Events & Activities", sectionOrder: 5 },
+  { key: "volunteer_activities", label: "Volunteer Activities", type: "checkbox", sectionName: "Events & Activities", sectionOrder: 5 },
+  { key: "cultural_programs", label: "Cultural Programs", type: "checkbox", sectionName: "Events & Activities", sectionOrder: 5 },
+  { key: "sports_events", label: "Sports Events", type: "checkbox", sectionName: "Events & Activities", sectionOrder: 5 },
+  { key: "organizer_name", label: "Organizer Name", isRequired: true, sectionName: "Organizer Information", sectionOrder: 6 },
+  { key: "organization_name", label: "Organization Name", sectionName: "Organizer Information", sectionOrder: 6 },
+  { key: "phone", label: "Phone Number", isRequired: true, sectionName: "Organizer Information", sectionOrder: 6 },
+  { key: "email", label: "Email Address", isRequired: true, sectionName: "Organizer Information", sectionOrder: 6 },
+  { key: "website", label: "Website", sectionName: "Organizer Information", sectionOrder: 6 },
+  { key: "social_media_links", label: "Social Media Links", type: "textarea", sectionName: "Organizer Information", sectionOrder: 6 },
+  { key: "logo", label: "Logo", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "group_banner", label: "Group Banner", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "event_photos", label: "Event Photos", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "videos", label: "Videos", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "brochures", label: "Brochures", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "membership_documents", label: "Membership Documents", type: "file", sectionName: "Media Upload", sectionOrder: 7 },
+  { key: "communication_website", label: "Website", sectionName: "Communication Channels", sectionOrder: 8 },
+  { key: "mobile_app", label: "Mobile App", sectionName: "Communication Channels", sectionOrder: 8 },
+  { key: "whatsapp_group", label: "WhatsApp Group", sectionName: "Communication Channels", sectionOrder: 8 },
+  { key: "telegram_channel", label: "Telegram Channel", sectionName: "Communication Channels", sectionOrder: 8 },
+  { key: "facebook_group", label: "Facebook Group", sectionName: "Communication Channels", sectionOrder: 8 },
+  { key: "discussion_forum", label: "Discussion Forum", sectionName: "Communication Channels", sectionOrder: 8 },
+  { key: "audience_students", label: "Students", type: "checkbox", sectionName: "Target Audience", sectionOrder: 9 },
+  { key: "audience_professionals", label: "Professionals", type: "checkbox", sectionName: "Target Audience", sectionOrder: 9 },
+  { key: "audience_families", label: "Families", type: "checkbox", sectionName: "Target Audience", sectionOrder: 9 },
+  { key: "audience_women", label: "Women", type: "checkbox", sectionName: "Target Audience", sectionOrder: 9 },
+  { key: "audience_seniors", label: "Seniors", type: "checkbox", sectionName: "Target Audience", sectionOrder: 9 },
+  { key: "audience_entrepreneurs", label: "Entrepreneurs", type: "checkbox", sectionName: "Target Audience", sectionOrder: 9 },
+  { key: "audience_general_public", label: "General Public", type: "checkbox", sectionName: "Target Audience", sectionOrder: 9 },
+  { key: "verified_organization", label: "Verified Organization", options: yesNoOptions, sectionName: "Verification & Trust", sectionOrder: 11 },
+  { key: "non_profit_status", label: "Non-Profit Status", options: yesNoOptions, sectionName: "Verification & Trust", sectionOrder: 11 },
+  { key: "registered_association", label: "Registered Association", options: yesNoOptions, sectionName: "Verification & Trust", sectionOrder: 11 },
+  { key: "tax_exemption_details", label: "Tax Exemption Details", sectionName: "Verification & Trust", sectionOrder: 11 },
+];
+
+const groupProfessionalFields: CategoryAttributeField[] = [
+  { key: "industry", label: "Industry", sectionName: "Professional Network Details", sectionOrder: 10 },
+  { key: "skills", label: "Skills", type: "textarea", sectionName: "Professional Network Details", sectionOrder: 10 },
+  { key: "career_interests", label: "Career Interests", type: "textarea", sectionName: "Professional Network Details", sectionOrder: 10 },
+  { key: "networking_opportunities", label: "Networking Opportunities", type: "textarea", sectionName: "Professional Network Details", sectionOrder: 10 },
+];
+const groupStudentFields: CategoryAttributeField[] = [
+  { key: "university_name", label: "University Name", sectionName: "Student Group Details", sectionOrder: 10 },
+  { key: "academic_program", label: "Academic Program", sectionName: "Student Group Details", sectionOrder: 10 },
+  { key: "graduation_year", label: "Graduation Year", type: "number", sectionName: "Student Group Details", sectionOrder: 10 },
+];
+const groupReligiousFields: CategoryAttributeField[] = [
+  { key: "worship_schedule", label: "Worship Schedule", type: "textarea", sectionName: "Religious Group Details", sectionOrder: 10 },
+  { key: "religious_affiliation", label: "Religious Affiliation", sectionName: "Religious Group Details", sectionOrder: 10 },
+  { key: "community_services", label: "Community Services", type: "textarea", sectionName: "Religious Group Details", sectionOrder: 10 },
+];
+const groupSportsFields: CategoryAttributeField[] = [
+  { key: "sport_type", label: "Sport Type", sectionName: "Sports Club Details", sectionOrder: 10 },
+  { key: "membership_capacity", label: "Membership Capacity", type: "number", sectionName: "Sports Club Details", sectionOrder: 10 },
+  { key: "practice_schedule", label: "Practice Schedule", type: "textarea", sectionName: "Sports Club Details", sectionOrder: 10 },
+  { key: "skill_level", label: "Skill Level", options: ["Beginner", "Intermediate", "Advanced", "All Levels"], sectionName: "Sports Club Details", sectionOrder: 10 },
+];
+const groupVolunteerFields: CategoryAttributeField[] = [
+  { key: "volunteer_opportunities", label: "Volunteer Opportunities", type: "textarea", sectionName: "Volunteer Organization Details", sectionOrder: 10 },
+  { key: "causes_supported", label: "Causes Supported", type: "textarea", sectionName: "Volunteer Organization Details", sectionOrder: 10 },
+  { key: "hours_required", label: "Hours Required", sectionName: "Volunteer Organization Details", sectionOrder: 10 },
+];
+const groupOnlineFields: CategoryAttributeField[] = [
+  { key: "platform_type", label: "Platform Type", sectionName: "Online Community Details", sectionOrder: 10 },
+  { key: "community_url", label: "Community URL", sectionName: "Online Community Details", sectionOrder: 10 },
+  { key: "virtual_meeting_schedule", label: "Virtual Meeting Schedule", type: "textarea", sectionName: "Online Community Details", sectionOrder: 10 },
+];
+
+const fashionConditionOptions = ["New", "Like New", "Gently Used", "Pre-Owned"];
+const fashionSellerTypeOptions = ["Individual", "Boutique", "Fashion Store", "Designer", "Brand Outlet"];
+const fashionClothingFields: CategoryAttributeField[] = [
+  { key: "gender", label: "Gender", options: ["Men", "Women", "Kids", "Unisex"], sectionName: "Clothing Fields", sectionOrder: 6 },
+  { key: "size", label: "Size", options: ["XS", "S", "M", "L", "XL", "XXL"], sectionName: "Clothing Fields", sectionOrder: 6 },
+  { key: "fabric_material", label: "Fabric Material", sectionName: "Clothing Fields", sectionOrder: 6 },
+  { key: "sleeve_type", label: "Sleeve Type", sectionName: "Clothing Fields", sectionOrder: 6 },
+  { key: "occasion_type", label: "Occasion Type", sectionName: "Clothing Fields", sectionOrder: 6 },
+];
+const fashionFootwearFields: CategoryAttributeField[] = [
+  { key: "shoe_size", label: "Shoe Size (US Sizes)", sectionName: "Footwear Fields", sectionOrder: 6 },
+  { key: "shoe_width", label: "Width", sectionName: "Footwear Fields", sectionOrder: 6 },
+];
+const fashionJewelryFields: CategoryAttributeField[] = [
+  { key: "metal_type", label: "Metal Type", sectionName: "Jewelry Fields", sectionOrder: 6 },
+  { key: "stone_type", label: "Stone Type", sectionName: "Jewelry Fields", sectionOrder: 6 },
+  { key: "weight", label: "Weight", sectionName: "Jewelry Fields", sectionOrder: 6 },
+  { key: "certification_available", label: "Certification Available", options: yesNoOptions, sectionName: "Jewelry Fields", sectionOrder: 6 },
+  { key: "gemstone_details", label: "Gemstone Details", type: "textarea", sectionName: "Jewelry Fields", sectionOrder: 6 },
+];
+const fashionWatchFields: CategoryAttributeField[] = [
+  { key: "movement_type", label: "Movement Type", options: ["Quartz", "Automatic", "Mechanical", "Digital", "Smart"], sectionName: "Watches Fields", sectionOrder: 6 },
+  { key: "water_resistant", label: "Water Resistant", options: yesNoOptions, sectionName: "Watches Fields", sectionOrder: 6 },
+];
+const fashionBeautyFields: CategoryAttributeField[] = [
+  { key: "skin_type", label: "Skin Type", options: ["All Skin Types", "Dry", "Oily", "Combination", "Sensitive"], sectionName: "Beauty Products", sectionOrder: 6 },
+  { key: "expiry_date", label: "Expiry Date", type: "date", sectionName: "Beauty Products", sectionOrder: 6 },
+  { key: "ingredients", label: "Ingredients", type: "textarea", sectionName: "Beauty Products", sectionOrder: 6 },
+];
+const fashionWeddingFields: CategoryAttributeField[] = [
+  { key: "custom_stitching_available", label: "Custom Stitching Available", options: yesNoOptions, sectionName: "Wedding Wear Details", sectionOrder: 6 },
+  { key: "rental_option_available", label: "Rental Option Available", options: yesNoOptions, sectionName: "Wedding Wear Details", sectionOrder: 6 },
+];
+const fashionLuxuryFields: CategoryAttributeField[] = [
+  { key: "purchase_invoice", label: "Purchase Invoice", options: yesNoOptions, sectionName: "Luxury Fashion Details", sectionOrder: 12 },
+  { key: "brand_verification", label: "Brand Verification", options: yesNoOptions, sectionName: "Luxury Fashion Details", sectionOrder: 12 },
+];
+const fashionPostingCommonFields: CategoryAttributeField[] = [
+  { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "product_name", label: "Product Name", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "brand", label: "Brand", sectionName: "Product Information", sectionOrder: 2 },
+  { key: "product_type", label: "Product Type", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Product Information", sectionOrder: 2 },
+  { key: "condition", label: "Condition", options: fashionConditionOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "seller_type", label: "Seller Type", options: fashionSellerTypeOptions, isRequired: true, sectionName: "Product Condition", sectionOrder: 3 },
+  { key: "price", label: "Selling Price (USD)", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "original_price", label: "Original Price", type: "number", sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "discount_percentage", label: "Discount Percentage", type: "number", sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "bulk_purchase_available", label: "Bulk Purchase Available", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 4 },
+  { key: "pickup_available", label: "Pickup Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 5 },
+  { key: "shipping_available", label: "Shipping Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 5 },
+  { key: "nationwide_delivery", label: "Nationwide Delivery", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 5 },
+  { key: "color", label: "Color", sectionName: "Product Specifications", sectionOrder: 6 },
+  { key: "material", label: "Material", sectionName: "Product Specifications", sectionOrder: 6 },
+  { key: "delivery_available", label: "Delivery Available", options: yesNoOptions, sectionName: "Shipping & Delivery", sectionOrder: 8 },
+  { key: "shipping_charges", label: "Shipping Charges", type: "number", sectionName: "Shipping & Delivery", sectionOrder: 8 },
+  { key: "delivery_time", label: "Delivery Time", sectionName: "Shipping & Delivery", sectionOrder: 8 },
+  { key: "return_available", label: "Return Available", options: yesNoOptions, sectionName: "Shipping & Delivery", sectionOrder: 8 },
+  { key: "exchange_available", label: "Exchange Available", options: yesNoOptions, sectionName: "Shipping & Delivery", sectionOrder: 8 },
+  { key: "seller_name", label: "Seller Name", isRequired: true, sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "business_name", label: "Business Name", sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "phone", label: "Phone (OTP Verified)", isRequired: true, sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "email", label: "Email", isRequired: true, sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "website", label: "Website", sectionName: "Seller Information", sectionOrder: 9 },
+  { key: "coupon_available", label: "Coupon Available", options: yesNoOptions, sectionName: "Offers & Promotions", sectionOrder: 11 },
+  { key: "seasonal_discount", label: "Seasonal Discount", options: yesNoOptions, sectionName: "Offers & Promotions", sectionOrder: 11 },
+  { key: "buy_one_get_one", label: "Buy One Get One", options: yesNoOptions, sectionName: "Offers & Promotions", sectionOrder: 11 },
+  { key: "clearance_sale", label: "Clearance Sale", options: yesNoOptions, sectionName: "Offers & Promotions", sectionOrder: 11 },
+  { key: "brand_verified", label: "Brand Verified", options: yesNoOptions, sectionName: "Verification & Authenticity", sectionOrder: 12 },
+  { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Verification & Authenticity", sectionOrder: 12 },
+  { key: "original_invoice_available", label: "Original Invoice Available", options: yesNoOptions, sectionName: "Verification & Authenticity", sectionOrder: 12 },
+  { key: "warranty_available", label: "Warranty Available", options: yesNoOptions, sectionName: "Verification & Authenticity", sectionOrder: 12 },
+  { key: "warranty", label: "Warranty", sectionName: "Verification & Authenticity", sectionOrder: 12 },
+];
+
+const beautyPostingCommonFields: CategoryAttributeField[] = [
+  { key: "service_title", label: "Service Title", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
+  { key: "service_category", label: "Service Category", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
+  { key: "service_subcategory", label: "Subcategory", sectionName: "Service Information", sectionOrder: 2 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
+  { key: "years_of_experience", label: "Years of Experience", type: "number", isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
+  { key: "service_type", label: "Service Type", options: ["Salon Based", "Home Service", "Mobile Service", "Studio Service", "Online Consultation"], isRequired: true, sectionName: "Service Information", sectionOrder: 2 },
+  { key: "professional_name", label: "Professional Name", isRequired: true, sectionName: "Professional Information", sectionOrder: 3 },
+  { key: "salon_name", label: "Salon Name", sectionName: "Professional Information", sectionOrder: 3 },
+  { key: "license_number", label: "License Number", sectionName: "Professional Information", sectionOrder: 3 },
+  { key: "certifications", label: "Certifications", type: "textarea", sectionName: "Professional Information", sectionOrder: 3 },
+  { key: "languages_spoken", label: "Languages Spoken", sectionName: "Professional Information", sectionOrder: 3 },
+  { key: "service_radius", label: "Service Radius", sectionName: "Location Information", sectionOrder: 4 },
+  { key: "price", label: "Starting Price", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 8 },
+  { key: "package_price", label: "Package Price", type: "number", sectionName: "Pricing Information", sectionOrder: 8 },
+  { key: "hourly_rate", label: "Hourly Rate", type: "number", sectionName: "Pricing Information", sectionOrder: 8 },
+  { key: "consultation_fee", label: "Consultation Fee", type: "number", sectionName: "Pricing Information", sectionOrder: 8 },
+  { key: "special_discounts", label: "Special Discounts", type: "textarea", sectionName: "Pricing Information", sectionOrder: 8 },
+  { key: "working_days", label: "Working Days", sectionName: "Availability", sectionOrder: 8 },
+  { key: "business_hours", label: "Business Hours", sectionName: "Availability", sectionOrder: 8 },
+  { key: "weekend_availability", label: "Weekend Availability", options: yesNoOptions, sectionName: "Availability", sectionOrder: 8 },
+  { key: "emergency_appointments", label: "Emergency Appointments", options: yesNoOptions, sectionName: "Availability", sectionOrder: 8 },
+  { key: "same_day_booking", label: "Same-Day Booking", options: yesNoOptions, sectionName: "Availability", sectionOrder: 8 },
+  { key: "audience_women", label: "Women", type: "checkbox", sectionName: "Target Audience", sectionOrder: 8 },
+  { key: "audience_men", label: "Men", type: "checkbox", sectionName: "Target Audience", sectionOrder: 8 },
+  { key: "audience_teens", label: "Teens", type: "checkbox", sectionName: "Target Audience", sectionOrder: 8 },
+  { key: "audience_brides", label: "Brides", type: "checkbox", sectionName: "Target Audience", sectionOrder: 8 },
+  { key: "audience_grooms", label: "Grooms", type: "checkbox", sectionName: "Target Audience", sectionOrder: 8 },
+  { key: "audience_seniors", label: "Seniors", type: "checkbox", sectionName: "Target Audience", sectionOrder: 8 },
+  { key: "audience_all_customers", label: "All Customers", type: "checkbox", sectionName: "Target Audience", sectionOrder: 8 },
+  { key: "phone", label: "Phone Number", isRequired: true, sectionName: "Contact Information", sectionOrder: 9 },
+  { key: "email", label: "Email", isRequired: true, sectionName: "Contact Information", sectionOrder: 9 },
+  { key: "website", label: "Website", sectionName: "Contact Information", sectionOrder: 9 },
+  { key: "social_media_links", label: "Social Media Links", type: "textarea", sectionName: "Contact Information", sectionOrder: 9 },
+];
+const beautyBridalFields: CategoryAttributeField[] = [
+  { key: "wedding_date", label: "Wedding Date", type: "date", sectionName: "Bridal Beauty Details", sectionOrder: 10 },
+  { key: "bridal_package_details", label: "Bridal Package Details", type: "textarea", sectionName: "Bridal Beauty Details", sectionOrder: 10 },
+  { key: "trial_makeup_available", label: "Trial Makeup Available", options: yesNoOptions, sectionName: "Bridal Beauty Details", sectionOrder: 10 },
+  { key: "travel_availability", label: "Travel Availability", options: yesNoOptions, sectionName: "Bridal Beauty Details", sectionOrder: 10 },
+];
+const beautyHairFields: CategoryAttributeField[] = [
+  { key: "hair_length", label: "Hair Length", options: ["Short", "Medium", "Long", "Extra Long"], sectionName: "Hair Service Details", sectionOrder: 10 },
+  { key: "hair_type", label: "Hair Type", options: ["Straight", "Wavy", "Curly", "Coily", "All Hair Types"], sectionName: "Hair Service Details", sectionOrder: 10 },
+  { key: "products_used", label: "Products Used", type: "textarea", sectionName: "Hair Service Details", sectionOrder: 10 },
+  { key: "treatment_duration", label: "Treatment Duration", sectionName: "Hair Service Details", sectionOrder: 10 },
+];
+const beautyNailFields: CategoryAttributeField[] = [
+  { key: "nail_type", label: "Nail Type", sectionName: "Nail Service Details", sectionOrder: 10 },
+  { key: "nail_art_gallery", label: "Nail Art Gallery", type: "file", sectionName: "Nail Service Details", sectionOrder: 10 },
+  { key: "extension_options", label: "Extension Options", type: "textarea", sectionName: "Nail Service Details", sectionOrder: 10 },
+];
+const beautySpaFields: CategoryAttributeField[] = [
+  { key: "session_duration", label: "Session Duration", sectionName: "Spa Service Details", sectionOrder: 10 },
+  { key: "wellness_packages", label: "Wellness Packages", type: "textarea", sectionName: "Spa Service Details", sectionOrder: 10 },
+  { key: "therapist_gender_preference", label: "Therapist Gender Preference", options: ["No Preference", "Female", "Male"], sectionName: "Spa Service Details", sectionOrder: 10 },
+];
+const beautyTrainingFields: CategoryAttributeField[] = [
+  { key: "course_duration", label: "Course Duration", sectionName: "Beauty Training Details", sectionOrder: 10 },
+  { key: "certification_details", label: "Certification Details", type: "textarea", sectionName: "Beauty Training Details", sectionOrder: 10 },
+  { key: "placement_assistance", label: "Placement Assistance", options: yesNoOptions, sectionName: "Beauty Training Details", sectionOrder: 10 },
+];
+const beautyMobileFields: CategoryAttributeField[] = [
+  { key: "travel_radius", label: "Travel Radius", sectionName: "Mobile Beauty Details", sectionOrder: 10 },
+  { key: "travel_charges", label: "Travel Charges", type: "number", sectionName: "Mobile Beauty Details", sectionOrder: 10 },
+  { key: "home_visit_availability", label: "Home Visit Availability", options: yesNoOptions, sectionName: "Mobile Beauty Details", sectionOrder: 10 },
+];
+
+const booksSportsConditionOptions = ["New", "Like New", "Good", "Fair", "Collectible", "Vintage"];
+const booksSportsPostingCommonFields: CategoryAttributeField[] = [
+  { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Listing Information", sectionOrder: 2 },
+  { key: "item_name", label: "Product / Activity Name", isRequired: true, sectionName: "Listing Information", sectionOrder: 2 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Listing Information", sectionOrder: 2 },
+  { key: "brand", label: "Brand", sectionName: "Listing Information", sectionOrder: 2 },
+  { key: "condition", label: "Condition", options: booksSportsConditionOptions, isRequired: true, sectionName: "Listing Information", sectionOrder: 2 },
+  { key: "price", label: "Selling Price", type: "number", isRequired: true, sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "original_price", label: "Original Price", type: "number", sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "price_negotiable", label: "Negotiable", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "auction_option", label: "Auction Option", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "bulk_purchase_available", label: "Bulk Purchase Available", options: yesNoOptions, sectionName: "Pricing Information", sectionOrder: 3 },
+  { key: "pickup_available", label: "Pickup Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 4 },
+  { key: "shipping_available", label: "Shipping Available", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 4 },
+  { key: "nationwide_delivery", label: "Nationwide Delivery", options: yesNoOptions, sectionName: "Location Information", sectionOrder: 4 },
+  { key: "videos", label: "Videos", sectionName: "Media Upload", sectionOrder: 5 },
+  { key: "certificates", label: "Certificates", type: "file", sectionName: "Media Upload", sectionOrder: 5 },
+  { key: "manuals", label: "Manuals", type: "file", sectionName: "Media Upload", sectionOrder: 5 },
+  { key: "product_documentation", label: "Product Documentation", type: "file", sectionName: "Media Upload", sectionOrder: 5 },
+  { key: "seller_name", label: "Seller Name", isRequired: true, sectionName: "Seller Information", sectionOrder: 6 },
+  { key: "business_name", label: "Business Name", sectionName: "Seller Information", sectionOrder: 6 },
+  { key: "phone", label: "Phone Number", isRequired: true, sectionName: "Seller Information", sectionOrder: 6 },
+  { key: "email", label: "Email Address", isRequired: true, sectionName: "Seller Information", sectionOrder: 6 },
+];
+const booksSpecificFields: CategoryAttributeField[] = [
+  { key: "isbn", label: "ISBN", sectionName: "Book-Specific Fields", sectionOrder: 7 },
+  { key: "author", label: "Author", sectionName: "Book-Specific Fields", sectionOrder: 7 },
+  { key: "publisher", label: "Publisher", sectionName: "Book-Specific Fields", sectionOrder: 7 },
+  { key: "publication_year", label: "Publication Year", type: "number", sectionName: "Book-Specific Fields", sectionOrder: 7 },
+  { key: "language", label: "Language", sectionName: "Book-Specific Fields", sectionOrder: 7 },
+  { key: "edition", label: "Edition", sectionName: "Book-Specific Fields", sectionOrder: 7 },
+  { key: "number_of_pages", label: "Number of Pages", type: "number", sectionName: "Book-Specific Fields", sectionOrder: 7 },
+];
+const booksSportsEquipmentFields: CategoryAttributeField[] = [
+  { key: "sport_type", label: "Sport Type", sectionName: "Sports Equipment Fields", sectionOrder: 7 },
+  { key: "equipment_size", label: "Equipment Size", sectionName: "Sports Equipment Fields", sectionOrder: 7 },
+  { key: "skill_level", label: "Skill Level", options: ["Beginner", "Intermediate", "Advanced", "Professional"], sectionName: "Sports Equipment Fields", sectionOrder: 7 },
+];
+const booksCollectibleFields: CategoryAttributeField[] = [
+  { key: "collection_type", label: "Collection Type", sectionName: "Collectibles Fields", sectionOrder: 7 },
+  { key: "collection_year", label: "Collection Year", type: "number", sectionName: "Collectibles Fields", sectionOrder: 7 },
+  { key: "authenticity_certificate", label: "Authenticity Certificate", options: yesNoOptions, sectionName: "Collectibles Fields", sectionOrder: 7 },
+  { key: "rarity_score", label: "Rarity Score", sectionName: "Collectibles Fields", sectionOrder: 7 },
+  { key: "appraisal_value", label: "Appraisal Value", type: "number", sectionName: "Collectibles Fields", sectionOrder: 7 },
+];
+const booksMusicFields: CategoryAttributeField[] = [
+  { key: "instrument_type", label: "Instrument Type", sectionName: "Musical Instrument Fields", sectionOrder: 7 },
+  { key: "model", label: "Model", sectionName: "Musical Instrument Fields", sectionOrder: 7 },
+  { key: "instrument_condition", label: "Instrument Condition", options: booksSportsConditionOptions, sectionName: "Musical Instrument Fields", sectionOrder: 7 },
+  { key: "warranty", label: "Warranty", options: yesNoOptions, sectionName: "Musical Instrument Fields", sectionOrder: 7 },
+  { key: "included_accessories", label: "Included Accessories", type: "textarea", sectionName: "Musical Instrument Fields", sectionOrder: 7 },
+  { key: "sound_samples", label: "Sound Samples", sectionName: "Musical Instrument Fields", sectionOrder: 7 },
+];
+const booksPhotographyFields: CategoryAttributeField[] = [
+  { key: "camera_brand", label: "Camera Brand", sectionName: "Photography Fields", sectionOrder: 7 },
+  { key: "camera_model", label: "Model", sectionName: "Photography Fields", sectionOrder: 7 },
+  { key: "lens_type", label: "Lens Type", sectionName: "Photography Fields", sectionOrder: 7 },
+  { key: "lens_compatibility", label: "Lens Compatibility", sectionName: "Photography Fields", sectionOrder: 7 },
+  { key: "sensor_type", label: "Sensor Type", sectionName: "Photography Fields", sectionOrder: 7 },
+  { key: "shutter_count", label: "Shutter Count", type: "number", sectionName: "Photography Fields", sectionOrder: 7 },
+];
+const booksHobbyClubFields: CategoryAttributeField[] = [
+  { key: "membership_type", label: "Membership Type", sectionName: "Hobby Club Details", sectionOrder: 7 },
+  { key: "meeting_frequency", label: "Meeting Frequency", sectionName: "Hobby Club Details", sectionOrder: 7 },
+  { key: "club_location", label: "Club Location", sectionName: "Hobby Club Details", sectionOrder: 7 },
+  { key: "member_capacity", label: "Member Capacity", type: "number", sectionName: "Hobby Club Details", sectionOrder: 7 },
 ];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
@@ -1109,26 +1407,45 @@ const categoryAttributeFieldsByCategory: Record<string, CategoryAttributeField[]
   "Furniture & Home Decor": [
     ...furniturePostingCommonFields,
   ],
+  "Groups & Communities": [
+    ...groupPostingCommonFields,
+    ...groupProfessionalFields,
+    ...groupStudentFields,
+    ...groupReligiousFields,
+    ...groupSportsFields,
+    ...groupVolunteerFields,
+    ...groupOnlineFields,
+  ],
   "Fashion & Lifestyle": [
-    { key: "brand", label: "Brand" },
-    { key: "size", label: "Size" },
-    { key: "condition", label: "Condition", options: commonConditionOptions },
-    { key: "material", label: "Material" },
-    { key: "color", label: "Color" },
-    { key: "genderFit", label: "Fit / Gender", options: ["Men", "Women", "Kids", "Unisex"] },
-    { key: "authenticity", label: "Authenticity", options: ["Original", "Replica", "Not Applicable"] },
+    ...fashionPostingCommonFields,
+    ...fashionClothingFields,
+    ...fashionFootwearFields,
+    ...fashionJewelryFields,
+    ...fashionWatchFields,
+    ...fashionBeautyFields,
+    ...fashionWeddingFields,
+    ...fashionLuxuryFields,
+  ],
+  "Beauty Services": [
+    ...beautyPostingCommonFields,
+    ...beautyBridalFields,
+    ...beautyHairFields,
+    ...beautyNailFields,
+    ...beautySpaFields,
+    ...beautyTrainingFields,
+    ...beautyMobileFields,
   ],
   "Pets & Animals": [
     ...petPostingCommonFields,
   ],
   "Books, Sports & Hobbies": [
-    { key: "brandOrAuthor", label: "Brand / Author" },
-    { key: "condition", label: "Condition", options: commonConditionOptions },
-    { key: "classOrLevel", label: "Class / Level" },
-    { key: "language", label: "Language" },
-    { key: "quantity", label: "Quantity", type: "number" },
-    { key: "ageGroup", label: "Age Group" },
-    { key: "includedItems", label: "Included Items" },
+    ...booksSportsPostingCommonFields,
+    ...booksSpecificFields,
+    ...booksSportsEquipmentFields,
+    ...booksCollectibleFields,
+    ...booksMusicFields,
+    ...booksPhotographyFields,
+    ...booksHobbyClubFields,
   ],
   Jobs: [
     { key: "job_title", label: "Job Title", isRequired: true, sectionName: "Job Information", sectionOrder: 2 },
@@ -1707,52 +2024,85 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Furniture & Home Decor": {
     default: categoryAttributeFieldsByCategory["Furniture & Home Decor"],
   },
+  "Groups & Communities": {
+    default: categoryAttributeFieldsByCategory["Groups & Communities"],
+    subCategories: {
+      "Cultural Communities": groupPostingCommonFields,
+      "Regional Communities": groupPostingCommonFields,
+      "Professional Networks": [...groupPostingCommonFields, ...groupProfessionalFields],
+      "Student Communities": [...groupPostingCommonFields, ...groupStudentFields],
+      "Religious & Spiritual Groups": [...groupPostingCommonFields, ...groupReligiousFields],
+      "Sports & Fitness Groups": [...groupPostingCommonFields, ...groupSportsFields],
+      "Hobby & Interest Groups": groupPostingCommonFields,
+      "Parents & Family Groups": groupPostingCommonFields,
+      "Women's Communities": groupPostingCommonFields,
+      "Senior Citizen Communities": groupPostingCommonFields,
+      "Non-Profit & Volunteer Groups": [...groupPostingCommonFields, ...groupVolunteerFields],
+      "Business Networking Groups": [...groupPostingCommonFields, ...groupProfessionalFields],
+      "Social Clubs": groupPostingCommonFields,
+      "Online Communities": [...groupPostingCommonFields, ...groupOnlineFields],
+      "Alumni Groups": groupPostingCommonFields,
+    },
+  },
   "Fashion & Lifestyle": {
     default: categoryAttributeFieldsByCategory["Fashion & Lifestyle"],
     subCategories: {
-      Men: [
-        { key: "itemType", label: "Item Type", options: ["Clothing", "Footwear"] },
-        { key: "brand", label: "Brand" },
-        { key: "size", label: "Size" },
-        { key: "fit", label: "Fit" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-      ],
-      Women: [
-        { key: "itemType", label: "Item Type", options: ["Clothing", "Footwear"] },
-        { key: "brand", label: "Brand" },
-        { key: "size", label: "Size" },
-        { key: "color", label: "Color" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-      ],
-      Kids: [
-        { key: "itemType", label: "Item Type", options: ["Clothing", "Footwear"] },
-        { key: "ageGroup", label: "Age Group" },
-        { key: "brand", label: "Brand" },
-        { key: "size", label: "Size" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-      ],
-      Accessories: [
-        { key: "accessoryType", label: "Accessory Type" },
-        { key: "brand", label: "Brand" },
-        { key: "material", label: "Material" },
-        { key: "authenticity", label: "Authenticity", options: ["Original", "Replica", "Not Applicable"] },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-      ],
+      "Men's Fashion": [...fashionPostingCommonFields, ...fashionClothingFields],
+      "Women's Fashion": [...fashionPostingCommonFields, ...fashionClothingFields],
+      "Kids & Baby Fashion": [...fashionPostingCommonFields, ...fashionClothingFields],
+      "Ethnic & Traditional Wear": [...fashionPostingCommonFields, ...fashionClothingFields],
+      Footwear: [...fashionPostingCommonFields, ...fashionFootwearFields],
+      "Jewelry & Watches": [...fashionPostingCommonFields, ...fashionJewelryFields, ...fashionWatchFields],
+      "Handbags & Accessories": fashionPostingCommonFields,
+      "Beauty & Personal Care": [...fashionPostingCommonFields, ...fashionBeautyFields],
+      "Health & Wellness": fashionPostingCommonFields,
+      "Luxury Fashion": [...fashionPostingCommonFields, ...fashionLuxuryFields],
+      "Sportswear & Activewear": [...fashionPostingCommonFields, ...fashionClothingFields],
+      "Wedding & Occasion Wear": [...fashionPostingCommonFields, ...fashionClothingFields, ...fashionWeddingFields],
     },
     detailedCategories: {
-      Jewelry: [
-        { key: "jewelryType", label: "Jewelry Type" },
-        { key: "metal", label: "Metal" },
-        { key: "purity", label: "Purity" },
-        { key: "weight", label: "Weight" },
-        { key: "certificateAvailable", label: "Certificate Available", options: ["Yes", "No"] },
-      ],
-      Watches: [
-        { key: "brand", label: "Brand" },
-        { key: "watchType", label: "Watch Type", options: ["Analog", "Digital", "Smartwatch"] },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "boxAvailable", label: "Box Available", options: ["Yes", "No"] },
-      ],
+      "Casual Shoes": [...fashionPostingCommonFields, ...fashionFootwearFields],
+      "Formal Shoes": [...fashionPostingCommonFields, ...fashionFootwearFields],
+      Sneakers: [...fashionPostingCommonFields, ...fashionFootwearFields],
+      Sandals: [...fashionPostingCommonFields, ...fashionFootwearFields],
+      Boots: [...fashionPostingCommonFields, ...fashionFootwearFields],
+      "Sports Shoes": [...fashionPostingCommonFields, ...fashionFootwearFields],
+      "Gold Jewelry": [...fashionPostingCommonFields, ...fashionJewelryFields],
+      "Silver Jewelry": [...fashionPostingCommonFields, ...fashionJewelryFields],
+      "Diamond Jewelry": [...fashionPostingCommonFields, ...fashionJewelryFields],
+      "Fashion Jewelry": [...fashionPostingCommonFields, ...fashionJewelryFields],
+      Watches: [...fashionPostingCommonFields, ...fashionWatchFields],
+      "Smart Watches": [...fashionPostingCommonFields, ...fashionWatchFields],
+      "Makeup Products": [...fashionPostingCommonFields, ...fashionBeautyFields],
+      "Skincare Products": [...fashionPostingCommonFields, ...fashionBeautyFields],
+      "Hair Care Products": [...fashionPostingCommonFields, ...fashionBeautyFields],
+      Fragrances: [...fashionPostingCommonFields, ...fashionBeautyFields],
+      "Grooming Kits": [...fashionPostingCommonFields, ...fashionBeautyFields],
+      "Bridal Wear": [...fashionPostingCommonFields, ...fashionClothingFields, ...fashionWeddingFields],
+      "Groom Wear": [...fashionPostingCommonFields, ...fashionClothingFields, ...fashionWeddingFields],
+      "Bridesmaid Dresses": [...fashionPostingCommonFields, ...fashionClothingFields, ...fashionWeddingFields],
+      "Wedding Accessories": [...fashionPostingCommonFields, ...fashionWeddingFields],
+      "Designer Clothing": [...fashionPostingCommonFields, ...fashionClothingFields, ...fashionLuxuryFields],
+      "Luxury Watches": [...fashionPostingCommonFields, ...fashionWatchFields, ...fashionLuxuryFields],
+      "Luxury Handbags": [...fashionPostingCommonFields, ...fashionLuxuryFields],
+      "Premium Accessories": [...fashionPostingCommonFields, ...fashionLuxuryFields],
+    },
+  },
+  "Beauty Services": {
+    default: categoryAttributeFieldsByCategory["Beauty Services"],
+    subCategories: {
+      "Hair Services": [...beautyPostingCommonFields, ...beautyHairFields],
+      "Makeup Services": beautyPostingCommonFields,
+      "Bridal Beauty Services": [...beautyPostingCommonFields, ...beautyBridalFields],
+      "Skincare & Facial Services": beautyPostingCommonFields,
+      "Nail Services": [...beautyPostingCommonFields, ...beautyNailFields],
+      "Spa & Wellness Services": [...beautyPostingCommonFields, ...beautySpaFields],
+      "Eyebrow & Eyelash Services": beautyPostingCommonFields,
+      "Waxing & Hair Removal": beautyPostingCommonFields,
+      "Men's Grooming Services": beautyPostingCommonFields,
+      "Beauty Training & Classes": [...beautyPostingCommonFields, ...beautyTrainingFields],
+      "Cosmetic & Aesthetic Services": beautyPostingCommonFields,
+      "Mobile Beauty Services": [...beautyPostingCommonFields, ...beautyMobileFields],
     },
   },
   "Pets & Animals": {
@@ -1811,33 +2161,62 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
   "Books, Sports & Hobbies": {
     default: categoryAttributeFieldsByCategory["Books, Sports & Hobbies"],
     subCategories: {
-      Books: [
-        { key: "bookType", label: "Book Type" },
-        { key: "authorOrPublisher", label: "Author / Publisher" },
-        { key: "classOrLevel", label: "Class / Level" },
-        { key: "language", label: "Language" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-      ],
-      "Sports Equipment": [
-        { key: "sportType", label: "Sport Type" },
-        { key: "brand", label: "Brand" },
-        { key: "sizeOrWeight", label: "Size / Weight" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "includedItems", label: "Included Items" },
-      ],
-      "Musical Instruments": [
-        { key: "instrumentType", label: "Instrument Type" },
-        { key: "brand", label: "Brand" },
-        { key: "model", label: "Model" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "accessoriesIncluded", label: "Accessories Included" },
-      ],
-      "Hobby Items": [
-        { key: "hobbyType", label: "Hobby Type" },
-        { key: "collectionSize", label: "Collection Size" },
-        { key: "condition", label: "Condition", options: commonConditionOptions },
-        { key: "authenticity", label: "Authenticity" },
-      ],
+      "Books & Magazines": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Educational Materials": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Sports Equipment": [...booksSportsPostingCommonFields, ...booksSportsEquipmentFields],
+      "Fitness & Exercise Gear": [...booksSportsPostingCommonFields, ...booksSportsEquipmentFields],
+      "Outdoor Recreation": [...booksSportsPostingCommonFields, ...booksSportsEquipmentFields],
+      "Team Sports": [...booksSportsPostingCommonFields, ...booksSportsEquipmentFields],
+      "Indoor Games": booksSportsPostingCommonFields,
+      Collectibles: [...booksSportsPostingCommonFields, ...booksCollectibleFields],
+      "Arts & Crafts": booksSportsPostingCommonFields,
+      "Music & Instruments": [...booksSportsPostingCommonFields, ...booksMusicFields],
+      "Photography & Videography": [...booksSportsPostingCommonFields, ...booksPhotographyFields],
+      "DIY & Maker Projects": booksSportsPostingCommonFields,
+      "Toys & Hobby Kits": booksSportsPostingCommonFields,
+      "Gaming & Board Games": booksSportsPostingCommonFields,
+      "Hobby Clubs & Activities": [...booksSportsPostingCommonFields, ...booksHobbyClubFields],
+    },
+    detailedCategories: {
+      "Fiction Books": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Non-Fiction Books": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Academic Books": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Children's Books": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Religious Books": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Language Learning Books": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Comics & Graphic Novels": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "E-Books": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      Magazines: [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Study Guides": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Test Preparation Books": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "School Textbooks": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "College Textbooks": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Competitive Exam Materials": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      "Educational Kits": [...booksSportsPostingCommonFields, ...booksSpecificFields],
+      Coins: [...booksSportsPostingCommonFields, ...booksCollectibleFields],
+      Stamps: [...booksSportsPostingCommonFields, ...booksCollectibleFields],
+      "Sports Memorabilia": [...booksSportsPostingCommonFields, ...booksCollectibleFields],
+      "Trading Cards": [...booksSportsPostingCommonFields, ...booksCollectibleFields],
+      "Vintage Collections": [...booksSportsPostingCommonFields, ...booksCollectibleFields],
+      "Action Figures": [...booksSportsPostingCommonFields, ...booksCollectibleFields],
+      Guitars: [...booksSportsPostingCommonFields, ...booksMusicFields],
+      Keyboards: [...booksSportsPostingCommonFields, ...booksMusicFields],
+      Drums: [...booksSportsPostingCommonFields, ...booksMusicFields],
+      Violins: [...booksSportsPostingCommonFields, ...booksMusicFields],
+      "DJ Equipment": [...booksSportsPostingCommonFields, ...booksMusicFields],
+      "Audio Accessories": [...booksSportsPostingCommonFields, ...booksMusicFields],
+      Cameras: [...booksSportsPostingCommonFields, ...booksPhotographyFields],
+      Lenses: [...booksSportsPostingCommonFields, ...booksPhotographyFields],
+      Tripods: [...booksSportsPostingCommonFields, ...booksPhotographyFields],
+      "Lighting Equipment": [...booksSportsPostingCommonFields, ...booksPhotographyFields],
+      Drones: [...booksSportsPostingCommonFields, ...booksPhotographyFields],
+      "Studio Accessories": [...booksSportsPostingCommonFields, ...booksPhotographyFields],
+      "Book Clubs": [...booksSportsPostingCommonFields, ...booksHobbyClubFields],
+      "Sports Clubs": [...booksSportsPostingCommonFields, ...booksHobbyClubFields],
+      "Photography Clubs": [...booksSportsPostingCommonFields, ...booksHobbyClubFields],
+      "Music Groups": [...booksSportsPostingCommonFields, ...booksHobbyClubFields],
+      "Art Communities": [...booksSportsPostingCommonFields, ...booksHobbyClubFields],
+      "Hobby Meetups": [...booksSportsPostingCommonFields, ...booksHobbyClubFields],
     },
   },
   Jobs: {
@@ -1970,6 +2349,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const isElectronicsListing = !isClassifiedMode && isElectronicsCategoryName(form.categoryName);
   const isFurnitureListing = !isClassifiedMode && isFurnitureCategory(form.categoryName);
   const isPetsListing = !isClassifiedMode && form.categoryName === "Pets & Animals";
+  const isGroupsListing = !isClassifiedMode && form.categoryName === "Groups & Communities";
+  const isFashionListing = !isClassifiedMode && form.categoryName === "Fashion & Lifestyle";
+  const isBeautyListing = !isClassifiedMode && form.categoryName === "Beauty Services";
+  const isBooksSportsListing = !isClassifiedMode && form.categoryName === "Books, Sports & Hobbies";
 
   useEffect(() => {
     if (isClassifiedMode) {
@@ -2397,7 +2780,18 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     [dynamicCategoryFields, form.categoryName, form.detailCategory, form.subCategory],
   );
   const hasDynamicCategoryFields = !isRealEstateListing && effectiveDynamicCategoryFields.length > 0;
-  const hasDynamicPriceField = !isRealEstateListing && hasAnyFieldKey(effectiveDynamicCategoryFields, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price");
+  const hasDynamicPriceField = !isRealEstateListing && hasAnyFieldKey(
+    effectiveDynamicCategoryFields,
+    "price",
+    "listing_price",
+    "total_price",
+    "monthly_rent",
+    "sale_price",
+    "vehicle_price",
+    "starting_price",
+    "selling_price",
+    "asking_price",
+  );
   const shouldRenderFallbackPriceField = !hasDynamicPriceField &&
     form.categoryName !== "Restaurants & Food" &&
     !isEventsListingCategory(form.categoryName) &&
@@ -2952,6 +3346,30 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           return finishStepValidation();
         }
 
+        if (form.categoryName === "Groups & Communities") {
+          addRequiredGroupCategoryFieldErrors(1, addFieldError);
+          addSharedListingLocationErrors(addFieldError);
+          return finishStepValidation();
+        }
+
+        if (form.categoryName === "Fashion & Lifestyle") {
+          addRequiredFashionCategoryFieldErrors(1, addFieldError);
+          addSharedListingLocationErrors(addFieldError);
+          return finishStepValidation();
+        }
+
+        if (form.categoryName === "Beauty Services") {
+          addRequiredBeautyCategoryFieldErrors(1, addFieldError);
+          addSharedListingLocationErrors(addFieldError);
+          return finishStepValidation();
+        }
+
+        if (form.categoryName === "Books, Sports & Hobbies") {
+          addRequiredBooksSportsCategoryFieldErrors(1, addFieldError);
+          addSharedListingLocationErrors(addFieldError);
+          return finishStepValidation();
+        }
+
         if (isFurnitureCategory(form.categoryName)) {
           addRequiredFurnitureCategoryFieldErrors(1, addFieldError);
           return finishStepValidation();
@@ -3065,6 +3483,27 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return finishStepValidation();
     }
 
+    if (step === 2 && form.categoryName === "Groups & Communities") {
+      addRequiredGroupCategoryFieldErrors(2, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 2 && form.categoryName === "Fashion & Lifestyle") {
+      addRequiredFashionCategoryFieldErrors(2, addFieldError);
+      addSharedListingLocationErrors(addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 2 && form.categoryName === "Beauty Services") {
+      addRequiredBeautyCategoryFieldErrors(2, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 2 && form.categoryName === "Books, Sports & Hobbies") {
+      addRequiredBooksSportsCategoryFieldErrors(2, addFieldError);
+      return finishStepValidation();
+    }
+
     if (step === 2 && isFurnitureCategory(form.categoryName)) {
       addRequiredFurnitureCategoryFieldErrors(2, addFieldError);
       return finishStepValidation();
@@ -3132,6 +3571,26 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return finishStepValidation();
     }
 
+    if (step === 3 && form.categoryName === "Groups & Communities") {
+      addRequiredGroupCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 3 && form.categoryName === "Fashion & Lifestyle") {
+      addRequiredFashionCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 3 && form.categoryName === "Beauty Services") {
+      addRequiredBeautyCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 3 && form.categoryName === "Books, Sports & Hobbies") {
+      addRequiredBooksSportsCategoryFieldErrors(3, addFieldError);
+      return finishStepValidation();
+    }
+
     if (step === 3 && isFurnitureCategory(form.categoryName)) {
       addRequiredFurnitureCategoryFieldErrors(3, addFieldError);
       return finishStepValidation();
@@ -3154,6 +3613,26 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (step === 4 && form.categoryName === "Pets & Animals") {
       addRequiredPetCategoryFieldErrors(4, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && form.categoryName === "Groups & Communities") {
+      addRequiredGroupCategoryFieldErrors(4, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && form.categoryName === "Fashion & Lifestyle") {
+      addRequiredFashionCategoryFieldErrors(4, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && form.categoryName === "Beauty Services") {
+      addRequiredBeautyCategoryFieldErrors(4, addFieldError);
+      return finishStepValidation();
+    }
+
+    if (step === 4 && form.categoryName === "Books, Sports & Hobbies") {
+      addRequiredBooksSportsCategoryFieldErrors(4, addFieldError);
       return finishStepValidation();
     }
 
@@ -3259,6 +3738,22 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Pets & Animals" && !validatePetFields()) {
+      return false;
+    }
+
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Groups & Communities" && !validateGroupFields()) {
+      return false;
+    }
+
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Fashion & Lifestyle" && !validateFashionFields()) {
+      return false;
+    }
+
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Beauty Services" && !validateBeautyFields()) {
+      return false;
+    }
+
+    if (!isClassifiedMode && !nextFieldErrors.categoryName && !nextFieldErrors.subCategory && form.categoryName === "Books, Sports & Hobbies" && !validateBooksSportsFields()) {
       return false;
     }
 
@@ -3428,6 +3923,46 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function addRequiredFurnitureCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
     getFurnitureStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+  }
+
+  function addRequiredGroupCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getGroupStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+  }
+
+  function addRequiredFashionCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getFashionStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+  }
+
+  function addRequiredBeautyCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getBeautyStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .forEach((field) => {
+        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+        }
+      });
+  }
+
+  function addRequiredBooksSportsCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    getBooksSportsStepCategoryFields(effectiveDynamicCategoryFields, formStep)
       .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
       .forEach((field) => {
         if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
@@ -4008,6 +4543,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     const requiredFields = [
       ["listing_title", "listingTitle", "Listing Title"],
       ["product_name", "productName", "Product Name"],
+      ["furniture_type", "furnitureType", "Furniture Type"],
       ["description", "Description"],
       ["condition", "item_condition", "Condition"],
       ["seller_type", "sellerType", "Seller Type"],
@@ -4036,6 +4572,101 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     return true;
   }
 
+  function validateGroupFields() {
+    const requiredFields = [
+      ["group_name", "groupName", "Group Name"],
+      ["group_type", "groupType", "Group Type"],
+      ["community_category", "communityCategory", "Community Category"],
+      ["description", "Description"],
+      ["group_coverage", "groupCoverage", "Group Coverage"],
+      ["membership_type", "membershipType", "Membership Type"],
+      ["membership_fees", "membershipFees", "Membership Fees"],
+      ["organizer_name", "organizerName", "Organizer Name"],
+      ["phone", "contact_phone", "Phone Number"],
+      ["email", "contact_email", "Email Address"],
+    ];
+    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    if (missing) {
+      return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
+    }
+
+    return true;
+  }
+
+  function validateFashionFields() {
+    const requiredFields = [
+      ["listing_title", "listingTitle", "Listing Title"],
+      ["product_name", "productName", "Product Name"],
+      ["product_type", "productType", "Product Type"],
+      ["description", "Description"],
+      ["condition", "item_condition", "Condition"],
+      ["seller_type", "sellerType", "Seller Type"],
+      ["price", "listing_price", "total_price", "Selling Price"],
+      ["price_negotiable", "priceNegotiable", "Negotiable"],
+      ["seller_name", "sellerName", "Seller Name"],
+      ["phone", "contact_phone", "Phone"],
+      ["email", "contact_email", "Email"],
+    ];
+    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    if (missing) {
+      return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
+    }
+
+    if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
+      return validateInlineCategoryRules([{ keys: ["price", "listing_price", "total_price"], formKey: getVisibleCategoryFieldKey("price", "listing_price", "total_price") ? undefined : "price", message: "Price is required for Fashion & Lifestyle listings." }]);
+    }
+
+    return true;
+  }
+
+  function validateBeautyFields() {
+    const requiredFields = [
+      ["service_title", "serviceTitle", "Service Title"],
+      ["service_category", "serviceCategory", "Service Category"],
+      ["description", "Description"],
+      ["years_of_experience", "yearsOfExperience", "Years of Experience"],
+      ["service_type", "serviceType", "Service Type"],
+      ["professional_name", "professionalName", "Professional Name"],
+      ["price", "starting_price", "startingPrice", "Starting Price"],
+      ["phone", "contact_phone", "Phone Number"],
+      ["email", "contact_email", "Email"],
+    ];
+    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    if (missing) {
+      return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
+    }
+
+    if (!getAttributeValue(categoryAttributes, "price", "starting_price", "startingPrice").trim() && !form.price.trim()) {
+      return validateInlineCategoryRules([{ keys: ["price", "starting_price", "startingPrice"], formKey: getVisibleCategoryFieldKey("price", "starting_price", "startingPrice") ? undefined : "price", message: "Starting Price is required for Beauty Services listings." }]);
+    }
+
+    return true;
+  }
+
+  function validateBooksSportsFields() {
+    const requiredFields = [
+      ["listing_title", "listingTitle", "Listing Title"],
+      ["item_name", "itemName", "product_name", "productName", "Product / Activity Name"],
+      ["description", "Description"],
+      ["condition", "item_condition", "Condition"],
+      ["price", "listing_price", "total_price", "Selling Price"],
+      ["price_negotiable", "priceNegotiable", "Negotiable"],
+      ["seller_name", "sellerName", "Seller Name"],
+      ["phone", "contact_phone", "Phone Number"],
+      ["email", "contact_email", "Email Address"],
+    ];
+    const missing = requiredFields.find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
+    if (missing) {
+      return validateInlineCategoryRules([{ keys: missing.slice(0, -1), message: `${missing[missing.length - 1]} is required.` }]);
+    }
+
+    if (!getAttributeValue(categoryAttributes, "price", "listing_price", "total_price").trim() && !form.price.trim()) {
+      return validateInlineCategoryRules([{ keys: ["price", "listing_price", "total_price"], formKey: getVisibleCategoryFieldKey("price", "listing_price", "total_price") ? undefined : "price", message: "Selling Price is required for Books, Sports & Hobbies listings." }]);
+    }
+
+    return true;
+  }
+
   function validateMedia() {
     if (isClassifiedMode) {
       return true;
@@ -4045,7 +4676,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return true;
     }
 
-    if (!isRealEstateListing && form.categoryName !== "Vehicles" && !isElectronicsCategoryName(form.categoryName) && form.categoryName !== "Care Services" && form.categoryName !== "Roommates & Rentals" && form.categoryName !== "Jobs" && !isFurnitureCategory(form.categoryName)) {
+    if (!isRealEstateListing && form.categoryName !== "Vehicles" && !isElectronicsCategoryName(form.categoryName) && form.categoryName !== "Care Services" && form.categoryName !== "Roommates & Rentals" && form.categoryName !== "Jobs" && form.categoryName !== "Groups & Communities" && form.categoryName !== "Fashion & Lifestyle" && form.categoryName !== "Beauty Services" && form.categoryName !== "Books, Sports & Hobbies" && !isFurnitureCategory(form.categoryName)) {
       return true;
     }
 
@@ -4055,7 +4686,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ...form.galleryMedia,
     ].filter((value) => value.trim() && !isVideoValue(value)).length;
 
-    const minImageCount = form.categoryName === "Care Services" ? 1 : form.categoryName === "Roommates & Rentals" || form.categoryName === "Jobs" ? 0 : 3;
+    const minImageCount = form.categoryName === "Care Services" ? 1 : form.categoryName === "Roommates & Rentals" || form.categoryName === "Jobs" || form.categoryName === "Groups & Communities" || form.categoryName === "Beauty Services" || form.categoryName === "Books, Sports & Hobbies" ? 0 : 3;
     if (form.categoryName === "Care Services" && !form.profileImageName.trim()) {
       const message = "Profile Photo is required for Care Services listings.";
       setErrorMessage(message);
@@ -4453,6 +5084,22 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return renderPetPostingSections(1);
     }
 
+    if (isGroupsListing) {
+      return renderGroupPostingSections(1);
+    }
+
+    if (isFashionListing) {
+      return renderFashionPostingSections(1);
+    }
+
+    if (isBeautyListing) {
+      return renderBeautyPostingSections(1);
+    }
+
+    if (isBooksSportsListing) {
+      return renderBooksSportsPostingSections(1);
+    }
+
     if (isFurnitureListing) {
       return renderFurniturePostingSections(1);
     }
@@ -4785,6 +5432,280 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     return <>{renderPetFields(petFields)}</>;
   }
 
+  function renderGroupPostingSections(formStep: number) {
+    const groupFields = getGroupStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    const renderGroupFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
+      <CategoryAttributesFields
+        categoryName={form.categoryName}
+        subCategory={form.subCategory}
+        detailCategory={form.detailCategory}
+        form={form}
+        currencyCountry={currencyCountry}
+        dynamicFields={fields}
+        values={categoryAttributes}
+        fieldErrors={fieldErrors}
+        uploadFiles={galleryFiles}
+        omitLocationFields={useSharedLocation}
+        locationSection={useSharedLocation ? (
+          <SharedListingLocationFields
+            form={form}
+            countries={countries}
+            states={states}
+            cities={cities}
+            fieldErrors={fieldErrors}
+            updateField={updateField}
+            updateCountry={updateCountry}
+            updateState={updateState}
+            updateCity={updateCity}
+            onAddressPlaceSelect={handleAddressPlaceSelect}
+          />
+        ) : undefined}
+        locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+        onChange={updateCategoryAttributes}
+        onUploadFilesChange={setGalleryFiles}
+      />
+    ) : null;
+
+    if (formStep === 3) {
+      const fieldsBeforeMedia = groupFields.filter((field) => (field.sectionOrder || 1) < 7 || (field.sectionOrder || 1) > 7);
+      const mediaFields = groupFields.filter((field) => (field.sectionOrder || 1) === 7);
+
+      return (
+        <>
+          <h5 className="mt-3 mb-3">Group Media</h5>
+          <GalleryMediaEditor
+            items={form.galleryMedia}
+            files={galleryFiles}
+            error={fieldErrors.galleryMedia}
+            onChange={(items) => {
+              clearFieldError("galleryMedia");
+              setForm((currentForm) => ({ ...currentForm, galleryMedia: items }));
+            }}
+            onFilesChange={setGalleryFiles}
+          />
+          {renderGroupFields(fieldsBeforeMedia)}
+          {renderGroupFields(mediaFields)}
+        </>
+      );
+    }
+
+    if (formStep === 4) {
+      const mainFields = groupFields.filter((field) => (field.sectionOrder || 1) < 12);
+      const promotionFields = groupFields.filter((field) => (field.sectionOrder || 1) >= 12);
+
+      return (
+        <>
+          {renderGroupFields(mainFields)}
+          {renderGenericListingVisibilityAndPromotions()}
+          {renderGroupFields(promotionFields)}
+        </>
+      );
+    }
+
+    return <>{renderGroupFields(groupFields)}</>;
+  }
+
+  function renderFashionPostingSections(formStep: number) {
+    const fashionFields = getFashionStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    const renderFashionFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
+      <CategoryAttributesFields
+        categoryName={form.categoryName}
+        subCategory={form.subCategory}
+        detailCategory={form.detailCategory}
+        form={form}
+        currencyCountry={currencyCountry}
+        dynamicFields={fields}
+        values={categoryAttributes}
+        fieldErrors={fieldErrors}
+        uploadFiles={galleryFiles}
+        omitLocationFields={useSharedLocation}
+        locationSection={useSharedLocation ? (
+          <SharedListingLocationFields
+            form={form}
+            countries={countries}
+            states={states}
+            cities={cities}
+            fieldErrors={fieldErrors}
+            updateField={updateField}
+            updateCountry={updateCountry}
+            updateState={updateState}
+            updateCity={updateCity}
+            onAddressPlaceSelect={handleAddressPlaceSelect}
+          />
+        ) : undefined}
+        locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+        onChange={updateCategoryAttributes}
+        onUploadFilesChange={setGalleryFiles}
+      />
+    ) : null;
+
+    if (formStep === 3) {
+      return (
+        <>
+          <h4>Product Images</h4>
+          <GalleryMediaEditor
+            items={form.galleryMedia}
+            files={galleryFiles}
+            error={fieldErrors.galleryMedia}
+            onChange={(items) => {
+              clearFieldError("galleryMedia");
+              setForm((currentForm) => ({ ...currentForm, galleryMedia: items }));
+            }}
+            onFilesChange={setGalleryFiles}
+          />
+          {renderFashionFields(fashionFields)}
+        </>
+      );
+    }
+
+    if (formStep === 4) {
+      return (
+        <>
+          {renderFashionFields(fashionFields)}
+          {renderGenericListingVisibilityAndPromotions()}
+        </>
+      );
+    }
+
+    return <>{renderFashionFields(fashionFields)}</>;
+  }
+
+  function renderBeautyPostingSections(formStep: number) {
+    const beautyFields = getBeautyStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    const renderBeautyFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
+      <CategoryAttributesFields
+        categoryName={form.categoryName}
+        subCategory={form.subCategory}
+        detailCategory={form.detailCategory}
+        form={form}
+        currencyCountry={currencyCountry}
+        dynamicFields={fields}
+        values={categoryAttributes}
+        fieldErrors={fieldErrors}
+        uploadFiles={galleryFiles}
+        omitLocationFields={useSharedLocation}
+        locationSection={useSharedLocation ? (
+          <SharedListingLocationFields
+            form={form}
+            countries={countries}
+            states={states}
+            cities={cities}
+            fieldErrors={fieldErrors}
+            updateField={updateField}
+            updateCountry={updateCountry}
+            updateState={updateState}
+            updateCity={updateCity}
+            onAddressPlaceSelect={handleAddressPlaceSelect}
+          />
+        ) : undefined}
+        locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+        onChange={updateCategoryAttributes}
+        onUploadFilesChange={setGalleryFiles}
+      />
+    ) : null;
+
+    if (formStep === 2) {
+      return (
+        <>
+          <h4>Portfolio & Media</h4>
+          <GalleryMediaEditor
+            items={form.galleryMedia}
+            files={galleryFiles}
+            error={fieldErrors.galleryMedia}
+            onChange={(items) => {
+              clearFieldError("galleryMedia");
+              setForm((currentForm) => ({ ...currentForm, galleryMedia: items }));
+            }}
+            onFilesChange={setGalleryFiles}
+          />
+        </>
+      );
+    }
+
+    if (formStep === 4) {
+      return (
+        <>
+          {renderGenericListingVisibilityAndPromotions()}
+        </>
+      );
+    }
+
+    return <>{renderBeautyFields(beautyFields)}</>;
+  }
+
+  function renderBooksSportsPostingSections(formStep: number) {
+    const booksSportsFields = getBooksSportsStepCategoryFields(effectiveDynamicCategoryFields, formStep);
+    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+
+    const renderBooksSportsFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
+      <CategoryAttributesFields
+        categoryName={form.categoryName}
+        subCategory={form.subCategory}
+        detailCategory={form.detailCategory}
+        form={form}
+        currencyCountry={currencyCountry}
+        dynamicFields={fields}
+        values={categoryAttributes}
+        fieldErrors={fieldErrors}
+        uploadFiles={galleryFiles}
+        omitLocationFields={useSharedLocation}
+        locationSection={useSharedLocation ? (
+          <SharedListingLocationFields
+            form={form}
+            countries={countries}
+            states={states}
+            cities={cities}
+            fieldErrors={fieldErrors}
+            updateField={updateField}
+            updateCountry={updateCountry}
+            updateState={updateState}
+            updateCity={updateCity}
+            onAddressPlaceSelect={handleAddressPlaceSelect}
+          />
+        ) : undefined}
+        locationSectionOrder={getSharedListingLocationSectionOrder(form.categoryName)}
+        onChange={updateCategoryAttributes}
+        onUploadFilesChange={setGalleryFiles}
+      />
+    ) : null;
+
+    if (formStep === 2) {
+      return (
+        <>
+          <h4>Media Upload</h4>
+          <GalleryMediaEditor
+            items={form.galleryMedia}
+            files={galleryFiles}
+            error={fieldErrors.galleryMedia}
+            onChange={(items) => {
+              clearFieldError("galleryMedia");
+              setForm((currentForm) => ({ ...currentForm, galleryMedia: items }));
+            }}
+            onFilesChange={setGalleryFiles}
+          />
+          {renderBooksSportsFields(booksSportsFields)}
+        </>
+      );
+    }
+
+    if (formStep === 4) {
+      return (
+        <>
+          {renderBooksSportsFields(booksSportsFields)}
+          {renderGenericListingVisibilityAndPromotions()}
+        </>
+      );
+    }
+
+    return <>{renderBooksSportsFields(booksSportsFields)}</>;
+  }
+
   function renderFurniturePostingSections(formStep: number) {
     const furnitureFields = getFurnitureStepCategoryFields(effectiveDynamicCategoryFields, formStep);
     const useSharedLocation = !isClassifiedMode && formStep === 3 && shouldUseSharedListingLocationSection(form.categoryName);
@@ -4963,7 +5884,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
               {wizardSteps.length > 2 && currentStep === 1 ? (
                 <div className="log">
                   <div className="login">
-                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : form.categoryName === "Vehicles" ? "Vehicle Details" : form.categoryName === "Care Services" ? "Care Service Details" : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? "Event Details" : isRoommatesRentalListing ? "Roommate & Rental Details" : form.categoryName === "Jobs" ? "Job Details" : isElectronicsListing ? "Electronics Details" : isPetsListing ? "Pet Details" : isFurnitureListing ? "Furniture & Home Details" : "Category Details"}</h4>
+                    <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : form.categoryName === "Vehicles" ? "Vehicle Details" : form.categoryName === "Care Services" ? "Care Service Details" : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? "Event Details" : isRoommatesRentalListing ? "Roommate & Rental Details" : form.categoryName === "Jobs" ? "Job Details" : isElectronicsListing ? "Electronics Details" : isPetsListing ? "Pet Details" : isGroupsListing ? "Groups & Communities Details" : isFashionListing ? "Fashion & Lifestyle Details" : isBeautyListing ? "Beauty Services Details" : isBooksSportsListing ? "Books, Sports & Hobbies Details" : isFurnitureListing ? "Furniture & Home Details" : "Category Details"}</h4>
                     <form className="listing_form_2" noValidate autoComplete="off">
                       {isRealEstateListing ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={40} />
@@ -5010,6 +5931,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           renderElectronicsPostingSections(2)
                         ) : isPetsListing ? (
                           renderPetPostingSections(2)
+                        ) : isGroupsListing ? (
+                          renderGroupPostingSections(2)
+                        ) : isFashionListing ? (
+                          renderFashionPostingSections(2)
+                        ) : isBeautyListing ? (
+                          renderBeautyPostingSections(2)
+                        ) : isBooksSportsListing ? (
+                          renderBooksSportsPostingSections(2)
                         ) : isFurnitureListing ? (
                           renderFurniturePostingSections(2)
                         ) : (
@@ -5066,6 +5995,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           renderElectronicsPostingSections(3)
                         ) : isPetsListing ? (
                           renderPetPostingSections(3)
+                        ) : isGroupsListing ? (
+                          renderGroupPostingSections(3)
+                        ) : isFashionListing ? (
+                          renderFashionPostingSections(3)
+                        ) : isBeautyListing ? (
+                          renderBeautyPostingSections(3)
+                        ) : isBooksSportsListing ? (
+                          renderBooksSportsPostingSections(3)
                         ) : isFurnitureListing ? (
                           renderFurniturePostingSections(3)
                         ) : (
@@ -5108,6 +6045,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         renderElectronicsPostingSections(4)
                       ) : isPetsListing ? (
                         renderPetPostingSections(4)
+                      ) : isGroupsListing ? (
+                        renderGroupPostingSections(4)
+                      ) : isFashionListing ? (
+                        renderFashionPostingSections(4)
+                      ) : isBeautyListing ? (
+                        renderBeautyPostingSections(4)
+                      ) : isBooksSportsListing ? (
+                        renderBooksSportsPostingSections(4)
                       ) : isFurnitureListing ? (
                         renderFurniturePostingSections(4)
                       ) : form.categoryName === "Care Services" ? (
@@ -8466,10 +9411,22 @@ function buildListingPayload(
   const isFurniturePayload = isFurnitureCategory(form.categoryName);
   const furnitureTitle = isFurniturePayload ? getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() : "";
   const furnitureDescription = isFurniturePayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
-  const listingDescription = careServiceDescription || roommatesRentalDescription || jobDescription || electronicsDescription || petDescription || furnitureDescription || form.description.trim() || form.businessDescription.trim();
+  const isGroupsPayload = form.categoryName === "Groups & Communities";
+  const groupTitle = isGroupsPayload ? getAttributeValue(categoryAttributes, "group_name", "groupName").trim() : "";
+  const groupDescription = isGroupsPayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
+  const isFashionPayload = form.categoryName === "Fashion & Lifestyle";
+  const fashionTitle = isFashionPayload ? getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() : "";
+  const fashionDescription = isFashionPayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
+  const isBeautyPayload = form.categoryName === "Beauty Services";
+  const beautyTitle = isBeautyPayload ? getAttributeValue(categoryAttributes, "service_title", "serviceTitle").trim() : "";
+  const beautyDescription = isBeautyPayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
+  const isBooksSportsPayload = form.categoryName === "Books, Sports & Hobbies";
+  const booksSportsTitle = isBooksSportsPayload ? getAttributeValue(categoryAttributes, "listing_title", "listingTitle").trim() : "";
+  const booksSportsDescription = isBooksSportsPayload ? getAttributeValue(categoryAttributes, "description").trim() : "";
+  const listingDescription = careServiceDescription || roommatesRentalDescription || jobDescription || electronicsDescription || petDescription || furnitureDescription || groupDescription || fashionDescription || beautyDescription || booksSportsDescription || form.description.trim() || form.businessDescription.trim();
   const businessDescription = form.businessDescription.trim() || form.description.trim();
   const listingPrice =
-    numberAttribute(categoryAttributes, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price") ??
+    numberAttribute(categoryAttributes, "price", "listing_price", "total_price", "monthly_rent", "sale_price", "vehicle_price", "starting_price", "selling_price", "asking_price") ??
     numberOrNull(form.price) ??
     numberOrNull(offers[0]?.price) ??
     0;
@@ -8503,12 +9460,31 @@ function buildListingPayload(
   const petContactEmail = isPetsPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
   const petWebsite = isPetsPayload ? getAttributeValue(categoryAttributes, "website").trim() : "";
   const petVideoUrl = isPetsPayload ? getAttributeValue(categoryAttributes, "pet_video_url", "petVideoUrl").trim() : "";
+  const groupOrganizerName = isGroupsPayload ? getAttributeValue(categoryAttributes, "organizer_name", "organizerName").trim() : "";
+  const groupOrganizerPhone = isGroupsPayload ? getAttributeValue(categoryAttributes, "phone", "contact_phone", "contactPhone").trim() : "";
+  const groupOrganizerEmail = isGroupsPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
+  const groupWebsite = isGroupsPayload ? getAttributeValue(categoryAttributes, "website", "communication_website", "community_url").trim() : "";
+  const groupVideoUrl = isGroupsPayload ? getAttributeValue(categoryAttributes, "videos", "video_url").trim() : "";
+  const fashionSellerName = isFashionPayload ? getAttributeValue(categoryAttributes, "seller_name", "sellerName").trim() : "";
+  const fashionSellerPhone = isFashionPayload ? getAttributeValue(categoryAttributes, "phone", "contact_phone", "contactPhone").trim() : "";
+  const fashionSellerEmail = isFashionPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
+  const fashionSellerWebsite = isFashionPayload ? getAttributeValue(categoryAttributes, "website").trim() : "";
+  const fashionVideoUrl = isFashionPayload ? getAttributeValue(categoryAttributes, "product_video_url", "productVideoUrl").trim() : "";
+  const beautyProfessionalName = isBeautyPayload ? getAttributeValue(categoryAttributes, "professional_name", "professionalName").trim() : "";
+  const beautyPhone = isBeautyPayload ? getAttributeValue(categoryAttributes, "phone", "contact_phone", "contactPhone").trim() : "";
+  const beautyEmail = isBeautyPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
+  const beautyWebsite = isBeautyPayload ? getAttributeValue(categoryAttributes, "website").trim() : "";
+  const beautyVideoUrl = isBeautyPayload ? getAttributeValue(categoryAttributes, "videos", "video_url").trim() : "";
+  const booksSportsSellerName = isBooksSportsPayload ? getAttributeValue(categoryAttributes, "seller_name", "sellerName").trim() : "";
+  const booksSportsPhone = isBooksSportsPayload ? getAttributeValue(categoryAttributes, "phone", "contact_phone", "contactPhone").trim() : "";
+  const booksSportsEmail = isBooksSportsPayload ? getAttributeValue(categoryAttributes, "email", "contact_email", "contactEmail").trim() : "";
+  const booksSportsVideoUrl = isBooksSportsPayload ? getAttributeValue(categoryAttributes, "videos", "video_url").trim() : "";
   const vehicleVideoUrl = form.categoryName === "Vehicles" ? getAttributeValue(categoryAttributes, "walkaround_video", "walkaroundVideo", "vehicle_video_url", "vehicleVideoUrl").trim() : "";
   const adDurationDays =
     numberAttribute(categoryAttributes, "ad_duration_days", "adDurationDays", "ad_duration") ??
     numberOrNull(form.adDurationDays) ??
     30;
-  const sellerType = getAttributeValue(categoryAttributes, "seller_type", "sellerType").trim() || form.sellerType.trim();
+  const sellerType = getAttributeValue(categoryAttributes, "seller_type", "sellerType", "group_type", "groupType").trim() || form.sellerType.trim();
   const restaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
   const isRestaurantCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
   const restaurantTitle = restaurantInfo.restaurantName.trim() || getAttributeValue(categoryAttributes, "restaurant_name", "restaurantName").trim() || form.title.trim();
@@ -8526,7 +9502,7 @@ function buildListingPayload(
     .map(([label]) => label);
 
   return {
-    title: form.categoryName === "Restaurants & Food" ? restaurantTitle : form.categoryName === "Vehicles" ? vehicleTitle : eventTitle || roommatesRentalTitle || jobTitle || electronicsTitle || petTitle || furnitureTitle || careServiceTitle || form.title.trim(),
+    title: form.categoryName === "Restaurants & Food" ? restaurantTitle : form.categoryName === "Vehicles" ? vehicleTitle : eventTitle || roommatesRentalTitle || jobTitle || electronicsTitle || petTitle || furnitureTitle || groupTitle || fashionTitle || beautyTitle || booksSportsTitle || careServiceTitle || form.title.trim(),
     description: form.categoryName === "Restaurants & Food" ? restaurantDescription : form.categoryName === "Vehicles" ? vehicleDescription : eventDescription || listingDescription,
     categoryName: isClassifiedMode ? "Classifieds" : form.categoryName.trim(),
     subCategory: isClassifiedMode ? form.categoryName.trim() : form.subCategory.trim(),
@@ -8620,16 +9596,16 @@ function buildListingPayload(
         form.coverImageName,
         ...form.galleryMedia,
       ].map((value) => value.trim()).filter((value) => value && !isVideoValue(value)),
-      videoUrl: electronicsVideoUrl || petVideoUrl || vehicleVideoUrl || form.listingVideo.trim() || form.galleryMedia.find(isVideoValue) || "",
+      videoUrl: electronicsVideoUrl || petVideoUrl || groupVideoUrl || fashionVideoUrl || beautyVideoUrl || booksSportsVideoUrl || vehicleVideoUrl || form.listingVideo.trim() || form.galleryMedia.find(isVideoValue) || "",
       logoUrl: form.profileImageName.trim(),
       coverBannerUrl: form.coverImageName.trim(),
     },
     sellerInformation: {
-      name: (isCareServicesPayload ? careContactName || sellerName : isRoommatesRentalsPayload ? roommatesContactName || sellerName : isJobsPayload ? jobContactName || sellerName : isElectronicsPayload ? electronicsSellerName || sellerName : isPetsPayload ? petContactName || sellerName : sellerName).trim() || form.title.trim(),
-      mobileNumber: (form.categoryName === "Restaurants & Food" ? contactInfo.mainPhone || form.mobileNumber : isCareServicesPayload ? careContactPhone || form.mobileNumber : isRoommatesRentalsPayload ? roommatesContactPhone || form.mobileNumber : isJobsPayload ? jobContactPhone || form.mobileNumber : isElectronicsPayload ? electronicsSellerPhone || form.mobileNumber : isPetsPayload ? petContactPhone || form.mobileNumber : form.mobileNumber).trim(),
-      email: (form.categoryName === "Restaurants & Food" ? contactInfo.email || form.email : isCareServicesPayload ? careContactEmail || form.email : isRoommatesRentalsPayload ? roommatesContactEmail || form.email : isJobsPayload ? jobContactEmail || form.email : isElectronicsPayload ? electronicsSellerEmail || form.email : isPetsPayload ? petContactEmail || form.email : form.email).trim(),
+      name: (isCareServicesPayload ? careContactName || sellerName : isRoommatesRentalsPayload ? roommatesContactName || sellerName : isJobsPayload ? jobContactName || sellerName : isElectronicsPayload ? electronicsSellerName || sellerName : isPetsPayload ? petContactName || sellerName : isGroupsPayload ? groupOrganizerName || sellerName : isFashionPayload ? fashionSellerName || sellerName : isBeautyPayload ? beautyProfessionalName || sellerName : isBooksSportsPayload ? booksSportsSellerName || sellerName : sellerName).trim() || form.title.trim(),
+      mobileNumber: (form.categoryName === "Restaurants & Food" ? contactInfo.mainPhone || form.mobileNumber : isCareServicesPayload ? careContactPhone || form.mobileNumber : isRoommatesRentalsPayload ? roommatesContactPhone || form.mobileNumber : isJobsPayload ? jobContactPhone || form.mobileNumber : isElectronicsPayload ? electronicsSellerPhone || form.mobileNumber : isPetsPayload ? petContactPhone || form.mobileNumber : isGroupsPayload ? groupOrganizerPhone || form.mobileNumber : isFashionPayload ? fashionSellerPhone || form.mobileNumber : isBeautyPayload ? beautyPhone || form.mobileNumber : isBooksSportsPayload ? booksSportsPhone || form.mobileNumber : form.mobileNumber).trim(),
+      email: (form.categoryName === "Restaurants & Food" ? contactInfo.email || form.email : isCareServicesPayload ? careContactEmail || form.email : isRoommatesRentalsPayload ? roommatesContactEmail || form.email : isJobsPayload ? jobContactEmail || form.email : isElectronicsPayload ? electronicsSellerEmail || form.email : isPetsPayload ? petContactEmail || form.email : isGroupsPayload ? groupOrganizerEmail || form.email : isFashionPayload ? fashionSellerEmail || form.email : isBeautyPayload ? beautyEmail || form.email : isBooksSportsPayload ? booksSportsEmail || form.email : form.email).trim(),
       whatsAppNumber: form.whatsapp.trim(),
-      websiteUrl: (form.categoryName === "Restaurants & Food" ? webLinks.mainWebsite || form.website : isCareServicesPayload ? careContactWebsite || form.website : isElectronicsPayload ? electronicsSellerWebsite || form.website : isPetsPayload ? petWebsite || form.website : form.website).trim(),
+      websiteUrl: (form.categoryName === "Restaurants & Food" ? webLinks.mainWebsite || form.website : isCareServicesPayload ? careContactWebsite || form.website : isElectronicsPayload ? electronicsSellerWebsite || form.website : isPetsPayload ? petWebsite || form.website : isGroupsPayload ? groupWebsite || form.website : isFashionPayload ? fashionSellerWebsite || form.website : isBeautyPayload ? beautyWebsite || form.website : form.website).trim(),
       sellerType,
       isMobileOtpVerified: false,
       reraNumber: form.reraNumber.trim() || getAttributeValue(categoryAttributes, "rera_number", "reraNumber").trim(),
@@ -9876,6 +10852,10 @@ function getSharedListingLocationSectionOrder(categoryName: string) {
     "Pets & Animals": 3,
     "Furniture & Home": 4,
     "Furniture & Home Decor": 4,
+    "Groups & Communities": 3,
+    "Fashion & Lifestyle": 5,
+    "Beauty Services": 4,
+    "Books, Sports & Hobbies": 4,
   };
 
   return isElectronicsCategoryName(categoryName) ? 5 : orderByCategory[categoryName] || 4;
@@ -9907,6 +10887,22 @@ function getPetStepCategoryFields(fields: CategoryAttributeField[], formStep: nu
 
 function getFurnitureStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
   return fields.filter((field) => getFurnitureFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getGroupStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getGroupFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getFashionStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getFashionFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getBeautyStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getBeautyFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
+}
+
+function getBooksSportsStepCategoryFields(fields: CategoryAttributeField[], formStep: number) {
+  return fields.filter((field) => getBooksSportsFormStepForSectionOrder(field.sectionOrder || 1) === formStep);
 }
 
 function getVehicleFormStepForSectionOrder(sectionOrder: number) {
@@ -10021,10 +11017,75 @@ function getFurnitureFormStepForSectionOrder(sectionOrder: number) {
   return 4;
 }
 
+function getGroupFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 3) {
+    return 1;
+  }
+
+  if (sectionOrder <= 6) {
+    return 2;
+  }
+
+  if (sectionOrder <= 9) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getFashionFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 5) {
+    return 1;
+  }
+
+  if (sectionOrder <= 8) {
+    return 2;
+  }
+
+  if (sectionOrder <= 11) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getBeautyFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 4) {
+    return 1;
+  }
+
+  if (sectionOrder <= 7) {
+    return 2;
+  }
+
+  if (sectionOrder <= 10) {
+    return 3;
+  }
+
+  return 4;
+}
+
+function getBooksSportsFormStepForSectionOrder(sectionOrder: number) {
+  if (sectionOrder <= 4) {
+    return 1;
+  }
+
+  if (sectionOrder <= 6) {
+    return 2;
+  }
+
+  if (sectionOrder <= 9) {
+    return 3;
+  }
+
+  return 4;
+}
+
 function getSharedListingLocationSectionTitle(categoryName: string) {
   if (categoryName === "Care Services") return "Service Location";
   if (categoryName === "Events & Tickets" || categoryName === "Tickets & Events") return "Event Location";
   if (categoryName === "Jobs") return "Job Location";
+  if (categoryName === "Groups & Communities") return "Group Location";
   if (categoryName === "Vehicles") return "Location";
   return "Location Information";
 }
@@ -10073,6 +11134,10 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
     categoryName === "Roommates & Rentals" ||
     categoryName === "Jobs" ||
     categoryName === "Pets & Animals" ||
+    categoryName === "Groups & Communities" ||
+    categoryName === "Fashion & Lifestyle" ||
+    categoryName === "Beauty Services" ||
+    categoryName === "Books, Sports & Hobbies" ||
     isFurnitureCategory(categoryName);
 
   if (!shouldMergeCommonFields) {
@@ -10094,7 +11159,15 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
                 ? categoryAttributeFieldsByCategory.Jobs
                 : categoryName === "Pets & Animals"
                   ? categoryAttributeFieldsByCategory["Pets & Animals"]
-                  : furniturePostingCommonFields;
+                  : categoryName === "Groups & Communities"
+                    ? categoryAttributeFieldsByCategory["Groups & Communities"]
+                    : categoryName === "Fashion & Lifestyle"
+                      ? categoryAttributeFieldsByCategory["Fashion & Lifestyle"]
+                      : categoryName === "Beauty Services"
+                        ? categoryAttributeFieldsByCategory["Beauty Services"]
+                        : categoryName === "Books, Sports & Hobbies"
+                          ? categoryAttributeFieldsByCategory["Books, Sports & Hobbies"]
+                          : furniturePostingCommonFields;
   if (categoryName === "Vehicles") {
     return dedupeCategoryPostingFields([
       ...commonFields,
@@ -10106,8 +11179,8 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
     return dedupeCategoryPostingFields(getCategoryAttributeFields("Electronics & Appliances", subCategory, detailCategory));
   }
 
-  if (categoryName === "Roommates & Rentals" || categoryName === "Jobs" || categoryName === "Pets & Animals") {
-    return dedupeCategoryPostingFields(categoryName === "Pets & Animals" ? getCategoryAttributeFields(categoryName, subCategory, detailCategory) : commonFields);
+  if (categoryName === "Roommates & Rentals" || categoryName === "Jobs" || categoryName === "Pets & Animals" || categoryName === "Groups & Communities" || categoryName === "Fashion & Lifestyle" || categoryName === "Beauty Services" || categoryName === "Books, Sports & Hobbies") {
+    return dedupeCategoryPostingFields(categoryName === "Pets & Animals" || categoryName === "Groups & Communities" || categoryName === "Fashion & Lifestyle" || categoryName === "Beauty Services" || categoryName === "Books, Sports & Hobbies" ? getCategoryAttributeFields(categoryName, subCategory, detailCategory) : commonFields);
   }
 
   if (isFurnitureCategory(categoryName)) {
@@ -10253,6 +11326,7 @@ function areEquivalentCategoryFieldKeys(firstKey: string, secondKey: string) {
     ["rentalduration", "rental_duration"],
     ["priceperhour", "price_per_hour"],
     ["priceperday", "price_per_day", "dailyprice", "daily_price", "dailyrate", "daily_rate"],
+    ["price", "listingprice", "listing_price", "totalprice", "total_price", "monthlyrent", "monthly_rent", "saleprice", "sale_price", "vehicleprice", "vehicle_price", "startingprice", "starting_price", "sellingprice", "selling_price", "askingprice", "asking_price"],
     ["securitydepositvehicle", "security_deposit_vehicle", "depositamount", "deposit_amount"],
     ["parttype", "part_type"],
     ["compatiblemodels", "compatible_models", "compatiblebrandsmodels", "compatible_brands_models"],
@@ -10425,6 +11499,44 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   const isFishPet = petSubCategory === "fish & aquariums" || petDetailCategory.includes("fish") || petDetailCategory.includes("aquarium");
   const isLostFoundPet = petSubCategory === "lost & found pets" || petDetailCategory.includes("lost") || petDetailCategory.includes("found") || petDetailCategory.includes("recovery");
   const isPetServiceListing = petSubCategory === "pet services" || petSubCategory === "pet boarding & daycare";
+  const groupSubCategory = form.subCategory.toLowerCase();
+  const isProfessionalGroup = groupSubCategory === "professional networks" || groupSubCategory === "business networking groups";
+  const isStudentGroup = groupSubCategory === "student communities";
+  const isReligiousGroup = groupSubCategory === "religious & spiritual groups";
+  const isSportsGroup = groupSubCategory === "sports & fitness groups";
+  const isVolunteerGroup = groupSubCategory === "non-profit & volunteer groups";
+  const isOnlineGroup = groupSubCategory === "online communities";
+  const fashionSubCategory = form.subCategory.toLowerCase();
+  const fashionDetailCategory = form.detailCategory.toLowerCase();
+  const isFashionClothing = [
+    "men's fashion",
+    "women's fashion",
+    "kids & baby fashion",
+    "ethnic & traditional wear",
+    "sportswear & activewear",
+    "wedding & occasion wear",
+  ].includes(fashionSubCategory) || ["designer clothing", "bridal wear", "groom wear", "bridesmaid dresses"].includes(fashionDetailCategory);
+  const isFashionFootwear = fashionSubCategory === "footwear" || ["casual shoes", "formal shoes", "sneakers", "sandals", "boots", "sports shoes"].includes(fashionDetailCategory);
+  const isFashionJewelry = fashionSubCategory === "jewelry & watches" && fashionDetailCategory.includes("jewelry");
+  const isFashionWatch = fashionSubCategory === "jewelry & watches" && fashionDetailCategory.includes("watch");
+  const isFashionBeauty = fashionSubCategory === "beauty & personal care";
+  const isFashionWedding = fashionSubCategory === "wedding & occasion wear" || ["bridal wear", "groom wear", "bridesmaid dresses", "wedding accessories"].includes(fashionDetailCategory);
+  const isFashionLuxury = fashionSubCategory === "luxury fashion" || fashionDetailCategory.startsWith("luxury") || fashionDetailCategory === "designer clothing" || fashionDetailCategory === "premium accessories";
+  const beautySubCategory = form.subCategory.toLowerCase();
+  const isBridalBeauty = beautySubCategory === "bridal beauty services";
+  const isHairBeauty = beautySubCategory === "hair services";
+  const isNailBeauty = beautySubCategory === "nail services";
+  const isSpaBeauty = beautySubCategory === "spa & wellness services";
+  const isTrainingBeauty = beautySubCategory === "beauty training & classes";
+  const isMobileBeauty = beautySubCategory === "mobile beauty services";
+  const booksSportsSubCategory = form.subCategory.toLowerCase();
+  const booksSportsDetailCategory = form.detailCategory.toLowerCase();
+  const isBooksItem = booksSportsSubCategory === "books & magazines" || booksSportsSubCategory === "educational materials" || booksSportsDetailCategory.includes("book") || booksSportsDetailCategory.includes("magazine") || booksSportsDetailCategory.includes("textbook") || booksSportsDetailCategory.includes("study") || booksSportsDetailCategory.includes("exam");
+  const isSportsItem = ["sports equipment", "fitness & exercise gear", "outdoor recreation", "team sports"].includes(booksSportsSubCategory) || booksSportsDetailCategory.includes("equipment") || booksSportsDetailCategory.includes("gear");
+  const isCollectibleItem = booksSportsSubCategory === "collectibles" || ["coins", "stamps", "sports memorabilia", "trading cards", "vintage collections", "action figures"].includes(booksSportsDetailCategory);
+  const isPhotographyItem = booksSportsSubCategory === "photography & videography" || ["cameras", "lenses", "tripods", "lighting equipment", "drones", "studio accessories"].includes(booksSportsDetailCategory);
+  const isMusicItem = booksSportsSubCategory === "music & instruments" || ["guitars", "keyboards", "drums", "violins", "dj equipment", "audio accessories"].includes(booksSportsDetailCategory);
+  const isHobbyClubItem = booksSportsSubCategory === "hobby clubs & activities" || ["book clubs", "sports clubs", "photography clubs", "music groups", "art communities", "hobby meetups"].includes(booksSportsDetailCategory);
 
   if (form.categoryName === "Care Services") {
     if (["additional details", "media upload", "reviews & ratings", "listing visibility & promotions"].includes(field.sectionName?.trim().toLowerCase() || "")) {
@@ -10586,6 +11698,122 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
     }
 
     if (!isPetServiceListing && ["servicetype", "service_type", "businesshours", "business_hours", "servicearea", "service_area", "certifications"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (form.categoryName === "Groups & Communities") {
+    if (!isProfessionalGroup && ["industry", "skills", "careerinterests", "career_interests", "networkingopportunities", "networking_opportunities"].includes(key)) {
+      return false;
+    }
+
+    if (!isStudentGroup && ["universityname", "university_name", "academicprogram", "academic_program", "graduationyear", "graduation_year"].includes(key)) {
+      return false;
+    }
+
+    if (!isReligiousGroup && ["worshipschedule", "worship_schedule", "religiousaffiliation", "religious_affiliation", "communityservices", "community_services"].includes(key)) {
+      return false;
+    }
+
+    if (!isSportsGroup && ["sporttype", "sport_type", "membershipcapacity", "membership_capacity", "practiceschedule", "practice_schedule", "skilllevel", "skill_level"].includes(key)) {
+      return false;
+    }
+
+    if (!isVolunteerGroup && ["volunteeropportunities", "volunteer_opportunities", "causessupported", "causes_supported", "hoursrequired", "hours_required"].includes(key)) {
+      return false;
+    }
+
+    if (!isOnlineGroup && ["platformtype", "platform_type", "communityurl", "community_url", "virtualmeetingschedule", "virtual_meeting_schedule"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (form.categoryName === "Fashion & Lifestyle") {
+    if (!isFashionClothing && ["gender", "size", "fabricmaterial", "fabric_material", "sleevetype", "sleeve_type", "occasiontype", "occasion_type"].includes(key)) {
+      return false;
+    }
+
+    if (!isFashionFootwear && ["shoesize", "shoe_size", "shoewidth", "shoe_width"].includes(key)) {
+      return false;
+    }
+
+    if (!isFashionJewelry && ["metaltype", "metal_type", "stonetype", "stone_type", "certificationavailable", "certification_available", "gemstonedetails", "gemstone_details"].includes(key)) {
+      return false;
+    }
+
+    if (!isFashionJewelry && !isFashionWatch && key === "weight") {
+      return false;
+    }
+
+    if (!isFashionWatch && ["movementtype", "movement_type", "waterresistant", "water_resistant"].includes(key)) {
+      return false;
+    }
+
+    if (!isFashionBeauty && ["skintype", "skin_type", "expirydate", "expiry_date", "ingredients"].includes(key)) {
+      return false;
+    }
+
+    if (!isFashionWedding && ["customstitchingavailable", "custom_stitching_available", "rentaloptionavailable", "rental_option_available"].includes(key)) {
+      return false;
+    }
+
+    if (!isFashionLuxury && ["purchaseinvoice", "purchase_invoice", "brandverification", "brand_verification"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (form.categoryName === "Beauty Services") {
+    if (!isBridalBeauty && ["weddingdate", "wedding_date", "bridalpackagedetails", "bridal_package_details", "trialmakeupavailable", "trial_makeup_available", "travelavailability", "travel_availability"].includes(key)) {
+      return false;
+    }
+
+    if (!isHairBeauty && ["hairlength", "hair_length", "hairtype", "hair_type", "productsused", "products_used", "treatmentduration", "treatment_duration"].includes(key)) {
+      return false;
+    }
+
+    if (!isNailBeauty && ["nailtype", "nail_type", "nailartgallery", "nail_art_gallery", "extensionoptions", "extension_options"].includes(key)) {
+      return false;
+    }
+
+    if (!isSpaBeauty && ["sessionduration", "session_duration", "wellnesspackages", "wellness_packages", "therapistgenderpreference", "therapist_gender_preference"].includes(key)) {
+      return false;
+    }
+
+    if (!isTrainingBeauty && ["courseduration", "course_duration", "certificationdetails", "certification_details", "placementassistance", "placement_assistance"].includes(key)) {
+      return false;
+    }
+
+    if (!isMobileBeauty && ["travelradius", "travel_radius", "travelcharges", "travel_charges", "homevisitavailability", "home_visit_availability"].includes(key)) {
+      return false;
+    }
+  }
+
+  if (form.categoryName === "Books, Sports & Hobbies") {
+    if (!isBooksItem && ["isbn", "author", "publisher", "publicationyear", "publication_year", "language", "edition", "numberofpages", "number_of_pages"].includes(key)) {
+      return false;
+    }
+
+    if (!isSportsItem && ["sporttype", "sport_type", "equipmentsize", "equipment_size", "skilllevel", "skill_level"].includes(key)) {
+      return false;
+    }
+
+    if (!isCollectibleItem && ["collectiontype", "collection_type", "collectionyear", "collection_year", "authenticitycertificate", "authenticity_certificate", "rarityscore", "rarity_score", "appraisalvalue", "appraisal_value"].includes(key)) {
+      return false;
+    }
+
+    if (!isPhotographyItem && ["camerabrand", "camera_brand", "cameramodel", "camera_model", "lenstype", "lens_type", "lenscompatibility", "lens_compatibility", "sensortype", "sensor_type", "shuttercount", "shutter_count"].includes(key)) {
+      return false;
+    }
+
+    if (!isMusicItem && ["instrumenttype", "instrument_type", "instrumentcondition", "instrument_condition", "warranty", "includedaccessories", "included_accessories", "soundsamples", "sound_samples"].includes(key)) {
+      return false;
+    }
+
+    if (!isMusicItem && !isPhotographyItem && key === "model") {
+      return false;
+    }
+
+    if (!isHobbyClubItem && ["membershiptype", "membership_type", "meetingfrequency", "meeting_frequency", "clublocation", "club_location", "membercapacity", "member_capacity"].includes(key)) {
       return false;
     }
   }
@@ -11184,6 +12412,10 @@ function getListingKind(categoryName: string, subCategory: string, detailCategor
   if (categoryName === "Vehicles") return "Vehicle";
   if (categoryName === "Electronics & Appliances") return "Electronics";
   if (categoryName === "Care Services") return "Care Service";
+  if (categoryName === "Groups & Communities") return "Group";
+  if (categoryName === "Fashion & Lifestyle") return "Fashion";
+  if (categoryName === "Beauty Services") return "Beauty Service";
+  if (categoryName === "Books, Sports & Hobbies") return "Books Sports Hobby";
   if (subCategory === "Job Listings") return "Job";
   if (subCategory === "Freelance Services") return "Service";
   return "Business";

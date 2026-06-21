@@ -215,7 +215,7 @@ export async function getJobListings(page = 1, pageSize = 4) {
 }
 
 export type PublicListingQuery = {
-  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "pets-animals" | "care-services" | "furniture-home-decor" | "roommates-rentals" | "jobs" | "events-tickets" | "chao-tv";
+  category?: "real-estate" | "restaurants-food" | "vehicles" | "electronics-appliances" | "pets-animals" | "care-services" | "furniture-home-decor" | "fashion-lifestyle" | "beauty-services" | "books-sports-hobbies" | "roommates-rentals" | "jobs" | "events-tickets" | "groups-communities" | "chao-tv";
   categoryName?: string;
   subCategory?: string;
   detailCategory?: string;
@@ -248,16 +248,20 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
   }
 
   const isFurnitureHome = query.category === "furniture-home-decor";
+  const isFashionLifestyle = query.category === "fashion-lifestyle";
+  const isBeautyServices = query.category === "beauty-services";
+  const isBooksSportsHobbies = query.category === "books-sports-hobbies";
   const isEventsTickets = query.category === "events-tickets";
   const isPetsAnimals = query.category === "pets-animals";
+  const isGroupsCommunities = query.category === "groups-communities";
   const isChaoTv = query.category === "chao-tv";
-  const categoryPath = query.category && !isFurnitureHome && !isEventsTickets && !isPetsAnimals && !isChaoTv ? `/${query.category}` : "";
+  const categoryPath = query.category && !isFurnitureHome && !isFashionLifestyle && !isBeautyServices && !isBooksSportsHobbies && !isEventsTickets && !isPetsAnimals && !isGroupsCommunities && !isChaoTv ? `/${query.category}` : "";
   const response = await apiClient.get<ListingListResponse>(`/Listings${categoryPath}`, {
     params: {
       page: query.page || 1,
       pageSize: query.pageSize || 10,
       search: query.search || undefined,
-      categoryName: isFurnitureHome ? "Furniture & Home" : isEventsTickets ? "Events & Tickets" : isPetsAnimals ? "Pets & Animals" : isChaoTv ? "Chao TV" : query.categoryName || undefined,
+      categoryName: isFurnitureHome ? "Furniture & Home" : isFashionLifestyle ? "Fashion & Lifestyle" : isBeautyServices ? "Beauty Services" : isBooksSportsHobbies ? "Books, Sports & Hobbies" : isEventsTickets ? "Events & Tickets" : isPetsAnimals ? "Pets & Animals" : isGroupsCommunities ? "Groups & Communities" : isChaoTv ? "Chao TV" : query.categoryName || undefined,
       subCategory: query.subCategory || undefined,
       detailCategory: query.detailCategory || undefined,
       city: query.city || undefined,
