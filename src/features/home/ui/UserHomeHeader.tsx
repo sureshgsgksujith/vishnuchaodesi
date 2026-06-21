@@ -6,10 +6,10 @@ import {
   type DashboardNavItem as MenuItem,
 } from "../../dashboard/config/dashboardData";
 import {
-  clearStoredProfileSnapshot,
   getStoredDashboardIdentity,
   PROFILE_UPDATED_EVENT,
 } from "../../dashboard/utils/profileStorage";
+import { clearCustomerSession } from "../../auth/utils/customerSession";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 import { categoryLinks, useExploreCategories, type ExploreMenuLink } from "./exploreMenuData";
 import "../styles/customerHeader.css";
@@ -82,13 +82,7 @@ export default function UserHomeHeader() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("customer_token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("customerCode");
-    localStorage.removeItem("fullName");
-    localStorage.removeItem("userType");
-    clearStoredProfileSnapshot();
+    clearCustomerSession();
     closeAllPopups();
     navigate("/home");
     window.location.reload();

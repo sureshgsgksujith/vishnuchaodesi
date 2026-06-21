@@ -1,4 +1,5 @@
 import { clearStoredProfileSnapshot } from "../../dashboard/utils/profileStorage";
+import { clearHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 
 const CUSTOMER_AUTH_KEYS = [
   "token",
@@ -11,6 +12,10 @@ const CUSTOMER_AUTH_KEYS = [
   "customer_name",
   "userType",
 ];
+
+const CUSTOMER_LAST_ACTIVITY_KEY = "chaodesi.customer.lastActivityAt";
+
+export const CUSTOMER_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
 export function getCustomerToken() {
   if (typeof window === "undefined") {
@@ -39,6 +44,38 @@ export function isCustomerAuthenticated() {
   return !isCustomerTokenExpired(getCustomerToken());
 }
 
+export function markCustomerSessionActivity() {
+  if (typeof window === "undefined" || !getCustomerToken()) {
+    return;
+  }
+
+  localStorage.setItem(CUSTOMER_LAST_ACTIVITY_KEY, String(Date.now()));
+}
+
+export function getCustomerLastActivityAt() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const value = Number(localStorage.getItem(CUSTOMER_LAST_ACTIVITY_KEY));
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+export function isCustomerSessionIdleExpired() {
+  if (!getCustomerToken()) {
+    return false;
+  }
+
+  const lastActivityAt = getCustomerLastActivityAt();
+
+  if (!lastActivityAt) {
+    markCustomerSessionActivity();
+    return false;
+  }
+
+  return Date.now() - lastActivityAt >= CUSTOMER_IDLE_TIMEOUT_MS;
+}
+
 export function getCurrentCustomerUserId() {
   if (typeof window === "undefined") {
     return null;
@@ -54,7 +91,9 @@ export function clearCustomerSession() {
   }
 
   CUSTOMER_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
+  localStorage.removeItem(CUSTOMER_LAST_ACTIVITY_KEY);
   clearStoredProfileSnapshot();
+  clearHomeSelectedLocation();
 }
 
 let isSessionPopupOpen = false;

@@ -66,6 +66,10 @@ function writeStoredHomeLocation(location: HomeSelectedLocation) {
   window.dispatchEvent(new CustomEvent(homeLocationChangedEvent, { detail: cleanLocation }));
 }
 
+export function clearHomeSelectedLocation() {
+  writeStoredHomeLocation({});
+}
+
 export function useHomeSelectedLocation() {
   const currentLocation = useCurrentLocationLabel();
   const [selectedLocation, setSelectedLocation] = useState(readStoredHomeLocation);

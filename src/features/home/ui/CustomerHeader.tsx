@@ -1,6 +1,10 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
+import {
+  clearCustomerSession,
+  getCustomerToken,
+  isCustomerAuthenticated,
+} from "../../auth/utils/customerSession";
 import HomeHeader from "./HomeHeader";
 
 const UserHomeHeader = lazy(() => import("./UserHomeHeader"));
@@ -10,7 +14,15 @@ export default function CustomerHeader() {
   const [isAuthenticated, setIsAuthenticated] = useState(isCustomerAuthenticated);
 
   useEffect(() => {
-    const syncAuthState = () => setIsAuthenticated(isCustomerAuthenticated());
+    const syncAuthState = () => {
+      const authenticated = isCustomerAuthenticated();
+
+      if (!authenticated && getCustomerToken()) {
+        clearCustomerSession();
+      }
+
+      setIsAuthenticated(authenticated);
+    };
 
     syncAuthState();
     window.addEventListener("storage", syncAuthState);
