@@ -7,10 +7,14 @@ import {
   PROFILE_UPDATED_EVENT,
 } from "../utils/profileStorage";
 import { getMyListings } from "../api/listingsApi";
+import { getMyEventTicketBookings, type EventTicketBooking } from "../api/eventTicketsApi";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import "../styles/eventBookings.css";
 
 export default function DashboardPage() {
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
   const [listingCount, setListingCount] = useState(0);
+  const [eventBookings, setEventBookings] = useState<EventTicketBooking[]>([]);
   const fullName = identity.fullName;
   const profileCardImageStyle = {
     width: 100,
@@ -56,6 +60,31 @@ export default function DashboardPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    getMyEventTicketBookings()
+      .then((bookings) => {
+        if (isActive) {
+          setEventBookings(bookings || []);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setEventBookings([]);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const totalTicketPayments = useMemo(
+    () => eventBookings.reduce((sum, booking) => sum + booking.totalAmount, 0),
+    [eventBookings],
+  );
+
   const summaryCards = useMemo(
     () => [
       {
@@ -82,8 +111,16 @@ export default function DashboardPage() {
         href: "/dashboard/followings",
         className: "ud-box-com-25 box-drk db-box-gre-25",
       },
+      {
+        eyebrow: "Bookings",
+        title: "Event Tickets",
+        count: eventBookings.length.toString().padStart(2, "0"),
+        description: `${formatCurrencyAmount(totalTicketPayments)} paid`,
+        href: "/dashboard/my-service-bookings",
+        className: "ud-box-com-25 db-box-blu-25",
+      },
     ],
-    [listingCount]
+    [eventBookings.length, listingCount, totalTicketPayments]
   );
 
   return (
@@ -113,6 +150,65 @@ export default function DashboardPage() {
               </Link>
             </div>
           ))}
+        </div>
+
+        <div className="ud-cen-s2">
+          <h2>Recent Event Bookings & Payments</h2>
+          <Link to="/dashboard/my-service-bookings" className="db-tit-btn">
+            View all
+          </Link>
+
+          <table className="responsive-table bordered">
+            <thead>
+              <tr>
+                <th>Event</th>
+                <th>Booking Ref</th>
+                <th>Tickets</th>
+                <th>Payment</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {eventBookings.length > 0 ? (
+                eventBookings.slice(0, 3).map((booking) => (
+                  <tr key={booking.id}>
+                    <td>
+                      <div className="dashboard-booking-title">
+                        <strong>{booking.eventTitle}</strong>
+                        <span>{booking.venue || booking.city || "-"}</span>
+                      </div>
+                    </td>
+                    <td>{booking.bookingReference}</td>
+                    <td>
+                      <div className="dashboard-ticket-lines">
+                        {booking.items.length ? (
+                          booking.items.map((item) => (
+                            <span key={`${booking.id}-${item.name}`}>
+                              {item.name} x {item.quantity}
+                            </span>
+                          ))
+                        ) : (
+                          <span>-</span>
+                        )}
+                      </div>
+                    </td>
+                    <td>{formatCurrencyAmount(booking.totalAmount)}</td>
+                    <td>
+                      <span className="db-list-ststus dashboard-booking-confirmed">
+                        {booking.bookingStatus}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="dashboard-empty-row">
+                    No event bookings yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
         <div className="row">

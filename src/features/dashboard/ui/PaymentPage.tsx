@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
+import {
+  getEventTicketApiErrorMessage,
+  getMyEventTicketBookings,
+  type EventTicketBooking,
+} from "../api/eventTicketsApi";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import "../styles/eventBookings.css";
 
 type PaymentGateway = {
   id: string;
@@ -72,7 +78,47 @@ export default function PaymentPage() {
   const [selectedGateway, setSelectedGateway] = useState(paymentGateways[0].id);
   const [billingForm, setBillingForm] =
     useState<BillingFormState>(initialBillingState);
+  const [eventBookings, setEventBookings] = useState<EventTicketBooking[]>([]);
+  const [isLoadingBookings, setIsLoadingBookings] = useState(true);
+  const [bookingError, setBookingError] = useState("");
   const checkoutAmount = formatCurrencyAmount(20, billingForm.country);
+  const paidBookingCount = eventBookings.filter((booking) =>
+    booking.paymentStatus.toLowerCase() === "paid"
+  ).length;
+  const eventPaymentTotal = useMemo(
+    () => eventBookings.reduce((sum, booking) => sum + booking.totalAmount, 0),
+    [eventBookings],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadBookings() {
+      try {
+        setIsLoadingBookings(true);
+        setBookingError("");
+        const bookings = await getMyEventTicketBookings();
+
+        if (isMounted) {
+          setEventBookings(bookings || []);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setBookingError(getEventTicketApiErrorMessage(error));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingBookings(false);
+        }
+      }
+    }
+
+    loadBookings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleBillingChange = (
     event: ChangeEvent<HTMLInputElement>
@@ -128,6 +174,87 @@ export default function PaymentPage() {
                 </li>
               </ul>
             </div>
+          </div>
+
+          <div className="dashboard-booking-summary">
+            <div className="dashboard-booking-stat">
+              <span>Event payments</span>
+              <strong>{paidBookingCount}</strong>
+            </div>
+            <div className="dashboard-booking-stat">
+              <span>Tickets booked</span>
+              <strong>{eventBookings.reduce((sum, booking) => sum + getTicketCount(booking), 0)}</strong>
+            </div>
+            <div className="dashboard-booking-stat">
+              <span>Total paid</span>
+              <strong>{formatCurrencyAmount(eventPaymentTotal)}</strong>
+            </div>
+            <div className="dashboard-booking-stat">
+              <span>Latest payment</span>
+              <strong>{formatDate(eventBookings[0]?.paidAt)}</strong>
+            </div>
+          </div>
+
+          {bookingError ? <div className="alert alert-danger">{bookingError}</div> : null}
+
+          <div className="table-responsive">
+            <table className="responsive-table bordered">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Event</th>
+                  <th>Booking Ref</th>
+                  <th>Tickets</th>
+                  <th>Payment</th>
+                  <th>Paid Date</th>
+                  <th>Status</th>
+                  <th>View</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoadingBookings ? (
+                  <tr>
+                    <td colSpan={8} className="dashboard-empty-row">Loading event payments...</td>
+                  </tr>
+                ) : eventBookings.length > 0 ? (
+                  eventBookings.map((booking, index) => (
+                    <tr key={booking.id}>
+                      <td>{index + 1}</td>
+                      <td>
+                        <div className="dashboard-booking-title">
+                          <strong>{booking.eventTitle}</strong>
+                          <span>{booking.venue || booking.city || "-"}</span>
+                        </div>
+                      </td>
+                      <td>{booking.bookingReference}</td>
+                      <td>
+                        <TicketLines booking={booking} />
+                      </td>
+                      <td>
+                        <b>{formatCurrencyAmount(booking.totalAmount)}</b>
+                        <br />
+                        <span>{booking.paymentProvider}</span>
+                      </td>
+                      <td>{formatDate(booking.paidAt)}</td>
+                      <td>
+                        <span className="db-list-ststus dashboard-booking-paid">
+                          {booking.paymentStatus}
+                        </span>
+                      </td>
+                      <td>
+                        <Link to={`/event-details?id=${booking.listingId}`} className="db-list-edit">
+                          Details
+                        </Link>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={8} className="dashboard-empty-row">No event ticket payments found.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
 
           <div className="ud-pay-op">
@@ -322,4 +449,42 @@ export default function PaymentPage() {
       </div>
     </DashboardLayout>
   );
+}
+
+function TicketLines({ booking }: { booking: EventTicketBooking }) {
+  return (
+    <div className="dashboard-ticket-lines">
+      {booking.items.length ? (
+        booking.items.map((item) => (
+          <span key={`${booking.id}-${item.name}`}>
+            {item.name} x {item.quantity}
+          </span>
+        ))
+      ) : (
+        <span>-</span>
+      )}
+    </div>
+  );
+}
+
+function getTicketCount(booking: EventTicketBooking) {
+  return booking.items.reduce((sum, item) => sum + item.quantity, 0);
+}
+
+function formatDate(value?: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }

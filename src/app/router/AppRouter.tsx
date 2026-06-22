@@ -29,6 +29,7 @@ const ListingStartPage = lazy(() => import("../../features/dashboard/ui/ListingS
 const PricingDetailsPage = lazy(() => import("../../features/pricing/ui/PricingDetailsPage"));
 const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPage"));
 const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
+const EventDetailPage = lazy(() => import("../../features/listing/ui/EventDetailPage"));
 const ChaoTvPage = lazy(() => import("../../features/chaoTv/ChaoTvPage"));
 const ClassifiedsHomePage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
@@ -138,6 +139,8 @@ export function AppRouter() {
     "/chao-tv",
     "/listing-details",
     "/listing/:listingId",
+    "/event-details",
+    "/event-checkout",
     "/pricing-details",
     "/post-your-ads",
   ];
@@ -196,6 +199,15 @@ export function AppRouter() {
       <Route path="/chao-tv" element={<ChaoTvPage />} />
       <Route path="/listing-details" element={<ListingDetailPage />} />
       <Route path="/listing/:listingId" element={<ListingDetailPage />} />
+      <Route path="/event-details" element={<EventDetailPage />} />
+      <Route
+        path="/event-checkout"
+        element={
+          <ProtectedCustomerRoute>
+            <StaticTemplatePage src="/template-17/event-checkout.html" title="Event Checkout" />
+          </ProtectedCustomerRoute>
+        }
+      />
       <Route path="/pricing-details" element={<PricingDetailsPage />} />
       <Route path="/post-your-ads" element={<PostYourAdsRoute />} />
 

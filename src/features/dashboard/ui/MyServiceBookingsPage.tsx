@@ -1,128 +1,259 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
-import DashboardRightRail from "../components/DashboardRightRail";
 import DashboardSearchField from "../components/DashboardSearchField";
-import { serviceBookings } from "../mock/dashboardMockData";
+import {
+  getEventTicketApiErrorMessage,
+  getMyEventTicketBookings,
+  type EventTicketBooking,
+} from "../api/eventTicketsApi";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import "../styles/eventBookings.css";
+
+const EVENT_BOOKINGS_PAGE_SIZE = 6;
 
 export default function MyServiceBookingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [eventBookings, setEventBookings] = useState<EventTicketBooking[]>([]);
+  const [isLoadingEventBookings, setIsLoadingEventBookings] = useState(true);
+  const [eventBookingError, setEventBookingError] = useState("");
+  const [eventPage, setEventPage] = useState(1);
 
-  const filteredBookings = useMemo(() => {
+  const filteredEventBookings = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
     if (!query) {
-      return serviceBookings;
+      return eventBookings;
     }
 
-    return serviceBookings.filter((booking) =>
+    return eventBookings.filter((booking) =>
       [
-        booking.expertSlug,
-        booking.enquirerName,
-        booking.phone,
-        booking.email,
-        booking.location,
-        booking.serviceDate,
-        booking.serviceTime,
-        booking.message,
-        booking.status,
+        booking.bookingReference,
+        booking.eventTitle,
+        booking.venue,
+        booking.city,
+        booking.buyerName,
+        booking.buyerEmail,
+        booking.buyerPhone,
+        booking.paymentStatus,
+        booking.bookingStatus,
+        booking.items.map((item) => item.name).join(" "),
       ]
         .join(" ")
         .toLowerCase()
         .includes(query)
     );
+  }, [eventBookings, searchTerm]);
+
+  const eventPageCount = Math.max(
+    1,
+    Math.ceil(filteredEventBookings.length / EVENT_BOOKINGS_PAGE_SIZE)
+  );
+  const currentEventPage = Math.min(eventPage, eventPageCount);
+  const pagedEventBookings = filteredEventBookings.slice(
+    (currentEventPage - 1) * EVENT_BOOKINGS_PAGE_SIZE,
+    currentEventPage * EVENT_BOOKINGS_PAGE_SIZE
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadEventBookings() {
+      try {
+        setIsLoadingEventBookings(true);
+        setEventBookingError("");
+        const bookings = await getMyEventTicketBookings();
+
+        if (isMounted) {
+          setEventBookings(bookings || []);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setEventBookingError(getEventTicketApiErrorMessage(error));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingEventBookings(false);
+        }
+      }
+    }
+
+    loadEventBookings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setEventPage(1);
   }, [searchTerm]);
 
+  useEffect(() => {
+    setEventPage(1);
+  }, [eventBookings.length]);
+
   return (
-    <DashboardLayout rightRail={<DashboardRightRail />}>
-      <div className="ud-cen">
+    <DashboardLayout mainContentClassName="ud-no-rhs">
+      <div className="ud-cen dashboard-bookings-page">
         <div className="log-bor">&nbsp;</div>
         <span className="udb-inst">My Service Bookings</span>
 
-        <div className="ud-cen-s2">
-          <DashboardSearchField value={searchTerm} onChange={setSearchTerm} />
+        <div className="ud-cen-s2 dashboard-bookings-panel">
+          <div className="dashboard-bookings-header">
+            <div>
+              <h2>Event Ticket Bookings</h2>
+              <p>{filteredEventBookings.length} bookings found</p>
+            </div>
+            <div className="dashboard-bookings-toolbar">
+              <div className="dashboard-bookings-search">
+                <span className="material-icons" aria-hidden="true">search</span>
+                <DashboardSearchField
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  placeholder="Search event bookings"
+                />
+              </div>
+              <Link to="/all-listing?category=events-tickets" className="dashboard-book-event-btn">
+                <span className="material-icons" aria-hidden="true">confirmation_number</span>
+                Book Event
+              </Link>
+            </div>
+          </div>
+          {eventBookingError ? <div className="alert alert-danger">{eventBookingError}</div> : null}
 
-          <table className="responsive-table bordered" id="myTable">
-            <thead>
-              <tr>
-                <th>No</th>
-                <th>Expert Profile</th>
-                <th>Enquirer Name</th>
-                <th>Enquiry Details</th>
-                <th>Message</th>
-                <th>Status</th>
-                <th>Manage</th>
-                <th>Delete</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBookings.map((booking) => (
-                <tr key={booking.id}>
-                  <td>{booking.id}</td>
-                  <td>
-                    <a
-                      target="_blank"
-                      href="/template-17/service-experts/service-experts-profile.html"
-                      rel="noreferrer"
-                    >
-                      <img src={booking.image} alt={booking.expertSlug} loading="lazy" />
-                    </a>
-                    <span>Date : {booking.createdAt}</span>
-                  </td>
-                  <td>{booking.enquirerName}</td>
-                  <td>
-                    <span>
-                      <b>Phone :</b>
-                      {booking.phone}
-                    </span>
-                    <br />
-                    <span>
-                      <b>Email Id :</b>
-                      {booking.email}
-                    </span>
-                    <br />
-                    <span>
-                      <b>Location :</b>
-                      {booking.location}
-                    </span>
-                    <br />
-                    <span>
-                      <b>Date :</b>
-                      {booking.serviceDate}
-                    </span>
-                    <br />
-                    <span>
-                      <b>Time :</b>
-                      {booking.serviceTime}
-                    </span>
-                  </td>
-                  <td>{booking.message}</td>
-                  <td>
-                    <span className="db-list-rat">{booking.status}</span>
-                  </td>
-                  <td>
-                    <a
-                      href="#!"
-                      className="db-list-edit"
-                      onClick={(event) => event.preventDefault()}
-                    >
-                      Manage
-                    </a>
-                  </td>
-                  <td>
-                    <a
-                      href="#!"
-                      className="db-list-edit"
-                      onClick={(event) => event.preventDefault()}
-                    >
-                      <span className="material-icons">delete</span>
-                    </a>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="dashboard-bookings-grid">
+            {isLoadingEventBookings ? (
+              <div className="dashboard-bookings-empty">Loading event bookings...</div>
+            ) : pagedEventBookings.length > 0 ? (
+              pagedEventBookings.map((booking) => (
+                <article className="dashboard-booking-card" key={booking.id}>
+                  <div className="dashboard-booking-card-head">
+                    <span className="dashboard-booking-status">{booking.bookingStatus}</span>
+                    <strong>{formatCurrencyAmount(booking.totalAmount)}</strong>
+                  </div>
+
+                  <h3>{booking.eventTitle}</h3>
+                  <p>{booking.venue || booking.city || "-"}</p>
+
+                  <div className="dashboard-booking-ref">{booking.bookingReference}</div>
+
+                  <dl className="dashboard-booking-meta">
+                    <div>
+                      <dt>Name</dt>
+                      <dd>{booking.buyerName || "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>Booked</dt>
+                      <dd>{formatDate(booking.createdAt)}</dd>
+                    </div>
+                    <div>
+                      <dt>Email</dt>
+                      <dd>{booking.buyerEmail || "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>Phone</dt>
+                      <dd>{booking.buyerPhone || "-"}</dd>
+                    </div>
+                    <div>
+                      <dt>Payment</dt>
+                      <dd>{booking.paymentStatus} via {booking.paymentProvider}</dd>
+                    </div>
+                    <div>
+                      <dt>Paid</dt>
+                      <dd>{formatDate(booking.paidAt)}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="dashboard-booking-tickets">
+                    <TicketLines booking={booking} />
+                  </div>
+
+                  <div className="dashboard-booking-actions">
+                    <Link to={`/event-details?id=${booking.listingId}`}>View Details</Link>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="dashboard-bookings-empty">No event ticket bookings found.</div>
+            )}
+          </div>
+
+          <Pagination
+            label="event bookings"
+            page={currentEventPage}
+            totalCount={filteredEventBookings.length}
+            totalPages={eventPageCount}
+            onPageChange={setEventPage}
+          />
+
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+function TicketLines({ booking }: { booking: EventTicketBooking }) {
+  return (
+    <div className="dashboard-ticket-lines">
+      {booking.items.length ? (
+        booking.items.map((item) => (
+          <span key={`${booking.id}-${item.name}`}>
+            {item.name} x {item.quantity}
+          </span>
+        ))
+      ) : (
+        <span>-</span>
+      )}
+    </div>
+  );
+}
+
+function formatDate(value?: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+type PaginationProps = {
+  label: string;
+  page: number;
+  totalCount: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+};
+
+function Pagination({ label, page, totalCount, totalPages, onPageChange }: PaginationProps) {
+  const goToPage = (nextPage: number) => {
+    onPageChange(Math.min(Math.max(nextPage, 1), totalPages));
+  };
+
+  return (
+    <div className="dashboard-bookings-pagination">
+      <span>
+        Showing page {page} of {totalPages} for {totalCount} {label}
+      </span>
+      <div>
+        <button type="button" disabled={page <= 1} onClick={() => goToPage(page - 1)}>
+          Previous
+        </button>
+        <strong>{page} / {totalPages}</strong>
+        <button type="button" disabled={page >= totalPages} onClick={() => goToPage(page + 1)}>
+          Next
+        </button>
+      </div>
+    </div>
   );
 }

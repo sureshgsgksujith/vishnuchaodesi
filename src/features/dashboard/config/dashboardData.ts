@@ -151,7 +151,7 @@ export const dashboardNavSections: DashboardNavSection[] = [
         icon: "/template-17/images/icon/job-apply.png",
       },
       {
-        label: "My Service Bookings",
+        label: "My Bookings",
         href: "/dashboard/my-service-bookings",
         icon: "/template-17/images/icon/expert-book.png",
       },

@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Chao Desi – Find Local Businesses, Jobs, Services & Events Near You</title>
+        <!--== META TAGS ==-->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+        <meta name="theme-color" content="#76cef1">
+        <meta property="og:image" content="images/home/logo-white.png">
+        <meta name="description" content="Find local businesses, services, jobs, events, and deals near you with Chao Desi. Connect with trusted experts and grow your community.">
+        <meta name="keyword" content="local business directory, nearby services, jobs near me, local experts, classifieds, events near me, coupons, Chao Desi">
+        <!--== FAV ICON(BROWSER TAB ICON) ==-->
+        <link rel="shortcut icon" href="images/fav.png" type="image/x-icon">
+        <!--== GOOGLE FONTS ==-->
+        <link href="https://fonts.googleapis.com/css?family=Oswald:700|Source+Sans+Pro:300,400,600,700&display=swap" rel="stylesheet">
+		
+        <!--== WEB ICON FONTS ==-->
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <!--== CSS FILES ==-->
+        <link rel="stylesheet" href="css/jquery-ui.css">
+        <link rel="stylesheet" href="css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="css/theme-color.css">
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <link rel="stylesheet" href="css/fonts.css">
+
+      
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+													<script src="js/html5shiv.js"></script>
+													<script src="js/respond.min.js"></script>
+													<![endif]-->
+    </head>
+    <body>
+        <!-- Preloader -->
+        <div id="preloader">
+            <div id="status">&nbsp;</div>
+        </div>
+        <!-- START -->
+        <section>
+            <div class="str ind2-home">
+                <div class="hom-head">
+				<video autoplay muted loop playsinline class="bg-video">
+					<source src="videos/bg-video.mp4" type="video/mp4">
+				</video>
+
+			   
+				<div class="video-overlay"></div>
+
+				 <div class="hom-top">
+                        <div class="container">
+                            <div class="row">
+                                <div class="hom-nav ">
+                                    <!--MOBILE MENU-->
+                                    <a href="index.html" class="top-log">
+                                       <img src="images/home/logo-white.png" alt="" loading="eager" class="ic-logo">
+                                    </a>
+                                    <div class="menu">
+                                        <h4>Explore</h4>
+                                    </div>
+                                    <div class="pop-menu"></div>
+                                    <!--END MOBILE MENU-->
+                                    <div class="top-ser">
+                                        <form name="filter_form" id="filter_form" class="filter_form">
+                                            <ul>
+                                                <li class="sr-sea">
+                                                    <input type="text" autocomplete="off" id="top-select-search" placeholder="What are you looking for?">
+                                                    <ul id="tser-res1" class="tser-res tser-res2"></ul>
+                                                </li>
+                                                <li class="sbtn">
+                                                    <button type="button" class="btn btn-success" id="top_filter_submit">
+                                                        <i class="material-icons">&nbsp;</i>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </form>
+                                    </div>
+                                    <ul class="bl">
+                                        <li>
+                                            <a href="login.html">Add business</a>
+                                        </li>
+                                        <li>
+                                            <a href="login.html">Sign in</a>
+                                        </li>
+                                        <li>
+                                            <a href="login.html?login=register">Create an account</a>
+                                        </li>
+                                    </ul>
+                                    <!--MOBILE MENU-->
+                                    <div class="mob-menu">
+                                        <div class="mob-me-ic">
+                                            <i class="material-icons">menu</i>
+                                        </div>
+                                        <div class="mob-me-all">
+                                            <div class="mob-me-clo">
+                                                <i class="material-icons">close</i>
+                                            </div>
+                                            <div class="mv-bus">
+                                                <h4></h4>
+                                                <ul>
+                                                    <li>
+                                                        <a href="login.html">Add business</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="login.html">Sign in</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="login.html?login=register">Create an account</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="mv-cate">
+                                                <h4>All Categories</h4>
+                                                <ul>
+                                                    <li>
+                                                        <a href="all-listing.html">Spa and Facial</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Wedding halls</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Automobiles</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Restaurants</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Technology</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Pet shop</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Real Estate</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Sports</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Hospitals</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Education</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Transportation</a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="all-listing.html">Electricals</a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--END MOBILE MENU-->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container">
+                        <div class="row">
+                            <div class="ban-tit">
+                                <h1>
+                                    <b>Find Trusted
+                                        <span>Service Professionals
+                                            <i></i>
+                                        </span>
+                                    </b>
+                                </h1>
+                            </div>
+                            <div class="ban-search ban-sear-all">
+                                <form name="filter_form" id="filter_form" class="filter_form">
+                                    <ul>
+                                        <li class="sr-cit">
+                                            <select id="city_check" name="city_check" data-placeholder="Select City" class="chosen-select">
+                                                <option value="48025">Los Angeles</option>
+                                                <option value="48026">Chicago</option>
+                                                <option value="48027">Houston</option>
+                                                <option value="48028">Phoenix</option>
+                                                <option value="48024">New York City</option>
+                                                <option value="48029">Philadelphia</option>
+                                                <option value="48030">San Antonio</option>
+                                                <option value="48031">San Diego</option>
+                                                <option value="48032">Dallas</option>
+                                                <option value="48035">Illinois City</option>
+                                            </select>
+                                        </li>
+                                        <li class="sr-nor">
+                                            <select id="expert-select-search" name="expert-select-search" class="chosen-select">
+                                                <option value="">What service are you looking for?</option>
+                                                <option value="Financial &amp; Taxation Services">Financial &amp; Taxation Services</option>
+                                                <option value="Real Estate Services">Real Estate Services</option>
+                                                <option value="Wedding &amp; Events">Wedding &amp; Events</option>
+                                                <option value="Lessons/Tuitions">Lessons/Tuitions</option>
+                                                <option value="Food &amp; Catering">Food &amp; Catering</option>
+                                                <option value="Home &amp; Business Needs">Home &amp; Business Needs</option>
+                                                <option value="Travel &amp; Accommodation">Travel &amp; Accommodation</option>
+                                                <option value="Health &amp; Wellness">Health &amp; Wellness</option>
+                                            </select>
+                                        </li>
+                                        <li class="sr-sea">
+                                            <input type="text" autocomplete="off" id="select-search" placeholder="What service are you looking for?" class="search-field">
+                                            <ul id="tser-res" class="tser-res tser-res1">
+                                                <li>
+                                                    <div>
+                                                        <h4>Home cleaning services near you</h4>
+                                                        <span>Home cleaning, pest control and more</span>
+                                                        <a href="service-experts/all-experts.html"></a>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div>
+                                                        <h4>Best AC Service Expert near you</h4>
+                                                        <span>Service expert, ac service, ac service in new york</span>
+                                                        <a href="service-experts/all-experts.html"></a>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li class="sr-btn">
+                                            <input type="submit" id="filter_submit" name="filter_submit" value="Get Quotes" class="filter_submit">
+                                        </li>
+                                    </ul>
+                                </form>
+                            </div>
+							<div class="ban-short-links">
+								<ul>
+									<li>
+										<div>
+											<img src="images/icon/general.png" alt="">
+											<h4>Financial & Taxation Services</h4>
+											<a href="all-listing.html" class="fclick"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/real-estate.png" alt="">
+											<h4>Real Estate Services</h4>
+											<a href="all-listing.html" class="fclick"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/event.png" alt="">
+											<h4>Wedding & Events</h4>
+											<a href="all-listing.html" class="fclick"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/expert-book.png" alt="">
+											<h4>Lessons/Tuitions</h4>
+											<a href="all-listing.html" class="fclick"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/restaurant.png" alt="">
+											<h4>Food & Catering</h4>
+											<a href="all-listing.html" class="fclick"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/public-service.png" alt="">
+											<h4>Home & Business Needs</h4>
+											<a href="all-listing.html" class="fclick"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/vehicles.png" alt="">
+											<h4>Travel & Accommodation</h4>
+											<a href="all-listing.html" class="fclick"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/shield.png" alt="">
+											<h4>Health & Wellness</h4>
+											<a href="all-listing.html" class="fclick"></a>
+										</div>
+									</li>
+								</ul>
+							</div>
+							<div class="h2-ban-ql">
+								<ul>
+									<li>
+										<div>
+											<img src="images/icon/listing.png" alt="">
+											<h5>
+												<span class="count1">120+</span>
+												All Services
+											</h5>
+											<a href="#"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/expert.png" alt="">
+											<h5>
+												<span class="count1">85+</span>
+												Service Experts
+											</h5>
+											<a href="#"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/employee.png" alt="">
+											<h5>
+												<span class="count1">60+</span>
+												Jobs
+											</h5>
+											<a href="#"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/shop.png" alt="">
+											<h5>
+												<span class="count1">45+</span>
+												Products
+											</h5>
+											<a href="#"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/event.png" alt="">
+											<h5>
+												<span class="count1">25+</span>
+												Events
+											</h5>
+											<a href="#"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/coupons.png" alt="">
+											<h5>
+												<span class="count1">30+</span>
+												Coupons
+											</h5>
+											<a href="#"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/blog.png" alt="">
+											<h5>
+												<span class="count1">75+</span>
+												Blogs
+											</h5>
+											<a href="local-service-details"></a>
+										</div>
+									</li>
+									<li>
+										<div>
+											<img src="images/icon/general.png" alt="">
+											<h5>
+												<span class="count1">15+</span>
+												Community
+											</h5>
+											<a href="#"></a>
+										</div>
+									</li>
+								</ul>
+							</div>
+                        </div>
+                    </div>
+
+</div>
+            </div>
+        </section>
+        <!-- END -->
+		  <section>
+            <div class="ad-modu-com ad-sec-pad asd-all-hom">
+                <div class="container">
+                    <div class="row">
+                        <div class="plac-det-tit-inn">
+                            <h2>Top Local Service Categories in New York Metro Area</h2>
+                        </div>
+                        <div class="plac-hom-all-pla">
+                            <ul class="row">
+								<li class="col-lg-3 col-md-6 col-sm-6">
+									<div class="plac-hom-box ad-box">
+
+										<div class="plac-hom-box-im">
+											<img src="classifieds/images/1.jpg" alt="">
+										</div>
+
+										<div class="ad-box-txt">
+											<h3>Financial & Taxation Services</h3>
+										</div>
+
+										<!-- Hover Content -->
+										<div class="service-hover">
+											<ul>
+												<li>Tax Filing</li>
+												<li>Accounting Services</li>
+												<li>Bookkeeping</li>
+												<li>Insurance Services</li>
+												<li>Loan Services</li>
+												<li>Financial Planning</li>
+											</ul>
+
+											<a href="local-service-details" class="more-services">
+												More Services
+											</a>
+										</div>
+
+										<a href="local-service-details" class="fclick"></a>
+
+									</div>
+								</li>
+                                <li class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="plac-hom-box ad-box">
+                                        <div class="plac-hom-box-im">
+                                           <img src="classifieds/images/2.jpg" class="b-lazy b-loaded" alt="">
+                                        </div>
+                                        <div class="ad-box-txt"><h3>Real Estate Services</h3></div>
+										<div class="service-hover"> <ul> <li>Buy Property</li> <li>Sell Property</li> <li>Rental Homes</li> <li>Commercial Space</li> <li>Property Management</li> <li>Mortgage Services</li> </ul> <a href="local-service-details" class="more-services"> More Services </a> </div>
+                                        <a href="local-service-details" class="fclick"></a>
+                                    </div>
+                                </li>
+                                <li class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="plac-hom-box ad-box">
+                                        <div class="plac-hom-box-im">
+                                           <img src="classifieds/images/3.jpeg" class="b-lazy b-loaded" alt="">
+                                        </div>
+                                        <div class="ad-box-txt"><h3>Wedding & Events</h3></div>
+										<div class="service-hover"> <ul> <li>Wedding Planning</li> <li>Photography</li> <li>Videography</li> <li>Decoration</li> <li>DJ Services</li> <li>Event Venues</li> </ul> <a href="local-service-details" class="more-services"> More Services </a> </div>
+                                        <a href="local-service-details" class="fclick"></a>
+                                    </div>
+                                </li>    
+                                <li class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="plac-hom-box ad-box">
+                                        <div class="plac-hom-box-im">
+                                           <img src="classifieds/images/4.jpeg" class="b-lazy b-loaded" alt="">
+                                        </div>
+                                        <div class="ad-box-txt"><h3>Lessons/Tuitions</h3></div>
+										<div class="service-hover"> <ul> <li>Math Tutors</li> <li>Science Tutors</li> <li>Music Classes</li> <li>Dance Classes</li> <li>Language Training</li> <li>Online Tutoring</li> </ul> <a href="local-service-details" class="more-services">More Services</a> </div>
+                                        <a href="local-service-details" class="fclick"></a>
+                                    </div>
+                                </li>
+                                <li class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="plac-hom-box ad-box">
+                                        <div class="plac-hom-box-im">
+                                           <img src="classifieds/images/5.jpg" class="b-lazy b-loaded" alt="">
+                                        </div>
+                                        <div class="ad-box-txt"><h3>Food & Catering</h3></div>
+										<div class="service-hover"> <ul> <li>Indian Catering</li> <li>Party Catering</li> <li>Wedding Catering</li> <li>Private Chef</li> <li>Tiffin Services</li> <li>Bakery Services</li> </ul> <a href="local-service-details" class="more-services">More Services</a> </div>
+                                        <a href="local-service-details" class="fclick"></a>
+                                    </div>
+                                </li>
+                                <li class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="plac-hom-box ad-box">
+                                        <div class="plac-hom-box-im">
+                                           <img src="classifieds/images/pets-1.jpg" class="b-lazy b-loaded" alt="">
+                                        </div>
+                                        <div class="ad-box-txt"><h3>Home & Business Needs</h3></div>
+										<div class="service-hover"> <ul> <li>Cleaning Services</li> <li>Electricians</li> <li>Plumbing</li> <li>Handyman</li> <li>Office Setup</li> <li>Pest Control</li> </ul> <a href="local-service-details" class="more-services">More Services</a> </div>
+                                        <a href="local-service-details" class="fclick"></a>
+                                    </div>
+                                </li>
+                                <li class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="plac-hom-box ad-box">
+                                        <div class="plac-hom-box-im">
+                                           <img src="classifieds/images/7.jpeg" class="b-lazy b-loaded" alt="">
+                                        </div>
+                                        <div class="ad-box-txt"><h3>Travel & Accommodation</h3></div>
+										<div class="service-hover"> <ul> <li>Travel Agents</li> <li>Vacation Packages</li> <li>Hotels</li> <li>Air Tickets</li> <li>Car Rentals</li> <li>Tour Guides</li> </ul> <a href="local-service-details" class="more-services">More Services</a> </div>
+                                        <a href="local-service-details" class="fclick"></a>
+                                    </div>
+                                </li>
+                                <li class="col-lg-3 col-md-6 col-sm-6">
+                                    <div class="plac-hom-box ad-box">
+                                        <div class="plac-hom-box-im">
+                                           <img src="classifieds/images/8.jpg" class="b-lazy b-loaded" alt="">
+                                        </div>
+                                        <div class="ad-box-txt"><h3>Health & Wellness</h3></div>
+										<div class="service-hover"> <ul> <li>Doctors</li> <li>Dental Care</li> <li>Yoga Classes</li> <li>Fitness Trainers</li> <li>Massage Therapy</li> <li>Mental Wellness</li> </ul> <a href="local-service-details" class="more-services">More Services</a> </div>
+                                        <a href="local-service-details" class="fclick"></a>
+                                    </div>
+                                </li>                    
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    
+       
+         <section>
+        <div class="full-bot-book">
+            <div class="container">
+                <div class="row">
+                    <div class="bot-book">
+                        <div class="col-md-12 bb-text">
+                            <h4>List your service for FREE</h4>
+                            <p>Join thousands of trusted local professionals and start receiving enquiries from customers near you.</p>
+                            <a href="pricing-details.html">Add my service <i class="material-icons">arrow_forward</i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <section class=" wed-hom-footer">
+        <div class="container">
+            <div class="row foot-supp">
+                <h2><span>Free support:</span> +01 5426 24400 &nbsp;&nbsp;|&nbsp;&nbsp; <span>Email:</span> info@chaodesi.com</h2>
+            </div>
+            <div class="row wed-foot-link">
+                <div class="col-md-4 foot-tc-mar-t-o">
+                    <h4>Local Services</h4>
+                    <ul>
+                        <li><a href="local-services.html">Financial &amp; Taxation Services</a></li>
+                        <li><a href="local-services.html">Real Estate Services</a></li>
+                        <li><a href="local-services.html">Wedding &amp; Events</a></li>
+                        <li><a href="local-services.html">Lessons/Tuitions</a></li>
+                        <li><a href="local-services.html">Food &amp; Catering</a></li>
+                        <li><a href="local-services.html">Home &amp; Business Needs</a></li>
+                        <li><a href="local-services.html">Travel &amp; Accommodation</a></li>
+                        <li><a href="local-services.html">Health &amp; Wellness</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="all-listing.html">All Listings</a></li>
+                        <li><a href="service-experts/index.html">Service Experts</a></li>
+                        <li><a href="jobs/index.html">Jobs</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="products.html">Products</a></li>
+                        <li><a href="coupons.html">Coupons</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>HELP &amp; SUPPORT</h4>
+                    <ul>
+                        <li><a href="about.html">About us</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="feedback.html">Feedback</a></li>
+                        <li><a href="contact-us.html">Contact us</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-use.html">Terms of Use</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row wed-foot-link-1">
+                <div class="col-md-4">
+                    <h4>Get In Touch</h4>
+                    <p>Address: 28800 Orchard Lake Road, Suite 180 Farmington Hills, U.S.A.</p>
+                    <p>Phone: <a href="tel:+01 5426 24400">+01 5426 24400</a></p>
+                    <p>Email: <a href="mailto:info@chaodesi.com">info@chaodesi.com</a></p>
+                </div>
+                <div class="col-md-4 fot-app">
+                    <h4>DOWNLOAD OUR FREE MOBILE APPS</h4>
+                    <ul>
+                        <li><a href=""><img src="images/gstore.png" alt="" loading="lazy"></a></li>
+                        <li><a href=""><img src="images/astore.png" alt="" loading="lazy"></a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 fot-soc">
+                    <h4>SOCIAL MEDIA</h4>
+                    <ul>
+                        <li><a target="_blank" href=""><img src="images/social/1.png" alt="" loading="lazy"></a></li>
+                        <li><a target="_blank" href="https://twitter.com/"><img src="images/social/2.png" alt="" loading="lazy"></a></li>
+                        <li><a target="_blank" href="https://www.facebook.com/"><img src="images/social/3.png" alt="" loading="lazy"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="cr">
+            <div class="container">
+                <div class="row">
+                    <p>Copyright © 2025
+                        <a href="https://chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by
+                        <a href="https://chaodesi.com/" target="_blank">Symplore</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+		
+		 <div class="fqui-menu">
+            <ul>
+                <li>
+                    <span class="mob-me-ic mob-me-fot">
+                        <i>&nbsp;</i>
+                        <i>&nbsp;</i>
+                        <i>&nbsp;</i>Menu
+                    </span>
+                </li>
+                <li>
+                    <a href="index.html">
+                       <img src="classifieds/images/icon/home.png">Home
+                    </a>
+                </li>
+                <li>
+                    <span class="mob-sear">
+                       <img src="classifieds/images/icon/search1.png">Search
+                    </span>
+                </li>
+                <li>
+                    <a href="all-category.html" class="act">
+                       <img src="classifieds/images/icon/shop.png">All Services
+                    </a>
+                </li>
+                <li>
+                    <a href="classifieds/index.html">
+                       <img src="classifieds/images/icon/ads.png">Classifieds
+                    </a>
+                </li>
+                <li>
+                    <a href="service-experts/index.html">
+                       <img src="classifieds/images/icon/expert.png">Service Experts
+                    </a>
+                </li>
+                <li>
+                    <a href="jobs/index.html">
+                        <img src="jobs/images/icon/employee.png">Jobs
+                    </a>
+                </li>
+                <li>
+                    <a href="events.html">
+                       <img src="classifieds/images/icon/calendar.png">Events
+                    </a>
+                </li>
+                <li>
+                    <a href="products.html">
+                       <img src="classifieds/images/icon/cart.png">Products
+                    </a>
+                </li>
+                <li>
+                    <a href="coupons.html">
+                       <img src="classifieds/images/icon/coupons.png">Coupons
+                    </a>
+                </li>
+                <li>
+                    <a href="blog-posts.html">
+                       <img src="classifieds/images/icon/blog1.png">Blogs
+                    </a>
+                </li>
+                <li>
+                    <a href="community.html">
+                       <img src="classifieds/images/icon/11.png">Community
+                    </a>
+                </li>
+                <li>
+                    <span class="btn-ser-need-ani">
+                       <img src="classifieds/images/icon/how1.png">Support
+                    </span>
+                </li>
+            </ul>
+        </div>
+		
+        <script src="js/jquery.min.js"></script>
+        <script src="js/popper.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <script src="js/jquery-ui.js"></script>
+        <script src="js/select-opt.js"></script>
+        <script src="js/blazy.min.js"></script>
+        <script src="js/slick.js"></script>
+        <script src="js/custom.js"></script>
+        <script src="js/jquery.validate.min.js"></script>
+        <script src="js/custom_validation.js"></script>
+
+ <script>
+    $('.multiple-items1').slick({
+        infinite: true,
+        slidesToShow: 4,
+        slidesToScroll: 1,
+        autoplay: true,
+        autoplaySpeed: 3000,
+        responsive: [{
+            breakpoint: 992,
+            settings: {
+                slidesToShow: 1,
+                slidesToScroll: 1,
+                centerMode: false
+            }
+        }]
+
+    });
+        </script>
+    </body>
+</html>

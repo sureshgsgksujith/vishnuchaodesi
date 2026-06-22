@@ -348,7 +348,7 @@ export default function AllListingPage() {
               {topProviders.length ? (
                 <SidebarCard className="public-provider-card" title="Top Service Providers">
                   {topProviders.map((listing) => (
-                    <Link to={`/listing-details?id=${listing.id}`} className="public-provider-row" key={listing.id}>
+                    <Link to={buildListingDetailHref(listing)} className="public-provider-row" key={listing.id}>
                       {listing.primaryImageUrl || listing.imageUrls?.[0] ? (
                         <img src={resolveListingImageUrl(listing.primaryImageUrl || listing.imageUrls?.[0])} alt="" />
                       ) : <span className="public-provider-image-empty" />}
@@ -641,7 +641,7 @@ function RatingList({
 }
 
 function ListingCard({ listing, onQuoteClick }: { listing: ListingSummary; onQuoteClick: (listing: ListingSummary) => void }) {
-  const href = `/listing-details?id=${listing.id}`;
+  const href = buildListingDetailHref(listing);
   const imageUrl = listing.primaryImageUrl || listing.imageUrls?.[0] || "";
   const displayRating = getDisplayRating(listing);
   const openLabel = getOpenStatusLabel(listing);
@@ -728,6 +728,13 @@ function ListingCard({ listing, onQuoteClick }: { listing: ListingSummary; onQuo
       </div>
     </article>
   );
+}
+
+function buildListingDetailHref(listing: ListingSummary) {
+  const idQuery = `id=${encodeURIComponent(String(listing.id))}`;
+  return categorySlugFromLabel(listing.categoryName) === "events-tickets"
+    ? `/event-details?${idQuery}`
+    : `/listing-details?${idQuery}`;
 }
 
 function QuoteModal({

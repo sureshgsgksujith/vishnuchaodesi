@@ -155,7 +155,7 @@ export default function HomeEventsSection() {
               {events.map((event) => {
                 const image = resolveListingImageUrl(event.primaryImageUrl || event.imageUrls?.[0]);
                 const eventLocation = getEventLocation(event);
-                const detailHref = `/listing/${event.id}`;
+                const detailHref = `/event-details?id=${encodeURIComponent(String(event.id))}`;
                 const meta =
                   event.subCategory ||
                   getDetailValue(event, ["propertyDetails"], ["lineup", "eventType", "tags"]) ||

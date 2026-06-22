@@ -24,6 +24,7 @@ export const customerTemplateRoutes = [
 
   { path: "/events", src: "/template-17/events.html", title: "Events" },
   { path: "/event-details", src: "/template-17/event-details.html", title: "Event Details" },
+  { path: "/event-checkout", src: "/template-17/event-checkout.html", title: "Event Checkout" },
   { path: "/create-new-event", src: "/template-17/create-new-event.html", title: "Create New Event" },
   { path: "/edit-event", src: "/template-17/edit-event.html", title: "Edit Event" },
 

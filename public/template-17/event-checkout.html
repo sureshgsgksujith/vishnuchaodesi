@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <title>
-            Chicago bike trails for a long ride
+            Checkout | Chicago Bike Trails Festival 2026 - Chao Desi
         </title>
         <!--== META TAGS ==-->
         <meta charset="utf-8">
@@ -24,7 +24,7 @@
         <link rel="stylesheet" type="text/css" href="css/theme-color.css">
         <link rel="stylesheet" type="text/css" href="css/style.css">
         <link rel="stylesheet" href="css/fonts.css">
-        <link rel="stylesheet" href="css/event-details.css">
+        <link rel="stylesheet" href="css/event-checkout.css">
         <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
         <!--[if lt IE 9]>
@@ -299,218 +299,401 @@
         </section>
         <!-- END -->
         <!-- START -->
-        <section class=" eve-deta-pg eve-deta-pg1">
-            <div class="container">
-                <div class="eve-deta-pg-main">
-                    <div class="rhs">
-                        <div class="list-rhs-form pglist-bg pglist-p-com">
-                            <div class="quote-pop">
-                                <h3>Book Your Tickets</h3>
-                                <div id="event_detail_enq_success" class="log new-tnk-msg" style="display: none;">
-                                    <p>Your Enquiry Is Submitted Successfully!!!</p>
-                                </div>
-                                <div id="event_detail_enq_same" class="log" style="display: none;">
-                                    <p>You cannot make enquiry on your own event!!</p>
-                                </div>
-                                <div id="event_detail_enq_fail" class="log" style="display: none;">
-                                    <p>Oops!! Something Went Wrong Try Later!!!</p>
-                                </div>
-                                <div class="event-ticket-summary">
-                                    <div class="ed-tk-type">
-                                        <div><b>VIP Pass</b><small>Front access + lounge</small></div>
-                                        <span class="amt">$134.10</span>
-                                    </div>
-                                    <div class="ed-tk-type">
-                                        <div><b>Premium</b><small>Orchestra &amp; boxes</small></div>
-                                        <span class="amt">$92.76</span>
-                                    </div>
-                                    <div class="ed-tk-type">
-                                        <div><b>General</b><small>Standard entry</small></div>
-                                        <span class="amt">$46.00</span>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ticketModal">Buy Tickets</button>
-                                <p class="event-ticket-note">Sign in is required at checkout.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lhs">
-                        <div class="img">
-                            <img
-                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                                class="b-lazy"
-                                data-src="images/events/2.jpg"
-                                loading="lazy"
-                            >
-                            <span class="dat">
-                                <b>Mar</b> 11
-                            </span>
-                        </div>
-                    </div>
+        <!-- ============ EVENT DETAILS (scoped under .event-details-page) ============ -->
+       
+
+        <!-- ===== CHECKOUT (scoped under .event-checkout-page) ===== -->
+        <div class="event-checkout-page">
+            <!-- Secure / countdown bar -->
+            <div class="ck-bar">
+                <div class="ed-wrap ck-bar-in">
+                    <span class="ck-bar-l"><i class="material-icons">verified_user</i> Secure checkout</span>
+                    <span class="ck-bar-r">
+                        <i class="material-icons">call</i> 512-788-5300
+                        <span class="ck-timer-wrap"><i class="material-icons">schedule</i> <b class="ck-timer">10:00</b> <small>minutes left</small></span>
+                    </span>
                 </div>
             </div>
-        </section>
-        <!--END-->
-        <!-- START -->
-        <section class=" eve-deta-body">
-            <div class="container">
-                <div class="eve-deta-body-main row">
-                    <div class="lhs">
-                        <div class="head row">
-                            <div class="eve-bred-crum">
-                                <ul>
-                                    <li>
-                                        <a href="index.html">Home</a>
-                                    </li>
-                                    <li>
-                                        <a href="events.html">All Events</a>
-                                    </li>
-                                    <li>
-                                        <a href="#">Chicago bike trails for a long ride</a>
-                                    </li>
+
+            <!-- Event summary hero -->
+            <section class="ck-hero">
+                <div class="ed-wrap ck-hero-in">
+                    <div class="ck-datebox"><b>11</b><span>Mar</span><i>6:00 AM</i></div>
+                    <div class="ck-hero-info">
+                        <h1 class="ck-ev-title">Chicago Bike Trails Festival 2026</h1>
+                        <p class="ck-ev-venue"><i class="material-icons">place</i> <span>Lakefront Trail — North Entrance, Chicago, IL</span></p>
+                        <p class="ck-ev-org">Organizer: <b class="ck-ev-org-name">Richflayer Events</b></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Steps + Order summary -->
+            <section class="ck-body">
+                <div class="ed-wrap">
+                    <div class="ck-layout">
+                        <!-- Steps -->
+                        <div class="ck-main">
+                            <div class="ck-step open" data-step="1">
+                                <div class="ck-step-head">
+                                    <span class="ck-num">1</span>
+                                    <h3>Phone Number Verification</h3>
+                                    <i class="material-icons ck-caret">expand_more</i>
+                                </div>
+                                <div class="ck-step-body">
+                                    <p class="ck-help">A One-Time Password (OTP) will be sent for verification. Please use a valid mobile number to continue.</p>
+                                    <div class="ck-field-row">
+                                        <select class="ck-cc">
+                                            <option>USA (+1)</option>
+                                            <option>IND (+91)</option>
+                                            <option>UK (+44)</option>
+                                        </select>
+                                        <input type="tel" class="ck-input" placeholder="Enter your mobile number">
+                                    </div>
+                                    <button class="ck-btn ck-next" type="button">Continue</button>
+                                </div>
+                            </div>
+
+                            <div class="ck-step" data-step="2">
+                                <div class="ck-step-head">
+                                    <span class="ck-num">2</span>
+                                    <h3>Share Your Contact Details</h3>
+                                    <i class="material-icons ck-caret">expand_more</i>
+                                </div>
+                                <div class="ck-step-body">
+                                    <div class="ck-field-row two">
+                                        <input class="ck-input" placeholder="Full name">
+                                        <input class="ck-input" type="email" placeholder="Email address">
+                                    </div>
+                                    <button class="ck-btn ck-next" type="button">Continue</button>
+                                </div>
+                            </div>
+
+                            <div class="ck-step" data-step="3">
+                                <div class="ck-step-head">
+                                    <span class="ck-num">3</span>
+                                    <h3>Payment Options</h3>
+                                    <i class="material-icons ck-caret">expand_more</i>
+                                </div>
+                                <div class="ck-step-body">
+                                    <p class="ck-help">Your card information is encrypted and never stored on our servers.</p>
+                                    <label class="ck-pay"><input type="radio" name="pay" checked> <i class="material-icons">credit_card</i> Credit / Debit Card</label>
+                                    <label class="ck-pay"><input type="radio" name="pay"> <i class="material-icons">account_balance</i> Net Banking</label>
+                                    <label class="ck-pay"><input type="radio" name="pay"> <i class="material-icons">account_balance_wallet</i> Wallet / UPI</label>
+                                    <button class="ck-btn ck-next" type="button">Continue</button>
+                                </div>
+                            </div>
+
+                            <div class="ck-step" data-step="4">
+                                <div class="ck-step-head">
+                                    <span class="ck-num">4</span>
+                                    <h3>Terms &amp; Conditions</h3>
+                                    <i class="material-icons ck-caret">expand_more</i>
+                                </div>
+                                <div class="ck-step-body">
+                                    <label class="ck-check"><input type="checkbox" class="ck-agree"> I agree to the Terms of Service, Privacy Policy and Refund Policy of Chao Desi.</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Order summary -->
+                        <aside class="ck-side">
+                            <div class="ck-summary">
+                                <h3>Order Summary</h3>
+                                <div class="ck-sec-title">Tickets</div>
+                                <div class="ck-tickets"></div>
+                                <div class="ck-sec-title ck-fee-title">Fee</div>
+                                <div class="ck-li"><span>Transaction Fee</span><span class="ck-tx">$0.00</span></div>
+                                <div class="ck-li"><span>Convenience Fee</span><span class="ck-conv">$0.00</span></div>
+                                <div class="ck-li"><span>Sales Tax</span><span class="ck-tax">$0.00</span></div>
+                                <div class="ck-payable"><span>Amount Payable</span><span class="ck-total">$0.00</span></div>
+                                <button class="ck-btn ck-pay-now" type="button"><i class="material-icons">lock</i> Pay Securely</button>
+                                <p class="ck-secure"><i class="material-icons">verified_user</i> 100% secure payment</p>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <!-- legacy event-details markup below is hidden / unused on checkout -->
+        <div class="ck-legacy" style="display:none;" aria-hidden="true">
+            <!-- ===== 1. EVENT HERO ===== -->
+            <section class="ed-hero">
+                <div class="ed-wrap ed-hero-in">
+                    <ul class="ed-crumb">
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li>Chicago Bike Trails Festival</li>
+                    </ul>
+                    <span class="ed-badge">Sports &amp; Adventure</span>
+                    <h1>Chicago Bike Trails Festival 2026</h1>
+                    <div class="ed-hero-meta">
+                        <span><i class="material-icons">event</i> Sat, 11 Mar 2026</span>
+                        <span><i class="material-icons">schedule</i> 6:00 AM – 2:00 PM</span>
+                        <span><i class="material-icons">place</i> Lakefront Trail, Chicago, IL</span>
+                        <span><i class="material-icons">star</i> 4.8 (320 reviews)</span>
+                    </div>
+                    <div class="ed-hero-cta">
+                        <a href="#ed-tickets" class="ed-btn ed-btn-primary" data-bs-toggle="modal" data-bs-target="#quote">
+                            <i class="material-icons">confirmation_number</i> Buy Tickets
+                        </a>
+                        <span class="ed-btn ed-btn-ghost share-new" data-bs-toggle="modal" data-bs-target="#sharepop">
+                            <i class="material-icons">share</i> Share
+                        </span>
+                        <span class="ed-share">
+                            <a href="#" title="Like"><i class="material-icons">favorite_border</i></a>
+                            <a href="#" title="Save"><i class="material-icons">bookmark_border</i></a>
+                            <a href="#" title="Copy link" data-bs-toggle="modal" data-bs-target="#sharepop"><i class="material-icons">link</i></a>
+                        </span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== BODY (main + sidebar) ===== -->
+            <section class="ed-body">
+                <div class="ed-wrap">
+                    <div class="ed-layout">
+                        <!-- MAIN COLUMN -->
+                        <div class="ed-main">
+                            <!-- 2. Overview -->
+                            <div class="ed-card">
+                                <h2>About This Event</h2>
+                                <p>Join hundreds of cycling enthusiasts for the Chicago Bike Trails Festival 2026 — a full-day celebration of riding, fitness, and community along the scenic Lakefront Trail. Whether you are a casual rider or a seasoned cyclist, there is a route and an experience crafted just for you.</p>
+                                <p>The festival features guided scenic rides, live music, food trucks, a gear expo, and family-friendly activities. Expert ride leaders will accompany every group, and support vans will be available throughout each route to keep your day safe and enjoyable.</p>
+                                <div class="ed-sub">Event Highlights</div>
+                                <div class="ed-high">
+                                    <span><i class="material-icons">directions_bike</i> Guided scenic routes</span>
+                                    <span><i class="material-icons">restaurant</i> Food trucks &amp; cafes</span>
+                                    <span><i class="material-icons">music_note</i> Live music stage</span>
+                                    <span><i class="material-icons">local_parking</i> Free parking</span>
+                                    <span><i class="material-icons">verified_user</i> On-route support vans</span>
+                                    <span><i class="material-icons">people</i> Family-friendly zone</span>
+                                </div>
+                            </div>
+
+                            <!-- Key information cards -->
+                            <div class="ed-card">
+                                <h2>Key Information</h2>
+                                <div class="ed-info">
+                                    <div class="ed-info-box">
+                                        <div class="ic"><i class="material-icons">event</i></div>
+                                        <b>11 Mar 2026</b><small>Date</small>
+                                    </div>
+                                    <div class="ed-info-box">
+                                        <div class="ic"><i class="material-icons">schedule</i></div>
+                                        <b>6:00 AM</b><small>Start time</small>
+                                    </div>
+                                    <div class="ed-info-box">
+                                        <div class="ic"><i class="material-icons">timelapse</i></div>
+                                        <b>8 hours</b><small>Duration</small>
+                                    </div>
+                                    <div class="ed-info-box">
+                                        <div class="ic"><i class="material-icons">translate</i></div>
+                                        <b>English</b><small>Language</small>
+                                    </div>
+                                    <div class="ed-info-box">
+                                        <div class="ic"><i class="material-icons">confirmation_number</i></div>
+                                        <b>$46 – $134</b><small>Ticket range</small>
+                                    </div>
+                                    <div class="ed-info-box">
+                                        <div class="ic"><i class="material-icons">person</i></div>
+                                        <b>All ages</b><small>Suitable for</small>
+                                    </div>
+                                    <div class="ed-info-box">
+                                        <div class="ic"><i class="material-icons">place</i></div>
+                                        <b>Outdoor</b><small>Venue type</small>
+                                    </div>
+                                    <div class="ed-info-box">
+                                        <div class="ic"><i class="material-icons">event_seat</i></div>
+                                        <b>500 seats</b><small>Capacity</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Schedule / Agenda -->
+                            <div class="ed-card">
+                                <h2>Event Schedule</h2>
+                                <div class="ed-tl">
+                                    <div class="ed-tl-item">
+                                        <div class="ed-tl-time">5:30 AM</div>
+                                        <h4>Check-in &amp; Registration</h4>
+                                        <span>Collect your rider kit, timing chip and festival wristband at the main gate.</span>
+                                    </div>
+                                    <div class="ed-tl-item">
+                                        <div class="ed-tl-time">6:00 AM</div>
+                                        <h4>Warm-up &amp; Safety Briefing</h4>
+                                        <span>Led by certified coaches — Coach Sarah Mitchell covers routes and safety.</span>
+                                    </div>
+                                    <div class="ed-tl-item">
+                                        <div class="ed-tl-time">6:30 AM</div>
+                                        <h4>Flag-off — Scenic Ride Begins</h4>
+                                        <span>Groups depart in waves across the 10k, 25k and 50k trails.</span>
+                                    </div>
+                                    <div class="ed-tl-item">
+                                        <div class="ed-tl-time">11:00 AM</div>
+                                        <h4>Live Music &amp; Food Festival</h4>
+                                        <span>Refuel with local food trucks while the live band performs on the main stage.</span>
+                                    </div>
+                                    <div class="ed-tl-item">
+                                        <div class="ed-tl-time">1:00 PM</div>
+                                        <h4>Awards &amp; Closing Ceremony</h4>
+                                        <span>Prize distribution for top riders and lucky-draw giveaways.</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. Venue -->
+                            <div class="ed-card">
+                                <h2>Venue &amp; Location</h2>
+                                <div class="ed-venue-row">
+                                    <img src="images/events/4.jpg" alt="Venue">
+                                    <div>
+                                        <b>Lakefront Trail — North Entrance</b>
+                                        <p>28800 Orchard Lake Road, Suite 180,<br>Farmington Hills, Chicago, IL, U.S.A.</p>
+                                    </div>
+                                </div>
+                                <div class="ed-map">
+                                    <iframe src="https://maps.google.com/maps?q=Chicago%20Lakefront%20Trail&t=&z=12&ie=UTF8&iwloc=&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Event location map"></iframe>
+                                </div>
+                                <a href="https://maps.google.com/?q=Chicago+Lakefront+Trail" target="_blank" rel="noopener" class="ed-btn ed-btn-out" style="margin-top:14px;">
+                                    <i class="material-icons">directions</i> Get Directions
+                                </a>
+                            </div>
+
+                            <!-- 6. Organizer -->
+                            <div class="ed-card">
+                                <h2>Organizer</h2>
+                                <div class="ed-org">
+                                    <img src="images/user/970813.jpg" alt="Organizer">
+                                    <div>
+                                        <h4>Richflayer Events</h4>
+                                        <p>Premium outdoor &amp; lifestyle event organizers · Joined Nov 2021</p>
+                                        <div class="ed-org-soc">
+                                            <a href="#" title="Website"><i class="material-icons">public</i></a>
+                                            <a href="#" title="Photos"><i class="material-icons">photo_camera</i></a>
+                                            <a href="#" title="Chat"><i class="material-icons">chat</i></a>
+                                            <a href="#" title="Videos"><i class="material-icons">play_circle_filled</i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <ul class="ed-meta-list">
+                                    <li><i class="material-icons">person</i> <span>Contact person: Markze</span></li>
+                                    <li><i class="material-icons">call</i> <span>+1 643 114 512</span></li>
+                                    <li><i class="material-icons">mail</i> <span>markze@biketrip.com</span></li>
+                                    <li><i class="material-icons">public</i> <span>www.chaodesi.com</span></li>
                                 </ul>
                             </div>
-                            <h1>Chicago bike trails for a long ride</h1>
+
+                            <!-- 7. Gallery -->
+                            <div class="ed-card">
+                                <h2>Gallery</h2>
+                                <div class="ed-gal">
+                                    <a href="images/events/2.jpg"><img src="images/events/2.jpg" alt="Gallery"></a>
+                                    <a href="images/events/3.jpg"><img src="images/events/3.jpg" alt="Gallery"></a>
+                                    <a href="images/events/4.jpg"><img src="images/events/4.jpg" alt="Gallery"></a>
+                                    <a href="images/events/5.jpg"><img src="images/events/5.jpg" alt="Gallery"></a>
+                                    <a href="images/events/6.jpg"><img src="images/events/6.jpg" alt="Gallery"></a>
+                                    <a href="images/events/3.jpg"><img src="images/events/3.jpg" alt="Gallery"></a>
+                                    <a href="images/events/5.jpg"><img src="images/events/5.jpg" alt="Gallery"></a>
+                                    <a href="images/events/2.jpg"><img src="images/events/2.jpg" alt="Gallery"></a>
+                                </div>
+                            </div>
                         </div>
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has
-                    survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently
-                    with desktop publishing software like Aldus PageMaker Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer
-                    took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the
-                    release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker
-                        <br>
-                        <br>
-                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type
-                    specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
-                    and more recently with desktop publishing software like Aldus PageMaker
-                        <div class="list-sh">
-                            <span class="share-new" data-bs-toggle="modal" data-bs-target="#sharepop">
-                                <i class="material-icons">share</i> Share now
-                            </span>
-                        </div>
+
+                        <!-- 3. TICKET SIDEBAR -->
+                        <aside class="ed-side" id="ed-tickets">
+                            <div class="ed-sticky">
+                                <div class="ed-ticket">
+                                    <div class="ed-ticket-top">
+                                        <small>Tickets starting from</small>
+                                        <div class="price">$46 <span>– $134</span></div>
+                                    </div>
+                                    <div class="ed-ticket-body">
+                                        <div class="ed-tk-type">
+                                            <div><b>VIP Pass</b><small>Front access + lounge</small></div>
+                                            <span class="amt">$134.10</span>
+                                        </div>
+                                        <div class="ed-tk-type">
+                                            <div><b>Premium</b><small>Orchestra &amp; boxes</small></div>
+                                            <span class="amt">$92.76</span>
+                                        </div>
+                                        <div class="ed-tk-type">
+                                            <div><b>General</b><small>Standard entry</small></div>
+                                            <span class="amt">$46.00</span>
+                                        </div>
+                                        <ul class="ed-meta-list">
+                                            <li><i class="material-icons">event</i> <span>Sat, 11 Mar 2026</span></li>
+                                            <li><i class="material-icons">schedule</i> <span>6:00 AM (Gates open 5:30 AM)</span></li>
+                                            <li><i class="material-icons">place</i> <span>Lakefront Trail, Chicago, IL</span></li>
+                                            <li><i class="material-icons">call</i> <span>+1 643 114 512</span></li>
+                                        </ul>
+                                        <a href="#" class="ed-btn ed-btn-primary" data-bs-toggle="modal" data-bs-target="#quote">
+                                            <i class="material-icons">confirmation_number</i> Buy Tickets
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
                     </div>
-                    <div class="rhs">
-                        <div class="sec-1">
-                            <h4>Event information:</h4>
-                            <ul>
-                                <li>
-                                    <b>Name</b>: Chicago bike trails for a long ride
-                                </li>
-                                <li>
-                                    <b>Date</b>: 11, Mar 2022
-                                </li>
-                                <li>
-                                    <b>Time</b>: 6:00 AM
-                                </li>
-                                <li>
-                                    <b>Address</b>: 28800 Orchard Lake Road, Suite 180 Farmington Hills, U.S.A.
-                                </li>
-                                <li>
-                                    <b>Contact person</b>: Markze
-                                </li>
-                                <li>
-                                    <b>Phone</b>: 643114512
-                                </li>
-                                <li>
-                                    <b>Email</b>: markze@biketrip.com
-                                </li>
-                                <li>
-                                    <b>Website(www.Symplore)</b>: https://dev.chaodesi.com/
-                                </li>
-                            </ul>
+                </div>
+            </section>
+
+            <!-- ===== 8. RELATED EVENTS ===== -->
+            <section class="ed-rel">
+                <div class="ed-wrap">
+                    <div class="ed-sec-head">
+                        <h2>Related Events</h2>
+                        <p>You might also be interested in these upcoming events</p>
+                    </div>
+                    <div class="ed-rel-grid">
+                        <div class="ed-rel-card">
+                            <div class="ed-rel-im">
+                                <img src="images/events/3.jpg" alt="Event">
+                                <span class="ed-rel-date"><b>03</b><small>May</small></span>
+                            </div>
+                            <div class="ed-rel-bd">
+                                <h4>New York Fashion Marathon</h4>
+                                <span class="loc"><i class="material-icons">place</i> Manhattan, NY</span>
+                                <a href="event-details.html" class="ed-btn ed-btn-out">View Details</a>
+                            </div>
                         </div>
-                        <div class="sec-2">
-                            <h4>Location</h4>
+                        <div class="ed-rel-card">
+                            <div class="ed-rel-im">
+                                <img src="images/events/4.jpg" alt="Event">
+                                <span class="ed-rel-date"><b>17</b><small>Apr</small></span>
+                            </div>
+                            <div class="ed-rel-bd">
+                                <h4>Riverside Music &amp; Food Fest</h4>
+                                <span class="loc"><i class="material-icons">place</i> Austin, TX</span>
+                                <a href="event-details.html" class="ed-btn ed-btn-out">View Details</a>
+                            </div>
                         </div>
-                        <div class="sec-3">
-                            <div class="pro-bad-sml">
-                                <img src="images/user/970813.jpg" alt="" loading="lazy">
-                                <h4>Richflayer</h4>
-                                <b>Joined on 14, Nov 2021</b>
-                                <a target="_blank" href="profile/richflayer" class="fclick">&nbsp;</a>
+                        <div class="ed-rel-card">
+                            <div class="ed-rel-im">
+                                <img src="images/events/5.jpg" alt="Event">
+                                <span class="ed-rel-date"><b>24</b><small>Apr</small></span>
+                            </div>
+                            <div class="ed-rel-bd">
+                                <h4>Lakeside Cycling Challenge</h4>
+                                <span class="loc"><i class="material-icons">place</i> Seattle, WA</span>
+                                <a href="event-details.html" class="ed-btn ed-btn-out">View Details</a>
+                            </div>
+                        </div>
+                        <div class="ed-rel-card">
+                            <div class="ed-rel-im">
+                                <img src="images/events/6.jpg" alt="Event">
+                                <span class="ed-rel-date"><b>25</b><small>Apr</small></span>
+                            </div>
+                            <div class="ed-rel-bd">
+                                <h4>Summer Trail Run 2026</h4>
+                                <span class="loc"><i class="material-icons">place</i> Denver, CO</span>
+                                <a href="event-details.html" class="ed-btn ed-btn-out">View Details</a>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="pro-rel-events">
-                    <h4>Related Events</h4>
-                    <div class="event-body">
-                        <div class="plac-hom-all-pla plac-det-eve">
-                            <ul class="multiple-items1">
-                                <li>
-                                    <div class="plac-hom-box">
-                                        <div class="plac-hom-box-im">
-                                            <img
-                                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                                                class="b-lazy"
-                                                data-src="images/events/3.jpg"
-                                                loading="lazy"
-                                            >
-                                            <h4>Every New York Fashion</h4>
-                                            <span class="plac-det-cate">May
-                                                <b>03</b>
-                                            </span>
-                                        </div>
-                                        <a href="event-details.html" class="fclick"></a>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="plac-hom-box">
-                                        <div class="plac-hom-box-im">
-                                            <img
-                                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                                                class="b-lazy"
-                                                data-src="images/events/4.jpg"
-                                                loading="lazy"
-                                            >
-                                            <h4>Every New York Fashion</h4>
-                                            <span class="plac-det-cate">May
-                                                <b>03</b>
-                                            </span>
-                                        </div>
-                                        <a href="event-details.html" class="fclick"></a>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="plac-hom-box">
-                                        <div class="plac-hom-box-im">
-                                            <img
-                                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                                                class="b-lazy"
-                                                data-src="images/events/5.jpg"
-                                                loading="lazy"
-                                            >
-                                            <h4>Every New York Fashion</h4>
-                                            <span class="plac-det-cate">May
-                                                <b>03</b>
-                                            </span>
-                                        </div>
-                                        <a href="event-details.html" class="fclick"></a>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="plac-hom-box">
-                                        <div class="plac-hom-box-im">
-                                            <img
-                                                src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
-                                                class="b-lazy"
-                                                data-src="images/events/6.jpg"
-                                                loading="lazy"
-                                            >
-                                            <h4>Every New York Fashion</h4>
-                                            <span class="plac-det-cate">May
-                                                <b>03</b>
-                                            </span>
-                                        </div>
-                                        <a href="event-details.html" class="fclick"></a>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!--END-->
+            </section>
+        </div>
+        <!-- ============ /EVENT DETAILS ============ -->
         <section>
             <div class="pop-ups pop-quo">
                 <!-- The Modal -->
@@ -520,7 +703,7 @@
                             <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
                             <!-- Modal Header -->
                             <div class="quote-pop">
-                                <h4>Get quote</h4>
+                                <h4>Book Your Tickets</h4>
                                 <form>
                                     <div class="form-group">
                                         <input
@@ -562,77 +745,6 @@
                 </div>
             </div>
         </section>
-        <div class="modal fade ed-ticket-pop" id="ticketModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="edt-head">
-                        <button type="button" class="edt-back" data-bs-dismiss="modal" aria-label="Back">
-                            <i class="material-icons">arrow_back</i>
-                        </button>
-                        <div>
-                            <h4>Select Tickets</h4>
-                            <span class="sub"><i class="material-icons">event</i> Chicago Bike Trails Festival 2026</span>
-                        </div>
-                        <button type="button" class="edt-close" data-bs-dismiss="modal" aria-label="Close">&times;</button>
-                    </div>
-                    <div class="edt-body">
-                        <div class="edt-row" data-name="VIP Pass" data-price="134.10">
-                            <div class="edt-info">
-                                <span class="edt-tag edt-fast">Selling fast</span>
-                                <b>VIP Pass</b>
-                                <small>Front access + lounge</small>
-                                <div class="edt-price">$134.10</div>
-                                <em>Includes premium entry benefits</em>
-                            </div>
-                            <div class="edt-step">
-                                <button type="button" class="edt-minus" aria-label="Remove VIP Pass">-</button>
-                                <span class="edt-qty">0</span>
-                                <button type="button" class="edt-plus" aria-label="Add VIP Pass">+</button>
-                            </div>
-                        </div>
-                        <div class="edt-row" data-name="Premium (Orchestra &amp; Boxes)" data-price="92.76">
-                            <div class="edt-info">
-                                <span class="edt-tag edt-ok">Available</span>
-                                <b>Premium</b>
-                                <small>Orchestra &amp; boxes</small>
-                                <div class="edt-price">$92.76</div>
-                                <em>Best view with reserved access</em>
-                            </div>
-                            <div class="edt-step">
-                                <button type="button" class="edt-minus" aria-label="Remove Premium">-</button>
-                                <span class="edt-qty">0</span>
-                                <button type="button" class="edt-plus" aria-label="Add Premium">+</button>
-                            </div>
-                        </div>
-                        <div class="edt-row" data-name="General Admission" data-price="46.00">
-                            <div class="edt-info">
-                                <span class="edt-tag edt-ok">Available</span>
-                                <b>General Admission</b>
-                                <small>Standard entry</small>
-                                <div class="edt-price">$46.00</div>
-                                <em>Entry to the event and festival zone</em>
-                            </div>
-                            <div class="edt-step">
-                                <button type="button" class="edt-minus" aria-label="Remove General Admission">-</button>
-                                <span class="edt-qty">0</span>
-                                <button type="button" class="edt-plus" aria-label="Add General Admission">+</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="edt-foot">
-                        <div class="edt-foot-left">
-                            <span class="edt-cart"><i class="material-icons">shopping_cart</i><b class="edt-count">0</b></span>
-                            <span class="edt-order">Order summary</span>
-                        </div>
-                        <div class="edt-foot-mid">
-                            <div class="edt-total">$0.00</div>
-                            <small>Fees from <span class="edt-fee">$0.00</span></small>
-                        </div>
-                        <button type="button" class="edt-checkout" disabled>Checkout</button>
-                    </div>
-                </div>
-            </div>
-        </div>
         <!-- SHARE POPUP -->
         <div class="modal fade sharepop" id="sharepop">
             <div class="modal-dialog modal-sm">
@@ -978,8 +1090,8 @@
                 <div class="container">
                     <div class="row">
                         <p>Copyright © 2025
-                            <a href="https://dev.chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by
-                            <a href="https://dev.chaodesi.com/" target="_blank">Symplore</a>
+                            <a href="https://chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by
+                            <a href="https://chaodesi.com/" target="_blank">Symplore</a>
                         </p>
                     </div>
                 </div>
@@ -1058,7 +1170,7 @@
         <script src="js/custom.js"></script>
         <script src="js/jquery.validate.min.js"></script>
         <script src="js/custom_validation.js"></script>
-        <script src="js/event-tickets.js"></script>
+        <script src="js/event-checkout.js"></script>
         <script>
         $('.multiple-items1').slick({
         infinite: true,
