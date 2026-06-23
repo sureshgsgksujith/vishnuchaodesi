@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  dashboardNavSections as menuSections,
   dashboardPrimaryNavItem as dashboardItem,
   type DashboardNavItem as MenuItem,
 } from "../../dashboard/config/dashboardData";
@@ -18,6 +17,25 @@ const notifications = [
   "Welcome back to Chao Desi",
   "Your profile is active",
   "New events available near you",
+];
+
+const profileMenuItems: MenuItem[] = [
+  {
+    label: "My Profile",
+    href: "/dashboard/my-profile",
+    icon: "/template-17/images/icon/profile.png",
+  },
+  dashboardItem,
+  {
+    label: "Settings",
+    href: "/dashboard/setting",
+    icon: "/template-17/images/icon/dbl210.png",
+  },
+  {
+    label: "Logout",
+    icon: "/template-17/images/icon/dbl12.png",
+    isLogout: true,
+  },
 ];
 
 export default function UserHomeHeader() {
@@ -102,10 +120,10 @@ export default function UserHomeHeader() {
             src={item.icon}
             alt={item.label}
             style={{
-              width: 20,
-              height: 20,
+              width: 18,
+              height: 18,
               objectFit: "contain",
-              marginRight: 12,
+              marginRight: 10,
               flexShrink: 0,
             }}
           />
@@ -127,10 +145,10 @@ export default function UserHomeHeader() {
             textAlign: "left",
             display: "flex",
             alignItems: "center",
-            padding: mobile ? "10px 0" : "10px 16px",
+            padding: mobile ? "8px 0" : "8px 14px",
             cursor: "pointer",
             color: "#304660",
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: 500,
           }}
         >
@@ -154,10 +172,10 @@ export default function UserHomeHeader() {
         style={{
           display: "flex",
           alignItems: "center",
-          padding: mobile ? "10px 0" : "10px 16px",
+          padding: mobile ? "8px 0" : "8px 14px",
           color: isActive(item.href) ? "#0b1a78" : "#304660",
           textDecoration: "none",
-          fontSize: 16,
+          fontSize: 14,
           fontWeight: isActive(item.href) ? 600 : 500,
           borderRadius: 10,
           background: isActive(item.href)
@@ -402,15 +420,18 @@ export default function UserHomeHeader() {
               style={{
                 display: showProfileMenu ? "block" : "none",
                 position: "fixed",
-                top: 0,
-                right: 0,
-                width: "380px",
-                maxWidth: "100%",
-                height: "100vh",
+                top: 74,
+                right: 18,
+                bottom: "auto",
+                width: "300px",
+                maxWidth: "calc(100vw - 24px)",
+                height: "auto",
+                maxHeight: "calc(100vh - 92px)",
                 overflowY: "auto",
                 zIndex: 99999,
                 background: "#fff",
-                boxShadow: "-10px 0 30px rgba(0,0,0,0.12)",
+                borderRadius: 12,
+                boxShadow: "0 16px 40px rgba(0,0,0,0.16)",
               }}
             >
               <span
@@ -421,81 +442,28 @@ export default function UserHomeHeader() {
                 close
               </span>
 
-              <div className="ud-lhs-s1">
-                <img src={profileImageUrl} alt="" loading="lazy" />
+              <div className="ud-lhs-s1" style={{ marginBottom: 8, padding: 8 }}>
+                <img
+                  src={profileImageUrl}
+                  alt=""
+                  loading="lazy"
+                  style={{ width: 42, height: 42 }}
+                />
                 <div className="ud-lhs-pro-bio">
-                  <h4>{fullName}</h4>
-                  <b>{joinDate}</b>
-                  <Link
-                    className="ud-lhs-view-pro"
-                    to="/profile"
-                    target="_blank"
-                    onClick={closeAllPopups}
-                  >
-                    My Profile
-                  </Link>
+                  <h4 style={{ fontSize: 18, lineHeight: "20px", marginBottom: 2 }}>{fullName}</h4>
+                  <b style={{ fontSize: 11, lineHeight: "14px" }}>{joinDate}</b>
                 </div>
               </div>
 
-              <div style={{ padding: "8px 18px 0 18px" }}>
-                <Link
-                  to={dashboardItem.href!}
-                  onClick={closeAllPopups}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    background: "#1536d2",
-                    color: "#fff",
-                    textDecoration: "none",
-                    borderRadius: 999,
-                    padding: "14px 18px",
-                    fontSize: 16,
-                    fontWeight: 600,
-                    boxShadow: "0 10px 22px rgba(21, 54, 210, 0.25)",
-                  }}
-                >
-                  <img
-                    src={dashboardItem.icon}
-                    alt={dashboardItem.label}
-                    style={{
-                      width: 20,
-                      height: 20,
-                      objectFit: "contain",
-                      filter: "brightness(0) invert(1)",
-                    }}
-                  />
-                  <span>{dashboardItem.label}</span>
-                </Link>
+              <div className="ud-menu-sec" style={{ marginTop: 0 }}>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {profileMenuItems.map((item) => (
+                    <li key={item.label} style={{ marginBottom: 4 }}>
+                      {renderMenuLink(item)}
+                    </li>
+                  ))}
+                </ul>
               </div>
-
-              {menuSections.map((section) => (
-                <div className="ud-menu-sec" key={section.title}>
-                  {section.title && (
-                    <h4
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 700,
-                        color: "#111827",
-                        borderBottom: "1px solid #e5e7eb",
-                        paddingBottom: 12,
-                        marginBottom: 10,
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      {section.title}
-                    </h4>
-                  )}
-
-                  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                    {section.items.map((item) => (
-                      <li key={item.label} style={{ marginBottom: 4 }}>
-                        {renderMenuLink(item)}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
             </div>
 
             <div className="mob-menu">
@@ -565,39 +533,8 @@ export default function UserHomeHeader() {
                 <div className="mv-cate">
                   <h4>Profile Menu</h4>
                   <ul style={{ listStyle: "none", padding: 0 }}>
-                    <li style={{ marginBottom: 6 }}>
-                      <Link
-                        to={dashboardItem.href!}
-                        onClick={closeAllPopups}
-                        style={{
-                          textDecoration: "none",
-                          color: "#1536d2",
-                          fontWeight: 700,
-                        }}
-                      >
-                        {dashboardItem.label}
-                      </Link>
-                    </li>
-
-                    {menuSections.map((section) => (
-                      <div key={section.title} style={{ marginBottom: 16 }}>
-                        {section.title && (
-                          <li
-                            style={{
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              color: "#111827",
-                              margin: "12px 0 8px 0",
-                            }}
-                          >
-                            {section.title}
-                          </li>
-                        )}
-
-                        {section.items.map((item) => (
-                          <li key={item.label}>{renderMenuLink(item, true)}</li>
-                        ))}
-                      </div>
+                    {profileMenuItems.map((item) => (
+                      <li key={item.label}>{renderMenuLink(item, true)}</li>
                     ))}
                   </ul>
                 </div>

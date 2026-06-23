@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import {
@@ -8,6 +8,7 @@ import {
   type ListingSummary,
 } from "../../dashboard/api/listingsApi";
 import { resolveListingImageUrl } from "../../dashboard/utils/listingImages";
+import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import "../styles/eventDetail.css";
 
 type LooseValue = string | number | boolean | null | undefined;
@@ -25,9 +26,11 @@ type DetailSection = {
 const feeRates = { tx: 0.09, tax: 0.091, conv: 4 };
 
 export default function EventDetailPage() {
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [listing, setListing] = useState<ListingSummary | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const isAuthenticated = isCustomerAuthenticated();
+  const [isLoading, setIsLoading] = useState(isAuthenticated);
   const [errorMessage, setErrorMessage] = useState("");
   const requestedId = Number(searchParams.get("id") || searchParams.get("listingId"));
 
@@ -35,6 +38,13 @@ export default function EventDetailPage() {
     let isActive = true;
 
     async function loadEvent() {
+      if (!isAuthenticated) {
+        setListing(null);
+        setErrorMessage("");
+        setIsLoading(false);
+        return;
+      }
+
       if (!Number.isFinite(requestedId) || requestedId <= 0) {
         setErrorMessage("Event not found.");
         setIsLoading(false);
@@ -66,7 +76,7 @@ export default function EventDetailPage() {
     return () => {
       isActive = false;
     };
-  }, [requestedId]);
+  }, [isAuthenticated, requestedId]);
 
   return (
     <>
@@ -79,9 +89,32 @@ export default function EventDetailPage() {
           <div className="event-detail-status event-detail-error">{errorMessage}</div>
         ) : null}
         {listing ? <EventDetail listing={listing} /> : null}
+        {!isAuthenticated ? (
+          <EventLoginRequiredPrompt
+            closeTo="/all-listing?category=events-tickets"
+            returnTo={`${location.pathname}${location.search}`}
+          />
+        ) : null}
       </main>
       <HomeFooterSection />
     </>
+  );
+}
+
+function EventLoginRequiredPrompt({ closeTo, returnTo }: { closeTo: string; returnTo: string }) {
+  const loginPath = `/login?returnUrl=${encodeURIComponent(returnTo)}`;
+
+  return (
+    <div className="event-login-prompt-backdrop" role="dialog" aria-modal="true" aria-labelledby="event-login-prompt-title">
+      <div className="event-login-prompt">
+        <h4 id="event-login-prompt-title">Login required</h4>
+        <p>Please login to view event details.</p>
+        <div>
+          <Link className="btn btn-primary" to={loginPath}>Login</Link>
+          <Link className="btn btn-default" to={closeTo}>Close</Link>
+        </div>
+      </div>
+    </div>
   );
 }
 

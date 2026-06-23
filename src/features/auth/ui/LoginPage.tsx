@@ -9,6 +9,7 @@ import {
   resetPasswordApi,
 } from "../api/authApi";
 import { getPageBanners, type PageBanner } from "../api/pageBannersApi";
+import { isCustomerAuthenticated, markCustomerSessionActivity } from "../utils/customerSession";
 import { reinitializeTemplate } from "../../../utils/reinitializeTemplate";
 import "../styles/authBanners.css";
 
@@ -127,6 +128,12 @@ export default function LoginPage() {
   useEffect(() => {
     setMode(initialMode);
   }, [initialMode]);
+
+  useEffect(() => {
+    if (isCustomerAuthenticated()) {
+      navigate(returnUrl || "/home", { replace: true });
+    }
+  }, [navigate, returnUrl]);
 
   useEffect(() => {
     reinitializeTemplate();
@@ -347,9 +354,9 @@ export default function LoginPage() {
       if (result.email) localStorage.setItem("email", result.email);
       if (result.mobileNumber) localStorage.setItem("mobileNumber", result.mobileNumber);
       if (result.userType) localStorage.setItem("userType", result.userType);
+      markCustomerSessionActivity();
 
-      navigate(returnUrl || "/home");
-      window.location.reload();
+      window.location.replace(returnUrl || "/home");
     } catch (error) {
       alert(error instanceof Error ? error.message : "Login failed");
     } finally {

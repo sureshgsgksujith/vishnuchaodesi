@@ -366,6 +366,45 @@
   color: #b42318;
 }
 
+.event-login-prompt-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.event-login-prompt {
+  width: min(360px, 100%);
+  padding: 24px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
+  text-align: center;
+}
+
+.event-login-prompt h4 {
+  margin: 0 0 10px;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.event-login-prompt p {
+  margin: 0 0 18px;
+  color: #475569;
+  font-size: 15px;
+}
+
+.event-login-prompt div {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
 @media (max-width: 991px) {
   .event-detail-layout {
     grid-template-columns: 1fr;
