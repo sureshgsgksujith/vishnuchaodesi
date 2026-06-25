@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Fully Furnished Bedroom For Rent Including Utilities - Chao Desi Rooms</title>
+    <!--== META TAGS ==-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#76cef1">
+    <meta property="og:image" content="images/chao-home-room-listings/2.jpeg">
+    <meta name="description" content="Fully furnished bedroom for rent including utilities in Reston, VA. View room details, amenities, location and contact the advertiser on Chao Desi.">
+    <meta name="keyword" content="rooms for rent, roommate listing, furnished room Reston VA, Chao Desi rooms">
+    <!--== FAV ICON(BROWSER TAB ICON) ==-->
+    <link rel="shortcut icon" href="images/fav.png" type="image/x-icon">
+    <!--== GOOGLE FONTS ==-->
+    <link href="https://fonts.googleapis.com/css?family=Oswald:700|Source+Sans+Pro:300,400,600,700&display=swap" rel="stylesheet">
+    <!--== WEB ICON FONTS ==-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--== CSS FILES ==-->
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/theme-color.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
+    <style>
+        :root {
+            --room-primary: #0a1830;
+            --room-primary-2: #ff7a00;
+            --room-accent: #16a34a;
+            --room-ink: #172033;
+            --room-muted: #697386;
+            --room-soft: #f6f8fc;
+            --room-border: #e8edf5;
+        }
+
+        body {
+            background: var(--room-soft);
+            color: var(--room-ink);
+        }
+
+        .rooms-page .hom-top {
+            background: #0a1830;
+        }
+
+        .rooms-page .rooms-hero {
+            position: relative;
+            padding: 72px 0 44px;
+            overflow: hidden;
+            background: linear-gradient(120deg, #0a1830 0%, #112d59 52%, #163b74 100%);
+            color: #fff;
+        }
+
+        .rooms-page .rooms-hero:before,
+        .rooms-page .rooms-hero:after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .rooms-page .rooms-hero:before {
+            width: 420px;
+            height: 420px;
+            right: -110px;
+            top: -150px;
+            background: radial-gradient(circle, rgba(255, 138, 0, .4), rgba(255, 138, 0, 0) 70%);
+        }
+
+        .rooms-page .rooms-hero:after {
+            width: 360px;
+            height: 360px;
+            left: -120px;
+            bottom: -180px;
+            background: radial-gradient(circle, rgba(54, 140, 255, .35), rgba(54, 140, 255, 0) 70%);
+        }
+
+        .rooms-page .rooms-hero .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .rooms-page .room-crumb {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 16px;
+            color: #c7d2e2;
+            font-size: 13px;
+        }
+
+        .rooms-page .room-crumb a {
+            color: #c7d2e2;
+        }
+
+        .rooms-page .room-crumb a:hover {
+            color: #fff;
+        }
+
+        .rooms-page .rooms-hero h1 {
+            max-width: 760px;
+            margin: 0 0 16px;
+            font-size: 40px;
+            line-height: 1.15;
+            font-weight: 700;
+        }
+
+        .rooms-page .room-hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px 18px;
+            margin-bottom: 26px;
+        }
+
+        .rooms-page .room-hero-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: #dbe3ef;
+            font-size: 14px;
+        }
+
+        .rooms-page .room-hero-meta i {
+            font-size: 18px;
+            color: #ffb266;
+        }
+
+        .rooms-page .room-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .rooms-page .room-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            border-radius: 8px;
+            padding: 12px 26px;
+            font-size: 15px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: pointer;
+            box-shadow: none !important;
+            text-decoration: none;
+        }
+
+        .rooms-page .room-btn-primary {
+            background: linear-gradient(180deg, #ff9a33, #ff7a00);
+            color: #fff;
+        }
+
+        .rooms-page .room-btn-light {
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, .3);
+        }
+
+        .rooms-page .room-btn-outline {
+            background: transparent;
+            color: #fff;
+            border-color: rgba(255, 255, 255, .32);
+        }
+
+        .rooms-page .room-detail-wrap {
+            padding: 34px 0 65px;
+        }
+
+        .rooms-page .room-card-box {
+            background: #fff;
+            border: 1px solid var(--room-border);
+            border-radius: 18px;
+            box-shadow: 0 18px 44px rgba(18, 31, 67, .08);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .rooms-page .room-card-pad {
+            padding: 26px;
+        }
+
+        .rooms-page .room-gallery {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: 14px;
+        }
+
+        .rooms-page .room-photo {
+            min-height: 330px;
+            border-radius: 16px;
+            background:
+                linear-gradient(135deg, rgba(27, 16, 101, .08), rgba(0, 87, 216, .12)),
+                url("images/chao-home-room-listings/2.jpeg") center/cover no-repeat;
+            overflow: hidden;
+        }
+
+        .rooms-page .room-photo-side {
+            display: grid;
+            gap: 14px;
+        }
+
+        .rooms-page .room-photo-thumb {
+            min-height: 158px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #eef4ff, #fff);
+            border: 1px solid var(--room-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--room-primary);
+            font-weight: 700;
+            text-align: center;
+            padding: 16px;
+        }
+
+        .rooms-page .room-photo-thumb i {
+            display: block;
+            font-size: 34px;
+            margin-bottom: 8px;
+            color: var(--room-primary-2);
+        }
+
+        .rooms-page .room-section-title {
+            margin-bottom: 18px;
+        }
+
+        .rooms-page .room-section-title h2,
+        .rooms-page .room-section-title h3 {
+            margin: 0 0 6px;
+            color: var(--room-ink);
+            font-weight: 800;
+        }
+
+        .rooms-page .room-section-title p {
+            margin: 0;
+            color: var(--room-muted);
+        }
+
+        .rooms-page .room-facts {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .rooms-page .room-fact {
+            padding: 16px;
+            border-radius: 14px;
+            background: #f8fbff;
+            border: 1px solid var(--room-border);
+        }
+
+        .rooms-page .room-fact i {
+            font-size: 24px;
+            color: var(--room-primary-2);
+            margin-bottom: 10px;
+        }
+
+        .rooms-page .room-fact span {
+            display: block;
+            color: var(--room-muted);
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .rooms-page .room-fact strong {
+            color: var(--room-ink);
+            font-size: 15px;
+        }
+
+        .rooms-page .room-copy {
+            color: #4d596b;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+
+        .rooms-page .room-amenities {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .rooms-page .room-amenity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 13px 14px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid var(--room-border);
+            color: #405064;
+            font-weight: 600;
+        }
+
+        .rooms-page .room-amenity i {
+            font-size: 20px;
+            color: var(--room-accent);
+        }
+
+        .rooms-page .room-location-box {
+            min-height: 250px;
+            border-radius: 16px;
+            background:
+                linear-gradient(rgba(27, 16, 101, .8), rgba(27, 16, 101, .76)),
+                url("images/chao-home-room-listings/1.png") center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            padding: 24px;
+        }
+
+        .rooms-page .room-location-box i {
+            display: block;
+            font-size: 44px;
+            margin-bottom: 10px;
+            color: #9fd2ff;
+        }
+
+        .rooms-page .room-side-card {
+            position: sticky;
+            top: 80px;
+        }
+
+        .rooms-page .room-price-box {
+            padding: 24px;
+            background: linear-gradient(135deg, #f2f7ff, #fff);
+            border-bottom: 1px solid var(--room-border);
+        }
+
+        .rooms-page .room-price-box span {
+            display: block;
+            color: var(--room-muted);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .rooms-page .room-price-box strong {
+            color: var(--room-accent);
+            font-size: 32px;
+            line-height: 1;
+        }
+
+        .rooms-page .room-price-box small {
+            color: var(--room-muted);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .rooms-page .room-contact-form .form-control {
+            height: 46px;
+            border-radius: 10px;
+            border-color: var(--room-border);
+            box-shadow: none;
+            margin-bottom: 12px;
+        }
+
+        .rooms-page .room-contact-form textarea.form-control {
+            height: auto;
+        }
+
+        .rooms-page .room-host {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            padding: 18px 0;
+            border-top: 1px solid var(--room-border);
+            border-bottom: 1px solid var(--room-border);
+            margin: 18px 0;
+        }
+
+        .rooms-page .room-host-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--room-primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+        .rooms-page .room-host h4 {
+            margin: 0 0 3px;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .rooms-page .room-host p {
+            margin: 0;
+            color: var(--room-muted);
+        }
+
+        .rooms-page .room-list {
+            margin: 0;
+        }
+
+        .rooms-page .room-list li {
+            display: flex;
+            gap: 10px;
+            color: #4c596c;
+            margin-bottom: 12px;
+            line-height: 1.45;
+        }
+
+        .rooms-page .room-list i {
+            color: var(--room-primary-2);
+            font-size: 20px;
+            margin-top: 1px;
+        }
+
+        .rooms-page .related-room {
+            display: flex;
+            gap: 14px;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--room-border);
+        }
+
+        .rooms-page .related-room:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .rooms-page .related-thumb {
+            width: 78px;
+            height: 72px;
+            border-radius: 12px;
+            background: #eef4ff;
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--room-primary-2);
+        }
+
+        .rooms-page .related-room h4 {
+            margin: 0 0 5px;
+            font-size: 15px;
+            line-height: 1.35;
+            font-weight: 800;
+        }
+
+        .rooms-page .related-room p {
+            margin: 0 0 6px;
+            color: var(--room-muted);
+            font-size: 13px;
+        }
+
+        .rooms-page .related-room strong {
+            color: var(--room-accent);
+        }
+
+        .rooms-page .badge-soft {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: auto;
+            min-width: 0;
+            max-width: max-content;
+            border-radius: 50px;
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, .12);
+            border: 1px solid rgba(255, 255, 255, .18);
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 14px;
+            line-height: 1.2;
+            box-shadow: none;
+            clear: none;
+        }
+
+        .rooms-page .badge-soft i {
+            color: #ffb266;
+            font-size: 18px;
+        }
+
+        @media (max-width: 991px) {
+            .rooms-page .rooms-hero {
+                padding-top: 70px;
+            }
+
+            .rooms-page .rooms-hero h1 {
+                font-size: 30px;
+            }
+
+            .rooms-page .room-gallery,
+            .rooms-page .room-facts,
+            .rooms-page .room-amenities {
+                grid-template-columns: 1fr;
+            }
+
+            .rooms-page .room-side-card {
+                position: static;
+            }
+        }
+
+        @media (max-width: 575px) {
+            .rooms-page .room-card-pad {
+                padding: 20px;
+            }
+
+            .rooms-page .room-photo {
+                min-height: 230px;
+            }
+        }
+    </style>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="js/html5shiv.js"></script>
+        <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="rooms-page">
+    <!-- Preloader -->
+    <div id="preloader">
+        <div id="status">&nbsp;</div>
+    </div>
+
+    <!-- ===== HEADER / NAV ===== -->
+    <section>
+        <div class="str ind2-home">
+            <div>
+                <div class="hom-top">
+                    <div class="container">
+                        <div class="row">
+                            <div class="hom-nav ">
+                                <a href="index.html" class="top-log">
+                                    <img src="images/home/logo-white.png" alt="" loading="eager" class="ic-logo">
+                                </a>
+                                <div class="menu">
+                                    <h4>Explore</h4>
+                                </div>
+                                <div class="pop-menu">
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="top-exp-menu"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="top-ser">
+                                    <form name="filter_form" id="filter_form" class="filter_form">
+                                        <ul>
+                                            <li class="sr-sea">
+                                                <input type="text" autocomplete="off" id="top-select-search" placeholder="What are you looking for?">
+                                                <ul id="tser-res1" class="tser-res tser-res2"></ul>
+                                            </li>
+                                            <li class="sbtn">
+                                                <button type="button" class="btn btn-success" id="top_filter_submit">
+                                                    <i class="material-icons">&nbsp;</i>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </form>
+                                </div>
+                                <ul class="bl">
+                                    <li><a href="login.html">Add business</a></li>
+                                    <li><a href="login.html">Sign in</a></li>
+                                    <li><a href="login.html?login=register">Create an account</a></li>
+                                </ul>
+                                <div class="mob-menu">
+                                    <div class="mob-me-ic">
+                                        <i class="material-icons">menu</i>
+                                    </div>
+                                    <div class="mob-me-all">
+                                        <div class="mob-me-clo">
+                                            <i class="material-icons">close</i>
+                                        </div>
+                                        <div class="mv-bus">
+                                            <h4></h4>
+                                            <ul>
+                                                <li><a href="login.html">Add business</a></li>
+                                                <li><a href="login.html">Sign in</a></li>
+                                                <li><a href="login.html?login=register">Create an account</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="mv-cate">
+                                            <h4>Rooms & Rentals</h4>
+                                            <ul>
+                                                <li><a href="rooms-for-rent.html">Rooms for Rent</a></li>
+                                                <li><a href="rooms-for-rent.html">Single Rooms</a></li>
+                                                <li><a href="rooms-for-rent.html">Shared Rooms</a></li>
+                                                <li><a href="rooms-for-rent.html">Roommates</a></li>
+                                                <li><a href="login.html">Post a Room</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ROOM HERO ===== -->
+    <section class="rooms-hero">
+        <div class="container">
+            <nav class="room-crumb" aria-label="breadcrumb">
+                <a href="index.html">Home</a>
+                <span>/</span>
+                <a href="index.html#rooms">Rooms for Rent</a>
+                <span>/</span>
+                <span>Reston, VA</span>
+            </nav>
+            <span class="badge-soft"><i class="material-icons">verified</i> Featured Room Offered</span>
+            <h1>Fully Furnished Bedroom For Rent Including Utilities $1200/room</h1>
+            <div class="room-hero-meta">
+                <span><i class="material-icons">location_on</i>1490 Roundleaf Court, Reston, VA 20190</span>
+                <span><i class="material-icons">event_available</i>Available from: 01 Jul 2026</span>
+                <span><i class="material-icons">person</i>Single Room</span>
+                <span><i class="material-icons">wc</i>Male/Female</span>
+            </div>
+            <div class="room-hero-actions">
+                <a href="#room-contact" class="room-btn room-btn-primary"><i class="material-icons">mail</i>Contact Advertiser</a>
+                <a href="tel:+01542624400" class="room-btn room-btn-light"><i class="material-icons">call</i>Call Now</a>
+                <a href="#room-location" class="room-btn room-btn-outline"><i class="material-icons">map</i>View Location</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ROOM DETAILS ===== -->
+    <section class="room-detail-wrap">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="room-card-box room-card-pad">
+                        <div class="room-gallery">
+                            <div class="room-photo" role="img" aria-label="Furnished bedroom photo"></div>
+                            <div class="room-photo-side">
+                                <div class="room-photo-thumb">
+                                    <div>
+                                        <i class="material-icons">king_bed</i>
+                                        Furnished private bedroom
+                                    </div>
+                                </div>
+                                <div class="room-photo-thumb">
+                                    <div>
+                                        <i class="material-icons">wifi</i>
+                                        Utilities and Wi-Fi included
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="room-card-box room-card-pad">
+                        <div class="room-section-title">
+                            <h2>Room Highlights</h2>
+                            <p>Everything a renter needs to know before contacting the advertiser.</p>
+                        </div>
+                        <div class="room-facts">
+                            <div class="room-fact">
+                                <i class="material-icons">payments</i>
+                                <span>Rent</span>
+                                <strong>$1200 / Month</strong>
+                            </div>
+                            <div class="room-fact">
+                                <i class="material-icons">meeting_room</i>
+                                <span>Room Type</span>
+                                <strong>Single Room</strong>
+                            </div>
+                            <div class="room-fact">
+                                <i class="material-icons">bathtub</i>
+                                <span>Bathroom</span>
+                                <strong>Separate</strong>
+                            </div>
+                            <div class="room-fact">
+                                <i class="material-icons">home</i>
+                                <span>Ad Type</span>
+                                <strong>Room Offered</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="room-card-box room-card-pad">
+                        <div class="room-section-title">
+                            <h2>About This Room</h2>
+                            <p>Comfortable accommodation in Reston, VA for students and working professionals.</p>
+                        </div>
+                        <div class="room-copy">
+                            <p>A fully furnished private bedroom is available for rent in a peaceful Reston neighborhood. The monthly rent includes utilities, high-speed internet, water, electricity and access to shared common areas.</p>
+                            <p>The room is move-in ready and ideal for someone looking for a clean, convenient place without a long lease commitment. Grocery stores, transit connections, restaurants and everyday services are within easy reach from Roundleaf Court.</p>
+                        </div>
+                    </div>
+
+                    <div class="room-card-box room-card-pad">
+                        <div class="room-section-title">
+                            <h2>Amenities</h2>
+                            <p>Included features for a comfortable stay.</p>
+                        </div>
+                        <div class="room-amenities">
+                            <div class="room-amenity"><i class="material-icons">check_circle</i>Fully Furnished</div>
+                            <div class="room-amenity"><i class="material-icons">check_circle</i>Utilities Included</div>
+                            <div class="room-amenity"><i class="material-icons">check_circle</i>High-Speed Wi-Fi</div>
+                            <div class="room-amenity"><i class="material-icons">check_circle</i>Shared Kitchen</div>
+                            <div class="room-amenity"><i class="material-icons">check_circle</i>Laundry Access</div>
+                            <div class="room-amenity"><i class="material-icons">check_circle</i>Parking Nearby</div>
+                        </div>
+                    </div>
+
+                    <div class="room-card-box room-card-pad" id="room-location">
+                        <div class="room-section-title">
+                            <h2>Location</h2>
+                            <p>1490 Roundleaf Court, Reston, VA, USA, 20190</p>
+                        </div>
+                        <div class="room-location-box">
+                            <div>
+                                <i class="material-icons">location_on</i>
+                                <h3>Reston, VA 20190</h3>
+                                <p>Close to shopping, restaurants, public transit and daily essentials.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="room-card-box room-card-pad">
+                        <div class="room-section-title">
+                            <h2>More Rooms Near Reston, VA</h2>
+                            <p>Similar room listings that match nearby renter needs.</p>
+                        </div>
+                        <div class="related-room">
+                            <div class="related-thumb"><i class="material-icons">bed</i></div>
+                            <div>
+                                <h4>Room For Rent - Female Only - Herndon VA</h4>
+                                <p>Single room, separate bath, available from 30 Jun 2026.</p>
+                                <strong>$725 / Month</strong>
+                            </div>
+                        </div>
+                        <div class="related-room">
+                            <div class="related-thumb"><i class="material-icons">apartment</i></div>
+                            <div>
+                                <h4>Private Room With Attached Bathroom Available In Townhome</h4>
+                                <p>Herndon, VA. Spacious bedroom in a safe neighborhood.</p>
+                                <strong>$1200 / Month</strong>
+                            </div>
+                        </div>
+                        <div class="related-room">
+                            <div class="related-thumb"><i class="material-icons">home_work</i></div>
+                            <div>
+                                <h4>Reston Townhouse Furnished Rooms With Utilities Included</h4>
+                                <p>Month-to-month furnished single room near South Lakes Drive.</p>
+                                <strong>$1350 / Month</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <aside class="room-card-box room-side-card" id="room-contact">
+                        <div class="room-price-box">
+                            <span>Monthly Rent</span>
+                            <strong>$1200</strong>
+                            <small>/ room</small>
+                        </div>
+                        <div class="room-card-pad">
+                            <div class="room-host">
+                                <div class="room-host-avatar">R</div>
+                                <div>
+                                    <h4>Room Owner</h4>
+                                    <p>Verified Chao Desi advertiser</p>
+                                </div>
+                            </div>
+                            <form class="room-contact-form">
+                                <input type="text" class="form-control" placeholder="Your name">
+                                <input type="email" class="form-control" placeholder="Email address">
+                                <input type="text" class="form-control" placeholder="Phone number">
+                                <textarea class="form-control" rows="4" placeholder="I am interested in this room. Please contact me."></textarea>
+                                <button type="button" class="room-btn room-btn-primary w-100">Send Enquiry</button>
+                            </form>
+                        </div>
+                    </aside>
+
+                    <div class="room-card-box room-card-pad">
+                        <div class="room-section-title">
+                            <h3>Listing Details</h3>
+                        </div>
+                        <ul class="room-list">
+                            <li><i class="material-icons">calendar_today</i><span>Posted recently and available from 01 Jul 2026.</span></li>
+                            <li><i class="material-icons">verified_user</i><span>Utilities included in the listed monthly rent.</span></li>
+                            <li><i class="material-icons">groups</i><span>Suitable for students and working professionals.</span></li>
+                            <li><i class="material-icons">place</i><span>Fairfax County, Reston, VA 20190.</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="room-card-box room-card-pad">
+                        <div class="room-section-title">
+                            <h3>Need A Roommate?</h3>
+                            <p>Post your room or roommate requirement and get matched with local seekers.</p>
+                        </div>
+                        <a href="login.html" class="room-btn room-btn-primary w-100">Post Your Need</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <section class=" wed-hom-footer">
+        <div class="container">
+            <div class="row foot-supp">
+                <h2><span>Free support:</span> +01 5426 24400 &nbsp;&nbsp;|&nbsp;&nbsp; <span>Email:</span> info@chaodesi.com</h2>
+            </div>
+            <div class="row wed-foot-link">
+                <div class="col-md-4 foot-tc-mar-t-o">
+                    <h4>Local Services</h4>
+                    <ul>
+                        <li><a href="local-services.html">Financial &amp; Taxation Services</a></li>
+                        <li><a href="local-services.html">Real Estate Services</a></li>
+                        <li><a href="local-services.html">Wedding &amp; Events</a></li>
+                        <li><a href="local-services.html">Lessons/Tuitions</a></li>
+                        <li><a href="local-services.html">Food &amp; Catering</a></li>
+                        <li><a href="local-services.html">Home &amp; Business Needs</a></li>
+                        <li><a href="local-services.html">Travel &amp; Accommodation</a></li>
+                        <li><a href="local-services.html">Health &amp; Wellness</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="all-listing.html">All Listings</a></li>
+                        <li><a href="rooms-for-rent.html">Rooms for Rent</a></li>
+                        <li><a href="service-experts/index.html">Service Experts</a></li>
+                        <li><a href="jobs/index.html">Jobs</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="products.html">Products</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>HELP &amp; SUPPORT</h4>
+                    <ul>
+                        <li><a href="about.html">About us</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="feedback.html">Feedback</a></li>
+                        <li><a href="contact-us.html">Contact us</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-use.html">Terms of Use</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row wed-foot-link-1">
+                <div class="col-md-4">
+                    <h4>Get In Touch</h4>
+                    <p>Address: 28800 Orchard Lake Road, Suite 180 Farmington Hills, U.S.A.</p>
+                    <p>Phone: <a href="tel:+01 5426 24400">+01 5426 24400</a></p>
+                    <p>Email: <a href="mailto:info@chaodesi.com">info@chaodesi.com</a></p>
+                </div>
+                <div class="col-md-4 fot-app">
+                    <h4>DOWNLOAD OUR FREE MOBILE APPS</h4>
+                    <ul>
+                        <li><a href=""><img src="images/gstore.png" alt="" loading="lazy"></a></li>
+                        <li><a href=""><img src="images/astore.png" alt="" loading="lazy"></a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 fot-soc">
+                    <h4>SOCIAL MEDIA</h4>
+                    <ul>
+                        <li><a target="_blank" href=""><img src="images/social/1.png" alt="" loading="lazy"></a></li>
+                        <li><a target="_blank" href="https://twitter.com/"><img src="images/social/2.png" alt="" loading="lazy"></a></li>
+                        <li><a target="_blank" href="https://www.facebook.com/"><img src="images/social/3.png" alt="" loading="lazy"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="cr">
+            <div class="container">
+                <div class="row">
+                    <p>Copyright © 2025
+                        <a href="https://chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by
+                        <a href="https://chaodesi.com/" target="_blank">Symplore</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="fqui-menu"></div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/select-opt.js"></script>
+    <script src="js/blazy.min.js"></script>
+    <script src="js/slick.js"></script>
+    <script src="js/custom.js"></script>
+    <script src="js/jquery.validate.min.js"></script>
+    <script src="js/custom_validation.js"></script>
+    <script>
+        $('.room-hero-actions a[href^="#"]').click(function () {
+            $('html, body').animate({
+                scrollTop: $($(this).attr('href')).offset().top - 90
+            }, 400);
+            return false;
+        });
+    </script>
+</body>
+
+</html>

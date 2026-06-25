@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
-import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
+import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { getMyProfile } from "../../dashboard/api/profileApi";
 import {
   getListing,
@@ -16,7 +16,7 @@ import {
   resolveListingImageUrl,
 } from "../../dashboard/utils/listingImages";
 import { submitRequirement } from "../api/requirementsApi";
-import { shouldShowQuoteAction } from "../utils/quoteVisibility";
+import { getQuoteActionLabel, shouldShowQuoteAction } from "../utils/quoteVisibility";
 import "../styles/publicListings.css";
 
 const PAGE_SIZE = 12;
@@ -272,6 +272,11 @@ export default function AllListingPage() {
       const returnUrl = `${window.location.pathname}${window.location.search}`;
       window.alert("Please login to send enquiry.");
       navigate(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
+    if (getCurrentCustomerUserId() === listing.userId) {
+      window.alert("You are the owner of this listing. You do not need to send an enquiry for your own post.");
       return;
     }
 
@@ -718,7 +723,7 @@ function ListingCard({ listing, onQuoteClick }: { listing: ListingSummary; onQuo
         </h2>
         {showQuoteAction ? (
           <div className="public-listing-actions">
-            <button type="button" onClick={() => onQuoteClick(listing)}>Get quote</button>
+            <button type="button" onClick={() => onQuoteClick(listing)}>{getQuoteActionLabel(listing)}</button>
           </div>
         ) : null}
       </div>
@@ -756,12 +761,14 @@ function QuoteModal({
   onClose: () => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
+  const title = getQuoteActionLabel(listing);
+
   return (
     <div className="public-quote-modal-backdrop" role="dialog" aria-modal="true">
       <form className="public-quote-modal" onSubmit={onSubmit}>
         <div className="public-quote-ribbon">Send Enquiry</div>
         <button type="button" className="public-quote-close" aria-label="Close" onClick={onClose}>x</button>
-        <h2>Get Quote</h2>
+        <h2>{title}</h2>
         <p>{listing.title}</p>
         <input
           type="text"

@@ -32,7 +32,7 @@ export default function DashboardSidebar({
         <div className="ud-lhs-pro-bio">
           <h4>{fullName}</h4>
           <b>{joinDate}</b>
-          <Link className="ud-lhs-view-pro" to="/profile" target="_blank">
+          <Link className="ud-lhs-view-pro" to="/dashboard/my-profile">
             My Profile
           </Link>
         </div>

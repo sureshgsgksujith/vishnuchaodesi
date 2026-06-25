@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
   deleteListing,
@@ -14,33 +14,102 @@ import {
 import "../styles/listings.css";
 
 const PAGE_SIZE = 10;
+type ListingModuleFilter = "" | "classified" | "jobs" | "products";
+type AllListingsPageProps = {
+  defaultModule?: ListingModuleFilter;
+  lockedModule?: boolean;
+  title?: string;
+};
 
-export default function AllListingsPage() {
+const moduleFilterOptions: Array<{ value: ListingModuleFilter; label: string }> = [
+  { value: "", label: "All Modules" },
+  { value: "classified", label: "Ads Posts" },
+  { value: "jobs", label: "Jobs" },
+  { value: "products", label: "Products" },
+];
+
+export default function AllListingsPage({
+  defaultModule = "",
+  lockedModule = false,
+  title = "Listing Details",
+}: AllListingsPageProps) {
+  const [searchParams] = useSearchParams();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [search, setSearch] = useState("");
+  const [selectedModule, setSelectedModule] = useState<ListingModuleFilter>(defaultModule);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
+  const categoryOptions = useMemo(
+    () =>
+      getUniqueOptions(
+        items
+          .filter((item) => matchesModuleFilter(item, selectedModule))
+          .map((item) => item.categoryName),
+      ),
+    [items, selectedModule],
+  );
+  const subCategoryOptions = useMemo(
+    () => {
+      if (!selectedCategory) {
+        return [];
+      }
+
+      return getUniqueOptions(
+        items
+          .filter((item) => matchesModuleFilter(item, selectedModule))
+          .filter((item) => item.categoryName === selectedCategory)
+          .map((item) => item.subCategory),
+      );
+    },
+    [items, selectedCategory, selectedModule],
+  );
+  const filteredItems = useMemo(
+    () => filterListings(items, search, selectedModule, selectedCategory, selectedSubCategory),
+    [items, search, selectedModule, selectedCategory, selectedSubCategory],
+  );
   const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(totalCount / PAGE_SIZE)),
-    [totalCount],
+    () => Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE)),
+    [filteredItems.length],
+  );
+  const pagedItems = useMemo(
+    () => filteredItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredItems, page],
   );
 
   useEffect(() => {
     loadListings();
-  }, [search, page]);
+  }, []);
+
+  useEffect(() => {
+    const nextModule = lockedModule
+      ? defaultModule
+      : getModuleFilter(searchParams.get("module")) || defaultModule;
+    const nextCategory = searchParams.get("category") || "";
+    const nextSubCategory = nextCategory ? searchParams.get("subCategory") || "" : "";
+    const nextSearch = searchParams.get("search") || "";
+
+    setSelectedModule(nextModule);
+    setSelectedCategory(nextCategory);
+    setSelectedSubCategory(nextSubCategory);
+    setSearch(nextSearch);
+  }, [defaultModule, lockedModule, searchParams]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedModule, selectedCategory, selectedSubCategory]);
 
   async function loadListings() {
     try {
       setIsLoading(true);
       setErrorMessage("");
 
-      const result = await getMyListings(search, page, PAGE_SIZE);
+      const result = await getMyListings("", 1, 1000);
       setItems(result.items || []);
-      setTotalCount(result.totalCount || 0);
     } catch (error) {
       setErrorMessage(getListingApiErrorMessage(error));
     } finally {
@@ -50,7 +119,24 @@ export default function AllListingsPage() {
 
   function handleSearch(value: string) {
     setSearch(value);
-    setPage(1);
+  }
+
+  function handleModuleChange(value: string) {
+    setSelectedModule(getModuleFilter(value));
+    setSelectedCategory("");
+    setSelectedSubCategory("");
+  }
+
+  function handleCategoryChange(value: string) {
+    setSelectedCategory(value);
+    setSelectedSubCategory("");
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setSelectedModule(lockedModule ? defaultModule : "");
+    setSelectedCategory("");
+    setSelectedSubCategory("");
   }
 
   async function handleDelete(listingId: number) {
@@ -69,7 +155,6 @@ export default function AllListingsPage() {
       setItems((currentItems) =>
         currentItems.filter((item) => item.id !== listingId)
       );
-      setTotalCount((currentCount) => Math.max(0, currentCount - 1));
     } catch (error) {
       setErrorMessage(getListingApiErrorMessage(error));
     } finally {
@@ -78,11 +163,13 @@ export default function AllListingsPage() {
   }
 
   return (
-    <DashboardLayout mainContentClassName="ud-no-rhs">
-      <div className="ud-cen">
+    <DashboardLayout mainContentClassName="ud-no-rhs dashboard-listings-main">
+      <div className="ud-cen dashboard-listings-page">
         <div className="log-bor">&nbsp;</div>
 
-        <span className="udb-inst">All Listings</span>
+        <span className="udb-inst">{lockedModule ? title : "All Listings"}</span>
+
+        {isLoading ? <ListingsLoadingOverlay /> : null}
 
         {errorMessage ? (
           <div className="alert alert-danger">
@@ -100,18 +187,73 @@ export default function AllListingsPage() {
 
         <div className="ud-cen-s2 dashboard-listings-panel">
           <div className="dashboard-listings-toolbar">
-            <h2>Listing Details</h2>
+            <div className="dashboard-listings-title-block">
+              <h2>{title}</h2>
+              <span>{filteredItems.length} matching listings</span>
+            </div>
 
-            <input
-              type="text"
-              placeholder="Search listings..."
-              value={search}
-              onChange={(event) => handleSearch(event.target.value)}
-            />
+            <div className="dashboard-listings-filters">
+              <label>
+                <span>Module</span>
+                <select
+                  value={selectedModule}
+                  onChange={(event) => handleModuleChange(event.target.value)}
+                  disabled={lockedModule}
+                >
+                  {moduleFilterOptions.map((option) => (
+                    <option key={option.value || "all"} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <Link to="/dashboard/listings/start" className="db-tit-btn">
-              Add New Listing
-            </Link>
+              <label>
+                <span>Category</span>
+                <select
+                  value={selectedCategory}
+                  onChange={(event) => handleCategoryChange(event.target.value)}
+                >
+                  <option value="">All Categories</option>
+                  {categoryOptions.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {selectedCategory ? (
+                <label>
+                  <span>Sub Category</span>
+                  <select
+                    value={selectedSubCategory}
+                    onChange={(event) => setSelectedSubCategory(event.target.value)}
+                  >
+                    <option value="">All Sub Categories</option>
+                    {subCategoryOptions.map((subCategory) => (
+                      <option key={subCategory} value={subCategory}>
+                        {subCategory}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+
+              <label className="dashboard-listings-search-field">
+                <span>Search</span>
+                <input
+                  type="search"
+                  placeholder="Search listings..."
+                  value={search}
+                  onChange={(event) => handleSearch(event.target.value)}
+                />
+              </label>
+
+              <button type="button" className="dashboard-listings-clear" onClick={clearFilters}>
+                Clear
+              </button>
+            </div>
           </div>
 
           <div className="table-responsive">
@@ -136,8 +278,8 @@ export default function AllListingsPage() {
                   <tr>
                     <td colSpan={10}>Loading listings...</td>
                   </tr>
-                ) : items.length > 0 ? (
-                  items.map((item, index) => (
+                ) : pagedItems.length > 0 ? (
+                  pagedItems.map((item, index) => (
                     <tr key={item.id}>
                       <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
 
@@ -249,7 +391,7 @@ export default function AllListingsPage() {
           </div>
 
           <div className="dashboard-listings-pagination">
-            <span>{totalCount} listings</span>
+            <span>{filteredItems.length} listings</span>
             <div>
               <button type="button" onClick={() => setPage(page - 1)} disabled={page <= 1}>
                 Previous
@@ -264,6 +406,88 @@ export default function AllListingsPage() {
       </div>
     </DashboardLayout>
   );
+}
+
+function ListingsLoadingOverlay() {
+  return (
+    <div className="dashboard-listings-loader" role="status" aria-live="polite">
+      <div className="dashboard-listings-loader-card">
+        <span className="dashboard-listings-loader-spinner" aria-hidden="true"></span>
+        <strong>Loading listings</strong>
+        <p>Getting your latest listing data and filters.</p>
+      </div>
+    </div>
+  );
+}
+
+function getUniqueOptions(values: Array<string | null | undefined>) {
+  return Array.from(
+    new Set(values.map((value) => value?.trim()).filter(Boolean) as string[]),
+  ).sort((first, second) => first.localeCompare(second));
+}
+
+function filterListings(
+  items: ListingSummary[],
+  search: string,
+  selectedModule: ListingModuleFilter,
+  selectedCategory: string,
+  selectedSubCategory: string,
+) {
+  const normalizedSearch = search.trim().toLowerCase();
+
+  return items.filter((item) => {
+    if (!matchesModuleFilter(item, selectedModule)) {
+      return false;
+    }
+
+    if (selectedCategory && item.categoryName !== selectedCategory) {
+      return false;
+    }
+
+    if (selectedSubCategory && item.subCategory !== selectedSubCategory) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    return [
+      item.title,
+      item.categoryName,
+      item.subCategory,
+      item.detailCategory,
+      item.status,
+      getListingModuleLabel(item),
+      getPlanName(item),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedSearch);
+  });
+}
+
+function getModuleFilter(value: string | null): ListingModuleFilter {
+  return value === "classified" || value === "jobs" || value === "products"
+    ? value
+    : "";
+}
+
+function matchesModuleFilter(item: ListingSummary, selectedModule: ListingModuleFilter) {
+  if (!selectedModule) {
+    return true;
+  }
+
+  if (selectedModule === "classified") {
+    return isClassifiedListing(item);
+  }
+
+  if (selectedModule === "jobs") {
+    return isJobsListing(item);
+  }
+
+  return isProductListing(item);
 }
 
 function formatDate(value?: string | null) {
@@ -292,6 +516,25 @@ function isClassifiedListing(item: ListingSummary) {
   const categoryName = item.categoryName?.trim().toLowerCase();
 
   return categoryName === "classifieds";
+}
+
+function isJobsListing(item: ListingSummary) {
+  return item.categoryName?.trim().toLowerCase() === "jobs";
+}
+
+function isProductListing(item: ListingSummary) {
+  return matchesListingText(item, [
+    "product",
+    "products",
+    "electronics",
+    "appliance",
+    "furniture",
+    "fashion",
+    "books",
+    "sports",
+    "hobbies",
+    "vehicles",
+  ]);
 }
 
 function getListingModuleLabel(item: ListingSummary) {
@@ -331,4 +574,23 @@ function getStatusClass(status: string) {
   }
 
   return "db-list-ststus dashboard-listing-waiting";
+}
+
+function matchesListingText(item: ListingSummary, needles: string[]) {
+  const haystack = [
+    item.categoryName,
+    item.subCategory,
+    item.detailCategory,
+    getRecordText(item.propertyDetails, "listingKind"),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return needles.some((needle) => haystack.includes(needle));
+}
+
+function getRecordText(record: Record<string, string | number | boolean | null> | undefined, key: string) {
+  const value = record?.[key];
+  return value === null || value === undefined ? "" : String(value);
 }

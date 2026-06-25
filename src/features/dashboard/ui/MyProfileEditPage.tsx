@@ -3,7 +3,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
-import DashboardRightRail from "../components/DashboardRightRail";
 import {
   getMyProfile,
   updateMyProfile,
@@ -12,6 +11,7 @@ import {
 } from "../api/profileApi";
 import { formatJoinDate } from "../utils/profileStorage";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
+import "../styles/profileEdit.css";
 
 type FileField = keyof UserProfileUploadFiles;
 type PreviewField = "profileImageUrl" | "coverImageUrl" | "photoIdProofUrl";
@@ -127,6 +127,10 @@ export default function MyProfileEditPage() {
       ? "Yes"
       : "No";
   }, [formValues]);
+  const nameParts = useMemo(
+    () => splitFullName(formValues?.fullName || ""),
+    [formValues?.fullName],
+  );
 
   const handleValueChange =
     (field: keyof UserProfileFormValues) =>
@@ -134,6 +138,29 @@ export default function MyProfileEditPage() {
       const { value } = event.target;
 
       setFormValues((prev) => (prev ? { ...prev, [field]: value } : prev));
+    };
+
+  const handleNamePartChange =
+    (field: keyof NameParts) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+
+      setFormValues((prev) => {
+        if (!prev) {
+          return prev;
+        }
+
+        const currentNameParts = splitFullName(prev.fullName);
+        const nextNameParts = {
+          ...currentNameParts,
+          [field]: value,
+        };
+
+        return {
+          ...prev,
+          fullName: joinNameParts(nextNameParts),
+        };
+      });
     };
 
   const handleFileChange =
@@ -181,16 +208,12 @@ export default function MyProfileEditPage() {
   if (profileQuery.isLoading || !formValues) {
     return (
       <DashboardLayout
-        rightRail={<DashboardRightRail />}
-        mainContentClassName="ud-no-rhs"
+        mainContentClassName="ud-no-rhs dashboard-profile-main"
       >
-        <div className="ud-cen">
+        <div className="ud-cen dashboard-profile-page">
           <div className="log-bor">&nbsp;</div>
           <span className="udb-inst">Edit User Profile</span>
-          <div className="ud-cen-s2 ud-pro-edit">
-            <h2>Profile Details</h2>
-            <p>Loading profile...</p>
-          </div>
+          <ProfileLoadingOverlay />
         </div>
       </DashboardLayout>
     );
@@ -198,18 +221,26 @@ export default function MyProfileEditPage() {
 
   return (
     <DashboardLayout
-      rightRail={<DashboardRightRail />}
-      mainContentClassName="ud-no-rhs"
+      mainContentClassName="ud-no-rhs dashboard-profile-main"
     >
-      <div className="ud-cen">
+      <div className="ud-cen dashboard-profile-page">
         <div className="log-bor">&nbsp;</div>
         <span className="udb-inst">Edit User Profile</span>
 
         <div className="ud-cen-s2 ud-pro-edit">
-          <h2>Profile Details</h2>
+          <div className="dashboard-profile-hero">
+            <div>
+              <span>Profile Details</span>
+              <h2>{formValues.fullName || "My Profile"}</h2>
+              <p>{formValues.email || "Update your account details"}</p>
+            </div>
+            <Link to="/dashboard/payment" className="dashboard-profile-upgrade">
+              Upgrade
+            </Link>
+          </div>
 
           {!profileQuery.data?.loadedFromApi ? (
-            <p className="text-muted" style={{ marginBottom: 20 }}>
+            <p className="dashboard-profile-alert">
               API profile endpoint is not available yet. This screen is using
               local fallback data and will switch to backend data when the
               endpoint is ready.
@@ -217,15 +248,67 @@ export default function MyProfileEditPage() {
           ) : null}
 
           <form onSubmit={handleSubmit}>
-            <table className="responsive-table bordered">
+            <table className="responsive-table bordered dashboard-profile-table">
               <tbody>
                 <tr>
-                  <td>Name</td>
-                  <td>{formValues.fullName}</td>
+                  <td>First Name</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="firstName"
+                        value={nameParts.firstName}
+                        onChange={handleNamePartChange("firstName")}
+                        autoComplete="given-name"
+                      />
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Middle Name</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="middleName"
+                        value={nameParts.middleName}
+                        onChange={handleNamePartChange("middleName")}
+                        autoComplete="additional-name"
+                      />
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Last Name</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="lastName"
+                        value={nameParts.lastName}
+                        onChange={handleNamePartChange("lastName")}
+                        autoComplete="family-name"
+                      />
+                    </div>
+                  </td>
                 </tr>
                 <tr>
                   <td>Email Id</td>
-                  <td>{formValues.email || "-"}</td>
+                  <td>
+                    <div className="form-group">
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="email"
+                        value={formValues.email}
+                        onChange={handleValueChange("email")}
+                        autoComplete="email"
+                      />
+                    </div>
+                  </td>
                 </tr>
                 <tr>
                   <td>Profile Password</td>
@@ -532,13 +615,6 @@ export default function MyProfileEditPage() {
                     >
                       {profileMutation.isPending ? "Saving..." : "Save Changes"}
                     </button>
-                    <Link
-                      to="/dashboard/payment"
-                      className="db-pro-bot-btn"
-                      style={{ marginLeft: 4 }}
-                    >
-                      Upgrade
-                    </Link>
                   </td>
                   <td></td>
                 </tr>
@@ -549,4 +625,39 @@ export default function MyProfileEditPage() {
       </div>
     </DashboardLayout>
   );
+}
+
+function ProfileLoadingOverlay() {
+  return (
+    <div className="dashboard-profile-loader" role="status" aria-live="polite">
+      <div className="dashboard-profile-loader-card">
+        <span className="dashboard-profile-loader-spinner" aria-hidden="true"></span>
+        <strong>Loading profile</strong>
+        <p>Getting your latest account details.</p>
+      </div>
+    </div>
+  );
+}
+
+type NameParts = {
+  firstName: string;
+  middleName: string;
+  lastName: string;
+};
+
+function splitFullName(value: string): NameParts {
+  const parts = value.trim().split(/\s+/).filter(Boolean);
+
+  return {
+    firstName: parts[0] || "",
+    middleName: parts.length > 2 ? parts.slice(1, -1).join(" ") : "",
+    lastName: parts.length > 1 ? parts[parts.length - 1] : "",
+  };
+}
+
+function joinNameParts(parts: NameParts) {
+  return [parts.firstName, parts.middleName, parts.lastName]
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .join(" ");
 }

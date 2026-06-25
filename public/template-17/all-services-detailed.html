@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Service Quote Request - Chao Desi</title>
+    <!--== META TAGS ==-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#76cef1">
+    <meta property="og:image" content="images/home/logo-white.png">
+    <meta name="description" content="Submit your local service requirement and get matched with trusted Chao Desi service providers near you.">
+    <meta name="keyword" content="local service quote, Chao Desi service request, service providers">
+    <!--== FAV ICON(BROWSER TAB ICON) ==-->
+    <link rel="shortcut icon" href="images/fav.png" type="image/x-icon">
+    <!--== GOOGLE FONTS ==-->
+    <link href="https://fonts.googleapis.com/css?family=Oswald:700|Source+Sans+Pro:300,400,600,700&display=swap" rel="stylesheet">
+    <!--== WEB ICON FONTS ==-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--== CSS FILES ==-->
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/theme-color.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
+   
+    <!--[if lt IE 9]>
+        <script src="js/html5shiv.js"></script>
+        <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="service-quote-page">
+    <div id="preloader">
+        <div id="status">&nbsp;</div>
+    </div>
+
+    <!-- ===== HEADER / NAV ===== -->
+    <section>
+        <div class="str ind2-home">
+            <div>
+                <div class="hom-top">
+                    <div class="container">
+                        <div class="row">
+                            <div class="hom-nav ">
+                                <a href="index.html" class="top-log">
+                                    <img src="images/home/logo-white.png" alt="" loading="eager" class="ic-logo">
+                                </a>
+                                <div class="menu">
+                                    <h4>Explore</h4>
+                                </div>
+                                <div class="pop-menu">
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="top-exp-menu"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="top-ser">
+                                    <form name="filter_form" id="filter_form" class="filter_form">
+                                        <ul>
+                                            <li class="sr-sea">
+                                                <input type="text" autocomplete="off" id="top-select-search" placeholder="What are you looking for?">
+                                                <ul id="tser-res1" class="tser-res tser-res2"></ul>
+                                            </li>
+                                            <li class="sbtn">
+                                                <button type="button" class="btn btn-success" id="top_filter_submit">
+                                                    <i class="material-icons">&nbsp;</i>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </form>
+                                </div>
+                                <ul class="bl">
+                                    <li><a href="login.html">Add business</a></li>
+                                    <li><a href="login.html">Sign in</a></li>
+                                    <li><a href="login.html?login=register">Create an account</a></li>
+                                </ul>
+                                <div class="mob-menu">
+                                    <div class="mob-me-ic">
+                                        <i class="material-icons">menu</i>
+                                    </div>
+                                    <div class="mob-me-all">
+                                        <div class="mob-me-clo">
+                                            <i class="material-icons">close</i>
+                                        </div>
+                                        <div class="mv-bus">
+                                            <h4></h4>
+                                            <ul>
+                                                <li><a href="login.html">Add business</a></li>
+                                                <li><a href="login.html">Sign in</a></li>
+                                                <li><a href="login.html?login=register">Create an account</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="mv-cate">
+                                            <h4>Local Services</h4>
+                                            <ul>
+                                                <li><a href="all-services.html">All Services</a></li>
+                                                <li><a href="local-services.html">Financial &amp; Taxation Services</a></li>
+                                                <li><a href="local-services.html">Real Estate Services</a></li>
+                                                <li><a href="local-services.html">Wedding &amp; Events</a></li>
+                                                <li><a href="local-services.html">Food &amp; Catering</a></li>
+                                                <li><a href="local-services.html">Health &amp; Wellness</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="quote-hero">
+        <div class="container">
+            <nav class="quote-crumb" aria-label="breadcrumb">
+                <a href="index.html">Home</a>
+                <span>/</span>
+                <a href="all-services.html">All Services</a>
+                <span>/</span>
+                <span id="quote-crumb-service">Metal Fabricators</span>
+            </nav>
+            <div class="quote-hero-grid">
+                <div>
+                    <span class="quote-eyebrow"><i class="material-icons">verified_user</i> Trusted local experts</span>
+                    <h1><span id="quote-title-service">Metal Fabricators</span> Services</h1>
+                    <p>Tell us more about your requirement so Chao Desi can connect you to the right <span id="quote-copy-service">Metal Fabricators</span> near you. Compare responses, choose a trusted provider and move forward with confidence.</p>
+                    <div class="quote-illustration" aria-hidden="true">
+                        <div class="bubble b1"><i class="material-icons">search</i></div>
+                        <div class="bubble b2"><i class="material-icons">place</i></div>
+                        <div class="bubble b3"><i class="material-icons">store</i></div>
+                        <div class="bubble b4"><i class="material-icons">shopping_bag</i></div>
+                        <div class="person"></div>
+                        <div class="laptop"></div>
+                    </div>
+                    <div class="quote-steps">
+                        <div class="quote-step">
+                            <strong>1</strong>
+                            <h4>Submit your requirement</h4>
+                            <p>Pick the service and share basic contact details.</p>
+                        </div>
+                        <div class="quote-step">
+                            <strong>2</strong>
+                            <h4>Get quotes from experts</h4>
+                            <p>Receive responses from matching local providers.</p>
+                        </div>
+                        <div class="quote-step">
+                            <strong>3</strong>
+                            <h4>Choose your provider</h4>
+                            <p>Compare, talk, and hire the right expert.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="quote-card">
+                    <h3>What <span id="quote-card-service">Metal Fabricators</span> are you looking for?</h3>
+                    <div class="quote-service-search">
+                        <i class="material-icons">search</i>
+                        <input type="text" id="quote-service-input" value="Metal Fabricators">
+                    </div>
+                    <div class="quote-check-list">
+                        <label><input type="checkbox" checked> <span id="quote-check-service">Metal Fabricators</span></label>
+                        <label><input type="checkbox"> Residential service</label>
+                        <label><input type="checkbox"> Commercial service</label>
+                        <label><input type="checkbox"> Urgent requirement</label>
+                    </div>
+                    <button type="button" class="quote-btn" data-bs-toggle="modal" data-bs-target="#quoteRequestModal">Get Started</button>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <section class="quote-content">
+        <div class="container">
+            <div class="quote-info-grid">
+                <div class="quote-info-box">
+                    <h2>Find The Right <span id="quote-about-service">Metal Fabricators</span></h2>
+                    <p>Chao Desi helps you submit one requirement and connect with service providers who understand your local needs. This page keeps the request flow simple, clean and aligned with your existing Chao Desi template.</p>
+                    <ul class="quote-feature-list">
+                        <li><i class="material-icons">check_circle</i> Share your need once and get matched with relevant local providers.</li>
+                        <li><i class="material-icons">check_circle</i> Use the enquiry form to collect name, city, email and phone details.</li>
+                        <li><i class="material-icons">check_circle</i> Works for every service selected from the All Services page.</li>
+                    </ul>
+                </div>
+                <div class="quote-info-box">
+                    <h3>Popular Service Needs</h3>
+                    <ul class="quote-feature-list">
+                        <li><i class="material-icons">build</i> New installation or project work</li>
+                        <li><i class="material-icons">schedule</i> Quick estimate or consultation</li>
+                        <li><i class="material-icons">business</i> Residential and commercial requests</li>
+                        <li><i class="material-icons">near_me</i> Local providers near your city</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <section class=" wed-hom-footer">
+        <div class="container">
+            <div class="row foot-supp">
+                <h2><span>Free support:</span> +01 5426 24400 &nbsp;&nbsp;|&nbsp;&nbsp; <span>Email:</span> info@chaodesi.com</h2>
+            </div>
+            <div class="row wed-foot-link">
+                <div class="col-md-4 foot-tc-mar-t-o">
+                    <h4>Local Services</h4>
+                    <ul>
+                        <li><a href="all-services.html">All Services</a></li>
+                        <li><a href="local-services.html">Financial &amp; Taxation Services</a></li>
+                        <li><a href="local-services.html">Real Estate Services</a></li>
+                        <li><a href="local-services.html">Wedding &amp; Events</a></li>
+                        <li><a href="local-services.html">Lessons/Tuitions</a></li>
+                        <li><a href="local-services.html">Food &amp; Catering</a></li>
+                        <li><a href="local-services.html">Home &amp; Business Needs</a></li>
+                        <li><a href="local-services.html">Travel &amp; Accommodation</a></li>
+                        <li><a href="local-services.html">Health &amp; Wellness</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="all-listing.html">All Listings</a></li>
+                        <li><a href="service-experts/index.html">Service Experts</a></li>
+                        <li><a href="jobs/index.html">Jobs</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="products.html">Products</a></li>
+                        <li><a href="coupons.html">Coupons</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>HELP &amp; SUPPORT</h4>
+                    <ul>
+                        <li><a href="about.html">About us</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="feedback.html">Feedback</a></li>
+                        <li><a href="contact-us.html">Contact us</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-use.html">Terms of Use</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row wed-foot-link-1">
+                <div class="col-md-4">
+                    <h4>Get In Touch</h4>
+                    <p>Address: 28800 Orchard Lake Road, Suite 180 Farmington Hills, U.S.A.</p>
+                    <p>Phone: <a href="tel:+01 5426 24400">+01 5426 24400</a></p>
+                    <p>Email: <a href="mailto:info@chaodesi.com">info@chaodesi.com</a></p>
+                </div>
+                <div class="col-md-4 fot-app">
+                    <h4>DOWNLOAD OUR FREE MOBILE APPS</h4>
+                    <ul>
+                        <li><a href=""><img src="images/gstore.png" alt="" loading="lazy"></a></li>
+                        <li><a href=""><img src="images/astore.png" alt="" loading="lazy"></a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 fot-soc">
+                    <h4>SOCIAL MEDIA</h4>
+                    <ul>
+                        <li><a target="_blank" href=""><img src="images/social/1.png" alt="" loading="lazy"></a></li>
+                        <li><a target="_blank" href="https://twitter.com/"><img src="images/social/2.png" alt="" loading="lazy"></a></li>
+                        <li><a target="_blank" href="https://www.facebook.com/"><img src="images/social/3.png" alt="" loading="lazy"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="cr">
+            <div class="container">
+                <div class="row">
+                    <p>Copyright © 2025
+                        <a href="https://chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by
+                        <a href="https://chaodesi.com/" target="_blank">Symplore</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade quote-modal" id="quoteRequestModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title">Get Matched with the Right Expert for Your Needs</h4>
+                    <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <input type="text" class="form-control" placeholder="Name *">
+                        <input type="text" class="form-control" value="New York, NY" placeholder="City *">
+                        <input type="email" class="form-control" placeholder="Email *">
+                        <div class="row">
+                            <div class="col-4">
+                                <input type="text" class="form-control" value="+1 US">
+                            </div>
+                            <div class="col-8">
+                                <input type="text" class="form-control" placeholder="Contact Number *">
+                            </div>
+                        </div>
+                        <button type="button" class="quote-btn">Send Enquiry</button>
+                        <label class="quote-consent">
+                            <input type="checkbox">
+                            <span>I agree to be contacted by Chao Desi via call, SMS, or WhatsApp. By submitting this enquiry, I consent to receive service responses and notifications.</span>
+                        </label>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/select-opt.js"></script>
+    <script src="js/blazy.min.js"></script>
+    <script src="js/slick.js"></script>
+    <script src="js/custom.js"></script>
+    <script src="js/jquery.validate.min.js"></script>
+    <script src="js/custom_validation.js"></script>
+    <script>
+        (function () {
+            var params = new URLSearchParams(window.location.search);
+            var service = params.get('service') || 'Metal Fabricators';
+            service = service.replace(/\+/g, ' ').trim() || 'Metal Fabricators';
+
+            $('#quote-title-service, #quote-copy-service, #quote-card-service, #quote-check-service, #quote-about-service, #quote-crumb-service').text(service);
+            $('#quote-service-input').val(service);
+            document.title = service + ' Services - Chao Desi';
+        })();
+    </script>
+</body>
+
+</html>

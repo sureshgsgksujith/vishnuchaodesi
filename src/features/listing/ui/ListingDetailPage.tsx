@@ -18,7 +18,9 @@ import {
 } from "../../dashboard/utils/listingImages";
 import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
-import { shouldShowQuoteAction } from "../utils/quoteVisibility";
+import { getQuoteActionLabel, shouldShowQuoteAction } from "../utils/quoteVisibility";
+import { submitRequirement } from "../api/requirementsApi";
+import { getMyProfile } from "../../dashboard/api/profileApi";
 import "../styles/publicListings.css";
 
 type LooseValue = string | number | boolean | string[] | null | undefined;
@@ -167,6 +169,16 @@ function ListingDetail({
   const [loginPrompt, setLoginPrompt] = useState<{ title: string; message: string } | null>(null);
   const [nearbyServices, setNearbyServices] = useState<NearbyService[]>([]);
   const [isNearbyLoading, setIsNearbyLoading] = useState(false);
+  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [quoteForm, setQuoteForm] = useState({
+    name: "",
+    email: "",
+    mobileNumber: "",
+    message: "",
+  });
+  const [quoteStatus, setQuoteStatus] = useState("");
+  const [isQuoteProfileLoading, setIsQuoteProfileLoading] = useState(false);
+  const [isQuoteSubmitting, setIsQuoteSubmitting] = useState(false);
   const scrollingRelatedListings = relatedListings.length > 1 ? [...relatedListings, ...relatedListings] : relatedListings;
   const relatedScrollDuration = `${Math.max(72, relatedListings.length * 18)}s`;
   const country = getString(listing.locationDetails, "country");
@@ -194,6 +206,7 @@ function ListingDetail({
   const isOwnerViewing = currentUserId === listing.userId;
   const isRealEstateListing = listing.categoryName === "Real Estate";
   const showQuoteAction = shouldShowQuoteAction(listing);
+  const quoteActionLabel = getQuoteActionLabel(listing);
   const nearbyLocation = getNearbyLocation(listing);
   const savedNearbyServices = getSavedNearbyServices(listing);
   const postedDetailSections = getPostedDetailSections(listing);
@@ -295,6 +308,71 @@ function ListingDetail({
       setReviewError(message);
     } finally {
       setIsReviewSubmitting(false);
+    }
+  }
+
+  async function openQuoteModal() {
+    if (!isCustomerAuthenticated()) {
+      setLoginPrompt({
+        title: "Login required",
+        message: "Please login to send your enquiry.",
+      });
+      return;
+    }
+
+    if (isOwnerViewing) {
+      setLoginPrompt({
+        title: "Owner action not needed",
+        message: "You are the owner of this listing. You do not need to send an enquiry for your own post.",
+      });
+      return;
+    }
+
+    setIsQuoteModalOpen(true);
+    setQuoteStatus("");
+    setQuoteForm({
+      name: localStorage.getItem("fullName") || localStorage.getItem("customer_name") || "",
+      email: localStorage.getItem("email") || "",
+      mobileNumber: localStorage.getItem("mobileNumber") || "",
+      message: "",
+    });
+    setIsQuoteProfileLoading(true);
+
+    try {
+      const { profile } = await getMyProfile();
+      setQuoteForm((current) => ({
+        ...current,
+        name: profile.fullName || current.name,
+        email: profile.email || current.email,
+        mobileNumber: profile.mobileNumber || current.mobileNumber,
+      }));
+    } finally {
+      setIsQuoteProfileLoading(false);
+    }
+  }
+
+  async function submitQuoteForm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setQuoteStatus("");
+    setIsQuoteSubmitting(true);
+
+    try {
+      await submitRequirement({
+        listingId: listing.id,
+        listingTitle: listing.title,
+        name: quoteForm.name,
+        email: quoteForm.email,
+        mobileNumber: quoteForm.mobileNumber,
+        message: quoteForm.message,
+        categoryName: listing.categoryName || "Listing",
+        pageUrl: `${window.location.origin}/listing-details?id=${listing.id}`,
+      });
+      setQuoteStatus("Your enquiry has been sent successfully.");
+      setQuoteForm((current) => ({ ...current, message: "" }));
+    } catch {
+      setQuoteStatus("Unable to send enquiry. Please try again.");
+    } finally {
+      setIsQuoteSubmitting(false);
     }
   }
 
@@ -567,7 +645,11 @@ function ListingDetail({
                       <ul className="row">
                         <li>{phone ? <a href={`tel:${phone}`} className="cta cta-call">Call Now</a> : <span className="cta cta-call">Call Now</span>}</li>
                         {showQuoteAction ? (
-                          <li>{email ? <a href={`mailto:${email}`} className="pulse cta cta-get">Get quote</a> : <span className="pulse cta cta-get">Get quote</span>}</li>
+                          <li>
+                            <button type="button" className="pulse cta cta-get public-detail-quote-button" onClick={openQuoteModal}>
+                              {quoteActionLabel}
+                            </button>
+                          </li>
                         ) : null}
                       </ul>
                     </div>
@@ -580,6 +662,20 @@ function ListingDetail({
                     </div>
                   </div>
                 </div>
+
+                {isQuoteModalOpen ? (
+                  <ListingQuoteModal
+                    form={quoteForm}
+                    isProfileLoading={isQuoteProfileLoading}
+                    isSubmitting={isQuoteSubmitting}
+                    listing={listing}
+                    title={quoteActionLabel}
+                    status={quoteStatus}
+                    onChange={(updates) => setQuoteForm((current) => ({ ...current, ...updates }))}
+                    onClose={() => setIsQuoteModalOpen(false)}
+                    onSubmit={submitQuoteForm}
+                  />
+                ) : null}
 
                 <TemplateSection id="company-info" eyebrow="Company" title="Info" className="pglist-p3">
                   <div className="list-pg-inn-sp">
@@ -677,6 +773,69 @@ function ListingDetail({
         </div>
       </section>
     </article>
+  );
+}
+
+function ListingQuoteModal({
+  form,
+  isProfileLoading,
+  isSubmitting,
+  listing,
+  title,
+  status,
+  onChange,
+  onClose,
+  onSubmit,
+}: {
+  form: { name: string; email: string; mobileNumber: string; message: string };
+  isProfileLoading: boolean;
+  isSubmitting: boolean;
+  listing: ListingSummary;
+  title: string;
+  status: string;
+  onChange: (updates: Partial<{ name: string; email: string; mobileNumber: string; message: string }>) => void;
+  onClose: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <div className="public-quote-modal-backdrop" role="dialog" aria-modal="true">
+      <form className="public-quote-modal public-detail-quote-modal" onSubmit={onSubmit}>
+        <div className="public-quote-ribbon">Listing Enquiry</div>
+        <button type="button" className="public-quote-close" aria-label="Close" onClick={onClose}>x</button>
+        <h2>{title}</h2>
+        <p>{listing.title}</p>
+        <input
+          type="text"
+          placeholder="Enter name*"
+          required
+          value={form.name}
+          onChange={(event) => onChange({ name: event.target.value })}
+        />
+        <input
+          type="email"
+          placeholder="Email*"
+          readOnly
+          required
+          value={form.email}
+        />
+        <input
+          type="tel"
+          placeholder="Phone number*"
+          required
+          value={form.mobileNumber}
+          onChange={(event) => onChange({ mobileNumber: event.target.value })}
+        />
+        <textarea
+          placeholder="Enter your query or message"
+          value={form.message}
+          onChange={(event) => onChange({ message: event.target.value })}
+        />
+        {status ? <div className="public-quote-status">{status}</div> : null}
+        <button type="submit" disabled={isProfileLoading || isSubmitting || !form.email}>
+          {isProfileLoading ? "Loading..." : isSubmitting ? "Submitting..." : "Submit Enquiry"}
+        </button>
+      </form>
+    </div>
   );
 }
 

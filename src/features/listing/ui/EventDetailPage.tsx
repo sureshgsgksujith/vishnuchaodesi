@@ -8,7 +8,7 @@ import {
   type ListingSummary,
 } from "../../dashboard/api/listingsApi";
 import { resolveListingImageUrl } from "../../dashboard/utils/listingImages";
-import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
+import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import "../styles/eventDetail.css";
 
 type LooseValue = string | number | boolean | null | undefined;
@@ -120,6 +120,8 @@ function EventLoginRequiredPrompt({ closeTo, returnTo }: { closeTo: string; retu
 
 function EventDetail({ listing }: { listing: ListingSummary }) {
   const navigate = useNavigate();
+  const currentUserId = getCurrentCustomerUserId();
+  const isOwnerViewing = currentUserId === listing.userId;
   const attrs = useMemo(() => getCategoryAttributes(listing), [listing]);
   const event = useMemo(() => buildEventView(listing, attrs), [attrs, listing]);
   const tickets = useMemo(() => buildTicketOptions(listing, attrs), [attrs, listing]);
@@ -140,6 +142,10 @@ function EventDetail({ listing }: { listing: ListingSummary }) {
   const total = subtotal + fee;
 
   function updateQty(ticketName: string, delta: number) {
+    if (isOwnerViewing) {
+      return;
+    }
+
     setQuantities((current) => ({
       ...current,
       [ticketName]: Math.max(0, Math.min(10, (current[ticketName] || 0) + delta)),
@@ -147,6 +153,11 @@ function EventDetail({ listing }: { listing: ListingSummary }) {
   }
 
   function checkout() {
+    if (isOwnerViewing) {
+      window.alert("You are the owner of this event. You cannot buy tickets for your own event.");
+      return;
+    }
+
     if (!selectedItems.length) {
       window.alert("Please select at least one ticket.");
       return;
@@ -272,9 +283,9 @@ function EventDetail({ listing }: { listing: ListingSummary }) {
                     <b>{formatMoney(ticket.price)}</b>
                   </div>
                   <div className="event-ticket-stepper">
-                    <button type="button" onClick={() => updateQty(ticket.name, -1)}>-</button>
+                    <button type="button" onClick={() => updateQty(ticket.name, -1)} disabled={isOwnerViewing}>-</button>
                     <span>{quantities[ticket.name] || 0}</span>
-                    <button type="button" onClick={() => updateQty(ticket.name, 1)}>+</button>
+                    <button type="button" onClick={() => updateQty(ticket.name, 1)} disabled={isOwnerViewing}>+</button>
                   </div>
                 </div>
               ))}
@@ -282,8 +293,15 @@ function EventDetail({ listing }: { listing: ListingSummary }) {
                 <span>Total</span>
                 <strong>{formatMoney(total)}</strong>
               </div>
-              <button className="event-ticket-checkout" type="button" onClick={checkout}>Buy Tickets</button>
-              <p>Login is required at checkout.</p>
+              {isOwnerViewing ? (
+                <p className="event-ticket-owner-note">
+                  You are the owner of this event. You do not need to buy tickets for your own event.
+                </p>
+              ) : null}
+              <button className="event-ticket-checkout" type="button" onClick={checkout} disabled={isOwnerViewing}>
+                {isOwnerViewing ? "Owner Event" : "Buy Tickets"}
+              </button>
+              <p>{isOwnerViewing ? "Ticket purchase is available for customers only." : "Login is required at checkout."}</p>
             </div>
           </aside>
         </div>

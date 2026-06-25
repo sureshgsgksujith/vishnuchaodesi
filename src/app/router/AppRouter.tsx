@@ -14,11 +14,12 @@ const PointHistoryPage = lazy(() => import("../../features/dashboard/ui/PointHis
 const NotificationsPage = lazy(() => import("../../features/dashboard/ui/NotificationsPage"));
 const FollowingsPage = lazy(() => import("../../features/dashboard/ui/FollowingsPage"));
 const ReviewPage = lazy(() => import("../../features/dashboard/ui/ReviewPage"));
-const ProductsPage = lazy(() => import("../../features/dashboard/ui/ProductsPage"));
+const EnquiryPage = lazy(() => import("../../features/dashboard/ui/EnquiryPage"));
 const MyServiceBookingsPage = lazy(() => import("../../features/dashboard/ui/MyServiceBookingsPage"));
+const SettingsPage = lazy(() => import("../../features/dashboard/ui/SettingsPage"));
+const InvoicePage = lazy(() => import("../../features/dashboard/ui/InvoicePage"));
 const UserAppliedJobsPage = lazy(() => import("../../features/dashboard/ui/UserAppliedJobsPage"));
 const EventsPage = lazy(() => import("../../features/dashboard/ui/EventsPage"));
-const JobsPage = lazy(() => import("../../features/dashboard/ui/JobsPage"));
 const BlogPostsPage = lazy(() => import("../../features/dashboard/ui/BlogPostsPage"));
 const CouponsPage = lazy(() => import("../../features/dashboard/ui/CouponsPage"));
 const MyProfileEditPage = lazy(() => import("../../features/dashboard/ui/MyProfileEditPage"));
@@ -30,6 +31,7 @@ const PricingDetailsPage = lazy(() => import("../../features/pricing/ui/PricingD
 const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPage"));
 const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
 const EventDetailPage = lazy(() => import("../../features/listing/ui/EventDetailPage"));
+const LocalServicesPage = lazy(() => import("../../features/localServices/ui/LocalServicesPage"));
 const ChaoTvPage = lazy(() => import("../../features/chaoTv/ChaoTvPage"));
 const ClassifiedsHomePage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
@@ -104,13 +106,18 @@ export function AppRouter() {
     "/dashboard/notifications",
     "/dashboard/followings",
     "/dashboard/review",
+    "/dashboard/enquiry",
+    "/dashboard/ad-posts",
     "/dashboard/products",
     "/dashboard/my-service-bookings",
+    "/dashboard/setting",
     "/dashboard/user-applied-jobs",
     "/dashboard/events",
+    "/dashboard/invoice",
     "/dashboard/jobs",
     "/dashboard/blog-posts",
     "/dashboard/coupons",
+    "/dashboard/my-profile",
     "/dashboard/my-profile-edit",
     "/dashboard/all-listing",
     "/dashboard/listings/new",
@@ -135,6 +142,7 @@ export function AppRouter() {
     "/classifieds/index",
     "/classifieds/ads-all",
     "/classifieds/ads-details",
+    "/all-category",
     "/all-listing",
     "/chao-tv",
     "/listing-details",
@@ -164,13 +172,18 @@ export function AppRouter() {
       <Route path="/dashboard/notifications" element={<ProtectedCustomerRoute><NotificationsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/followings" element={<ProtectedCustomerRoute><FollowingsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/review" element={<ProtectedCustomerRoute><ReviewPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/products" element={<ProtectedCustomerRoute><ProductsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/enquiry" element={<ProtectedCustomerRoute><EnquiryPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/ad-posts" element={<ProtectedCustomerRoute><AllListingsPage defaultModule="classified" lockedModule title="Ads Posts" /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/products" element={<ProtectedCustomerRoute><AllListingsPage defaultModule="products" lockedModule title="Product Details" /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/my-service-bookings" element={<ProtectedCustomerRoute><MyServiceBookingsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/setting" element={<ProtectedCustomerRoute><SettingsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/user-applied-jobs" element={<ProtectedCustomerRoute><UserAppliedJobsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/events" element={<ProtectedCustomerRoute><EventsPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/jobs" element={<ProtectedCustomerRoute><JobsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/invoice" element={<ProtectedCustomerRoute><InvoicePage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/jobs" element={<ProtectedCustomerRoute><AllListingsPage defaultModule="jobs" lockedModule title="Jobs" /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/blog-posts" element={<ProtectedCustomerRoute><BlogPostsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/coupons" element={<ProtectedCustomerRoute><CouponsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/my-profile" element={<ProtectedCustomerRoute><MyProfileEditPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/my-profile-edit" element={<ProtectedCustomerRoute><MyProfileEditPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/all-listing" element={<ProtectedCustomerRoute><AllListingsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/start" element={<ProtectedCustomerRoute><ListingStartPage /></ProtectedCustomerRoute>} />
@@ -195,6 +208,7 @@ export function AppRouter() {
       <Route path="/classifieds/index" element={<ClassifiedsHomePage />} />
       <Route path="/classifieds/ads-all" element={<ClassifiedAdsAllPage />} />
       <Route path="/classifieds/ads-details" element={<ClassifiedAdDetailsPage />} />
+      <Route path="/all-category" element={<LocalServicesPage />} />
       <Route path="/all-listing" element={<AllListingPage />} />
       <Route path="/chao-tv" element={<ChaoTvPage />} />
       <Route path="/listing-details" element={<ListingDetailPage />} />

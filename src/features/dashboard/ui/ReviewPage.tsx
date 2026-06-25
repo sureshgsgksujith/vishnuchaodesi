@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "../components/DashboardLayout";
 import DashboardRightRail from "../components/DashboardRightRail";
 import DashboardTabs from "../components/DashboardTabs";
 import type { DashboardTabItem } from "../components/DashboardTabs";
+import { getMyListings, type ListingReview, type ListingSummary } from "../api/listingsApi";
 import { sentReviews } from "../mock/dashboardMockData";
 
 const reviewTabs: DashboardTabItem[] = [
@@ -12,6 +13,43 @@ const reviewTabs: DashboardTabItem[] = [
 
 export default function ReviewPage() {
   const [activeTab, setActiveTab] = useState("received");
+  const [listings, setListings] = useState<ListingSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isActive = true;
+
+    getMyListings("", 1, 1000)
+      .then((result) => {
+        if (isActive) {
+          setListings(result.items || []);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setListings([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const receivedReviews = useMemo(
+    () => listings.flatMap((listing) =>
+      (listing.reviews || []).map((review) => ({
+        listing,
+        review,
+      })),
+    ),
+    [listings],
+  );
 
   return (
     <DashboardLayout rightRail={<DashboardRightRail />}>
@@ -43,7 +81,40 @@ export default function ReviewPage() {
                     <th>Delete</th>
                   </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={9}>Loading reviews...</td>
+                    </tr>
+                  ) : receivedReviews.length ? (
+                    receivedReviews.map(({ listing, review }, index) => (
+                      <tr key={`${listing.id}-${review.id}`}>
+                        <td>{index + 1}</td>
+                        <td>{listing.title}</td>
+                        <td>{review.reviewerName || "User"}</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td>{listing.city || "-"}</td>
+                        <td>
+                          <ReviewStars rating={review.rating} />
+                        </td>
+                        <td>{review.reviewMessage || "-"}</td>
+                        <td>
+                          <a
+                            href="#!"
+                            onClick={(event) => event.preventDefault()}
+                          >
+                            <span className="db-list-edit">Delete</span>
+                          </a>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={9}>No received reviews found.</td>
+                    </tr>
+                  )}
+                </tbody>
               </table>
             </div>
 
@@ -76,13 +147,7 @@ export default function ReviewPage() {
                       <td>{review.phone}</td>
                       <td>{review.city}</td>
                       <td>
-                        <label className="rat">
-                          {Array.from({ length: review.rating }).map((_, index) => (
-                            <i key={index} className="material-icons">
-                              star
-                            </i>
-                          ))}
-                        </label>
+                        <ReviewStars rating={review.rating} />
                       </td>
                       <td>{review.message}</td>
                       <td>
@@ -102,5 +167,17 @@ export default function ReviewPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+function ReviewStars({ rating }: { rating: ListingReview["rating"] }) {
+  return (
+    <label className="rat">
+      {Array.from({ length: rating }).map((_, index) => (
+        <i key={index} className="material-icons">
+          star
+        </i>
+      ))}
+    </label>
   );
 }

@@ -96,26 +96,6 @@ export const dashboardNavSections: DashboardNavSection[] = [
         icon: "/template-17/images/icon/dbl9.png",
       },
       {
-        label: "Promotions",
-        href: "/dashboard/promote",
-        icon: "/template-17/images/icon/promotion.png",
-      },
-      {
-        label: "SEO",
-        href: "/dashboard/seo",
-        icon: "/template-17/images/icon/seo.png",
-      },
-      {
-        label: "Points History",
-        href: "/dashboard/point-history",
-        icon: "/template-17/images/icon/point.png",
-      },
-      {
-        label: "Ad Summary",
-        href: "/dashboard/post-ads",
-        icon: "/template-17/images/icon/dbl11.png",
-      },
-      {
         label: "Payment invoice",
         href: "/dashboard/invoice",
         icon: "/template-17/images/icon/dbl16.png",

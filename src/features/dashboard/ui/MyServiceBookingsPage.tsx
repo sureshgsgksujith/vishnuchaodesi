@@ -54,6 +54,21 @@ export default function MyServiceBookingsPage() {
     (currentEventPage - 1) * EVENT_BOOKINGS_PAGE_SIZE,
     currentEventPage * EVENT_BOOKINGS_PAGE_SIZE
   );
+  const bookingStats = useMemo(() => {
+    const paidBookings = eventBookings.filter((booking) => isPaidBooking(booking.paymentStatus));
+    const ticketCount = eventBookings.reduce(
+      (sum, booking) => sum + booking.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
+      0,
+    );
+    const paidAmount = paidBookings.reduce((sum, booking) => sum + booking.totalAmount, 0);
+
+    return [
+      { label: "Total Bookings", value: eventBookings.length.toString().padStart(2, "0"), tone: "blue" },
+      { label: "Paid Bookings", value: paidBookings.length.toString().padStart(2, "0"), tone: "green" },
+      { label: "Tickets Sold", value: ticketCount.toString().padStart(2, "0"), tone: "violet" },
+      { label: "Paid Amount", value: formatCurrencyAmount(paidAmount), tone: "orange" },
+    ];
+  }, [eventBookings]);
 
   useEffect(() => {
     let isMounted = true;
@@ -94,7 +109,7 @@ export default function MyServiceBookingsPage() {
   }, [eventBookings.length]);
 
   return (
-    <DashboardLayout mainContentClassName="ud-no-rhs">
+    <DashboardLayout mainContentClassName="ud-no-rhs dashboard-bookings-main">
       <div className="ud-cen dashboard-bookings-page">
         <div className="log-bor">&nbsp;</div>
         <span className="udb-inst">My Service Bookings</span>
@@ -121,6 +136,15 @@ export default function MyServiceBookingsPage() {
             </div>
           </div>
           {eventBookingError ? <div className="alert alert-danger">{eventBookingError}</div> : null}
+
+          <section className="dashboard-booking-summary" aria-label="Booking summary">
+            {bookingStats.map((stat) => (
+              <div className={`dashboard-booking-stat is-${stat.tone}`} key={stat.label}>
+                <span>{stat.label}</span>
+                <strong>{stat.value}</strong>
+              </div>
+            ))}
+          </section>
 
           <div className="dashboard-bookings-grid">
             {isLoadingEventBookings ? (
@@ -191,6 +215,12 @@ export default function MyServiceBookingsPage() {
       </div>
     </DashboardLayout>
   );
+}
+
+function isPaidBooking(status: string) {
+  const normalized = status.trim().toLowerCase();
+
+  return ["paid", "completed", "success", "succeeded"].includes(normalized);
 }
 
 function TicketLines({ booking }: { booking: EventTicketBooking }) {

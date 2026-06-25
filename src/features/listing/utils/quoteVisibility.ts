@@ -7,13 +7,22 @@ type ListingWithModule = ListingSummary & {
 export function shouldShowQuoteAction(listing: ListingSummary) {
   const item = listing as ListingWithModule;
   const categoryName = normalizeListingName(item.categoryName);
-  const listingKind = normalizeListingName(String(item.propertyDetails?.listingKind || ""));
-  const listingModule = normalizeListingName(item.listingModule || "");
 
-  return categoryName === "real estate" ||
-    categoryName.includes("yellow pages") ||
-    listingKind.includes("yellow pages") ||
-    listingModule.includes("yellow pages");
+  if (!categoryName) {
+    return false;
+  }
+
+  if (categoryName === "chao tv") {
+    return false;
+  }
+
+  return true;
+}
+
+export function getQuoteActionLabel(listing: ListingSummary) {
+  return normalizeListingName(listing.categoryName) === "real estate"
+    ? "Get quote"
+    : "Enquiry";
 }
 
 function normalizeListingName(value?: string | null) {

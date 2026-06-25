@@ -1,37 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
-import DashboardRightRail from "../components/DashboardRightRail";
 import {
   getStoredDashboardIdentity,
   PROFILE_UPDATED_EVENT,
 } from "../utils/profileStorage";
-import { getMyListings } from "../api/listingsApi";
+import { getMyListings, type ListingSummary } from "../api/listingsApi";
 import { getMyEventTicketBookings, type EventTicketBooking } from "../api/eventTicketsApi";
+import {
+  getMyRequirementEnquiries,
+  type RequirementEnquiry,
+} from "../../listing/api/requirementsApi";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
-import "../styles/eventBookings.css";
+import {
+  dashboardBlogPosts,
+  dashboardCoupons,
+  dashboardNotifications,
+  followingUsers,
+  sentReviews,
+} from "../mock/dashboardMockData";
+import "../styles/dashboardPage.css";
 
 export default function DashboardPage() {
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
-  const [listingCount, setListingCount] = useState(0);
+  const [listingTotalCount, setListingTotalCount] = useState(0);
+  const [listingItems, setListingItems] = useState<ListingSummary[]>([]);
   const [eventBookings, setEventBookings] = useState<EventTicketBooking[]>([]);
+  const [enquiries, setEnquiries] = useState<RequirementEnquiry[]>([]);
+  const [isLoadingListings, setIsLoadingListings] = useState(true);
+  const [isLoadingEventBookings, setIsLoadingEventBookings] = useState(true);
+  const [isLoadingEnquiries, setIsLoadingEnquiries] = useState(true);
   const fullName = identity.fullName;
-  const profileCardImageStyle = {
-    width: 100,
-    height: 100,
-    objectFit: "cover",
-    objectPosition: "center",
-    borderRadius: "50%",
-    border: "4px solid #fff",
-    margin: "0 auto 15px",
-    display: "block",
-    float: "none",
-  } as const;
-  const jobProfileHref = "/profile-job-user";
-  const jobProfileUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}${jobProfileHref}`
-      : jobProfileHref;
+  const isDashboardLoading = isLoadingListings || isLoadingEventBookings || isLoadingEnquiries;
 
   useEffect(() => {
     const syncIdentity = () => setIdentity(getStoredDashboardIdentity());
@@ -43,15 +43,26 @@ export default function DashboardPage() {
 
   useEffect(() => {
     let isActive = true;
-    getMyListings()
+
+    setIsLoadingListings(true);
+
+    getMyListings("", 1, 1000)
       .then((result) => {
         if (isActive) {
-          setListingCount(result.totalCount);
+          const nextItems = result.items || [];
+          setListingTotalCount(Math.max(result.totalCount || 0, nextItems.length));
+          setListingItems(nextItems);
         }
       })
       .catch(() => {
         if (isActive) {
-          setListingCount(0);
+          setListingTotalCount(0);
+          setListingItems([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingListings(false);
         }
       });
 
@@ -63,6 +74,8 @@ export default function DashboardPage() {
   useEffect(() => {
     let isActive = true;
 
+    setIsLoadingEventBookings(true);
+
     getMyEventTicketBookings()
       .then((bookings) => {
         if (isActive) {
@@ -72,6 +85,38 @@ export default function DashboardPage() {
       .catch(() => {
         if (isActive) {
           setEventBookings([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingEventBookings(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    setIsLoadingEnquiries(true);
+
+    getMyRequirementEnquiries()
+      .then((items) => {
+        if (isActive) {
+          setEnquiries(items || []);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setEnquiries([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingEnquiries(false);
         }
       });
 
@@ -84,47 +129,137 @@ export default function DashboardPage() {
     () => eventBookings.reduce((sum, booking) => sum + booking.totalAmount, 0),
     [eventBookings],
   );
+  const paidTicketBookingCount = useMemo(
+    () => eventBookings.filter((booking) => isPaidBooking(booking.paymentStatus)).length,
+    [eventBookings],
+  );
+
+  const listingMetrics = useMemo(() => buildListingMetrics(listingItems), [listingItems]);
+  const activeFollowings = useMemo(
+    () => followingUsers.filter((user) => user.isFollowing).length,
+    [],
+  );
+  const reviewCount = useMemo(
+    () => sentReviews.length + listingItems.reduce((sum, listing) => sum + (listing.totalReviews || listing.reviews?.length || 0), 0),
+    [listingItems],
+  );
 
   const summaryCards = useMemo(
     () => [
       {
-        eyebrow: "New Users",
+        eyebrow: "Listings",
         title: "All Listings",
-        count: listingCount.toString().padStart(2, "0"),
-        description: "Total no of listings",
+        count: formatDashboardCount(listingTotalCount),
+        description: "Manage your business listings",
         href: "/dashboard/all-listing",
-        className: "ud-box-com-25 box-drk grn-box",
+        icon: "/template-17/images/icon/shop.png",
+        tone: "green",
       },
       {
-        eyebrow: "Enquiries",
-        title: "Enquiries",
-        count: "03",
-        description: "Total no of enquiry",
-        href: "/dashboard/enquiry",
-        className: "ud-box-com-25 db-box-blu-25",
+        eyebrow: "Classifieds",
+        title: "Ads Posts",
+        count: formatDashboardCount(listingMetrics.classifieds),
+        description: "Post and manage local ads",
+        href: "/dashboard/ad-posts",
+        icon: "/template-17/images/icon/ads.png",
+        tone: "blue",
       },
       {
-        eyebrow: "Followings",
-        title: "Followings",
-        count: "38",
-        description: "Total no of followings",
-        href: "/dashboard/followings",
-        className: "ud-box-com-25 box-drk db-box-gre-25",
+        eyebrow: "Careers",
+        title: "Jobs",
+        count: formatDashboardCount(listingMetrics.jobs),
+        description: "Track jobs and applicants",
+        href: "/dashboard/jobs",
+        icon: "/template-17/images/icon/employee.png",
+        tone: "slate",
+      },
+      {
+        eyebrow: "Store",
+        title: "Products",
+        count: formatDashboardCount(listingMetrics.products),
+        description: "Manage product posts",
+        href: "/dashboard/products",
+        icon: "/template-17/images/icon/cart.png",
+        tone: "orange",
       },
       {
         eyebrow: "Bookings",
         title: "Event Tickets",
-        count: eventBookings.length.toString().padStart(2, "0"),
+        count: formatDashboardCount(eventBookings.length),
         description: `${formatCurrencyAmount(totalTicketPayments)} paid`,
         href: "/dashboard/my-service-bookings",
-        className: "ud-box-com-25 db-box-blu-25",
+        icon: "/template-17/images/icon/calendar.png",
+        tone: "violet",
+      },
+      {
+        eyebrow: "Content",
+        title: "Blog Posts",
+        count: formatDashboardCount(dashboardBlogPosts.length),
+        description: "Create and update blog posts",
+        href: "/dashboard/blog-posts",
+        icon: "/template-17/images/icon/blog1.png",
+        tone: "pink",
+      },
+      {
+        eyebrow: "Offers",
+        title: "Coupons",
+        count: formatDashboardCount(dashboardCoupons.length),
+        description: "Manage coupons and deals",
+        href: "/dashboard/coupons",
+        icon: "/template-17/images/icon/coupons.png",
+        tone: "amber",
+      },
+      {
+        eyebrow: "Leads",
+        title: "Enquiries",
+        count: formatDashboardCount(enquiries.length),
+        description: "View lead enquiry requests",
+        href: "/dashboard/enquiry",
+        icon: "/template-17/images/icon/tick.png",
+        tone: "cyan",
+      },
+      {
+        eyebrow: "Network",
+        title: "Followings",
+        count: formatDashboardCount(activeFollowings),
+        description: "Listings and profiles you follow",
+        href: "/dashboard/followings",
+        icon: "/template-17/images/icon/dbl18.png",
+        tone: "slate",
+      },
+      {
+        eyebrow: "Feedback",
+        title: "Reviews",
+        count: formatDashboardCount(reviewCount),
+        description: "View and manage reviews",
+        href: "/dashboard/review",
+        icon: "/template-17/images/icon/dbl13.png",
+        tone: "green",
+      },
+      {
+        eyebrow: "Updates",
+        title: "Notifications",
+        count: formatDashboardCount(dashboardNotifications.length),
+        description: "Read account notifications",
+        href: "/dashboard/notifications",
+        icon: "/template-17/images/icon/dbl19.png",
+        tone: "blue",
+      },
+      {
+        eyebrow: "Billing",
+        title: "Payments",
+        count: formatDashboardCount(paidTicketBookingCount),
+        description: `${formatCurrencyAmount(totalTicketPayments)} paid`,
+        href: "/dashboard/payment",
+        icon: "/template-17/images/icon/dbl9.png",
+        tone: "orange",
       },
     ],
-    [eventBookings.length, listingCount, totalTicketPayments]
+    [activeFollowings, enquiries.length, eventBookings.length, listingMetrics, listingTotalCount, paidTicketBookingCount, reviewCount, totalTicketPayments]
   );
 
   return (
-    <DashboardLayout rightRail={<DashboardRightRail />}>
+    <DashboardLayout mainContentClassName="ud-no-rhs customer-dashboard-main">
       <div className="ud-cen">
         <div className="cd-cen-intr">
           <div className="cd-cen-intr-inn">
@@ -138,242 +273,112 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="ud-cen-s1-25 row">
+        {isDashboardLoading ? <DashboardLoadingOverlay /> : null}
+
+        <div className="customer-dashboard-card-grid">
           {summaryCards.map((card) => (
-            <div className={card.className} key={card.title}>
-              <h4>{card.eyebrow}</h4>
-              <h2>{card.title}</h2>
-              <span className="bnum">{card.count}</span>
-              <p>{card.description}</p>
+            <div className={`customer-dashboard-card is-${card.tone}`} key={card.title}>
+              <div className="customer-dashboard-card-copy">
+                <h4>{card.eyebrow}</h4>
+                <h2>{card.title}</h2>
+                <span className="bnum">{card.count}</span>
+                <p>{card.description}</p>
+              </div>
+              <span className="customer-dashboard-card-icon">
+                <img src={card.icon} alt="" loading="lazy" />
+              </span>
               <Link to={card.href} className="fclick">
                 &nbsp;
               </Link>
             </div>
           ))}
         </div>
-
-        <div className="ud-cen-s2">
-          <h2>Recent Event Bookings & Payments</h2>
-          <Link to="/dashboard/my-service-bookings" className="db-tit-btn">
-            View all
-          </Link>
-
-          <table className="responsive-table bordered">
-            <thead>
-              <tr>
-                <th>Event</th>
-                <th>Booking Ref</th>
-                <th>Tickets</th>
-                <th>Payment</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {eventBookings.length > 0 ? (
-                eventBookings.slice(0, 3).map((booking) => (
-                  <tr key={booking.id}>
-                    <td>
-                      <div className="dashboard-booking-title">
-                        <strong>{booking.eventTitle}</strong>
-                        <span>{booking.venue || booking.city || "-"}</span>
-                      </div>
-                    </td>
-                    <td>{booking.bookingReference}</td>
-                    <td>
-                      <div className="dashboard-ticket-lines">
-                        {booking.items.length ? (
-                          booking.items.map((item) => (
-                            <span key={`${booking.id}-${item.name}`}>
-                              {item.name} x {item.quantity}
-                            </span>
-                          ))
-                        ) : (
-                          <span>-</span>
-                        )}
-                      </div>
-                    </td>
-                    <td>{formatCurrencyAmount(booking.totalAmount)}</td>
-                    <td>
-                      <span className="db-list-ststus dashboard-booking-confirmed">
-                        {booking.bookingStatus}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="dashboard-empty-row">
-                    No event bookings yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="row">
-          <div className="ud-cen-s3 ud-cen-s4 col-md-6">
-            <h2>Profile page</h2>
-            <div className="ud-payment ud-pro-link row">
-              <div className="pay-lhs">
-                <div className="lis-pro-badg">
-                  <div>
-                    <img
-                      src={identity.profileImageUrl}
-                      alt={fullName}
-                      style={profileCardImageStyle}
-                    />
-                    <h4>{fullName}</h4>
-                    <p>Member since02, Jun 2025</p>
-                  </div>
-                  <Link to="/profile" className="fclick" target="_blank">
-                    &nbsp;
-                  </Link>
-                </div>
-              </div>
-              <div className="hide-pop-cta">
-                <Link
-                  to="/profile"
-                  target="_blank"
-                  className="btn btn-outline-primary"
-                >
-                  View my profile page
-                </Link>
-                <Link
-                  to="/dashboard/my-profile-edit"
-                  className="btn btn-outline-success"
-                >
-                  Edit profile page
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="ud-cen-s3 ud-cen-s4 col-md-6">
-            <h2>Business page</h2>
-            <div className="ud-payment ud-pro-link row bus-pg">
-              <div className="pay-lhs">
-                <div className="lis-pro-badg">
-                  <div>
-                    <img
-                      src="/template-17/images/user/10.png"
-                      alt="Website Directory"
-                      style={profileCardImageStyle}
-                    />
-                    <h4>Website Directory</h4>
-                    <p>Member since02, Jun 2025</p>
-                  </div>
-                  <Link to="/company-profile" className="fclick" target="_blank">
-                    &nbsp;
-                  </Link>
-                </div>
-              </div>
-              <div className="hide-pop-cta">
-                <Link
-                  to="/company-profile"
-                  target="_blank"
-                  className="btn btn-outline-primary"
-                >
-                  View business page
-                </Link>
-                <Link
-                  to="/company-profile-edit"
-                  className="btn btn-outline-success"
-                >
-                  Edit business page
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="ud-cen-s3 ud-cen-s4 col-md-6">
-            <h2>Service Expert Profile</h2>
-            <div className="ud-payment ud-pro-link row bus-pg">
-              <div className="pay-lhs">
-                <div className="lis-pro-badg">
-                  <div>
-                    <img
-                      src="/template-17/service-experts/images/services/1.jpg"
-                      alt={fullName}
-                      style={profileCardImageStyle}
-                    />
-                    <h4>{fullName}</h4>
-                    <p>Member since02, Jun 2025</p>
-                  </div>
-                  <a
-                    href="/template-17/service-experts/service-experts-profile.html"
-                    className="fclick"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    &nbsp;
-                  </a>
-                </div>
-              </div>
-              <div className="hide-pop-cta">
-                <a
-                  href="/template-17/service-experts/service-experts-profile.html"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-outline-primary"
-                >
-                  View Expert Profile page
-                </a>
-                <Link
-                  to="/create-service-expert-profile"
-                  className="btn btn-outline-success"
-                >
-                  Edit Your Expert Profile
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          <div className="ud-cen-s3 ud-cen-s4 col-md-6">
-            <h2>Job Profile</h2>
-            <Link to="/create-job-seeker-profile" className="db-tit-btn">
-              Edit Your Job Profile
-            </Link>
-            <div className="ud-payment ud-pro-link bus-pg">
-              <div className="pay-lhs">
-                <div className="lis-pro-badg">
-                  <div>
-                    <img
-                      src="/template-17/jobs/images/jobs/22000bean.jpg"
-                      alt={fullName}
-                      loading="lazy"
-                      style={profileCardImageStyle}
-                    />
-                    <h4>{fullName}</h4>
-                    <p>Member since17, Aug 2022</p>
-                  </div>
-                  <Link to={jobProfileHref} className="fclick" target="_blank">
-                    &nbsp;
-                  </Link>
-                </div>
-              </div>
-              <div className="pay-rhs">
-                <ul>
-                  <li>
-                    <b>Name :</b> {fullName}
-                  </li>
-                  <li>
-                    <b>Page views :</b> <span>00</span>
-                  </li>
-                  <li className="pro">
-                    <input type="text" value={jobProfileUrl} readOnly />
-                  </li>
-                  <li className="pre">
-                    <Link target="_blank" to={jobProfileHref}>
-                      View Job Profile page
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </DashboardLayout>
   );
+}
+
+function DashboardLoadingOverlay() {
+  return (
+    <div className="customer-dashboard-loader" role="status" aria-live="polite">
+      <div className="customer-dashboard-loader-card">
+        <span className="customer-dashboard-loader-spinner" aria-hidden="true"></span>
+        <strong>Loading dashboard</strong>
+        <p>Getting your latest listings, payments, and enquiries.</p>
+      </div>
+    </div>
+  );
+}
+
+function formatDashboardCount(value: number) {
+  return Number.isFinite(value) ? value.toString().padStart(2, "0") : "00";
+}
+
+function buildListingMetrics(listings: ListingSummary[]) {
+  return listings.reduce(
+    (metrics, listing) => {
+      if (isClassifiedListing(listing)) {
+        metrics.classifieds += 1;
+      }
+
+      if (isJobsListing(listing)) {
+        metrics.jobs += 1;
+      }
+
+      if (isProductListing(listing)) {
+        metrics.products += 1;
+      }
+
+      return metrics;
+    },
+    { classifieds: 0, jobs: 0, products: 0 },
+  );
+}
+
+function isClassifiedListing(listing: ListingSummary) {
+  return listing.categoryName?.trim().toLowerCase() === "classifieds";
+}
+
+function isJobsListing(listing: ListingSummary) {
+  return listing.categoryName?.trim().toLowerCase() === "jobs";
+}
+
+function isProductListing(listing: ListingSummary) {
+  return matchesListingText(listing, [
+    "product",
+    "products",
+    "electronics",
+    "appliance",
+    "furniture",
+    "fashion",
+    "books",
+    "sports",
+    "hobbies",
+    "vehicles",
+  ]);
+}
+
+function matchesListingText(listing: ListingSummary, needles: string[]) {
+  const haystack = [
+    listing.categoryName,
+    listing.subCategory,
+    listing.detailCategory,
+    getRecordText(listing.propertyDetails, "listingKind"),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return needles.some((needle) => haystack.includes(needle));
+}
+
+function getRecordText(record: Record<string, string | number | boolean | null> | undefined, key: string) {
+  const value = record?.[key];
+  return value === null || value === undefined ? "" : String(value);
+}
+
+function isPaidBooking(status: string) {
+  const normalized = status.trim().toLowerCase();
+
+  return ["paid", "completed", "success", "succeeded"].includes(normalized);
 }

@@ -16,6 +16,18 @@ export type PricingPlan = {
   videoLimit: number;
   durationMonths: number;
   isHighlighted: boolean;
+  canCreateDuplicateListing?: boolean;
+  canShareSocialMedia?: boolean;
+  canGetDirectLeads?: boolean;
+  hasEmailNotificationLeads?: boolean;
+  hasVerifiedListing?: boolean;
+  hasTrustedListing?: boolean;
+  hasSpecialOffers?: boolean;
+  hasUserDashboard?: boolean;
+  hasReviewControl?: boolean;
+  hasAdminTips?: boolean;
+  displayOrder?: number;
+  isActive?: boolean;
   features: string[];
 };
 

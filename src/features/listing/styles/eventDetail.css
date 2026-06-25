@@ -320,6 +320,13 @@
   color: #fff;
 }
 
+.event-ticket-stepper button:disabled {
+  background: #eef2f6;
+  border-color: #d7e0ea;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
 .event-ticket-stepper span {
   font-weight: 800;
   min-width: 18px;
@@ -349,11 +356,30 @@
   width: 100%;
 }
 
+.event-ticket-checkout:disabled {
+  background: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 .event-ticket-panel p {
   color: #718096;
   font-size: 12px;
   margin: 10px 0 0;
   text-align: center;
+}
+
+.event-ticket-panel .event-ticket-owner-note {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+  margin-top: 14px;
+  padding: 12px;
+  text-align: left;
 }
 
 .event-detail-status {
