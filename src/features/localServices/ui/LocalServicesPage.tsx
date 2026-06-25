@@ -94,7 +94,7 @@ const serviceCategories: ServiceCategory[] = [
 ];
 
 const summaryCards = [
-  { title: "All Services", value: "120+", icon: "/template-17/images/icon/listing.png", href: "/all-listing" },
+  { title: "All Services", value: "120+", icon: "/template-17/images/icon/shop.png", href: "/all-services" },
   { title: "Service Experts", value: "85+", icon: "/template-17/images/icon/expert.png", href: "/service-experts/all-experts" },
   { title: "Jobs", value: "60+", icon: "/template-17/images/icon/employee.png", href: "/all-listing?category=jobs" },
   { title: "Products", value: "45+", icon: "/template-17/images/icon/shop.png", href: "/dashboard/products" },
@@ -173,6 +173,10 @@ export default function LocalServicesPage() {
             </form>
 
             <div className="local-services-shortcuts">
+              <button type="button" className="local-services-shortcut-featured" onClick={() => navigate("/all-services")}>
+                <img src="/template-17/images/icon/shop.png" alt="" />
+                <span>All Services</span>
+              </button>
               {serviceCategories.map((category) => (
                 <button type="button" onClick={() => openCategory(category)} key={category.title}>
                   <img src={category.icon} alt="" />
@@ -248,10 +252,10 @@ export default function LocalServicesPage() {
         <section className="local-services-cta">
           <div className="local-services-container">
             <div>
-              <p>List your service for free</p>
+              <p>List your business</p>
               <h2>Start receiving enquiries from customers near you.</h2>
             </div>
-            <Link to="/pricing-details">Add my service <span className="material-icons">arrow_forward</span></Link>
+            <Link to="/dashboard/listings/new">Add Business <span className="material-icons">arrow_forward</span></Link>
           </div>
         </section>
       </main>

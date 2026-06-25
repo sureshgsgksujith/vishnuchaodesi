@@ -20,7 +20,7 @@ export type ExploreCategoryLink = {
 const supportedListingCategoryNameSet = new Set<string>(supportedListingCategoryNames);
 
 export const categoryLinks: ExploreMenuLink[] = [
-  { label: "All Services", href: "/all-category", icon: "/template-17/images/icon/shop.png" },
+  { label: "All Services", href: "/all-services", icon: "/template-17/images/icon/shop.png" },
   { label: "Real Estate", href: "/all-listing?category=real-estate", icon: "/template-17/images/icon/real-estate.png" },
   { label: "Restaurants & Food", href: "/all-listing?category=restaurants-food", icon: "/template-17/images/icon/restaurant.png" },
   { label: "Vehicles", href: "/all-listing?category=vehicles", icon: "/template-17/images/icon/vehicles.png" },

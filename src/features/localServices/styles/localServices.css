@@ -15,9 +15,9 @@
 .local-services-hero {
   align-items: center;
   display: flex;
-  min-height: 720px;
+  min-height: 620px;
   overflow: hidden;
-  padding: 116px 0 64px;
+  padding: 98px 0 48px;
   position: relative;
 }
 
@@ -51,18 +51,18 @@
 
 .local-services-kicker {
   color: #a8f0d3;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 900;
-  letter-spacing: 2px;
-  margin: 0 0 12px;
+  letter-spacing: 1.8px;
+  margin: 0 0 10px;
   text-transform: uppercase;
 }
 
 .local-services-hero h1 {
   color: #ffffff;
-  font-size: 56px;
+  font-size: 42px;
   font-weight: 900;
-  line-height: 1.04;
+  line-height: 1.08;
   margin: 0;
 }
 
@@ -73,10 +73,10 @@
 
 .local-services-copy {
   color: rgba(255, 255, 255, 0.92);
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 700;
-  margin: 18px auto 36px;
-  max-width: 980px;
+  margin: 14px auto 26px;
+  max-width: 820px;
 }
 
 .local-services-search {
@@ -87,11 +87,11 @@
   box-shadow: 0 22px 50px rgba(0, 0, 0, 0.24);
   display: grid;
   gap: 0;
-  grid-template-columns: 220px 300px minmax(260px, 1fr) 190px;
+  grid-template-columns: 190px 270px minmax(240px, 1fr) 170px;
   margin: 0 auto;
-  max-width: 1120px;
+  max-width: 1040px;
   overflow: hidden;
-  padding: 18px;
+  padding: 14px;
 }
 
 .local-services-search label {
@@ -99,10 +99,10 @@
   background: #ffffff;
   border-right: 1px solid #e5eaf1;
   display: grid;
-  gap: 12px;
-  grid-template-columns: 26px minmax(0, 1fr);
-  min-height: 64px;
-  padding: 0 18px;
+  gap: 10px;
+  grid-template-columns: 22px minmax(0, 1fr);
+  min-height: 52px;
+  padding: 0 16px;
 }
 
 .local-services-search label:first-child {
@@ -111,7 +111,7 @@
 
 .local-services-search .material-icons {
   color: #8392c7;
-  font-size: 24px;
+  font-size: 21px;
 }
 
 .local-services-search select,
@@ -120,7 +120,7 @@
   border: 0;
   color: #252a37;
   font: inherit;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 800;
   min-width: 0;
   outline: 0;
@@ -138,7 +138,7 @@
   color: #ffffff;
   cursor: pointer;
   font: inherit;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 900;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -146,10 +146,10 @@
 
 .local-services-shortcuts {
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 30px auto 0;
-  max-width: 1010px;
+  gap: 8px;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  margin: 22px auto 0;
+  max-width: 1340px;
 }
 
 .local-services-shortcuts button {
@@ -160,10 +160,10 @@
   color: #ffffff;
   cursor: pointer;
   display: grid;
-  gap: 10px;
+  gap: 6px;
   justify-items: center;
-  min-height: 104px;
-  padding: 14px 10px;
+  min-height: 72px;
+  padding: 9px 6px;
   transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
 
@@ -174,14 +174,26 @@
   transform: translateY(-3px);
 }
 
+.local-services-shortcuts .local-services-shortcut-featured {
+  background: linear-gradient(135deg, #1536e7, #0d27b6);
+  border-color: rgba(122, 149, 255, 0.78);
+  box-shadow: 0 14px 30px rgba(19, 56, 232, 0.28);
+}
+
+.local-services-shortcuts .local-services-shortcut-featured:hover,
+.local-services-shortcuts .local-services-shortcut-featured:focus {
+  background: linear-gradient(135deg, #1945ff, #1230d8);
+  border-color: #ffffff;
+}
+
 .local-services-shortcuts img {
-  height: 34px;
+  height: 26px;
   object-fit: contain;
-  width: 34px;
+  width: 26px;
 }
 
 .local-services-shortcuts span {
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 900;
   line-height: 1.25;
 }
@@ -207,33 +219,33 @@
   color: #101828;
   display: grid;
   gap: 6px;
-  grid-template-columns: 44px minmax(0, 1fr);
-  min-height: 90px;
-  padding: 16px 18px;
+  grid-template-columns: 38px minmax(0, 1fr);
+  min-height: 76px;
+  padding: 13px 15px;
   text-decoration: none;
 }
 
 .local-services-summary-card img {
   grid-row: span 2;
-  height: 38px;
+  height: 32px;
   object-fit: contain;
-  width: 38px;
+  width: 32px;
 }
 
 .local-services-summary-card strong {
-  font-size: 25px;
+  font-size: 21px;
   line-height: 1;
 }
 
 .local-services-summary-card span {
   color: #566477;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
 }
 
 .local-services-section,
 .local-services-featured {
-  padding: 56px 0 20px;
+  padding: 42px 0 16px;
 }
 
 .local-services-section-title {
@@ -256,7 +268,7 @@
 .local-services-featured h2,
 .local-services-cta h2 {
   color: #101828;
-  font-size: 32px;
+  font-size: 25px;
   font-weight: 900;
   line-height: 1.15;
   margin: 0;
@@ -264,7 +276,7 @@
 
 .local-services-grid {
   display: grid;
-  gap: 22px;
+  gap: 16px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
@@ -273,26 +285,26 @@
   border: 1px solid #dce7f2;
   border-radius: 10px;
   box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
-  min-height: 245px;
+  min-height: 198px;
   overflow: hidden;
   position: relative;
 }
 
 .local-services-card > img {
   display: block;
-  height: 180px;
+  height: 138px;
   object-fit: cover;
   width: 100%;
 }
 
 .local-services-card-title {
   background: #ffffff;
-  padding: 18px;
+  padding: 13px;
 }
 
 .local-services-card-title h3 {
   color: #101828;
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 900;
   line-height: 1.22;
   margin: 0;
@@ -301,7 +313,7 @@
 .local-services-card-title span {
   color: #667085;
   display: block;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   margin-top: 5px;
 }
@@ -313,7 +325,7 @@
   flex-direction: column;
   inset: 0;
   opacity: 0;
-  padding: 22px;
+  padding: 16px;
   position: absolute;
   transform: translateY(14px);
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -327,14 +339,14 @@
 
 .local-services-card-hover h4 {
   color: #ffffff;
-  font-size: 19px;
+  font-size: 15px;
   font-weight: 900;
-  margin: 0 0 14px;
+  margin: 0 0 10px;
 }
 
 .local-services-card-hover ul {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -346,7 +358,7 @@
   color: inherit;
   cursor: pointer;
   font: inherit;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 800;
   padding: 0;
   text-align: left;
@@ -367,12 +379,12 @@
   border-radius: 6px;
   color: #ffffff;
   display: inline-flex;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 900;
   justify-content: center;
   margin-top: auto;
-  min-height: 38px;
-  padding: 0 16px;
+  min-height: 32px;
+  padding: 0 13px;
   text-align: center;
   width: max-content;
 }
@@ -380,8 +392,8 @@
 .local-services-featured .local-services-container {
   align-items: start;
   display: grid;
-  gap: 30px;
-  grid-template-columns: 310px minmax(0, 1fr);
+  gap: 24px;
+  grid-template-columns: 260px minmax(0, 1fr);
 }
 
 .local-services-feature-list {
@@ -397,7 +409,7 @@
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
   cursor: pointer;
   display: block;
-  padding: 16px;
+  padding: 13px;
   text-align: left;
 }
 
@@ -408,19 +420,19 @@
 
 .local-services-feature-list span {
   color: #101828;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 900;
 }
 
 .local-services-feature-list small {
   color: #667085;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 800;
   margin-top: 4px;
 }
 
 .local-services-cta {
-  padding: 46px 0 64px;
+  padding: 34px 0 48px;
 }
 
 .local-services-cta .local-services-container {
@@ -430,8 +442,8 @@
   color: #ffffff;
   display: flex;
   justify-content: space-between;
-  min-height: 150px;
-  padding: 28px 34px;
+  min-height: 118px;
+  padding: 22px 28px;
 }
 
 .local-services-cta p,
@@ -445,11 +457,11 @@
   border-radius: 8px;
   color: #082044;
   display: inline-flex;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 900;
   gap: 8px;
-  min-height: 48px;
-  padding: 0 20px;
+  min-height: 40px;
+  padding: 0 16px;
   text-decoration: none;
   white-space: nowrap;
 }
@@ -474,16 +486,16 @@
 
 @media (max-width: 760px) {
   .local-services-hero {
-    min-height: 760px;
-    padding: 98px 0 42px;
+    min-height: 680px;
+    padding: 86px 0 36px;
   }
 
   .local-services-hero h1 {
-    font-size: 38px;
+    font-size: 32px;
   }
 
   .local-services-copy {
-    font-size: 17px;
+    font-size: 15px;
   }
 
   .local-services-search,
@@ -502,11 +514,11 @@
   .local-services-search label,
   .local-services-search button {
     border-radius: 7px;
-    min-height: 54px;
+    min-height: 48px;
   }
 
   .local-services-shortcuts button {
-    min-height: 82px;
+    min-height: 70px;
   }
 
   .local-services-summary {

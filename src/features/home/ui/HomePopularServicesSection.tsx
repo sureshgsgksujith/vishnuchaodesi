@@ -145,7 +145,7 @@ export default function HomePopularServicesSection() {
               ))}
             </div>
 
-            <a href="/all-category" className="view-all">
+            <a href="/all-services" className="view-all">
               View all services
             </a>
           </div>

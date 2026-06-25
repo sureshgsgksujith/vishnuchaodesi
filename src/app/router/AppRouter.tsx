@@ -32,6 +32,8 @@ const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPa
 const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
 const EventDetailPage = lazy(() => import("../../features/listing/ui/EventDetailPage"));
 const LocalServicesPage = lazy(() => import("../../features/localServices/ui/LocalServicesPage"));
+const AllServicesPage = lazy(() => import("../../features/allServices/ui/AllServicesPage"));
+const AllServicesDetailedPage = lazy(() => import("../../features/allServices/ui/AllServicesDetailedPage"));
 const ChaoTvPage = lazy(() => import("../../features/chaoTv/ChaoTvPage"));
 const ClassifiedsHomePage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
@@ -143,6 +145,12 @@ export function AppRouter() {
     "/classifieds/ads-all",
     "/classifieds/ads-details",
     "/all-category",
+    "/all-services",
+    "/all-services.html",
+    "/all-services-detailed",
+    "/all-services-detailed.html",
+    "/local-services",
+    "/local-services.html",
     "/all-listing",
     "/chao-tv",
     "/listing-details",
@@ -208,7 +216,13 @@ export function AppRouter() {
       <Route path="/classifieds/index" element={<ClassifiedsHomePage />} />
       <Route path="/classifieds/ads-all" element={<ClassifiedAdsAllPage />} />
       <Route path="/classifieds/ads-details" element={<ClassifiedAdDetailsPage />} />
-      <Route path="/all-category" element={<LocalServicesPage />} />
+      <Route path="/all-category" element={<Navigate to="/local-services" replace />} />
+      <Route path="/local-services" element={<LocalServicesPage />} />
+      <Route path="/local-services.html" element={<Navigate to="/local-services" replace />} />
+      <Route path="/all-services" element={<AllServicesPage />} />
+      <Route path="/all-services.html" element={<Navigate to="/all-services" replace />} />
+      <Route path="/all-services-detailed" element={<AllServicesDetailedPage />} />
+      <Route path="/all-services-detailed.html" element={<AllServicesDetailedPage />} />
       <Route path="/all-listing" element={<AllListingPage />} />
       <Route path="/chao-tv" element={<ChaoTvPage />} />
       <Route path="/listing-details" element={<ListingDetailPage />} />

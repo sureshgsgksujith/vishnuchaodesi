@@ -20,7 +20,7 @@ import {
 type HomeCategorySlug = NonNullable<PublicListingQuery["category"]>;
 
 const quickLinks = [
-  { title: "All Services", image: "/template-17/images/icon/shop.png", href: "/all-category" },
+  { title: "All Services", image: "/template-17/images/icon/shop.png", href: "/local-services" },
   { title: "Classified Listings", image: "/template-17/images/icon/ads.png", href: "/classifieds/index" },
   { title: "Real Estate", image: "/template-17/images/icon/real-estate.png", category: "real-estate" },
   { title: "Restaurants & Food", image: "/template-17/images/icon/restaurant.png", category: "restaurants-food" },
@@ -104,7 +104,7 @@ function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
   }
 
   if (!item.category) {
-    return "/all-category";
+    return "/local-services";
   }
 
   if (item.category === "chao-tv") {

@@ -42,6 +42,16 @@ export default function UserHomeHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const logoTarget = useLogoNavigationTarget();
+  const isServicePage = [
+    "/local-services",
+    "/local-services.html",
+    "/all-services",
+    "/all-services.html",
+    "/all-services-detailed",
+    "/all-services-detailed.html",
+  ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
+  const addActionLabel = isServicePage ? "Add Service" : "Add Business";
+  const addActionHref = isServicePage ? "/dashboard/listings/new" : "/dashboard/listings/start";
 
   const [showExplore, setShowExplore] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -279,9 +289,9 @@ export default function UserHomeHeader() {
                         </Link>
                       </li>
                       <li>
-                        <Link to="/dashboard/listings/start">
+                        <Link to={addActionHref}>
                           <i className="material-icons">store</i>
-                          {" "}Add your business
+                          {" "}{isServicePage ? "Add your service" : "Add your business"}
                         </Link>
                       </li>
                     </ul>
@@ -346,7 +356,7 @@ export default function UserHomeHeader() {
             <div className="chaodesi-header-actions">
               <ul className="bl">
                 <li>
-                  <Link to="/dashboard/listings/start">Add Business</Link>
+                  <Link to={addActionHref}>{addActionLabel}</Link>
                 </li>
               </ul>
 
@@ -507,11 +517,11 @@ export default function UserHomeHeader() {
                 </div>
 
                 <div className="mv-cate">
-                  <h4>Business</h4>
+                  <h4>{isServicePage ? "Service" : "Business"}</h4>
                   <ul>
                     <li>
-                      <Link to="/dashboard/listings/start" onClick={closeAllPopups}>
-                        Add Business
+                      <Link to={addActionHref} onClick={closeAllPopups}>
+                        {addActionLabel}
                       </Link>
                     </li>
                   </ul>

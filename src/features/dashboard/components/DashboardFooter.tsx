@@ -249,7 +249,7 @@ export default function DashboardFooter({
             </span>
           </li>
           <li>
-            <Link to="/all-category" className="act">
+            <Link to="/all-services" className="act">
               <img src="/template-17/images/icon/shop.png" alt="All Services" />
               All Services
             </Link>

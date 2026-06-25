@@ -192,7 +192,7 @@ export default function HomeFooterSection() {
             </span>
           </li>
           <li>
-            <a href="/all-category" className="act">
+            <a href="/all-services" className="act">
               <img src="/template-17/images/icon/shop.png" alt="All Services" />
               All Services
             </a>
