@@ -2305,7 +2305,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const [brands, setBrands] = useState<string[]>([""]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethods>(initialPaymentMethods);
   const [restaurantInfo, setRestaurantInfo] = useState<RestaurantInfo>(initialRestaurantInfo);
-  const [restaurantMenuItems, setRestaurantMenuItems] = useState<RestaurantMenuItem[]>([{ ...initialRestaurantMenuItem }]);
+  const [restaurantMenuItems, setRestaurantMenuItems] = useState<RestaurantMenuItem[]>([]);
   const [categoryAttributes, setCategoryAttributes] = useState<CategoryAttributes>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -3148,46 +3148,53 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }, [cities, countries, form.categoryName, form.country, form.pincode, states]);
 
   const handleAddressPlaceSelect = useCallback((addressDetails: ListingAddressDetails) => {
-    void ensureAndApplyResolvedLocation({
-      countryName: addressDetails.country,
-      stateName: addressDetails.state,
-      cityName: addressDetails.city,
-      address: addressDetails.address,
-      pincode: addressDetails.pincode,
-      latitude: addressDetails.latitude,
-      longitude: addressDetails.longitude,
-    });
+    void (async () => {
+      const resolvedPincode = addressDetails.pincode || await lookupPostalCodeByCoordinates(addressDetails.latitude, addressDetails.longitude);
+
+      await ensureAndApplyResolvedLocation({
+        countryName: addressDetails.country,
+        stateName: addressDetails.state,
+        cityName: addressDetails.city,
+        address: addressDetails.address,
+        pincode: resolvedPincode,
+        latitude: addressDetails.latitude,
+        longitude: addressDetails.longitude,
+      });
+    })();
   }, [cities, countries, form.country, states]);
 
   const handleRestaurantAddressPlaceSelect = useCallback((addressDetails: ListingAddressDetails) => {
-    const countryName = addressDetails.country || form.country || "United States";
+    void (async () => {
+      const countryName = addressDetails.country || form.country || "United States";
+      const resolvedPincode = addressDetails.pincode || await lookupPostalCodeByCoordinates(addressDetails.latitude, addressDetails.longitude);
 
-    setContactInfo((currentContactInfo) => ({
-      ...currentContactInfo,
-      streetAddress: addressDetails.address || currentContactInfo.streetAddress,
-      zipcode: addressDetails.pincode || currentContactInfo.zipcode,
-      city: addressDetails.city || currentContactInfo.city,
-      state: addressDetails.state || currentContactInfo.state,
-    }));
+      setContactInfo((currentContactInfo) => ({
+        ...currentContactInfo,
+        streetAddress: addressDetails.address || currentContactInfo.streetAddress,
+        zipcode: resolvedPincode || currentContactInfo.zipcode,
+        city: addressDetails.city || currentContactInfo.city,
+        state: addressDetails.state || currentContactInfo.state,
+      }));
 
-    void ensureAndApplyResolvedLocation({
-      countryName,
-      stateName: addressDetails.state,
-      cityName: addressDetails.city,
-      address: addressDetails.address,
-      pincode: addressDetails.pincode,
-      latitude: addressDetails.latitude,
-      longitude: addressDetails.longitude,
-    });
+      await ensureAndApplyResolvedLocation({
+        countryName,
+        stateName: addressDetails.state,
+        cityName: addressDetails.city,
+        address: addressDetails.address,
+        pincode: resolvedPincode,
+        latitude: addressDetails.latitude,
+        longitude: addressDetails.longitude,
+      });
 
-    setFieldErrors((currentErrors) => {
-      const nextErrors = { ...currentErrors };
-      delete nextErrors.restaurantStreetAddress;
-      delete nextErrors.restaurantZipcode;
-      delete nextErrors.restaurantCity;
-      delete nextErrors.restaurantState;
-      return nextErrors;
-    });
+      setFieldErrors((currentErrors) => {
+        const nextErrors = { ...currentErrors };
+        delete nextErrors.restaurantStreetAddress;
+        delete nextErrors.restaurantZipcode;
+        delete nextErrors.restaurantCity;
+        delete nextErrors.restaurantState;
+        return nextErrors;
+      });
+    })();
   }, [cities, countries, form.country, states]);
 
   function handleNext(skipValidation = false) {
@@ -3299,15 +3306,6 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
             addFieldError("restaurantDescription", "Description is required.");
           }
 
-          if (!restaurantInfo.businessType.trim()) {
-            addFieldError("restaurantBusinessType", "Business Type is required.");
-          }
-
-          const yearEstablished = numberOrNull(restaurantInfo.yearEstablished);
-          if (!yearEstablished || yearEstablished < 1800 || yearEstablished > new Date().getFullYear()) {
-            addFieldError("restaurantYearEstablished", "Year Established must be a valid year.");
-          }
-
           if (!restaurantInfo.cuisine.trim()) {
             addFieldError("restaurantCuisine", "Cuisine Type is required.");
           }
@@ -3391,7 +3389,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           effectiveDynamicCategoryFields
             .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
             .forEach((field) => {
-              if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+              if (isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
                 addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
               }
             });
@@ -3525,6 +3523,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         addFieldError("restaurantStreetAddress", "Street Address is required.");
       }
 
+      if (!form.country.trim()) {
+        addFieldError("country", "Country is required.");
+      }
+
       if (!restaurantZipcode.trim()) {
         addFieldError("restaurantZipcode", "ZIP Code is required.");
       } else if (!/^\d{5}(-\d{4})?$/.test(restaurantZipcode.trim())) {
@@ -3644,14 +3646,12 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (step === 3 && isRestaurantListing) {
       const isCloudKitchen = ["Cloud Kitchen", "Cloud Kitchen / Delivery Only"].includes(form.subCategory);
       const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
-      const requireFoodType = shouldShowRestaurantFoodStyleMenuFields(form.subCategory, form.detailCategory);
       const selectedRestaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
       const isDeliveryListing = restaurantInfo.deliveryAvailable || selectedRestaurantServiceTypes.includes("Delivery") || isCloudKitchen;
       restaurantMenuItems.forEach((item, index) => {
         if (!item.itemName.trim()) addFieldError(restaurantMenuItemErrorKey(index, "itemName"), "Item Name is required.");
-        if (!item.menuCategory.trim()) addFieldError(restaurantMenuItemErrorKey(index, "menuCategory"), "Category is required.");
         if (numberOrNull(item.price) === null) addFieldError(restaurantMenuItemErrorKey(index, "price"), "Price is required.");
-        if (requireFoodType && !item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.");
+        if (!item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.");
       });
 
       if ((isDeliveryListing || selectedRestaurantServiceTypes.includes("Catering") || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
@@ -3840,7 +3840,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       effectiveDynamicCategoryFields
         .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
         .forEach((field) => {
-          if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+          if (isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
             addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
           }
         });
@@ -3864,111 +3864,61 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return;
     }
 
+    if (!form.address.trim()) addFieldError("address", "Street Address is required.");
     if (!form.country.trim()) addFieldError("country", "Country is required.");
     if (!form.state.trim()) addFieldError("state", "State is required.");
     if (!form.city.trim()) addFieldError("city", "City is required.");
     if (!form.pincode.trim()) addFieldError("pincode", "ZIP Code is required.");
   }
 
-  function addRequiredVehicleCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getVehicleStepCategoryFields(effectiveDynamicCategoryFields, formStep)
+  function addRequiredCategoryFieldErrorsForFields(fields: CategoryAttributeField[], addFieldError: (name: string, message: string) => void) {
+    fields
       .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
       .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+        if (isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
           addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
         }
       });
+  }
+
+  function addRequiredVehicleCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
+    addRequiredCategoryFieldErrorsForFields(getVehicleStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredRoommatesRentalCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getRoommatesRentalStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
-
+    addRequiredCategoryFieldErrorsForFields(getRoommatesRentalStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredElectronicsCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getElectronicsStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
+    addRequiredCategoryFieldErrorsForFields(getElectronicsStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredJobCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getJobStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
+    addRequiredCategoryFieldErrorsForFields(getJobStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredPetCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getPetStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
+    addRequiredCategoryFieldErrorsForFields(getPetStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredFurnitureCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getFurnitureStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
+    addRequiredCategoryFieldErrorsForFields(getFurnitureStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredGroupCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getGroupStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
+    addRequiredCategoryFieldErrorsForFields(getGroupStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredFashionCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getFashionStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
+    addRequiredCategoryFieldErrorsForFields(getFashionStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredBeautyCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getBeautyStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
+    addRequiredCategoryFieldErrorsForFields(getBeautyStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function addRequiredBooksSportsCategoryFieldErrors(formStep: number, addFieldError: (name: string, message: string) => void) {
-    getBooksSportsStepCategoryFields(effectiveDynamicCategoryFields, formStep)
-      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
-      .forEach((field) => {
-        if (field.isRequired && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
-          addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
-        }
-      });
+    addRequiredCategoryFieldErrorsForFields(getBooksSportsStepCategoryFields(effectiveDynamicCategoryFields, formStep), addFieldError);
   }
 
   function validateRestaurantFields() {
@@ -3994,15 +3944,6 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       addFieldError("restaurantDescription", "Description is required.", 1);
     }
 
-    if (!restaurantInfo.businessType.trim()) {
-      addFieldError("restaurantBusinessType", "Business Type is required.", 1);
-    }
-
-    const yearEstablished = numberOrNull(restaurantInfo.yearEstablished);
-    if (!yearEstablished || yearEstablished < 1800 || yearEstablished > new Date().getFullYear()) {
-      addFieldError("restaurantYearEstablished", "Year Established must be a valid year.", 1);
-    }
-
     if (!restaurantInfo.cuisine.trim()) {
       addFieldError("restaurantCuisine", "Cuisine Type is required.", 1);
     }
@@ -4025,6 +3966,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (!(contactInfo.streetAddress || form.address).trim()) {
       addFieldError("restaurantStreetAddress", "Street Address is required.", 2);
+    }
+
+    if (!form.country.trim()) {
+      addFieldError("country", "Country is required.", 2);
     }
 
     if (!restaurantZipcode.trim()) {
@@ -4057,12 +4002,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       addFieldError("restaurantAlcoholLicenseNumber", "Alcohol License is required for Bars & Beverages.", 4);
     }
 
-    const requireFoodType = shouldShowRestaurantFoodStyleMenuFields(form.subCategory, form.detailCategory);
     restaurantMenuItems.forEach((item, index) => {
       if (!item.itemName.trim()) addFieldError(restaurantMenuItemErrorKey(index, "itemName"), "Item Name is required.", 3);
-      if (!item.menuCategory.trim()) addFieldError(restaurantMenuItemErrorKey(index, "menuCategory"), "Category is required.", 3);
       if (numberOrNull(item.price) === null) addFieldError(restaurantMenuItemErrorKey(index, "price"), "Price is required.", 3);
-      if (requireFoodType && !item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.", 3);
+      if (!item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.", 3);
     });
 
     const invalidHours = businessHours.find((hour) => hour.status !== "Closed" && !hour.is24Hours && (!hour.open || !hour.close));
@@ -4135,7 +4078,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     effectiveDynamicCategoryFields
       .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
       .forEach((field) => {
-        if (!field.isRequired || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+        if (!isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
           return;
         }
 
@@ -4171,7 +4114,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     effectiveDynamicCategoryFields
       .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
       .forEach((field) => {
-        if (!field.isRequired || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+        if (!isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
           return;
         }
 
@@ -4207,7 +4150,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     effectiveDynamicCategoryFields
       .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
       .forEach((field) => {
-        if (!field.isRequired || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
+        if (!isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) || !isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
           return;
         }
 
@@ -5908,8 +5851,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                             restaurantInfo={restaurantInfo}
                             businessHours={businessHours}
                             categoryAttributes={categoryAttributes}
+                            countries={countries}
+                            states={states}
+                            cities={cities}
                             fieldErrors={fieldErrors}
                             updateField={updateField}
+                            updateCountry={updateCountry}
+                            updateState={updateState}
+                            updateCity={updateCity}
                             onSellerNameChange={setSellerName}
                             onContactInfoChange={setContactInfo}
                             onWebLinksChange={setWebLinks}
@@ -6624,6 +6573,38 @@ function mapAddressSuggestion(item: NominatimAddressResult): AddressSuggestion {
   };
 }
 
+async function lookupPostalCodeByCoordinates(latitude?: string, longitude?: string) {
+  const lat = latitude?.trim();
+  const lon = longitude?.trim();
+
+  if (!lat || !lon) {
+    return "";
+  }
+
+  try {
+    const params = new URLSearchParams({
+      format: "jsonv2",
+      addressdetails: "1",
+      lat,
+      lon,
+    });
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?${params.toString()}`, {
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      return "";
+    }
+
+    const result = (await response.json()) as NominatimAddressResult;
+    return result.address?.postcode || "";
+  } catch {
+    return "";
+  }
+}
+
 function isAddressInSelectedCity(item: NominatimAddressResult, country: string, state: string, city: string) {
   const displayName = item.display_name.toLowerCase();
 
@@ -6930,7 +6911,8 @@ function CategoryAttributesFields({
   }
 
   function renderCategoryAttributeField(field: CategoryAttributeField) {
-    const displayLabel = labelWithCountryCurrency(field.isRequired ? `${field.label}*` : field.label, currencyCountry);
+    const isRequired = isEffectivelyRequiredCategoryField(field, categoryName, subCategory, detailCategory, values, form);
+    const displayLabel = labelWithCountryCurrency(isRequired ? `${field.label}*` : field.label, currencyCountry);
     const error = fieldErrors[categoryFieldErrorKey(field.key)];
     const inputMin = getCategoryAttributeInputMin(field, categoryName, values);
     const inputStep = getCategoryAttributeInputStep(field, categoryName);
@@ -7570,8 +7552,14 @@ function RestaurantOperationsFields({
   restaurantInfo,
   businessHours,
   categoryAttributes,
+  countries,
+  states,
+  cities,
   fieldErrors,
   updateField,
+  updateCountry,
+  updateState,
+  updateCity,
   onSellerNameChange,
   onContactInfoChange,
   onWebLinksChange,
@@ -7589,8 +7577,14 @@ function RestaurantOperationsFields({
   restaurantInfo: RestaurantInfo;
   businessHours: BusinessHour[];
   categoryAttributes: CategoryAttributes;
+  countries: CountryOption[];
+  states: StateOption[];
+  cities: CityOption[];
   fieldErrors: FieldErrors;
   updateField: (name: StringFormField, value: string) => void;
+  updateCountry: (value: string) => void;
+  updateState: (value: string) => void;
+  updateCity: (value: string) => void;
   onSellerNameChange: (value: string) => void;
   onContactInfoChange: (value: ContactInfo) => void;
   onWebLinksChange: (value: WebLinks) => void;
@@ -7635,6 +7629,21 @@ function RestaurantOperationsFields({
   const restaurantZipcode = contactInfo.zipcode || form.pincode;
   const restaurantAddress = contactInfo.streetAddress || form.address;
 
+  function updateRestaurantCountry(value: string) {
+    updateCountry(value);
+    onContactInfoChange({ ...contactInfo, state: "", city: "", zipcode: "", streetAddress: "" });
+  }
+
+  function updateRestaurantState(value: string) {
+    updateState(value);
+    onContactInfoChange({ ...contactInfo, state: value, city: "", zipcode: "", streetAddress: "" });
+  }
+
+  function updateRestaurantCity(value: string) {
+    updateCity(value);
+    onContactInfoChange({ ...contactInfo, city: value });
+  }
+
   function updateRestaurantZipcode(value: string) {
     const zipcodeChanged = value.trim() !== restaurantZipcode.trim();
 
@@ -7664,22 +7673,8 @@ function RestaurantOperationsFields({
   return (
     <>
       <h5 className="mt-3 mb-3">Location</h5>
-      <div className="row">
-        <InputColumn placeholder="ZIP Code*" value={restaurantZipcode} error={fieldErrors.restaurantZipcode} onChange={updateRestaurantZipcode} />
-        <InputColumn placeholder="Country" value={form.country || "United States"} onChange={(value) => updateField("country", value || "United States")} />
-      </div>
-      <div className="row">
-        <InputColumn placeholder="State*" value={contactInfo.state || form.state} error={fieldErrors.restaurantState} onChange={(value) => {
-          updateField("state", value);
-          onContactInfoChange({ ...contactInfo, state: value });
-        }} />
-        <InputColumn placeholder="City*" value={contactInfo.city || form.city} error={fieldErrors.restaurantCity} onChange={(value) => {
-          updateField("city", value);
-          onContactInfoChange({ ...contactInfo, city: value });
-        }} />
-      </div>
       <AddressAutocompleteInput
-        placeholder="Street Address"
+        placeholder="Street Address*"
         value={restaurantAddress}
         error={fieldErrors.restaurantStreetAddress}
         country={form.country || "United States"}
@@ -7693,9 +7688,13 @@ function RestaurantOperationsFields({
         }}
         onPlaceSelect={onAddressPlaceSelect}
       />
+      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateRestaurantCountry} />
+      <Select placeholder="Select State*" value={contactInfo.state || form.state} error={fieldErrors.restaurantState} options={includeCurrentValue(states.map((state) => state.name), contactInfo.state || form.state)} onChange={updateRestaurantState} disabled={!form.country} />
+      <Select placeholder="Select City*" value={contactInfo.city || form.city} error={fieldErrors.restaurantCity} options={includeCurrentValue(cities.map((city) => city.name), contactInfo.city || form.city)} onChange={updateRestaurantCity} disabled={!(contactInfo.state || form.state)} />
+      <Input placeholder="Zip Code*" value={restaurantZipcode} error={fieldErrors.restaurantZipcode} onChange={updateRestaurantZipcode} />
       <div className="row">
-        <InputColumn placeholder="Latitude" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
-        <InputColumn placeholder="Longitude" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
+        <InputColumn placeholder="Google Map Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
+        <InputColumn placeholder="Google Map Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
       </div>
       <Input placeholder="Delivery Radius (miles)" type="number" value={restaurantInfo.serviceRadiusMiles} error={fieldErrors.restaurantServiceRadiusMiles} onChange={(value) => onRestaurantInfoChange({ ...restaurantInfo, serviceRadiusMiles: value })} />
 
@@ -7758,9 +7757,12 @@ function RestaurantMenuPricingFields({
   const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
   const isFoodTruck = form.subCategory === "Food Trucks & Pop-ups";
   const isGrocery = form.subCategory === "Grocery & Specialty Food Stores";
-  const showFoodStyleMenuFields = shouldShowRestaurantFoodStyleMenuFields(form.subCategory, form.detailCategory);
   const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || isCloudKitchen;
   const showCatering = restaurantInfo.serviceTypes.includes("Catering") || isCatering;
+  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
+  const [menuModalIndex, setMenuModalIndex] = useState<number | null>(null);
+  const [menuDraft, setMenuDraft] = useState<RestaurantMenuItem>({ ...initialRestaurantMenuItem });
+  const [menuDraftErrors, setMenuDraftErrors] = useState<FieldErrors>({});
   const amenityOptions = [
     ...(isCloudKitchen ? [] : ["Parking", "Outdoor Seating", "Private Dining"]),
     "WiFi",
@@ -7783,41 +7785,126 @@ function RestaurantMenuPricingFields({
     onMenuItemsChange(updateArrayItem(menuItems, index, value));
   }
 
+  function openMenuItemModal(index: number | null = null) {
+    setMenuModalIndex(index);
+    setMenuDraft(index === null ? { ...initialRestaurantMenuItem, displayOrder: String(menuItems.length + 1) } : { ...menuItems[index] });
+    setMenuDraftErrors({});
+    setIsMenuModalOpen(true);
+  }
+
+  function closeMenuItemModal() {
+    setIsMenuModalOpen(false);
+    setMenuModalIndex(null);
+    setMenuDraft({ ...initialRestaurantMenuItem });
+    setMenuDraftErrors({});
+  }
+
+  function updateMenuDraft(key: keyof RestaurantMenuItem, value: string) {
+    setMenuDraft((currentDraft) => ({ ...currentDraft, [key]: value }));
+    setMenuDraftErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[key];
+      return nextErrors;
+    });
+  }
+
+  function saveMenuDraft() {
+    const nextErrors: FieldErrors = {};
+    if (!menuDraft.itemName.trim()) nextErrors.itemName = "Item Name is required.";
+    if (numberOrNull(menuDraft.price) === null) nextErrors.price = "Price is required.";
+    if (!menuDraft.foodType.trim()) nextErrors.foodType = "Veg / Non-Veg is required.";
+
+    if (Object.keys(nextErrors).length) {
+      setMenuDraftErrors(nextErrors);
+      return;
+    }
+
+    const sanitizedItem = {
+      ...menuDraft,
+      itemName: menuDraft.itemName.trim(),
+      price: menuDraft.price.trim(),
+      foodType: menuDraft.foodType.trim(),
+      imageUrl: menuDraft.imageUrl.trim(),
+      menuCategory: "",
+      description: "",
+      spiceLevel: "",
+      calories: "",
+    };
+
+    if (menuModalIndex === null) {
+      onMenuItemsChange([...menuItems, sanitizedItem]);
+    } else {
+      updateMenuItem(menuModalIndex, sanitizedItem);
+    }
+
+    closeMenuItemModal();
+  }
+
   return (
     <>
-      <h5 className="mt-3 mb-3">Menu Management</h5>
+      <div className="listing-menu-heading">
+        <h5 className="mt-3 mb-3">Menu Management</h5>
+        <button type="button" className="btn btn-primary listing-menu-add-btn" onClick={() => openMenuItemModal()}>Add Menu Item</button>
+      </div>
       <FieldError message={fieldErrors.restaurantMenuItems} />
-      {menuItems.map((item, index) => (
-        <ListingSectionCard title={`Menu Item ${index + 1}`} key={index}>
-          <div className="row">
-            <InputColumn placeholder="Item Name*" value={item.itemName} error={fieldErrors[restaurantMenuItemErrorKey(index, "itemName")]} onChange={(value) => updateMenuItem(index, { ...item, itemName: value }, "itemName")} />
-            <SelectColumn placeholder="Category*" value={item.menuCategory} error={fieldErrors[restaurantMenuItemErrorKey(index, "menuCategory")]} options={["Starter", "Main Course", "Dessert", "Beverage"]} onChange={(value) => updateMenuItem(index, { ...item, menuCategory: value }, "menuCategory")} />
+      {menuItems.length ? (
+        <div className="listing-menu-grid">
+          <div className="listing-menu-grid-head">
+            <span>Item Name</span>
+            <span>{labelWithCountryCurrency("Price", currencyCountry)}</span>
+            <span>Veg / Non-Veg</span>
+            <span>Item Image</span>
+            <span aria-label="Actions"></span>
           </div>
-          <Textarea placeholder="Description" value={item.description} onChange={(value) => updateMenuItem(index, { ...item, description: value })} />
-          <div className="row">
-            <InputColumn placeholder={labelWithCountryCurrency("Price*", currencyCountry)} type="number" value={item.price} error={fieldErrors[restaurantMenuItemErrorKey(index, "price")]} onChange={(value) => updateMenuItem(index, { ...item, price: value }, "price")} />
-            <InputColumn placeholder="Calories (optional)" type="number" value={item.calories} onChange={(value) => updateMenuItem(index, { ...item, calories: value }, "calories")} />
-          </div>
-          {showFoodStyleMenuFields ? (
-            <div className="row">
-              <SelectColumn placeholder="Veg / Non-Veg*" value={item.foodType} error={fieldErrors[restaurantMenuItemErrorKey(index, "foodType")]} options={["Veg", "Non-Veg", "Vegan"]} onChange={(value) => updateMenuItem(index, { ...item, foodType: value }, "foodType")} />
-              <SelectColumn placeholder="Spice Level (optional)" value={item.spiceLevel} options={["Mild", "Medium", "Hot", "Extra Hot"]} onChange={(value) => updateMenuItem(index, { ...item, spiceLevel: value }, "spiceLevel")} />
+          {menuItems.map((item, index) => (
+            <div className="listing-menu-grid-row" key={`${item.itemName}-${index}`}>
+              <div className="listing-menu-grid-cell" data-label="Item Name">
+                <strong>{item.itemName || `Menu Item ${index + 1}`}</strong>
+                <FieldError message={fieldErrors[restaurantMenuItemErrorKey(index, "itemName")] || fieldErrors[restaurantMenuItemErrorKey(index, "price")] || fieldErrors[restaurantMenuItemErrorKey(index, "foodType")]} />
+              </div>
+              <div className="listing-menu-grid-cell" data-label={labelWithCountryCurrency("Price", currencyCountry)}>{item.price || "-"}</div>
+              <div className="listing-menu-grid-cell" data-label="Veg / Non-Veg">{item.foodType || "-"}</div>
+              <div className="listing-menu-grid-cell" data-label="Item Image">
+                <MenuItemImageThumb imageUrl={item.imageUrl} uploadFiles={uploadFiles} itemName={item.itemName} />
+              </div>
+              <div className="listing-menu-list-actions" data-label="Actions">
+                <button type="button" className="listing-menu-icon-btn" aria-label="Edit menu item" title="Edit" onClick={() => openMenuItemModal(index)}>
+                  <i className="material-icons" aria-hidden="true">edit</i>
+                </button>
+                <button type="button" className="listing-menu-icon-btn listing-menu-icon-btn-danger" aria-label="Delete menu item" title="Delete" onClick={() => onMenuItemsChange(menuItems.filter((_, itemIndex) => itemIndex !== index))}>
+                  <i className="material-icons" aria-hidden="true">delete</i>
+                </button>
+              </div>
             </div>
-          ) : null}
-          <FileUploadColumn
-            label="Item Image"
-            accept="image/*,.jpg,.jpeg,.png,.webp"
-            value={item.imageUrl}
-            files={uploadFiles}
-            onFilesChange={onUploadFilesChange}
-            onChange={(value) => updateMenuItem(index, { ...item, imageUrl: value }, "imageUrl")}
-          />
-          {menuItems.length > 1 ? (
-            <button type="button" className="btn btn-primary" onClick={() => onMenuItemsChange(menuItems.filter((_, itemIndex) => itemIndex !== index))}>Remove Item</button>
-          ) : null}
-        </ListingSectionCard>
-      ))}
-      <button type="button" className="btn btn-primary" onClick={() => onMenuItemsChange([...menuItems, { ...initialRestaurantMenuItem, displayOrder: String(menuItems.length + 1) }])}>Add Menu Item</button>
+          ))}
+        </div>
+      ) : null}
+
+      {isMenuModalOpen ? (
+        <div className="listing-plan-modal-backdrop" role="presentation">
+          <div className="listing-plan-modal listing-menu-modal" role="dialog" aria-modal="true" aria-labelledby="restaurant-menu-modal-title">
+            <div className="listing-plan-modal-head">
+              <h3 id="restaurant-menu-modal-title">{menuModalIndex === null ? "Add Menu Item" : "Edit Menu Item"}</h3>
+              <button type="button" className="listing-plan-modal-close" aria-label="Close menu item popup" onClick={closeMenuItemModal}>x</button>
+            </div>
+            <Input placeholder="Item Name*" value={menuDraft.itemName} error={menuDraftErrors.itemName} onChange={(value) => updateMenuDraft("itemName", value)} />
+            <Input placeholder={labelWithCountryCurrency("Price*", currencyCountry)} type="number" value={menuDraft.price} error={menuDraftErrors.price} onChange={(value) => updateMenuDraft("price", value)} />
+            <Select placeholder="Veg / Non-Veg*" value={menuDraft.foodType} error={menuDraftErrors.foodType} options={["Veg", "Non-Veg"]} onChange={(value) => updateMenuDraft("foodType", value)} />
+            <FileUpload
+              label="Item Image (optional)"
+              accept="image/*,.jpg,.jpeg,.png,.webp"
+              value={menuDraft.imageUrl}
+              files={uploadFiles}
+              onFilesChange={onUploadFilesChange}
+              onChange={(value) => updateMenuDraft("imageUrl", value)}
+            />
+            <div className="listing-menu-modal-actions">
+              <button type="button" className="btn btn-primary" onClick={saveMenuDraft}>Save Item</button>
+              <button type="button" className="btn btn-primary" onClick={closeMenuItemModal}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <h5 className="mt-3 mb-3">Pricing & Offers</h5>
       <div className="row">
@@ -8387,6 +8474,49 @@ function FileUploadColumn(props: FileUploadProps) {
   );
 }
 
+function MenuItemImageThumb({
+  imageUrl,
+  uploadFiles,
+  itemName,
+}: {
+  imageUrl: string;
+  uploadFiles: GalleryUploadFile[];
+  itemName: string;
+}) {
+  const selectedFile = imageUrl.startsWith(galleryImageUploadMarkerPrefix)
+    ? uploadFiles.find((item) => item.marker === imageUrl)?.file || null
+    : null;
+  const [objectUrl, setObjectUrl] = useState("");
+
+  useEffect(() => {
+    if (!selectedFile) {
+      setObjectUrl("");
+      return;
+    }
+
+    const nextObjectUrl = URL.createObjectURL(selectedFile);
+    setObjectUrl(nextObjectUrl);
+    return () => URL.revokeObjectURL(nextObjectUrl);
+  }, [selectedFile]);
+
+  if (!imageUrl) {
+    return <>-</>;
+  }
+
+  const thumbnailUrl = selectedFile ? objectUrl : resolveUploadFileUrl(imageUrl);
+  if (!thumbnailUrl) {
+    return <>-</>;
+  }
+
+  return (
+    <img
+      className="listing-menu-thumb"
+      src={thumbnailUrl}
+      alt={itemName || "Menu item"}
+    />
+  );
+}
+
 type FileUploadProps = {
   label: string;
   accept: string;
@@ -8809,13 +8939,6 @@ function RestaurantInfoFields({
       <h5 className="mt-3 mb-3">Restaurant / Business Information</h5>
       <div className="row">
         <InputColumn placeholder="Restaurant Name*" value={restaurantInfo.restaurantName} error={fieldErrors.restaurantName} onChange={(value) => onChange({ ...restaurantInfo, restaurantName: value })} />
-        <InputColumn placeholder="Business Name (optional)" value={restaurantInfo.businessName} onChange={(value) => onChange({ ...restaurantInfo, businessName: value })} />
-      </div>
-      <div className="row">
-        <SelectColumn placeholder="Business Type*" value={restaurantInfo.businessType} error={fieldErrors.restaurantBusinessType} options={["Restaurant", "Cafe", "Bar", "Cloud Kitchen", "Catering", "Food Truck", "Grocery", "Bakery", "Other"]} onChange={(value) => onChange({ ...restaurantInfo, businessType: value })} />
-        <InputColumn placeholder="Year Established*" type="number" value={restaurantInfo.yearEstablished} error={fieldErrors.restaurantYearEstablished} onChange={(value) => onChange({ ...restaurantInfo, yearEstablished: value })} />
-      </div>
-      <div className="row">
         <InputColumn placeholder="Tagline (optional)" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
       </div>
       <Textarea placeholder="Description*" value={restaurantInfo.description} error={fieldErrors.restaurantDescription} onChange={(value) => onChange({ ...restaurantInfo, description: value })} />
@@ -10368,7 +10491,7 @@ function applyCareContactDefaults(
 function mapRestaurantMenuItemsFromListing(listing: ListingSummary): RestaurantMenuItem[] {
   const menuItems = listing.restaurantMenuItems || [];
   if (!menuItems.length) {
-    return [{ ...initialRestaurantMenuItem }];
+    return [];
   }
 
   return menuItems.map((item, index) => ({
@@ -10462,9 +10585,10 @@ function parseListingOtherInformation(value: unknown): { items: InfoItem[]; cate
       const parsedItems = Array.isArray(record.items) && record.items.length
         ? record.items as InfoItem[]
         : fallbackItems;
-      const parsedAttributes = record.categoryAttributes && typeof record.categoryAttributes === "object" && !Array.isArray(record.categoryAttributes)
-        ? record.categoryAttributes as CategoryAttributes
-        : {};
+      const parsedAttributes = {
+        ...categoryAttributesFromUnknown(record.customFields),
+        ...categoryAttributesFromUnknown(record.categoryAttributes),
+      };
 
       return { items: parsedItems, categoryAttributes: parsedAttributes };
     }
@@ -10475,10 +10599,36 @@ function parseListingOtherInformation(value: unknown): { items: InfoItem[]; cate
   return { items: fallbackItems, categoryAttributes: {} };
 }
 
+function categoryAttributesFromUnknown(value: unknown): CategoryAttributes {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .map(([key, attributeValue]) => {
+        if (attributeValue === null || attributeValue === undefined) {
+          return [key, ""];
+        }
+
+        if (Array.isArray(attributeValue)) {
+          return [key, attributeValue.map((item) => stringValue(item).trim()).filter(Boolean).join(", ")];
+        }
+
+        if (typeof attributeValue === "object") {
+          return [key, JSON.stringify(attributeValue)];
+        }
+
+        return [key, stringValue(attributeValue)];
+      })
+      .filter(([, attributeValue]) => attributeValue.trim())
+  );
+}
+
 function trimCategoryAttributes(value: CategoryAttributes) {
   return Object.fromEntries(
     Object.entries(value)
-      .map(([key, attributeValue]) => [key, attributeValue.trim()])
+      .map(([key, attributeValue]) => [key, stringValue(attributeValue).trim()])
       .filter(([, attributeValue]) => attributeValue)
   );
 }
@@ -10684,6 +10834,107 @@ function isMissingRequiredCategoryValue(field: CategoryAttributeField, value?: s
   }
 
   return !String(value || "").trim();
+}
+
+function isEffectivelyRequiredCategoryField(
+  field: CategoryAttributeField,
+  categoryName: string,
+  subCategory: string,
+  detailCategory: string,
+  values: CategoryAttributes,
+  form: FormState,
+) {
+  if (field.isRequired) {
+    return true;
+  }
+
+  const isField = (...keys: string[]) => keys.some((key) => areEquivalentCategoryFieldKeys(field.key, key) || normalizeFieldKey(field.label) === normalizeFieldKey(key));
+
+  if (categoryName === "Vehicles") {
+    const isRental = isVehicleRentalSubCategory(subCategory);
+    const isService = isVehicleServicesSubCategory(subCategory);
+    const isChargingStation = detailCategory === "Charging Stations";
+    const isUsed = isUsedVehicleCondition(getAttributeValue(values, "vehicleCondition", "vehicle_condition", "condition"));
+
+    if (isRental && isField("rentalType", "rental_type", "rentalDuration", "rental_duration", "pricePerDay", "price_per_day", "daily_price", "daily_rate", "securityDepositVehicle", "security_deposit_vehicle")) {
+      return true;
+    }
+
+    if (isService && isField("serviceType", "service_type")) {
+      return true;
+    }
+
+    if (isChargingStation && isField("chargingStationType", "charging_station_type", "chargingPortType", "charging_port_type")) {
+      return true;
+    }
+
+    if (isUsed && isField("kilometersDriven", "kilometers_driven", "kmDriven", "km_driven", "ownerCount", "owner_count", "numberOfOwners", "number_of_owners")) {
+      return true;
+    }
+
+    if (getAttributeValue(values, "insurance", "insuranceStatus", "insurance_status") === "Active" && isField("insuranceValidTill", "insurance_valid_till")) {
+      return true;
+    }
+  }
+
+  if (isElectronicsCategoryName(categoryName)) {
+    const condition = getAttributeValue(values, "condition");
+    const warranty = getAttributeValue(values, "warranty");
+    const isMobile = subCategory === "Mobile Phones & Tablets" || ["Smartphones", "Feature Phones", "Tablets", "iPads"].includes(detailCategory);
+    const isComputer = subCategory === "Computers & Laptops" || detailCategory === "Laptops";
+    const isTv = subCategory === "TVs & Home Entertainment" || ["Smart TVs", "LED TVs", "OLED TVs"].includes(detailCategory);
+    const isAppliance = subCategory === "Home Appliances" || subCategory === "Kitchen Appliances";
+    const isAccessory = subCategory === "Wearables & Accessories";
+
+    if (warranty === "Yes" && isField("manufacturerWarranty", "manufacturer_warranty", "extendedWarranty", "extended_warranty", "warrantyExpiryDate", "warranty_expiry_date")) {
+      return true;
+    }
+
+    if (isMobile && isField("ram", "storage", "carrierStatus", "carrier_status")) {
+      return true;
+    }
+
+    if (isMobile && condition === "Used" && isField("batteryHealth", "battery_health")) {
+      return true;
+    }
+
+    if (isComputer && isField("ram", "storage_type", "storageType", "processor", "operatingSystem", "operating_system")) {
+      return true;
+    }
+
+    if (isTv && isField("screenSize", "screen_size", "resolution", "smartTv", "smart_tv")) {
+      return true;
+    }
+
+    if (isAppliance && isField("capacity")) {
+      return true;
+    }
+
+    if (isAccessory && isField("accessoryType", "accessory_type")) {
+      return true;
+    }
+  }
+
+  if (categoryName === "Care Services") {
+    const isAgency = getAttributeValue(values, "providerType", "provider_type").trim() === "Agency / Company";
+
+    if (isNursingCareSubCategory(subCategory) && isField("licenseNumber", "license_number", "certificationDocuments", "certification_documents")) {
+      return true;
+    }
+
+    if (isAgency && isField("insurance", "insurance_coverage", "staffCount", "staff_count")) {
+      return true;
+    }
+  }
+
+  if (categoryName === "Restaurants & Food") {
+    const isDeliveryListing = form.subCategory === "Cloud Kitchen" || form.subCategory === "Cloud Kitchen / Delivery Only";
+    if (isDeliveryListing && isField("serviceRadiusMiles", "service_radius_miles", "deliveryFee", "delivery_fee", "minimumOrderValue", "minimum_order_value")) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function vehicleFeatureValues(values: CategoryAttributes) {
@@ -11939,26 +12190,6 @@ function normalizeFieldKey(key: string) {
 
 function normalizeCategoryName(value?: string | null) {
   return value?.trim().toLowerCase() || "";
-}
-
-function shouldShowRestaurantFoodStyleMenuFields(subCategory?: string | null, detailCategory?: string | null) {
-  const subCategoryName = normalizeCategoryName(subCategory);
-  const detailCategoryName = normalizeCategoryName(detailCategory);
-  const combined = `${subCategoryName} ${detailCategoryName}`;
-
-  return ![
-    "cafe",
-    "coffee",
-    "bakery",
-    "bakeries",
-    "beverage",
-    "bar",
-    "juice",
-    "smoothie",
-    "tea",
-    "grocery",
-    "specialty food store",
-  ].some((keyword) => combined.includes(keyword));
 }
 
 function isChildCareSubCategory(value?: string | null) {
