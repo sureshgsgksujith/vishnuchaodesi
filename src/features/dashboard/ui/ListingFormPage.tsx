@@ -7049,86 +7049,31 @@ function SharedListingLocationFields({
   updateCity: (value: string) => void;
   onAddressPlaceSelect: (addressDetails: ListingAddressDetails) => void;
 }) {
-  const isZipFirstLocation = form.categoryName === "Vehicles" || form.categoryName === "Care Services" || isElectronicsCategoryName(form.categoryName) || form.categoryName === "Pets & Animals";
   const isEventsLocation = form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events";
   const useFullAddressLabel = isEventsLocation || form.categoryName === "Pets & Animals";
-
-  if (isZipFirstLocation) {
-    const updateZipFirstZipcode = (value: string) => {
-      const zipcodeChanged = value.trim() !== form.pincode.trim();
-
-      updateField("pincode", value);
-
-      if (zipcodeChanged) {
-        updateField("address", "");
-        updateField("latitude", "");
-        updateField("longitude", "");
-      }
-    };
-
-    const updateZipFirstAddress = (value: string) => {
-      if (value.trim() !== form.address.trim()) {
-        updateField("latitude", "");
-        updateField("longitude", "");
-      }
-
-      updateField("address", value);
-    };
-
-    return (
-      <div>
-        <h5 className="mt-3 mb-3">{getSharedListingLocationSectionTitle(form.categoryName)}</h5>
-        <div className="row">
-          <InputColumn placeholder="ZIP Code*" value={form.pincode} error={fieldErrors.pincode} onChange={updateZipFirstZipcode} />
-          <SelectColumn placeholder="Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
-        </div>
-        <div className="row">
-          <SelectColumn placeholder="State*" value={form.state} error={fieldErrors.state} options={includeCurrentValue(states.map((state) => state.name), form.state)} onChange={updateState} disabled={!form.country} />
-          <SelectColumn placeholder="City*" value={form.city} error={fieldErrors.city} options={includeCurrentValue(cities.map((city) => city.name), form.city)} onChange={updateCity} disabled={!form.state} />
-        </div>
-        <AddressAutocompleteInput
-          placeholder={form.categoryName === "Pets & Animals" ? "Full Address" : "Street Address"}
-          value={form.address}
-          country={form.country || "United States"}
-          state={form.state}
-          city={form.city}
-          postalCode={form.pincode}
-          onChange={updateZipFirstAddress}
-          onPostalCodeDetected={updateZipFirstZipcode}
-          onPlaceSelect={onAddressPlaceSelect}
-        />
-        <div className="row">
-          <InputColumn placeholder="Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
-          <InputColumn placeholder="Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div>
       <h5 className="mt-3 mb-3">{getSharedListingLocationSectionTitle(form.categoryName)}</h5>
       <AddressAutocompleteInput
-        placeholder={useFullAddressLabel ? "Full Address" : "Street Address"}
+        placeholder={useFullAddressLabel ? "Full Address*" : "Street Address*"}
         value={form.address}
+        error={fieldErrors.address}
         country={form.country || "United States"}
         state={form.state}
         city={form.city}
+        postalCode={form.pincode}
         onChange={(value) => updateField("address", value)}
         onPostalCodeDetected={(postalCode) => updateField("pincode", postalCode)}
         onPlaceSelect={onAddressPlaceSelect}
       />
+      <Select placeholder="Select Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
+      <Select placeholder="Select State*" value={form.state} error={fieldErrors.state} options={includeCurrentValue(states.map((state) => state.name), form.state)} onChange={updateState} disabled={!form.country} />
+      <Select placeholder="Select City*" value={form.city} error={fieldErrors.city} options={includeCurrentValue(cities.map((city) => city.name), form.city)} onChange={updateCity} disabled={!form.state} />
+      <Input placeholder="Zip Code*" value={form.pincode} error={fieldErrors.pincode} onChange={(value) => updateField("pincode", value)} />
       <div className="row">
-        <SelectColumn placeholder="Country*" value={form.country} error={fieldErrors.country} options={includeCurrentValue(countries.map((country) => country.name), form.country)} onChange={updateCountry} />
-        <SelectColumn placeholder="State*" value={form.state} error={fieldErrors.state} options={includeCurrentValue(states.map((state) => state.name), form.state)} onChange={updateState} disabled={!form.country} />
-      </div>
-      <div className="row">
-        <SelectColumn placeholder="City*" value={form.city} error={fieldErrors.city} options={includeCurrentValue(cities.map((city) => city.name), form.city)} onChange={updateCity} disabled={!form.state} />
-        <InputColumn placeholder="ZIP Code*" value={form.pincode} error={fieldErrors.pincode} onChange={(value) => updateField("pincode", value)} />
-      </div>
-      <div className="row">
-        <InputColumn placeholder="Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
-        <InputColumn placeholder="Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
+        <InputColumn placeholder="Google Map Latitude" type="number" value={form.latitude} onChange={(value) => updateField("latitude", value)} />
+        <InputColumn placeholder="Google Map Longitude" type="number" value={form.longitude} onChange={(value) => updateField("longitude", value)} />
       </div>
     </div>
   );
@@ -10829,7 +10774,9 @@ function getCategoryAttributeFields(categoryName: string, subCategory: string, d
 }
 
 function shouldUseSharedListingLocationSection(categoryName: string) {
-  return sharedListingLocationCategories.includes(categoryName) || isElectronicsCategoryName(categoryName);
+  return Boolean(categoryName) &&
+    !isRealEstateCategory(categoryName) &&
+    categoryName !== "Restaurants & Food";
 }
 
 function isEventsListingCategory(categoryName: string) {
@@ -10837,7 +10784,8 @@ function isEventsListingCategory(categoryName: string) {
 }
 
 function shouldDefaultCountryToUsa(categoryName: string) {
-  return usaDefaultLocationCategories.includes(categoryName) || isElectronicsCategoryName(categoryName);
+  return usaDefaultLocationCategories.includes(categoryName) ||
+    shouldUseSharedListingLocationSection(categoryName);
 }
 
 function getSharedListingLocationSectionOrder(categoryName: string) {

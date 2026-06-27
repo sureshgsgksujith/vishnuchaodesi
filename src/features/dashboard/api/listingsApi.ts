@@ -219,6 +219,7 @@ export type PublicListingQuery = {
   categoryName?: string;
   subCategory?: string;
   detailCategory?: string;
+  country?: string;
   city?: string;
   locality?: string;
   search?: string;
@@ -236,6 +237,7 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
     categoryName: query.categoryName || "",
     subCategory: query.subCategory || "",
     detailCategory: query.detailCategory || "",
+    country: query.country || "",
     city: query.city || "",
     locality: query.locality || "",
     search: query.search || "",
@@ -264,6 +266,7 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
       categoryName: isFurnitureHome ? "Furniture & Home" : isFashionLifestyle ? "Fashion & Lifestyle" : isBeautyServices ? "Beauty Services" : isBooksSportsHobbies ? "Books, Sports & Hobbies" : isEventsTickets ? "Events & Tickets" : isPetsAnimals ? "Pets & Animals" : isGroupsCommunities ? "Groups & Communities" : isChaoTv ? "Chao TV" : query.categoryName || undefined,
       subCategory: query.subCategory || undefined,
       detailCategory: query.detailCategory || undefined,
+      country: query.country || undefined,
       city: query.city || undefined,
       locality: query.locality || undefined,
     },

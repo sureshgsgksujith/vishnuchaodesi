@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
+import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
 import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { getMyProfile } from "../../dashboard/api/profileApi";
@@ -57,6 +58,7 @@ type SortKey = "recent" | "rating" | "price-low" | "price-high";
 export default function AllListingPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { currentLocation, selectedLocation, locationRevision } = useHomeSelectedLocation();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [facetItems, setFacetItems] = useState<ListingSummary[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -95,19 +97,32 @@ export default function AllListingPage() {
   const feature = searchParams.get("feature") || "";
   const rating = searchParams.get("rating") || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  const activeCountry = selectedLocation.countryName || currentLocation.country || "";
+  const isWaitingForCountry =
+    !selectedLocation.countryName &&
+    (currentLocation.status === "idle" || currentLocation.status === "loading");
   const totalPages = useMemo(() => Math.max(1, Math.ceil(totalCount / PAGE_SIZE)), [totalCount]);
   const sortedItems = useMemo(() => sortListings(filterListings(items, feature, rating), sort), [feature, items, rating, sort]);
   const displayCount = feature || rating ? sortedItems.length : totalCount;
-  const dynamicCategories = useMemo(() => buildCategoryOptions(facetItems, category), [facetItems, category]);
+  const countryFacetItems = useMemo(() => filterListingsByCountry(facetItems, activeCountry), [activeCountry, facetItems]);
+  const dynamicCategories = useMemo(() => buildCategoryOptions(countryFacetItems, category), [countryFacetItems, category]);
   const activeCategoryName = category ? categoryLabel(category, dynamicCategories) : categoryName;
-  const categoryFacetItems = useMemo(() => getFacetItemsForCategory(facetItems, category, categoryName), [facetItems, category, categoryName]);
+  const categoryFacetItems = useMemo(() => getFacetItemsForCategory(countryFacetItems, category, categoryName), [countryFacetItems, category, categoryName]);
   const dynamicCities = useMemo(() => uniqueValues(categoryFacetItems.map((item) => getListingCity(item))), [categoryFacetItems]);
   const dynamicSubCategories = useMemo(() => uniqueValues(categoryFacetItems.map((item) => item.subCategory)), [categoryFacetItems]);
   const topBanners = useMemo(() => getBannersForSlot(pageBanners, "top"), [pageBanners]);
   const leftBanners = useMemo(() => getBannersForSlot(pageBanners, "left"), [pageBanners]);
   const topProviders = useMemo(() => {
     return [...categoryFacetItems]
-      .sort((a, b) => Number(b.averageRating || b.rating || b.views || 0) - Number(a.averageRating || a.rating || a.views || 0))
+      .sort((a, b) => {
+        const latestDifference = getLatestListingTime(b) - getLatestListingTime(a);
+
+        if (latestDifference !== 0) {
+          return latestDifference;
+        }
+
+        return Number(b.averageRating || b.rating || b.views || 0) - Number(a.averageRating || a.rating || a.views || 0);
+      })
       .slice(0, 5);
   }, [categoryFacetItems]);
 
@@ -171,6 +186,11 @@ export default function AllListingPage() {
     let isActive = true;
 
     async function loadListings() {
+      if (isWaitingForCountry) {
+        setIsLoading(true);
+        return;
+      }
+
       try {
         setIsLoading(true);
         setErrorMessage("");
@@ -180,10 +200,12 @@ export default function AllListingPage() {
           categoryName: category ? undefined : categoryName || undefined,
           subCategory,
           detailCategory,
+          country: activeCountry || undefined,
           city,
           search,
           page,
           pageSize: PAGE_SIZE,
+          forceRefresh: locationRevision > 0,
         });
 
         if (!isActive) return;
@@ -206,12 +228,26 @@ export default function AllListingPage() {
     return () => {
       isActive = false;
     };
-  }, [category, categoryName, city, detailCategory, page, search, subCategory]);
+  }, [activeCountry, category, categoryName, city, detailCategory, isWaitingForCountry, locationRevision, page, search, subCategory]);
 
   useEffect(() => {
     let isActive = true;
 
-    getPublicListings({ page: 1, pageSize: 50 })
+    if (isWaitingForCountry) {
+      setFacetItems([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setFacetItems([]);
+
+    getPublicListings({
+      country: activeCountry || undefined,
+      page: 1,
+      pageSize: 200,
+      forceRefresh: locationRevision > 0,
+    })
       .then((result) => {
         if (isActive) {
           setFacetItems(result.items || []);
@@ -226,7 +262,7 @@ export default function AllListingPage() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [activeCountry, isWaitingForCountry, locationRevision]);
 
   function updateQuery(updates: Record<string, string | number | null>) {
     const next = new URLSearchParams(searchParams);
@@ -951,6 +987,14 @@ function getFacetItemsForCategory(items: ListingSummary[], category?: PublicCate
   return items.filter((item) => categorySlugFromLabel(item.categoryName) === category);
 }
 
+function filterListingsByCountry(items: ListingSummary[], country: string) {
+  if (!country.trim()) {
+    return items;
+  }
+
+  return items.filter((item) => countriesMatch(getListingCountry(item), country));
+}
+
 function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Real Estate") return "real-estate";
   if (label === "Restaurants & Food") return "restaurants-food";
@@ -1007,8 +1051,37 @@ function uniqueValues(values: Array<string | null | undefined>) {
   return Array.from(new Set(values.map((value) => value?.trim()).filter(Boolean) as string[])).sort((a, b) => a.localeCompare(b));
 }
 
+function getListingCountry(listing: ListingSummary) {
+  return getString(listing.locationDetails, "country");
+}
+
 function getListingCity(listing: ListingSummary) {
   return getString(listing.locationDetails, "city") || listing.city || "";
+}
+
+function countriesMatch(left: string, right: string) {
+  const normalizedLeft = normalizeCountryValue(left);
+  const normalizedRight = normalizeCountryValue(right);
+
+  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight);
+}
+
+function normalizeCountryValue(value: string) {
+  const normalized = normalizeComparableValue(value);
+
+  if (["us", "usa", "unitedstates", "unitedstatesofamerica"].includes(normalized)) {
+    return "unitedstates";
+  }
+
+  if (["in", "ind", "india"].includes(normalized)) {
+    return "india";
+  }
+
+  return normalized;
+}
+
+function normalizeComparableValue(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 function buildLocationText(listing: ListingSummary) {
