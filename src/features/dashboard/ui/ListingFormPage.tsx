@@ -13,6 +13,7 @@ import { getMyPlanUsage, getPricingPlans, selectPricingPlan, type PlanUsage, typ
 import { resolveListingImageUrl } from "../utils/listingImages";
 import { formatCurrencyAmount, labelWithCountryCurrency } from "../../../shared/utils/currency";
 import { fallbackListingCategoryTree, supportedListingCategoryNames } from "../config/listingCategoryTree";
+import { getVehicleBrandOptions, getVehicleModelOptions, vehicleBrandOptions, vehicleSubCategoryOptions } from "../config/vehicleBrandModelData";
 import "../styles/listings.css";
 
 const wizardSteps = [
@@ -431,7 +432,6 @@ const restaurantServiceTypeOptions = [
 ];
 const vehicleConditionOptions = ["New", "Certified Pre-Owned", "Used"];
 const vehicleFuelOptions = ["Gasoline", "Diesel", "Hybrid", "Electric"];
-const vehicleBrandOptions = ["Acura", "Audi", "BMW", "Chevrolet", "Dodge", "Ford", "GMC", "Honda", "Hyundai", "Jeep", "Kia", "Lexus", "Mercedes-Benz", "Nissan", "Subaru", "Tesla", "Toyota", "Volkswagen", "Yamaha", "Harley-Davidson", "Royal Enfield", "Other"];
 const transmissionOptions = ["Automatic", "Manual", "CVT"];
 const vehicleDriveTypeOptions = ["FWD", "RWD", "AWD", "4WD"];
 const listingTypeOptions = ["Free", "Featured", "Premium"];
@@ -846,7 +846,7 @@ const booksHobbyClubFields: CategoryAttributeField[] = [
 
 const vehicleCoreFields: CategoryAttributeField[] = [
   { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "vehicle_type", label: "Vehicle Type", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "vehicle_type", label: "Vehicle Type", options: vehicleSubCategoryOptions, isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "brand", label: "Make", options: vehicleBrandOptions, isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "model", label: "Model", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
   { key: "variant", label: "Variant / Trim", sectionName: "Vehicle Information", sectionOrder: 1 },
@@ -1752,6 +1752,14 @@ const categoryAttributeFieldSetsByCategory: Record<string, CategoryAttributeFiel
         { key: "chargingPortType", label: "Charging Port Type", sectionName: "EV-Specific Fields", sectionOrder: 9 },
       ],
       "Services & Repairs": [
+        { key: "brand", label: "Brand / Business Type", isRequired: true, sectionName: "Service Information", sectionOrder: 1 },
+        { key: "serviceType", label: "Service Type", options: ["Auto Repair Shop", "Car Wash & Detailing", "Oil Change Service", "Tire Service", "Body Shop", "Towing Service"], isRequired: true },
+        { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number" },
+        { key: "appointmentRequired", label: "Appointment Required", options: yesNoOptions },
+        { key: "emergencyService", label: "Emergency Service", options: yesNoOptions },
+      ],
+      "Auto Services & Repair": [
+        { key: "brand", label: "Brand / Business Type", isRequired: true, sectionName: "Service Information", sectionOrder: 1 },
         { key: "serviceType", label: "Service Type", options: ["Auto Repair Shop", "Car Wash & Detailing", "Oil Change Service", "Tire Service", "Body Shop", "Towing Service"], isRequired: true },
         { key: "serviceRadiusMiles", label: "Service Radius (miles)", type: "number" },
         { key: "appointmentRequired", label: "Appointment Required", options: yesNoOptions },
@@ -2799,8 +2807,13 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     [selectedListingSubCategory, form.categoryName, form.detailCategory, form.subCategory],
   );
   const effectiveDynamicCategoryFields = useMemo(
-    () => mergeCategoryPostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
-    [dynamicCategoryFields, form.categoryName, form.detailCategory, form.subCategory],
+    () => withVehicleBrandModelOptions(
+      mergeCategoryPostingFields(dynamicCategoryFields, form.categoryName, form.subCategory, form.detailCategory),
+      form.categoryName,
+      form.subCategory,
+      categoryAttributes,
+    ),
+    [dynamicCategoryFields, form.categoryName, form.detailCategory, form.subCategory, categoryAttributes],
   );
   const hasDynamicCategoryFields = !isRealEstateListing && effectiveDynamicCategoryFields.length > 0;
   const hasDynamicPriceField = !isRealEstateListing && hasAnyFieldKey(
@@ -6886,6 +6899,32 @@ function CategoryAttributesFields({
   }
 
   function updateAttribute(key: string, value: string) {
+    if (categoryName === "Vehicles" && isVehicleTypeFieldKey(key)) {
+      const nextValues = { ...values, [key]: value };
+
+      for (const dependentKey of ["brand", "make", "partType", "part_type", "itemType", "item_type", "model", "compatibleModels", "compatible_models", "serviceType", "service_type"]) {
+        if (dependentKey !== key) {
+          delete nextValues[dependentKey];
+        }
+      }
+
+      onChange(nextValues);
+      return;
+    }
+
+    if (categoryName === "Vehicles" && isVehicleBrandBusinessFieldKey(key)) {
+      const nextValues = { ...values, [key]: value };
+
+      for (const dependentKey of ["model", "compatibleModels", "compatible_models", "serviceType", "service_type"]) {
+        if (dependentKey !== key) {
+          delete nextValues[dependentKey];
+        }
+      }
+
+      onChange(nextValues);
+      return;
+    }
+
     if (isEventsListingCategory(categoryName)) {
       const normalizedKey = normalizeFieldKey(key);
 
@@ -11416,6 +11455,106 @@ function mergeCategoryPostingFields(fields: CategoryAttributeField[], categoryNa
   return dedupeCategoryPostingFields(requiredFields);
 }
 
+function withVehicleBrandModelOptions(
+  fields: CategoryAttributeField[],
+  categoryName: string,
+  subCategory: string,
+  values: CategoryAttributes
+) {
+  if (categoryName !== "Vehicles") {
+    return fields;
+  }
+
+  const selectedVehicleType = getAttributeValue(values, "vehicle_type", "vehicleType").trim();
+  const scopedSubCategory = selectedVehicleType || subCategory;
+  const selectedBrand = getAttributeValue(values, "brand", "make", "partType", "part_type", "itemType", "item_type").trim();
+  const selectedModel = getAttributeValue(values, "model", "compatibleModels", "compatible_models", "serviceType", "service_type").trim();
+  const vehicleTypeOptions = includeCurrentValue(vehicleSubCategoryOptions, selectedVehicleType || subCategory);
+  const brandOptions = includeCurrentValue(getVehicleBrandOptions(scopedSubCategory), selectedBrand);
+  const generatedModelOptions = scopedSubCategory || selectedBrand ? getVehicleModelOptions(scopedSubCategory, selectedBrand) : [];
+  const modelOptions = scopedSubCategory || selectedBrand || selectedModel
+    ? includeCurrentValue([...generatedModelOptions, "Other"], selectedModel)
+    : [];
+
+  return fields.map((field) => {
+    const normalizedKey = normalizeFieldKey(field.key);
+
+    if (["vehicletype", "vehicle_type"].includes(normalizedKey)) {
+      return { ...field, options: vehicleTypeOptions };
+    }
+
+    if (["brand", "make"].includes(field.key)) {
+      return {
+        ...field,
+        label: getVehicleBrandBusinessLabel(scopedSubCategory),
+        options: brandOptions,
+      };
+    }
+
+    if (["parttype", "part_type", "itemtype", "item_type"].includes(normalizedKey)) {
+      return {
+        ...field,
+        label: getVehicleBrandBusinessLabel(scopedSubCategory),
+        options: brandOptions,
+      };
+    }
+
+    if (field.key === "model" && modelOptions.length) {
+      return {
+        ...field,
+        label: getVehicleModelProductLabel(scopedSubCategory),
+        options: modelOptions,
+      };
+    }
+
+    if (["compatiblemodels", "compatible_models", "servicetype", "service_type"].includes(normalizedKey) && modelOptions.length) {
+      return {
+        ...field,
+        label: getVehicleModelProductLabel(scopedSubCategory),
+        options: modelOptions,
+      };
+    }
+
+    return field;
+  });
+}
+
+function getVehicleBrandBusinessLabel(subCategory: string) {
+  const normalizedSubCategory = normalizeFieldKey(subCategory);
+
+  if (["vehiclerentals", "rentals", "autoservicesrepair", "servicesrepairs", "cardealers"].includes(normalizedSubCategory)) {
+    return "Brand / Business Type";
+  }
+
+  if (["autopartsaccessories", "sparepartsaccessories", "tireswheels"].includes(normalizedSubCategory)) {
+    return "Brand";
+  }
+
+  return "Make / Brand";
+}
+
+function getVehicleModelProductLabel(subCategory: string) {
+  const normalizedSubCategory = normalizeFieldKey(subCategory);
+
+  if (["autoservicesrepair", "servicesrepairs"].includes(normalizedSubCategory)) {
+    return "Service Types";
+  }
+
+  if (["vehiclerentals", "rentals"].includes(normalizedSubCategory)) {
+    return "Rental Service Types";
+  }
+
+  if (["autopartsaccessories", "sparepartsaccessories", "tireswheels"].includes(normalizedSubCategory)) {
+    return "Product Lines / Compatible Models";
+  }
+
+  if (normalizedSubCategory === "cardealers") {
+    return "Models / Product Lines";
+  }
+
+  return "Model";
+}
+
 function dedupeCategoryPostingFields(fields: CategoryAttributeField[]) {
   const nextFields: CategoryAttributeField[] = [];
 
@@ -12041,7 +12180,7 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
   }
 
   if (form.categoryName === "Vehicles" && isVehicleService && [
-    "brand", "model", "variant", "yearofmanufacture", "year_of_manufacture", "vin", "vehiclecondition", "vehicle_condition",
+    "model", "variant", "yearofmanufacture", "year_of_manufacture", "vin", "vehiclecondition", "vehicle_condition",
     "ownershiptypevehicle", "ownership_type_vehicle", "ownercount", "owner_count", "accidenthistory", "accident_history",
     "cleantitle", "clean_title", "fueltype", "fuel_type", "transmission", "drivetype", "drive_type", "kilometersdriven",
     "kilometers_driven", "enginecapacity", "engine_capacity", "horsepower", "color", "interiorcolor", "interior_color",
@@ -12209,6 +12348,14 @@ function shouldShowCategoryAttributeField(field: CategoryAttributeField, values:
 
 function normalizeFieldKey(key: string) {
   return key.replace(/[^a-z0-9_]/gi, "").toLowerCase();
+}
+
+function isVehicleTypeFieldKey(key: string) {
+  return ["vehicletype", "vehicle_type"].includes(normalizeFieldKey(key));
+}
+
+function isVehicleBrandBusinessFieldKey(key: string) {
+  return ["brand", "make", "parttype", "part_type", "itemtype", "item_type"].includes(normalizeFieldKey(key));
 }
 
 function normalizeCategoryName(value?: string | null) {

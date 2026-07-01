@@ -51,6 +51,16 @@ const imagePool = [
   "/template-17/images/coupon-deals.jpg",
 ];
 
+const noviRealImagePool = [
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Twelve%20Oaks%20Mall%20interior.jpg",
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Novi%2C%20Michigan%20%2821676246506%29.jpg",
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Suburban%20Collection%20Showplace%2C%20Novi%2C%20Michigan.jpg",
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Nordstrom%20Entrance%20Twelve%20Oaks%20Mall%20Novi%20MI.jpg",
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Novi%20Michigan%20Civic%20Center.JPG",
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Gardner-White%20Furniture%2C%20Novi%2C%20Michigan.jpg",
+  "https://commons.wikimedia.org/wiki/Special:FilePath/Walled%20Lake%20as%20seen%20from%20Beachwalk%20Apartments%2C%20Novi%2C%20Michigan%20-%2020201214.jpg",
+];
+
 const api = axios.create({
   baseURL: apiBaseUrl,
   timeout: readInt("SMOKE_TIMEOUT_MS", 30000),
@@ -484,6 +494,19 @@ function buildLocation() {
 }
 
 function buildMedia(categoryName, profile = null) {
+  if (dataProfile === "sulekha-novi") {
+    const imageUrls = noviImageUrlsFor(categoryName);
+    const firstImage = imageUrls[0] || noviRealImagePool[0];
+
+    return {
+      imageUrls,
+      videoUrl: includeOptional ? "https://www.youtube.com/watch?v=dQw4w9WgXcQ" : "",
+      virtualTourUrl: isRealEstate(categoryName) && includeOptional ? "https://www.chaodesi.com" : "",
+      logoUrl: isCare(categoryName) ? firstImage : includeOptional ? firstImage : "",
+      coverBannerUrl: includeOptional ? imageUrls[1] || firstImage : "",
+    };
+  }
+
   if (Array.isArray(profile?.images) && profile.images.length > 0) {
     return {
       imageUrls: profile.images,
@@ -505,6 +528,23 @@ function buildMedia(categoryName, profile = null) {
     logoUrl: isCare(categoryName) ? firstImage : includeOptional ? firstImage : "",
     coverBannerUrl: includeOptional ? imagePool[1] : "",
   };
+}
+
+function noviImageUrlsFor(categoryName) {
+  const requiredCount = Math.max(requiredImageCount(categoryName), 3);
+  const normalizedCategory = normalize(categoryName);
+  const categoryStartIndex =
+    normalizedCategory === "restaurants & food" ? 0 :
+    normalizedCategory === "electronics & appliances" ? 3 :
+    normalizedCategory === "roommates & rentals" ? 6 :
+    normalizedCategory === "events & tickets" ? 2 :
+    normalizedCategory === "furniture & home" ? 5 :
+    normalizedCategory === "vehicles" ? 1 :
+    normalizedCategory === "real estate" ? 6 :
+    4;
+
+  return Array.from({ length: requiredCount }, (_, index) =>
+    noviRealImagePool[(categoryStartIndex + index) % noviRealImagePool.length]);
 }
 
 function buildSettings(categoryName) {
@@ -605,7 +645,7 @@ function listingProfileFor(testCase, index) {
 const noviSulekhaProfiles = {
   2: [
     {
-      title: "Turmerican Vegetarian Cuisine Novi",
+      title: "Novi Vegetarian Indian Kitchen",
       description:
         "Authentic Indian vegetarian restaurant profile for Novi, Michigan. The listing highlights gluten-free, vegan, Jain, South Indian, North Indian, Indo-Chinese, chaat, dosa and vegetable biryani choices.",
       tagline: "Authentic Indian vegetarian cuisine in Novi",
@@ -626,7 +666,7 @@ const noviSulekhaProfiles = {
       ],
     },
     {
-      title: "1947 Indian Cuisine Novi",
+      title: "Novi Regional Indian Cuisine",
       description:
         "Indian cuisine restaurant profile serving Novi, Michigan with Andhra, Asian, Hyderabadi, Kerala, North Indian, South Indian and vegetarian restaurant options.",
       tagline: "Regional Indian flavors for Novi diners",
@@ -647,7 +687,7 @@ const noviSulekhaProfiles = {
       ],
     },
     {
-      title: "Nawabi Hyderabad House Indian Restaurant And Bakery Novi",
+      title: "Novi Hyderabadi Restaurant And Bakery",
       description:
         "Indian restaurant and bakery profile for Novi, Michigan, focused on Hyderabadi restaurant options, bakery items, biryani, curries, tandoor selections and family dining.",
       tagline: "Hyderabadi restaurant and bakery near Novi",
@@ -672,7 +712,7 @@ const noviSulekhaProfiles = {
     {
       title: "Novi Certified Smartphone Deal",
       description:
-        "Electronics listing for Novi, Michigan based on Sulekha local shopping and electronics references. This smartphone deal highlights a clean display, 5G support, good battery health, charger support and local pickup availability.",
+        "Electronics listing for Novi, Michigan. This smartphone deal highlights a clean display, 5G support, good battery health, charger support and local pickup availability.",
       price: 420,
       offer: "Local Novi pickup available. Same-day inspection before purchase.",
       source: "https://us.sulekha.com/novi-mi/online-shopping",
@@ -702,7 +742,7 @@ const noviSulekhaProfiles = {
     {
       title: "Novi Reliable Feature Phone",
       description:
-        "Feature phone listing for Novi buyers looking for a simple secondary phone with long battery life, clear calling and easy local purchase through a Sulekha-style shopping listing.",
+        "Feature phone listing for Novi buyers looking for a simple secondary phone with long battery life, clear calling and easy local purchase.",
       price: 65,
       offer: "Budget phone with charger and basic warranty check.",
       source: "https://us.sulekha.com/novi-mi/online-shopping",
@@ -877,7 +917,7 @@ const noviSulekhaProfiles = {
     {
       title: "Atul Purohit Garba Live Michigan",
       description:
-        "Live Indian concert event listing for Novi, Michigan inspired by Sulekha Michigan event tour references. The event focuses on Garba, community music, stage performance and ticketed entry.",
+        "Live Indian concert event listing for Novi, Michigan. The event focuses on Garba, community music, stage performance and ticketed entry.",
       price: 30,
       offer: "Advance event tickets available for community music and Garba night.",
       source: "https://us.sulekha.com/michigan-center-mi",
@@ -890,7 +930,7 @@ const noviSulekhaProfiles = {
     {
       title: "DJ Dharak Bollywood Punjabi Night Novi",
       description:
-        "Bollywood and Punjabi DJ night for Novi, Michigan, based on Sulekha event and DJ service references. The event includes dance music, party lighting and ticketed entry.",
+        "Bollywood and Punjabi DJ night for Novi, Michigan. The event includes dance music, party lighting and ticketed entry.",
       price: 18,
       offer: "Early bird DJ night tickets available.",
       source: "https://us.sulekha.com/novi-mi/event-djs",
@@ -916,7 +956,7 @@ const noviSulekhaProfiles = {
     {
       title: "Live Bollywood Band By Hamza Amir Detroit",
       description:
-        "Live Bollywood and Pakistani music band event serving the Detroit and Novi community, inspired by Sulekha Detroit Dhol and live Bollywood band service references.",
+        "Live Bollywood and Pakistani music band event serving the Detroit and Novi community.",
       price: 35,
       offer: "Reserved seating available for live band performance.",
       source: "https://us.sulekha.com/detroit-metro-area/dhol-players",
@@ -929,7 +969,7 @@ const noviSulekhaProfiles = {
     {
       title: "North Indian Classical Music Evening Novi",
       description:
-        "Classical and semi-classical Indian music evening in Novi, Michigan, inspired by Sulekha Novi music lesson references covering Hindi bhajans and North Indian classical music.",
+        "Classical and semi-classical Indian music evening in Novi, Michigan, covering Hindi bhajans and North Indian classical music.",
       price: 25,
       offer: "Advance registration recommended for classical music seating.",
       source: "https://us.sulekha.com/novi-mi/singing-lessons/north-indian-classical-music-lessons-918131",
@@ -942,7 +982,7 @@ const noviSulekhaProfiles = {
     {
       title: "Falguni Pathak Garba Event Tickets Novi",
       description:
-        "Garba and Dandiya ticket listing for Novi, Michigan, inspired by Sulekha Michigan event ticket references for Indian music tours and Navratri celebrations.",
+        "Garba and Dandiya ticket listing for Novi, Michigan, for Indian music tours and Navratri celebrations.",
       price: 32,
       offer: "Family and group ticket options available for Garba night.",
       source: "https://us.sulekha.com/michigan-center-mi",
@@ -955,7 +995,7 @@ const noviSulekhaProfiles = {
     {
       title: "Javed Ali Live Concert Tickets Novi",
       description:
-        "Live Bollywood concert ticket listing for Novi area music lovers, based on Sulekha event ticket references for Indian concert tours and city event discovery.",
+        "Live Bollywood concert ticket listing for Novi area music lovers, focused on Indian concert tours and local event discovery.",
       price: 40,
       offer: "Reserved and general admission tickets available.",
       source: "https://us.sulekha.com/michigan-center-mi",
@@ -968,7 +1008,7 @@ const noviSulekhaProfiles = {
     {
       title: "Detroit Indian Wedding DJ Showcase",
       description:
-        "Indian wedding DJ showcase serving the Detroit and Novi community, inspired by Sulekha DJ service references for weddings, anniversaries, birthdays, Navratri and corporate events.",
+        "Indian wedding DJ showcase serving the Detroit and Novi community for weddings, anniversaries, birthdays, Navratri and corporate events.",
       price: 22,
       offer: "Showcase pass includes DJ demos and event consultation access.",
       source: "https://us.sulekha.com/detroit-metro-area/dj-service",
@@ -981,7 +1021,7 @@ const noviSulekhaProfiles = {
     {
       title: "Novi Community Cultural Festival Tickets",
       description:
-        "Community cultural festival ticket listing for Novi, Michigan with Indian music, food stalls, stage activities and family entertainment inspired by Sulekha local events discovery.",
+        "Community cultural festival ticket listing for Novi, Michigan with Indian music, food stalls, stage activities and family entertainment.",
       price: 16,
       offer: "Early community ticket pricing available.",
       source: "https://us.sulekha.com/novi-mi",

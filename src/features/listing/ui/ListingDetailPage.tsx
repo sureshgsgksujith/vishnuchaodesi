@@ -32,6 +32,29 @@ type PostedDetailSection = {
   title: string;
   rows: Array<{ label: string; value: PostedDetailValue }>;
 };
+type ListingInteractionProps = {
+  reviews: NonNullable<ListingSummary["reviews"]>;
+  reviewRating: number;
+  reviewMessage: string;
+  reviewSuccess: string;
+  reviewError: string;
+  isReviewSubmitting: boolean;
+  loginPrompt: { title: string; message: string } | null;
+  quoteForm: { name: string; email: string; mobileNumber: string; message: string };
+  quoteStatus: string;
+  quoteActionLabel: string;
+  isQuoteModalOpen: boolean;
+  isQuoteProfileLoading: boolean;
+  isQuoteSubmitting: boolean;
+  onReviewRatingChange: (rating: number) => void;
+  onReviewMessageChange: (message: string) => void;
+  onReviewSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onLoginPromptClose: () => void;
+  onOpenQuote: () => void;
+  onQuoteChange: (updates: Partial<{ name: string; email: string; mobileNumber: string; message: string }>) => void;
+  onQuoteClose: () => void;
+  onQuoteSubmit: (event: FormEvent<HTMLFormElement>) => void;
+};
 
 const nearbyServiceCategories = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
 
@@ -205,6 +228,8 @@ function ListingDetail({
   const currentUserId = getCurrentCustomerUserId();
   const isOwnerViewing = currentUserId === listing.userId;
   const isRealEstateListing = listing.categoryName === "Real Estate";
+  const isRoommatesRentalListing = listing.categoryName === "Roommates & Rentals";
+  const isLocalServiceListing = isLocalServiceDetailListing(listing);
   const showQuoteAction = shouldShowQuoteAction(listing);
   const quoteActionLabel = getQuoteActionLabel(listing);
   const nearbyLocation = getNearbyLocation(listing);
@@ -369,11 +394,79 @@ function ListingDetail({
       });
       setQuoteStatus("Your enquiry has been sent successfully.");
       setQuoteForm((current) => ({ ...current, message: "" }));
+      window.setTimeout(() => {
+        setIsQuoteModalOpen(false);
+        setQuoteStatus("");
+      }, 1400);
     } catch {
       setQuoteStatus("Unable to send enquiry. Please try again.");
     } finally {
       setIsQuoteSubmitting(false);
     }
+  }
+
+  if (isRoommatesRentalListing) {
+    return (
+      <RoommatesRentalDetail
+        listing={listing}
+        relatedListings={relatedListings}
+        galleryImages={galleryImages}
+        postedDetailSections={postedDetailSections}
+        reviews={reviews}
+        reviewRating={reviewRating}
+        reviewMessage={reviewMessage}
+        reviewSuccess={reviewSuccess}
+        reviewError={reviewError}
+        isReviewSubmitting={isReviewSubmitting}
+        loginPrompt={loginPrompt}
+        quoteForm={quoteForm}
+        quoteStatus={quoteStatus}
+        quoteActionLabel={quoteActionLabel}
+        isQuoteModalOpen={isQuoteModalOpen}
+        isQuoteProfileLoading={isQuoteProfileLoading}
+        isQuoteSubmitting={isQuoteSubmitting}
+        onReviewRatingChange={setReviewRating}
+        onReviewMessageChange={setReviewMessage}
+        onReviewSubmit={handleReviewSubmit}
+        onLoginPromptClose={() => setLoginPrompt(null)}
+        onOpenQuote={openQuoteModal}
+        onQuoteChange={(updates) => setQuoteForm((current) => ({ ...current, ...updates }))}
+        onQuoteClose={() => setIsQuoteModalOpen(false)}
+        onQuoteSubmit={submitQuoteForm}
+      />
+    );
+  }
+
+  if (isLocalServiceListing) {
+    return (
+      <LocalServiceDetail
+        listing={listing}
+        relatedListings={relatedListings}
+        galleryImages={galleryImages}
+        postedDetailSections={postedDetailSections}
+        reviews={reviews}
+        reviewRating={reviewRating}
+        reviewMessage={reviewMessage}
+        reviewSuccess={reviewSuccess}
+        reviewError={reviewError}
+        isReviewSubmitting={isReviewSubmitting}
+        loginPrompt={loginPrompt}
+        quoteForm={quoteForm}
+        quoteStatus={quoteStatus}
+        quoteActionLabel={quoteActionLabel}
+        isQuoteModalOpen={isQuoteModalOpen}
+        isQuoteProfileLoading={isQuoteProfileLoading}
+        isQuoteSubmitting={isQuoteSubmitting}
+        onReviewRatingChange={setReviewRating}
+        onReviewMessageChange={setReviewMessage}
+        onReviewSubmit={handleReviewSubmit}
+        onLoginPromptClose={() => setLoginPrompt(null)}
+        onOpenQuote={openQuoteModal}
+        onQuoteChange={(updates) => setQuoteForm((current) => ({ ...current, ...updates }))}
+        onQuoteClose={() => setIsQuoteModalOpen(false)}
+        onQuoteSubmit={submitQuoteForm}
+      />
+    );
   }
 
   return (
@@ -776,6 +869,831 @@ function ListingDetail({
   );
 }
 
+function LocalServiceDetail({
+  listing,
+  relatedListings,
+  galleryImages,
+  postedDetailSections,
+  reviews,
+  reviewRating,
+  reviewMessage,
+  reviewSuccess,
+  reviewError,
+  isReviewSubmitting,
+  loginPrompt,
+  quoteForm,
+  quoteStatus,
+  quoteActionLabel,
+  isQuoteModalOpen,
+  isQuoteProfileLoading,
+  isQuoteSubmitting,
+  onReviewRatingChange,
+  onReviewMessageChange,
+  onReviewSubmit,
+  onLoginPromptClose,
+  onOpenQuote,
+  onQuoteChange,
+  onQuoteClose,
+  onQuoteSubmit,
+}: {
+  listing: ListingSummary;
+  relatedListings: ListingSummary[];
+  galleryImages: string[];
+  postedDetailSections: PostedDetailSection[];
+} & ListingInteractionProps) {
+  const details = getLocalServiceDisplayDetails(listing);
+  const country = getString(listing.locationDetails, "country");
+  const address = buildAddress(listing);
+  const rating = Number(listing.averageRating || listing.rating || 0);
+  const displayRating = rating > 0 ? rating : getAverageRatingFromReviews(reviews);
+  const phone = details.phone || getString(listing.sellerInformation, "mobileNumber");
+  const email = details.email || getString(listing.sellerInformation, "email");
+  const whatsapp = details.whatsapp || getString(listing.sellerInformation, "whatsAppNumber") || phone;
+  const website = normalizeWebsite(details.website || getString(listing.sellerInformation, "websiteUrl"));
+  const serviceImage = galleryImages[0] || listing.primaryImageUrl || listing.logoUrl || "/template-17/classifieds/images/6.jpg";
+  const ownerImage = listing.logoUrl || listing.primaryImageUrl || "";
+  const features = getLocalServiceFeatures(listing);
+  const packages = getLocalServicePackages(listing, country);
+  const serviceItems = getLocalServiceItems(listing);
+  const businessHours = getBusinessHours(listing);
+  const todaysHours = getTodayHours(businessHours);
+  const contactRows = getLocalServiceContactRows(listing, phone, email, whatsapp, website?.label || "");
+  const infoRows = getLocalServiceInfoRows(listing, details);
+  const relatedServices = relatedListings.slice(0, 5);
+  const quickNavItems = [
+    { href: "#lsd-about", icon: "person", label: "Overview", show: true },
+    { href: "#lsd-features", icon: "check_circle", label: "Features", show: features.length > 0 },
+    { href: "#lsd-pricing", icon: "style", label: "Pricing", show: packages.length > 0 },
+    { href: "#lsd-location", icon: "map", label: "Location", show: true },
+    { href: "#lsd-contact", icon: "mail", label: "Contact", show: contactRows.length > 0 },
+    { href: "#lsd-reviews", icon: "star_half", label: "Reviews", show: true },
+    { href: "#lsd-posted", icon: "fact_check", label: "Details", show: postedDetailSections.length > 0 },
+  ];
+
+  return (
+    <article className="public-local-service-detail">
+      <section className="public-local-service-quick">
+        <div className="container">
+          <ul>
+            {quickNavItems.filter((item) => item.show).map((item, index) => (
+              <li className={index === 0 ? "active" : ""} key={item.href}>
+                <a href={item.href} onClick={scrollToSection}>
+                  <i className="material-icons" aria-hidden="true">{item.icon}</i>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="public-local-service-hero">
+        <div className="container">
+          <nav className="public-local-service-crumb" aria-label="breadcrumb">
+            <Link to="/">Home</Link>
+            <span>/</span>
+            <Link to="/local-services">Local Services</Link>
+            <span>/</span>
+            <span>{listing.title}</span>
+          </nav>
+          <div className="public-local-service-hero-grid">
+            <div>
+              <span className="public-local-service-badge">
+                <i className="material-icons" aria-hidden="true">{getLocalServiceCategoryIcon(listing)}</i>
+                {details.categoryLabel}
+              </span>
+              <h1>{listing.title}</h1>
+              <p>{details.summary || listing.description || "Local service details are available from this provider."}</p>
+              <div className="public-local-service-meta">
+                {address ? <span><i className="material-icons" aria-hidden="true">place</i>{address}</span> : null}
+                <span><i className="material-icons" aria-hidden="true">star</i>{displayRating ? displayRating.toFixed(1) : "0.0"} ({Math.max(listing.totalReviews || 0, reviews.length)} reviews)</span>
+                <span><i className="material-icons" aria-hidden="true">verified_user</i>{details.verifiedText}</span>
+              </div>
+              <div className="public-local-service-actions">
+                <button type="button" className="public-local-service-btn public-local-service-btn-primary" onClick={onOpenQuote}>
+                  Get a free quote
+                </button>
+                {phone ? (
+                  <a href={`tel:${phone}`} className="public-local-service-btn public-local-service-btn-light">
+                    <i className="material-icons" aria-hidden="true">call</i>
+                    Call now
+                  </a>
+                ) : null}
+              </div>
+            </div>
+            <div className="public-local-service-hero-card">
+              <img src={resolveListingImageUrl(serviceImage)} alt={listing.title} onError={hideBrokenImage} loading="eager" />
+              <div>
+                <strong>{formatPrice(listing.price, country)}</strong>
+                <span>{details.serviceType || listing.detailCategory || listing.subCategory || "Service provider"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="public-local-service-sticky">
+        <div className="container">
+          <img src={resolveListingImageUrl(ownerImage || serviceImage)} alt="" onError={hideBrokenImage} loading="lazy" />
+          <div>
+            <strong>{listing.title}</strong>
+            <span>{[details.categoryLabel, listing.city].filter(Boolean).join(" | ")}</span>
+          </div>
+          <RatingStars rating={displayRating} />
+          <button type="button" onClick={onOpenQuote}>{quoteActionLabel}</button>
+        </div>
+      </section>
+
+      <section className="public-local-service-body">
+        <div className="container">
+          <div className="public-local-service-layout">
+            <main className="public-local-service-main">
+              <LocalServiceCard id="lsd-about" title="About This Service" eyebrow="Overview">
+                <p className="public-local-service-copy">{details.description || listing.description || "Details are not listed."}</p>
+                <div className="public-local-service-highlights">
+                  {infoRows.slice(0, 4).map(([label, value]) => (
+                    <span key={label}>
+                      <i className="material-icons" aria-hidden="true">done</i>
+                      <b>{label}</b>
+                      {formatValue(value)}
+                    </span>
+                  ))}
+                </div>
+              </LocalServiceCard>
+
+              <LocalServiceCard title="Service Information">
+                <InfoList rows={infoRows} />
+              </LocalServiceCard>
+
+              {features.length ? (
+                <LocalServiceCard id="lsd-features" title="Features & Amenities">
+                  <div className="public-local-service-features">
+                    {features.map((feature) => (
+                      <div key={feature.title}>
+                        <span><i className="material-icons" aria-hidden="true">{feature.icon}</i></span>
+                        <div>
+                          <h4>{feature.title}</h4>
+                          {feature.detail ? <p>{feature.detail}</p> : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </LocalServiceCard>
+              ) : null}
+
+              {serviceItems.length ? (
+                <LocalServiceCard title="Services Offered">
+                  <div className="public-local-service-items">
+                    {serviceItems.map((service, index) => (
+                      <div key={`${service.name}-${index}`}>
+                        {getDynamicImage(service.imageName, galleryImages, serviceImage, index) ? (
+                          <img src={resolveListingImageUrl(getDynamicImage(service.imageName, galleryImages, serviceImage, index))} alt="" onError={hideBrokenImage} loading="lazy" />
+                        ) : null}
+                        <strong>{service.name}</strong>
+                      </div>
+                    ))}
+                  </div>
+                </LocalServiceCard>
+              ) : null}
+
+              {packages.length ? (
+                <LocalServiceCard id="lsd-pricing" title="Pricing & Packages">
+                  <div className="public-local-service-packages">
+                    {packages.map((servicePackage, index) => (
+                      <div className={index === 1 ? "is-popular" : ""} key={`${servicePackage.name}-${index}`}>
+                        {index === 1 ? <span className="public-local-service-popular">Most popular</span> : null}
+                        <h4>{servicePackage.name}</h4>
+                        <strong>{servicePackage.price}</strong>
+                        {servicePackage.detail ? <p>{servicePackage.detail}</p> : null}
+                        <button type="button" onClick={onOpenQuote}>Request Quote</button>
+                      </div>
+                    ))}
+                  </div>
+                </LocalServiceCard>
+              ) : null}
+
+              {galleryImages.length ? (
+                <LocalServiceCard title="Gallery">
+                  <div className="public-local-service-gallery">
+                    {galleryImages.map((imageUrl, index) => (
+                      <img key={`${imageUrl}-${index}`} src={resolveListingImageUrl(imageUrl)} alt="" onError={hideBrokenImage} loading="lazy" />
+                    ))}
+                  </div>
+                </LocalServiceCard>
+              ) : null}
+
+              <LocalServiceCard id="lsd-location" title="Location">
+                <p className="public-local-service-copy">{address || "Location details not listed."}</p>
+                <div className="public-local-service-map">
+                  <iframe
+                    src={buildMapUrl(address)}
+                    title={`${listing.title} location`}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              </LocalServiceCard>
+
+              <LocalServiceCard id="lsd-contact" title="Contact Provider">
+                <ul className="public-local-service-contact-list">
+                  {contactRows.map(([label, value]) => (
+                    <li key={label}>
+                      <i className="material-icons" aria-hidden="true">{getContactIcon(label)}</i>
+                      <span>{label}</span>
+                      <b>{formatValue(value)}</b>
+                    </li>
+                  ))}
+                </ul>
+              </LocalServiceCard>
+
+              {postedDetailSections.length ? (
+                <LocalServiceCard id="lsd-posted" title="Posted Details" eyebrow="More">
+                  <PostedDetailsSection sections={postedDetailSections} />
+                </LocalServiceCard>
+              ) : null}
+
+              <LocalServiceCard id="lsd-reviews" title="Reviews">
+                <form className="public-local-service-review-form" onSubmit={onReviewSubmit}>
+                  <div className="public-review-rating-input" aria-label="Rating">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={value <= reviewRating ? "active" : ""}
+                        aria-label={`${value} star rating`}
+                        onClick={() => onReviewRatingChange(value)}
+                      >
+                        <i className="material-icons" aria-hidden="true">star</i>
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    className="form-control"
+                    placeholder="Write review"
+                    value={reviewMessage}
+                    onChange={(event) => onReviewMessageChange(event.target.value)}
+                  />
+                  {reviewSuccess ? <div className="alert alert-success">{reviewSuccess}</div> : null}
+                  {reviewError ? <div className="alert alert-danger">{reviewError}</div> : null}
+                  <button type="submit" disabled={isReviewSubmitting}>
+                    {isReviewSubmitting ? "Submitting..." : "Submit Review"}
+                  </button>
+                </form>
+                {reviews.length ? (
+                  <div className="public-user-review-list">
+                    {reviews.map((review) => (
+                      <div className="public-user-review" key={review.id}>
+                        <div>
+                          <strong>{review.reviewerName || "User"}</strong>
+                          <span>{formatShortDate(review.updatedAt || review.createdAt)}</span>
+                        </div>
+                        <RatingStars rating={review.rating} />
+                        {review.reviewMessage ? <p>{review.reviewMessage}</p> : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </LocalServiceCard>
+            </main>
+
+            <aside className="public-local-service-side">
+              <div className="public-local-service-side-card">
+                <div className="public-local-service-provider">
+                  {ownerImage ? <img src={resolveListingImageUrl(ownerImage)} alt="" onError={hideBrokenImage} loading="lazy" /> : <span>{listing.title.charAt(0).toUpperCase()}</span>}
+                  <div>
+                    <h3>{listing.sellerName || getString(listing.sellerInformation, "name") || listing.title}</h3>
+                    <p>{details.verifiedText}</p>
+                  </div>
+                </div>
+                <button type="button" className="public-local-service-btn public-local-service-btn-primary" onClick={onOpenQuote}>{quoteActionLabel}</button>
+                {phone ? <a href={`tel:${phone}`} className="public-local-service-btn public-local-service-btn-light">Call {phone}</a> : null}
+                {whatsapp ? <a href={`https://wa.me/${numbersOnly(whatsapp)}`} className="public-local-service-btn public-local-service-btn-outline" target="_blank" rel="noreferrer">WhatsApp</a> : null}
+              </div>
+
+              <div className="public-local-service-side-card">
+                <h3>Business Hours</h3>
+                {todaysHours ? (
+                  <div className="public-local-service-open">
+                    <strong>{todaysHours.time === "Closed" ? "Closed" : "Open"}</strong>
+                    <span>{todaysHours.day}: {todaysHours.time}</span>
+                  </div>
+                ) : null}
+                {businessHours.length ? (
+                  <ul className="public-local-service-hours">
+                    {businessHours.map((item) => <li key={item.day}><span>{item.day}</span><b>{item.time}</b></li>)}
+                  </ul>
+                ) : (
+                  <p>Business hours are not listed.</p>
+                )}
+              </div>
+
+              <div className="public-local-service-side-card">
+                <h3>Quick Info</h3>
+                <InfoList rows={infoRows.slice(0, 8)} />
+              </div>
+            </aside>
+          </div>
+
+          {relatedServices.length ? (
+            <section className="public-local-service-related">
+              <h2>Related local services</h2>
+              <div>
+                {relatedServices.map((item) => (
+                  <Link to={`/listing-details?id=${item.id}`} key={item.id}>
+                    {item.primaryImageUrl || item.imageUrls?.[0] ? (
+                      <img src={resolveListingImageUrl(item.primaryImageUrl || item.imageUrls?.[0])} alt="" onError={hideBrokenImage} loading="lazy" />
+                    ) : null}
+                    <strong>{item.title}</strong>
+                    <span>{[item.subCategory, item.city].filter(Boolean).join(", ")}</span>
+                    <b>{formatPrice(item.price, country)}</b>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
+      </section>
+
+      {isQuoteModalOpen ? (
+        <ListingQuoteModal
+          form={quoteForm}
+          isProfileLoading={isQuoteProfileLoading}
+          isSubmitting={isQuoteSubmitting}
+          listing={listing}
+          title={quoteActionLabel}
+          status={quoteStatus}
+          onChange={onQuoteChange}
+          onClose={onQuoteClose}
+          onSubmit={onQuoteSubmit}
+        />
+      ) : null}
+
+      {loginPrompt ? (
+        <LoginRequiredPrompt
+          title={loginPrompt.title}
+          message={loginPrompt.message}
+          onClose={onLoginPromptClose}
+        />
+      ) : null}
+    </article>
+  );
+}
+
+function LocalServiceCard({
+  id,
+  eyebrow,
+  title,
+  children,
+}: {
+  id?: string;
+  eyebrow?: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className="public-local-service-card">
+      <div className="public-local-service-title">
+        <h2>{eyebrow ? <span>{eyebrow}</span> : null}{title}</h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function RoommatesRentalDetail({
+  listing,
+  relatedListings,
+  galleryImages,
+  postedDetailSections,
+  reviews,
+  reviewRating,
+  reviewMessage,
+  reviewSuccess,
+  reviewError,
+  isReviewSubmitting,
+  loginPrompt,
+  quoteForm,
+  quoteStatus,
+  quoteActionLabel,
+  isQuoteModalOpen,
+  isQuoteProfileLoading,
+  isQuoteSubmitting,
+  onReviewRatingChange,
+  onReviewMessageChange,
+  onReviewSubmit,
+  onLoginPromptClose,
+  onOpenQuote,
+  onQuoteChange,
+  onQuoteClose,
+  onQuoteSubmit,
+}: {
+  listing: ListingSummary;
+  relatedListings: ListingSummary[];
+  galleryImages: string[];
+  postedDetailSections: PostedDetailSection[];
+  reviews: NonNullable<ListingSummary["reviews"]>;
+  reviewRating: number;
+  reviewMessage: string;
+  reviewSuccess: string;
+  reviewError: string;
+  isReviewSubmitting: boolean;
+  loginPrompt: { title: string; message: string } | null;
+  quoteForm: { name: string; email: string; mobileNumber: string; message: string };
+  quoteStatus: string;
+  quoteActionLabel: string;
+  isQuoteModalOpen: boolean;
+  isQuoteProfileLoading: boolean;
+  isQuoteSubmitting: boolean;
+  onReviewRatingChange: (rating: number) => void;
+  onReviewMessageChange: (message: string) => void;
+  onReviewSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onLoginPromptClose: () => void;
+  onOpenQuote: () => void;
+  onQuoteChange: (updates: Partial<{ name: string; email: string; mobileNumber: string; message: string }>) => void;
+  onQuoteClose: () => void;
+  onQuoteSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  const details = getRoommatesRentalDisplayDetails(listing);
+  const country = getString(listing.locationDetails, "country");
+  const address = buildAddress(listing);
+  const phone = details.phone || getString(listing.sellerInformation, "mobileNumber");
+  const email = details.email || getString(listing.sellerInformation, "email");
+  const whatsapp = getString(listing.sellerInformation, "whatsAppNumber") || phone;
+  const images = getRoommatesRentalImages(galleryImages);
+  const tabSections = getRoommatesRentalTabSections(listing, postedDetailSections, details.amenities.length > 0);
+  const relatedRooms = relatedListings.slice(0, 3);
+  const ownerName = listing.sellerName || details.contactName || getString(listing.sellerInformation, "name") || "Room Owner";
+  const displayPrice = details.monthlyRent
+    ? `${formatCurrencyAmount(Number(details.monthlyRent), country)}`
+    : formatPrice(listing.price, country);
+  const priceSuffix = details.monthlyRent || listing.price ? "/ Month" : "";
+  const availableText = details.availableFrom ? formatShortDate(details.availableFrom) || details.availableFrom : "Contact advertiser";
+
+  return (
+    <article className="public-room-detail">
+      <section className="public-room-hero">
+        <div className="container">
+          <nav className="public-room-crumb" aria-label="breadcrumb">
+            <Link to="/">Home</Link>
+            <span>/</span>
+            <Link to={buildBackHref(listing)}>Rooms & Rentals</Link>
+            {listing.city ? (
+              <>
+                <span>/</span>
+                <span>{listing.city}</span>
+              </>
+            ) : null}
+          </nav>
+          <span className="public-room-badge">
+            <i className="material-icons" aria-hidden="true">verified</i>
+            {listing.subCategory || "Room Listing"}
+          </span>
+          <h1>{listing.title}</h1>
+          <div className="public-room-hero-meta">
+            {address ? <span><i className="material-icons" aria-hidden="true">location_on</i>{address}</span> : null}
+            <span><i className="material-icons" aria-hidden="true">event_available</i>Available from: {availableText}</span>
+            {details.roomType ? <span><i className="material-icons" aria-hidden="true">meeting_room</i>{details.roomType}</span> : null}
+            {details.preferredGender ? <span><i className="material-icons" aria-hidden="true">wc</i>{details.preferredGender}</span> : null}
+          </div>
+          <div className="public-room-hero-actions">
+            <button type="button" className="public-room-btn public-room-btn-primary" onClick={onOpenQuote}>
+              <i className="material-icons" aria-hidden="true">mail</i>
+              Contact Advertiser
+            </button>
+            {phone ? (
+              <a href={`tel:${phone}`} className="public-room-btn public-room-btn-light">
+                <i className="material-icons" aria-hidden="true">call</i>
+                Call Now
+              </a>
+            ) : null}
+            <a href="#room-location" className="public-room-btn public-room-btn-outline" onClick={scrollToSection}>
+              <i className="material-icons" aria-hidden="true">map</i>
+              View Location
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="public-room-wrap">
+        <div className="container">
+          <div className="public-room-layout">
+            <div className="public-room-main">
+              <div className="public-room-card public-room-card-pad">
+                <div className="public-room-gallery">
+                  <img src={resolveListingImageUrl(images[0])} alt={listing.title} loading="eager" onError={hideBrokenImage} />
+                  <div className="public-room-photo-side">
+                    <img src={resolveListingImageUrl(images[1])} alt="" loading="lazy" onError={hideBrokenImage} />
+                    <img src={resolveListingImageUrl(images[2])} alt="" loading="lazy" onError={hideBrokenImage} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="public-room-card public-room-card-pad">
+                <RoomSectionTitle title="Room Highlights" description="Everything a renter needs to know before contacting the advertiser." />
+                <div className="public-room-facts">
+                  <RoomFact icon="payments" label="Rent" value={`${displayPrice} ${priceSuffix}`.trim()} />
+                  <RoomFact icon="meeting_room" label="Room Type" value={details.roomType || listing.detailCategory || listing.subCategory || "Room"} />
+                  <RoomFact icon="bathtub" label="Bathroom" value={details.bathrooms || "Contact advertiser"} />
+                  <RoomFact icon="home" label="Property Type" value={details.propertyType || listing.subCategory || "Rental"} />
+                </div>
+              </div>
+
+              <div className="public-room-card public-room-card-pad">
+                <RoomSectionTitle title="About This Room" description={details.neighborhood || address || "Room and rental details"} />
+                <div className="public-room-copy">
+                  <p>{details.description || listing.description || "Details are not listed."}</p>
+                </div>
+              </div>
+
+              {details.amenities.length ? (
+                <div className="public-room-card public-room-card-pad">
+                  <RoomSectionTitle title="Amenities" description="Included features for a comfortable stay." />
+                  <div className="public-room-amenities">
+                    {details.amenities.map((amenity) => (
+                      <div className="public-room-amenity" key={amenity}>
+                        <i className="material-icons" aria-hidden="true">check_circle</i>
+                        {amenity}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {tabSections.length ? (
+                <div className="public-room-card public-room-card-pad">
+                  <RoomSectionTitle title="Posted Details" description="Additional listing information grouped tab wise." />
+                  <RoommatesRentalTabs sections={tabSections} />
+                </div>
+              ) : null}
+
+              <div className="public-room-card public-room-card-pad" id="room-location">
+                <RoomSectionTitle title="Location" description={address || "Location details not listed."} />
+                <div className="public-room-map">
+                  <iframe
+                    src={buildMapUrl(address)}
+                    title={`${listing.title} location`}
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+              </div>
+
+              <div className="public-room-card public-room-card-pad" id="ld-rev">
+                <RoomSectionTitle title="Reviews" description="Share your experience with this listing." />
+                <form className="public-room-review-form" onSubmit={onReviewSubmit}>
+                  <div className="public-review-rating-input" aria-label="Rating">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={value <= reviewRating ? "active" : ""}
+                        aria-label={`${value} star rating`}
+                        onClick={() => onReviewRatingChange(value)}
+                      >
+                        <i className="material-icons" aria-hidden="true">star</i>
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    className="form-control"
+                    placeholder="Write review"
+                    value={reviewMessage}
+                    onChange={(event) => onReviewMessageChange(event.target.value)}
+                  />
+                  {reviewSuccess ? <div className="alert alert-success">{reviewSuccess}</div> : null}
+                  {reviewError ? <div className="alert alert-danger">{reviewError}</div> : null}
+                  <button type="submit" className="public-room-btn public-room-btn-primary" disabled={isReviewSubmitting}>
+                    {isReviewSubmitting ? "Submitting..." : "Submit Review"}
+                  </button>
+                </form>
+                {reviews.length ? (
+                  <div className="public-user-review-list">
+                    {reviews.map((review) => (
+                      <div className="public-user-review" key={review.id}>
+                        <div>
+                          <strong>{review.reviewerName || "User"}</strong>
+                          <span>{formatShortDate(review.updatedAt || review.createdAt)}</span>
+                        </div>
+                        <RatingStars rating={review.rating} />
+                        {review.reviewMessage ? <p>{review.reviewMessage}</p> : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              {relatedRooms.length ? (
+                <div className="public-room-card public-room-card-pad">
+                  <RoomSectionTitle title={`More Rooms Near ${listing.city || "You"}`} description="Similar room listings that match nearby renter needs." />
+                  <div className="public-room-related-list">
+                    {relatedRooms.map((item) => (
+                      <Link to={`/listing-details?id=${item.id}`} className="public-room-related" key={item.id}>
+                        <span className="public-room-related-thumb">
+                          {item.primaryImageUrl || item.imageUrls?.[0] ? (
+                            <img src={resolveListingImageUrl(item.primaryImageUrl || item.imageUrls?.[0])} alt="" loading="lazy" onError={hideBrokenImage} />
+                          ) : (
+                            <i className="material-icons" aria-hidden="true">bed</i>
+                          )}
+                        </span>
+                        <span>
+                          <strong>{item.title}</strong>
+                          <small>{[item.subCategory, item.city].filter(Boolean).join(", ")}</small>
+                          <b>{formatPrice(item.price, country)}</b>
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <aside className="public-room-side">
+              <div className="public-room-card public-room-side-card" id="room-contact">
+                <div className="public-room-price-box">
+                  <span>Monthly Rent</span>
+                  <strong>{displayPrice}</strong>
+                  {priceSuffix ? <small>{priceSuffix}</small> : null}
+                </div>
+                <div className="public-room-card-pad">
+                  <div className="public-room-host">
+                    <div className="public-room-host-avatar">{ownerName.charAt(0).toUpperCase()}</div>
+                    <div>
+                      <h4>{ownerName}</h4>
+                      <p>Verified Chao Desi advertiser</p>
+                    </div>
+                  </div>
+                  <button type="button" className="public-room-btn public-room-btn-primary public-room-full-btn" onClick={onOpenQuote}>
+                    {quoteActionLabel}
+                  </button>
+                  {phone ? <a href={`tel:${phone}`} className="public-room-btn public-room-btn-light public-room-full-btn">Call {phone}</a> : null}
+                  {whatsapp ? (
+                    <a href={`https://wa.me/${numbersOnly(whatsapp)}`} className="public-room-btn public-room-btn-outline public-room-full-btn" target="_blank" rel="noreferrer">
+                      WhatsApp
+                    </a>
+                  ) : null}
+                  {email ? <a href={`mailto:${email}`} className="public-room-email">{email}</a> : null}
+                </div>
+              </div>
+
+              <div className="public-room-card public-room-card-pad">
+                <RoomSectionTitle title="Listing Details" />
+                <ul className="public-room-list">
+                  <li><i className="material-icons" aria-hidden="true">calendar_today</i><span>Posted {formatMonthYear(listing.createdAt)} and available from {availableText}.</span></li>
+                  {details.utilitiesIncluded ? <li><i className="material-icons" aria-hidden="true">verified_user</i><span>Utilities included: {details.utilitiesIncluded}.</span></li> : null}
+                  {details.preferredOccupation ? <li><i className="material-icons" aria-hidden="true">groups</i><span>Suitable for {details.preferredOccupation.toLowerCase()} renters.</span></li> : null}
+                  {address ? <li><i className="material-icons" aria-hidden="true">place</i><span>{address}</span></li> : null}
+                </ul>
+              </div>
+
+              <div className="public-room-card public-room-card-pad">
+                <RoomSectionTitle title="Need A Roommate?" description="Post your room or roommate requirement and get matched with local seekers." />
+                <Link to="/dashboard/listings/start" className="public-room-btn public-room-btn-primary public-room-full-btn">Post Your Need</Link>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      {isQuoteModalOpen ? (
+        <ListingQuoteModal
+          form={quoteForm}
+          isProfileLoading={isQuoteProfileLoading}
+          isSubmitting={isQuoteSubmitting}
+          listing={listing}
+          title={quoteActionLabel}
+          status={quoteStatus}
+          onChange={onQuoteChange}
+          onClose={onQuoteClose}
+          onSubmit={onQuoteSubmit}
+        />
+      ) : null}
+
+      {loginPrompt ? (
+        <LoginRequiredPrompt
+          title={loginPrompt.title}
+          message={loginPrompt.message}
+          onClose={onLoginPromptClose}
+        />
+      ) : null}
+    </article>
+  );
+}
+
+function RoomSectionTitle({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="public-room-section-title">
+      <h2>{title}</h2>
+      {description ? <p>{description}</p> : null}
+    </div>
+  );
+}
+
+function RoomFact({ icon, label, value }: { icon: string; label: string; value: string }) {
+  return (
+    <div className="public-room-fact">
+      <i className="material-icons" aria-hidden="true">{icon}</i>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function RoommatesRentalTabs({ sections }: { sections: PostedDetailSection[] }) {
+  const [activeTitle, setActiveTitle] = useState(sections[0]?.title || "");
+
+  useEffect(() => {
+    if (!sections.some((section) => section.title === activeTitle)) {
+      setActiveTitle(sections[0]?.title || "");
+    }
+  }, [activeTitle, sections]);
+
+  const activeSection = sections.find((section) => section.title === activeTitle) || sections[0];
+
+  if (!activeSection) {
+    return null;
+  }
+
+  return (
+    <div className="public-room-tabs">
+      <div className="public-room-tab-list" role="tablist" aria-label="Room details">
+        {sections.map((section) => (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={section.title === activeSection.title}
+            className={section.title === activeSection.title ? "active" : ""}
+            key={section.title}
+            onClick={() => setActiveTitle(section.title)}
+          >
+            <i className="material-icons" aria-hidden="true">{getRoomTabIcon(section.title)}</i>
+            {section.title}
+          </button>
+        ))}
+      </div>
+      <div className="public-room-tab-panel" role="tabpanel">
+        <div className="public-room-tab-heading">
+          <span><i className="material-icons" aria-hidden="true">{getRoomTabIcon(activeSection.title)}</i></span>
+          <div>
+            <h3>{activeSection.title}</h3>
+            <p>{getRoomTabDescription(activeSection.title)}</p>
+          </div>
+        </div>
+        <dl className={activeSection.rows.length === 1 ? "is-single" : ""}>
+          {activeSection.rows.map((row) => (
+            <div key={`${activeSection.title}-${row.label}`}>
+              <dt>{row.label}</dt>
+              <dd><RoomPostedDetailValue value={row.value} /></dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  );
+}
+
+function RoomPostedDetailValue({ value }: { value: PostedDetailValue }) {
+  if (typeof value === "string") {
+    const parts = value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (parts.length > 1 && parts.every((item) => item.length <= 34)) {
+      return (
+        <div className="public-room-value-chips">
+          {parts.map((item) => <span key={item}>{item}</span>)}
+        </div>
+      );
+    }
+  }
+
+  return <PostedDetailValueView value={value} />;
+}
+
+function getRoomTabIcon(title: string) {
+  const normalizedTitle = title.toLowerCase();
+
+  if (normalizedTitle.includes("rental")) return "payments";
+  if (normalizedTitle.includes("room")) return "king_bed";
+  if (normalizedTitle.includes("preference")) return "group";
+  if (normalizedTitle.includes("amenit")) return "verified";
+  if (normalizedTitle.includes("contact")) return "contact_phone";
+  if (normalizedTitle.includes("verification")) return "workspace_premium";
+  return "fact_check";
+}
+
+function getRoomTabDescription(title: string) {
+  const normalizedTitle = title.toLowerCase();
+
+  if (normalizedTitle.includes("rental")) return "Rent, deposit, lease and availability details.";
+  if (normalizedTitle.includes("room")) return "Room type, property type and living space information.";
+  if (normalizedTitle.includes("preference")) return "Renter and roommate preferences posted by the advertiser.";
+  if (normalizedTitle.includes("amenit")) return "Comfort features and nearby facilities included with this listing.";
+  if (normalizedTitle.includes("contact")) return "Advertiser contact and viewing preference information.";
+  if (normalizedTitle.includes("verification")) return "Verification, lease, student, sublease and special rental details.";
+  return "Additional information submitted with this listing.";
+}
+
 function ListingQuoteModal({
   form,
   isProfileLoading,
@@ -1101,6 +2019,466 @@ function getSavedNearbyServices(listing: ListingSummary): NearbyService[] {
   } catch {
     return [];
   }
+}
+
+const localServiceCategoryNames = new Set([
+  "Financial & Taxation Services",
+  "Lessons/Tuitions",
+  "Home & Business Needs",
+  "Travel & Accommodation",
+  "Health & Wellness",
+  "Beauty Services",
+  "Care Services",
+]);
+
+const localServiceSubCategoryNames = new Set([
+  "Real Estate Services",
+  "Wedding & Events",
+  "Food & Catering",
+  "Financial & Taxation Services",
+  "Lessons/Tuitions",
+  "Home & Business Needs",
+  "Travel & Accommodation",
+  "Health & Wellness",
+]);
+
+function isLocalServiceDetailListing(listing: ListingSummary) {
+  return (
+    localServiceCategoryNames.has(listing.categoryName) ||
+    localServiceSubCategoryNames.has(listing.subCategory) ||
+    localServiceSubCategoryNames.has(listing.detailCategory)
+  );
+}
+
+function getLocalServiceDisplayDetails(listing: ListingSummary) {
+  const attributes = getListingCategoryAttributes(listing);
+  const contactInfo = parseJsonRecord(getString(listing.propertyDetails, "additionalContactInfo"));
+  const categoryLabel = localServiceSubCategoryNames.has(listing.subCategory)
+    ? listing.subCategory
+    : listing.categoryName || "Local Service";
+
+  return {
+    categoryLabel,
+    summary: getLocalServiceAttributeValue(attributes, "tagline", "shortDescription", "summary"),
+    description: getLocalServiceAttributeValue(attributes, "description", "serviceDescription") || getString(listing.propertyDetails, "businessDescription"),
+    serviceType: getLocalServiceAttributeValue(attributes, "serviceType", "service_type", "servicesOffered", "services_offered") || listing.detailCategory,
+    serviceArea: getLocalServiceAttributeValue(attributes, "serviceArea", "service_area", "delivery_radius", "service_radius", "operatingZones"),
+    experience: getLocalServiceAttributeValue(attributes, "experience", "yearsOfExperience", "years_experience"),
+    licenseNumber: getLocalServiceAttributeValue(attributes, "licenseNumber", "license_number", "businessRegistrationNumber"),
+    availability: getLocalServiceAttributeValue(attributes, "availability", "working_days", "open_24x7"),
+    bookingType: getLocalServiceAttributeValue(attributes, "bookingType", "onlineBooking", "online_booking", "reservations_accepted"),
+    phone: getLocalServiceAttributeValue(attributes, "phone", "contact_phone", "mainPhone") || getString(contactInfo, "mainPhone"),
+    email: getLocalServiceAttributeValue(attributes, "email", "contact_email") || getString(contactInfo, "email"),
+    whatsapp: getLocalServiceAttributeValue(attributes, "whatsapp", "whatsAppNumber"),
+    website: getLocalServiceAttributeValue(attributes, "website", "websiteUrl", "onlineBookingUrl"),
+    verifiedText: getBoolean(listing.settings, "verifiedByAdmin") ? "Verified provider" : "Listed provider",
+  };
+}
+
+function getLocalServiceInfoRows(
+  listing: ListingSummary,
+  details: ReturnType<typeof getLocalServiceDisplayDetails>
+): Array<[string, LooseValue]> {
+  return [
+    ["Category", details.categoryLabel],
+    ["Service Type", details.serviceType],
+    ["Service Area", details.serviceArea || buildAddress(listing)],
+    ["Experience", details.experience],
+    ["License", details.licenseNumber],
+    ["Availability", details.availability],
+    ["Booking", details.bookingType],
+    ["Starting Price", listing.price ? formatPrice(listing.price, getString(listing.locationDetails, "country")) : ""],
+  ];
+}
+
+function getLocalServiceContactRows(
+  listing: ListingSummary,
+  phone: string,
+  email: string,
+  whatsapp: string,
+  website: string
+): Array<[string, LooseValue]> {
+  const rows: Array<[string, LooseValue]> = [
+    ["Phone", phone],
+    ["Email", email],
+    ["WhatsApp", whatsapp],
+    ["Website", website],
+    ["Address", buildAddress(listing)],
+  ];
+
+  return rows.filter(([, value]) => Boolean(value));
+}
+
+function getLocalServiceFeatures(listing: ListingSummary) {
+  const attributes = getListingCategoryAttributes(listing);
+  const amenityItems = Object.entries(listing.amenities || {})
+    .filter(([, value]) => value === true)
+    .map(([key]) => formatPostedLabel(key));
+  const enabledAttributeItems = Object.entries(attributes)
+    .filter(([, value]) => value === true || String(value).toLowerCase() === "yes")
+    .map(([key]) => formatPostedLabel(key))
+    .filter((label) => !["Open 24x7", "Online Booking"].includes(label));
+  const serviceItems = getLocalServiceItems(listing).map((item) => item.name).filter(Boolean);
+  const paymentMethods = getPaymentMethodLabels(listing);
+  const rawFeatures = Array.from(new Set([...serviceItems, ...amenityItems, ...enabledAttributeItems, ...paymentMethods])).slice(0, 8);
+
+  if (!rawFeatures.length) {
+    return [
+      { title: "Verified listing", detail: "Provider details are available through Chao Desi.", icon: "verified_user" },
+      { title: "Local service area", detail: buildAddress(listing) || "Service area is available on request.", icon: "location_on" },
+      { title: "Customer enquiries", detail: "Send a request and the provider can respond directly.", icon: "mail" },
+    ];
+  }
+
+  return rawFeatures.map((title, index) => ({
+    title,
+    detail: getLocalServiceFeatureDetail(title),
+    icon: ["done_all", "local_shipping", "groups", "event_available", "security", "payment", "workspace_premium", "support_agent"][index % 8],
+  }));
+}
+
+function getLocalServiceFeatureDetail(title: string) {
+  const normalizedTitle = title.toLowerCase();
+
+  if (normalizedTitle.includes("cash") || normalizedTitle.includes("card") || normalizedTitle.includes("pay")) {
+    return "Flexible payment option supported by this provider.";
+  }
+
+  if (normalizedTitle.includes("delivery") || normalizedTitle.includes("travel") || normalizedTitle.includes("mobile")) {
+    return "Available for mobile or area-based service requests.";
+  }
+
+  if (normalizedTitle.includes("verified") || normalizedTitle.includes("license")) {
+    return "Important provider verification details are listed.";
+  }
+
+  return "Included with this local service listing.";
+}
+
+function getLocalServiceItems(listing: ListingSummary): NamedImageItem[] {
+  const services = parseJsonArray<NamedImageItem>(getString(listing.propertyDetails, "services"))
+    .filter((item) => item.name)
+    .slice(0, 6);
+
+  if (services.length) {
+    return services;
+  }
+
+  const attributes = getListingCategoryAttributes(listing);
+  const serviceText = getLocalServiceAttributeValue(attributes, "servicesOffered", "services_offered", "serviceType", "service_type");
+  const serviceNames = splitTextList(serviceText || listing.detailCategory || listing.subCategory).slice(0, 6);
+  return serviceNames.map((name) => ({ name }));
+}
+
+function getLocalServicePackages(listing: ListingSummary, country?: string) {
+  const offers = getOfferItems(listing);
+
+  if (offers.length) {
+    return offers.map((offer) => ({
+      name: offer.name || "Service package",
+      price: offer.price ? formatPrice(Number(offer.price), country) : formatPrice(listing.price, country),
+      detail: offer.detail || "Package details are available from the provider.",
+    }));
+  }
+
+  const attributes = getListingCategoryAttributes(listing);
+  const priceText = getLocalServiceAttributeValue(
+    attributes,
+    "price_range",
+    "average_cost_for_two",
+    "per_plate_pricing",
+    "delivery_fee",
+    "hourlyRate",
+    "serviceFee"
+  );
+
+  if (priceText || listing.price) {
+    return [
+      {
+        name: "Standard Service",
+        price: listing.price ? formatPrice(listing.price, country) : priceText,
+        detail: "Contact the provider for final pricing based on your requirement.",
+      },
+    ];
+  }
+
+  return [
+    {
+      name: "Custom Quote",
+      price: "Price on request",
+      detail: "Share your requirement and receive a quote from the provider.",
+    },
+  ];
+}
+
+function getPaymentMethodLabels(listing: ListingSummary) {
+  const paymentMethods = parseJsonRecord(getString(listing.propertyDetails, "paymentMethods"));
+  return Object.entries(paymentMethods)
+    .filter(([, value]) => value === true)
+    .map(([key]) => formatPostedLabel(key));
+}
+
+function getLocalServiceAttributeValue(record: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+
+    if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    }
+  }
+
+  return "";
+}
+
+function splitTextList(value: string) {
+  return value
+    .split(/[,;\n]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getLocalServiceCategoryIcon(listing: ListingSummary) {
+  const text = `${listing.categoryName} ${listing.subCategory} ${listing.detailCategory}`.toLowerCase();
+
+  if (text.includes("real estate")) return "home";
+  if (text.includes("wedding") || text.includes("event")) return "celebration";
+  if (text.includes("food") || text.includes("catering")) return "restaurant";
+  if (text.includes("health") || text.includes("care")) return "health_and_safety";
+  if (text.includes("travel")) return "flight";
+  if (text.includes("tax") || text.includes("financial")) return "account_balance";
+  if (text.includes("lesson") || text.includes("tuition")) return "school";
+  if (text.includes("beauty")) return "spa";
+  return "design_services";
+}
+
+function getContactIcon(label: string) {
+  const normalizedLabel = label.toLowerCase();
+
+  if (normalizedLabel.includes("phone")) return "call";
+  if (normalizedLabel.includes("email")) return "mail";
+  if (normalizedLabel.includes("whatsapp")) return "chat";
+  if (normalizedLabel.includes("website")) return "language";
+  return "place";
+}
+
+function getRoommatesRentalDisplayDetails(listing: ListingSummary) {
+  const attributes = getListingCategoryAttributes(listing);
+  const monthlyRent = getRoommateNumber(attributes, "monthly_rent", "monthlyRent", "rent", "price") || listing.price || null;
+
+  return {
+    description: getRoommateAttributeValue(attributes, "description") || listing.description,
+    propertyType: getRoommateAttributeValue(attributes, "property_type", "propertyType") || listing.subCategory,
+    neighborhood: getRoommateAttributeValue(attributes, "neighborhood"),
+    monthlyRent,
+    securityDeposit: getRoommateNumber(attributes, "security_deposit", "securityDeposit"),
+    utilitiesIncluded: getRoommateBooleanText(attributes, "utilities_included", "utilitiesIncluded"),
+    leaseDuration: getRoommateAttributeValue(attributes, "lease_duration", "leaseDuration"),
+    availableFrom: getRoommateAttributeValue(attributes, "available_from", "availableFrom"),
+    roomType: getRoommateAttributeValue(attributes, "room_type", "roomType") || listing.detailCategory,
+    bedrooms: getRoommateAttributeValue(attributes, "bedrooms", "number_of_bedrooms", "numberOfBedrooms"),
+    bathrooms: getRoommateAttributeValue(attributes, "bathrooms"),
+    furnishingType: getRoommateAttributeValue(attributes, "furnishing_type", "furnishingType"),
+    roomSize: getRoommateAttributeValue(attributes, "room_size_sqft", "roomSizeSqft", "room_size"),
+    preferredGender: getRoommateAttributeValue(attributes, "preferred_gender", "preferredGender"),
+    preferredOccupation: getRoommateAttributeValue(attributes, "preferred_occupation", "preferredOccupation"),
+    contactName: getRoommateAttributeValue(attributes, "contact_name", "contactName"),
+    phone: getRoommateAttributeValue(attributes, "phone", "contact_phone", "contactPhone"),
+    email: getRoommateAttributeValue(attributes, "email", "contact_email", "contactEmail"),
+    amenities: getRoommatesRentalAmenities(attributes, listing.amenities),
+  };
+}
+
+function getRoommatesRentalImages(galleryImages: string[]) {
+  const fallbacks = [
+    "/template-17/images/chao-home-room-listings/2.jpeg",
+    "/template-17/images/chao-home-room-listings/1.png",
+    "/template-17/images/chao-home-room-listings/3.png",
+  ];
+
+  return Array.from(new Set([...galleryImages, ...fallbacks])).slice(0, 3);
+}
+
+function getRoommatesRentalTabSections(
+  listing: ListingSummary,
+  fallbackSections: PostedDetailSection[],
+  hideAmenitiesSection = false
+) {
+  const attributes = getListingCategoryAttributes(listing);
+  const sections: PostedDetailSection[] = [];
+
+  addPostedSection(sections, "Rental", [
+    ["Monthly Rent", getRoommateNumber(attributes, "monthly_rent", "monthlyRent", "rent", "price") || listing.price],
+    ["Security Deposit", getRoommateNumber(attributes, "security_deposit", "securityDeposit")],
+    ["Utilities Included", getRoommateBooleanText(attributes, "utilities_included", "utilitiesIncluded")],
+    ["Negotiable", getRoommateBooleanText(attributes, "price_negotiable", "priceNegotiable")],
+    ["Lease Duration", getRoommateAttributeValue(attributes, "lease_duration", "leaseDuration")],
+    ["Available From", getRoommateAttributeValue(attributes, "available_from", "availableFrom")],
+    ["Available Until", getRoommateAttributeValue(attributes, "available_until", "availableUntil")],
+  ]);
+
+  addPostedSection(sections, "Room", [
+    ["Property Type", getRoommateAttributeValue(attributes, "property_type", "propertyType") || listing.subCategory],
+    ["Detailed Category", listing.detailCategory],
+    ["Bedrooms", getRoommateAttributeValue(attributes, "bedrooms", "number_of_bedrooms", "numberOfBedrooms")],
+    ["Bathrooms", getRoommateAttributeValue(attributes, "bathrooms")],
+    ["Room Type", getRoommateAttributeValue(attributes, "room_type", "roomType")],
+    ["Furnishing", getRoommateAttributeValue(attributes, "furnishing_type", "furnishingType")],
+    ["Room Size", getRoommateAttributeValue(attributes, "room_size_sqft", "roomSizeSqft", "room_size")],
+  ]);
+
+  addPostedSection(sections, "Preferences", [
+    ["Preferred Gender", getRoommateAttributeValue(attributes, "preferred_gender", "preferredGender")],
+    ["Preferred Occupation", getRoommateAttributeValue(attributes, "preferred_occupation", "preferredOccupation")],
+    ["Preferred Age Range", getRoommateAttributeValue(attributes, "preferred_age_range", "preferredAgeRange")],
+    ["Smoking Allowed", getRoommateBooleanText(attributes, "smoking_allowed", "smokingAllowed")],
+    ["Pets Allowed", getRoommateBooleanText(attributes, "pets_allowed", "petsAllowed")],
+    ["Couples Allowed", getRoommateBooleanText(attributes, "couples_allowed", "couplesAllowed")],
+  ]);
+
+  if (!hideAmenitiesSection) {
+    addPostedSection(sections, "Amenities", [
+      ["Amenities", getRoommatesRentalAmenities(attributes, listing.amenities)],
+      ["Public Transportation Nearby", getRoommateBooleanText(attributes, "public_transportation_nearby", "publicTransportationNearby")],
+      ["University Nearby", getRoommateBooleanText(attributes, "university_nearby", "universityNearby")],
+      ["Grocery Stores Nearby", getRoommateBooleanText(attributes, "grocery_stores_nearby", "groceryStoresNearby")],
+      ["Hospital Nearby", getRoommateBooleanText(attributes, "hospital_nearby", "hospitalNearby")],
+      ["Shopping Center Nearby", getRoommateBooleanText(attributes, "shopping_center_nearby", "shoppingCenterNearby")],
+    ]);
+  }
+
+  addPostedSection(sections, "Contact", [
+    ["Contact Name", getRoommateAttributeValue(attributes, "contact_name", "contactName")],
+    ["Phone", getRoommateAttributeValue(attributes, "phone", "contact_phone", "contactPhone")],
+    ["Email", getRoommateAttributeValue(attributes, "email", "contact_email", "contactEmail")],
+    ["Preferred Contact Method", getRoommateAttributeValue(attributes, "preferred_contact_method", "preferredContactMethod")],
+    ["Schedule Property Viewing", getRoommateBooleanText(attributes, "schedule_property_viewing", "schedulePropertyViewing")],
+    ["Open House Dates", getRoommateAttributeValue(attributes, "open_house_dates", "openHouseDates")],
+  ]);
+
+  addPostedSection(sections, "Verification", [
+    ["Identity Verified", getRoommateBooleanText(attributes, "identity_verified", "identityVerified")],
+    ["Property Ownership Verified", getRoommateBooleanText(attributes, "property_ownership_verified", "propertyOwnershipVerified")],
+    ["Background Verification", getRoommateBooleanText(attributes, "background_verification", "backgroundVerification")],
+    ["University Name", getRoommateAttributeValue(attributes, "university_name", "universityName")],
+    ["Distance From Campus", getRoommateAttributeValue(attributes, "distance_from_campus", "distanceFromCampus")],
+    ["Student Only", getRoommateBooleanText(attributes, "student_only", "studentOnly")],
+    ["Original Lease End Date", getRoommateAttributeValue(attributes, "original_lease_end_date", "originalLeaseEndDate")],
+    ["Landlord Approval Required", getRoommateBooleanText(attributes, "landlord_approval_required", "landlordApprovalRequired")],
+    ["Corporate Rates", getRoommateAttributeValue(attributes, "corporate_rates", "corporateRates")],
+    ["Business Traveler Amenities", getRoommateAttributeValue(attributes, "business_traveler_amenities", "businessTravelerAmenities")],
+    ["Daily Rate", getRoommateNumber(attributes, "daily_rate", "dailyRate")],
+    ["Cleaning Fee", getRoommateNumber(attributes, "cleaning_fee", "cleaningFee")],
+  ]);
+
+  return sections.length ? sections : fallbackSections;
+}
+
+function getListingCategoryAttributes(listing: ListingSummary): Record<string, unknown> {
+  const otherInformation = parseUnknownRecord(getString(listing.propertyDetails, "otherInformation"));
+  return asUnknownRecord(otherInformation.categoryAttributes);
+}
+
+function getRoommateAttributeValue(record: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+
+    if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    }
+  }
+
+  return "";
+}
+
+function getRoommateNumber(record: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const parsed = Number(value.replace(/,/g, ""));
+      if (Number.isFinite(parsed)) {
+        return parsed;
+      }
+    }
+  }
+
+  return null;
+}
+
+function getRoommateBooleanText(record: Record<string, unknown>, ...keys: string[]) {
+  for (const key of keys) {
+    const value = record[key];
+
+    if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    }
+
+    if (typeof value === "string" && value.trim()) {
+      const normalized = value.trim().toLowerCase();
+
+      if (["yes", "true", "1", "included", "available"].includes(normalized)) {
+        return "Yes";
+      }
+
+      if (["no", "false", "0", "not included", "unavailable"].includes(normalized)) {
+        return "No";
+      }
+
+      return value.trim();
+    }
+  }
+
+  return "";
+}
+
+function getRoommatesRentalAmenities(
+  attributes: Record<string, unknown>,
+  amenities?: Record<string, boolean>
+) {
+  const attributeAmenities = [
+    ["wifi_included", "Wi-Fi Included"],
+    ["parking_available", "Parking Available"],
+    ["laundry_facility", "Laundry Facility"],
+    ["air_conditioning", "Air Conditioning"],
+    ["heating", "Heating"],
+    ["gym_access", "Gym Access"],
+    ["swimming_pool", "Swimming Pool"],
+    ["elevator", "Elevator"],
+    ["security_system", "Security System"],
+    ["public_transportation_nearby", "Public Transportation Nearby"],
+    ["university_nearby", "University Nearby"],
+    ["grocery_stores_nearby", "Grocery Stores Nearby"],
+    ["hospital_nearby", "Hospital Nearby"],
+    ["shopping_center_nearby", "Shopping Center Nearby"],
+  ];
+  const enabledAttributes = attributeAmenities
+    .filter(([key]) => getRoommateBooleanText(attributes, key) === "Yes")
+    .map(([, label]) => label);
+  const enabledAmenities = Object.entries(amenities || {})
+    .filter(([, value]) => value === true)
+    .map(([key]) => formatPostedLabel(key));
+
+  return Array.from(new Set([...enabledAttributes, ...enabledAmenities]));
 }
 
 function getPostedDetailSections(listing: ListingSummary): PostedDetailSection[] {

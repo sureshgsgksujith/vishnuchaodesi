@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 import { categoryLinks, useExploreCategories } from "./exploreMenuData";
 import "../styles/customerHeader.css";
 
 export default function HomeHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
   const logoTarget = useLogoNavigationTarget();
   const [showExplore, setShowExplore] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -18,6 +19,15 @@ export default function HomeHeader() {
     closeExplore();
     closeMobileMenu();
   };
+  const isServicePage = [
+    "/local-services",
+    "/local-services.html",
+    "/all-services",
+    "/all-services.html",
+    "/all-services-detailed",
+    "/all-services-detailed.html",
+  ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
+  const addActionLabel = isServicePage ? "Add Service" : "Add business";
 
   function submitHeaderSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -139,7 +149,7 @@ export default function HomeHeader() {
             <div className="chaodesi-header-actions">
               <ul className="bl">
                 <li>
-                  <Link to="/login">Add business</Link>
+                  <Link to="/login">{addActionLabel}</Link>
                 </li>
                 <li>
                   <Link to="/login">Sign in</Link>
@@ -176,7 +186,7 @@ export default function HomeHeader() {
                 <div className="mv-bus">
                   <h4></h4>
                   <ul>
-                    <li><Link to="/login" onClick={closeAllPopups}>Add business</Link></li>
+                    <li><Link to="/login" onClick={closeAllPopups}>{addActionLabel}</Link></li>
                     <li><Link to="/login" onClick={closeAllPopups}>Sign in</Link></li>
                     <li><Link to="/register" onClick={closeAllPopups}>Create an account</Link></li>
                   </ul>

@@ -255,7 +255,7 @@ export default function LocalServicesPage() {
               <p>List your business</p>
               <h2>Start receiving enquiries from customers near you.</h2>
             </div>
-            <Link to="/dashboard/listings/new">Add Business <span className="material-icons">arrow_forward</span></Link>
+            <Link to="/dashboard/listings/new">Add Service <span className="material-icons">arrow_forward</span></Link>
           </div>
         </section>
       </main>

@@ -19,8 +19,9 @@
   width: 100%;
   margin: 0 0 50px;
   padding: 0 0 100px;
+  background-image: url("/template-17/images/chao-bg/bg-1.jpg");
   background-size: cover;
-  background-position: center;
+  background-position: center 38%;
   background-repeat: no-repeat;
   overflow-x: hidden;
   overflow-y: visible;
@@ -35,8 +36,11 @@
 }
 
 .chao-home-page .hom-head .bg-video {
+  display: block;
   z-index: 0;
   object-fit: cover;
+  object-position: center center;
+  transform: none;
 }
 
 .chao-home-page .hom-head .video-overlay {
@@ -47,6 +51,10 @@
 .chao-home-page .hom-head .container {
   position: relative;
   z-index: 2;
+}
+
+.chao-home-page .hom-head::before {
+  display: none;
 }
 
 .chao-home-page .hom-head::after {
@@ -261,6 +269,11 @@
   background: #fff;
 }
 
+.chao-home-page .home-pricing-banner-section {
+  padding-top: 48px;
+  padding-bottom: 34px;
+}
+
 .home-dynamic-banner {
   position: relative;
   width: 100%;
@@ -325,8 +338,8 @@
   right: 28px;
 }
 
-.home-pricing-banner-section + .pri {
-  padding-top: 0;
+.chao-home-page .pri {
+  padding-top: 34px;
 }
 
 .chao-home-page .home-plan-know-more {
@@ -1818,6 +1831,18 @@
   text-decoration: underline;
 }
 
+.chao-home-page section.chao-law {
+  padding-bottom: 40px;
+}
+
+.chao-home-page .chao-law .mt-50 {
+  margin-bottom: 34px;
+}
+
+.chao-home-page section.chao-travel-car {
+  padding-top: 34px;
+}
+
 .chao-home-page .chao-jobs .home-jobs-listings {
   width: 100%;
   overflow: hidden;
@@ -2445,6 +2470,15 @@ html {
 
   .home-dynamic-banner-section {
     padding: 18px 14px 4px;
+  }
+
+  .chao-home-page .home-pricing-banner-section {
+    padding-top: 30px;
+    padding-bottom: 20px;
+  }
+
+  .chao-home-page .pri {
+    padding-top: 22px;
   }
 
   .home-dynamic-banner-section .container,
