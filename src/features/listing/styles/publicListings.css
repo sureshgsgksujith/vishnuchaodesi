@@ -1907,6 +1907,14 @@
     padding-top: 14px;
   }
 
+  .public-filter-panel {
+    gap: 22px;
+  }
+
+  .public-filter-title h1 {
+    white-space: normal;
+  }
+
   .public-listing-grid,
   .public-service-grid,
   .public-detail-photo-grid,
@@ -1918,6 +1926,12 @@
 }
 
 @media (max-width: 767px) {
+  .public-listing-content,
+  .public-detail-page {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
   .public-listing-shell {
     width: calc(100% - 28px);
   }
@@ -1929,7 +1943,22 @@
   .public-sidebar-card,
   .public-requirement-card,
   .public-side-ad {
-    padding: 24px;
+    padding: 18px;
+  }
+
+  .public-sidebar-card h2,
+  .public-provider-card h2 {
+    font-size: 14px;
+    min-height: auto;
+    padding: 18px;
+  }
+
+  .public-sidebar-search input,
+  .public-sidebar-card select,
+  .public-top-search input,
+  .public-requirement-card input,
+  .public-requirement-card textarea {
+    min-height: 48px;
   }
 
   .public-listing-grid,
@@ -1951,7 +1980,17 @@
   }
 
   .public-listing-image {
-    height: 250px;
+    height: clamp(190px, 58vw, 250px);
+  }
+
+  .public-listing-card-body {
+    padding: 22px 16px 14px;
+  }
+
+  .public-listing-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
   .public-rating-summary {
@@ -1987,6 +2026,28 @@
   .public-related-template-list li {
     flex-basis: 285px;
     width: 285px;
+  }
+}
+
+@media (max-width: 420px) {
+  .public-listing-shell {
+    width: calc(100% - 18px);
+  }
+
+  .public-sidebar-card,
+  .public-requirement-card,
+  .public-side-ad,
+  .public-detail-card {
+    padding: 14px;
+  }
+
+  .public-provider-row {
+    grid-template-columns: 38px minmax(0, 1fr) 32px;
+    margin: 0 14px;
+  }
+
+  .public-listing-actions {
+    grid-template-columns: 1fr;
   }
 }
 

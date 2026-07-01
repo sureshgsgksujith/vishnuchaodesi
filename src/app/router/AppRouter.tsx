@@ -90,7 +90,7 @@ function RegisterRedirect() {
 function PostYourAdsRoute() {
   return isCustomerAuthenticated()
     ? <Navigate to="/dashboard/listings/start" replace />
-    : <Navigate to="/login?login=register&returnUrl=/dashboard/listings/start" replace />;
+    : <Navigate to="/login?returnUrl=/dashboard/listings/start" replace />;
 }
 
 export function AppRouter() {
@@ -152,6 +152,7 @@ export function AppRouter() {
     "/local-services",
     "/local-services.html",
     "/all-listing",
+    "/real-estate-listings",
     "/chao-tv",
     "/listing-details",
     "/listing/:listingId",
@@ -224,6 +225,7 @@ export function AppRouter() {
       <Route path="/all-services-detailed" element={<AllServicesDetailedPage />} />
       <Route path="/all-services-detailed.html" element={<AllServicesDetailedPage />} />
       <Route path="/all-listing" element={<AllListingPage />} />
+      <Route path="/real-estate-listings" element={<AllListingPage lockedCategory="real-estate" includeAllCountries pageTitle="Real Estate" />} />
       <Route path="/chao-tv" element={<ChaoTvPage />} />
       <Route path="/listing-details" element={<ListingDetailPage />} />
       <Route path="/listing/:listingId" element={<ListingDetailPage />} />

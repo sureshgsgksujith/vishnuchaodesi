@@ -5,7 +5,7 @@ export default function HomeFooterSection() {
         <div className="container">
           <div className="row foot-supp">
             <h2>
-              <span>Free support:</span> +01 5426 24400 &nbsp;&nbsp;|&nbsp;&nbsp;
+              <span>Free support:</span> +1 248 430 4014 &nbsp;&nbsp;|&nbsp;&nbsp;
               <span>Email:</span>
               info@chaodesi.com
             </h2>
@@ -53,39 +53,13 @@ export default function HomeFooterSection() {
             </div>
           </div>
 
-          <div className="row wed-foot-link-pop">
-            <div className="col-md-12">
-              <h4>Popular Tags</h4>
-              <ul>
-                <li><a href="#">Schools in NewYork</a></li>
-                <li><a href="#">Real estate in Illunois</a></li>
-                <li><a href="#">Real estate in Chennai1</a></li>
-                <li><a href="#">Enents in Tailand</a></li>
-                <li><a href="#">Flat for rent in Melborn</a></li>
-                <li><a href="#">Schools in NewYork</a></li>
-                <li><a href="#">Real estate in Illunois</a></li>
-                <li><a href="#">Real estate in Chennai1</a></li>
-                <li><a href="#">Enents in Tailand</a></li>
-                <li><a href="#">Flat for rent in Melborn</a></li>
-                <li><a href="#">Schools in NewYork</a></li>
-                <li><a href="#">Real estate in Illunois</a></li>
-                <li><a href="#">Real estate in Chennai1</a></li>
-                <li><a href="#">Enents in Tailand</a></li>
-                <li><a href="#">Flat for rent in Melborn</a></li>
-                <li><a href="#">Schools in NewYork</a></li>
-                <li><a href="#">Real estate in Illunois</a></li>
-                <li><a href="#">Real estate in Chennai1</a></li>
-              </ul>
-            </div>
-          </div>
-
           <div className="row wed-foot-link-1">
             <div className="col-md-4">
               <h4>Get In Touch</h4>
-              <p>Address: 28800 Orchard Lake Road, Suite 180 Farmington Hills, U.S.A.</p>
+              <p>Address: 39555 Orchard Hill Place, Suite 203, Novi, MI 48375.</p>
               <p>
                 Phone:
-                <a href="tel:+01 5426 24400">+01 5426 24400</a>
+                <a href="tel:+12484304014">+1 248 430 4014</a>
               </p>
               <p>
                 Email:
@@ -113,7 +87,7 @@ export default function HomeFooterSection() {
               <h4>SOCIAL MEDIA</h4>
               <ul>
                 <li>
-                  <a target="_blank" href="" rel="noreferrer">
+                  <a target="_blank" href="https://www.linkedin.com/company/chaodesi/" rel="noreferrer">
                     <img src="/template-17/images/social/1.png" alt="" loading="lazy" />
                   </a>
                 </li>
@@ -133,7 +107,7 @@ export default function HomeFooterSection() {
                   </a>
                 </li>
                 <li>
-                  <a target="_blank" href="" rel="noreferrer">
+                  <a target="_blank" href="https://www.youtube.com/@chaodesi860" rel="noreferrer">
                     <img src="/template-17/images/social/5.png" alt="" loading="lazy" />
                   </a>
                 </li>
@@ -143,13 +117,8 @@ export default function HomeFooterSection() {
 
           <div className="row foot-count">
             <ul>
-              <li><a target="_blank" href="http://www.chaodesi.au" rel="noreferrer">Australia</a></li>
-              <li><a target="_blank" href="http://www.chaodesi.uk" rel="noreferrer">UK</a></li>
               <li><a target="_blank" href="http://www.chaodesi.usa" rel="noreferrer">USA</a></li>
               <li><a target="_blank" href="http://www.chaodesi.in" rel="noreferrer">India</a></li>
-              <li><a target="_blank" href="http://www.chaodesi.ge" rel="noreferrer">Germany</a></li>
-              <li><a target="_blank" href="http://www.chaodesi.ch" rel="noreferrer">China</a></li>
-              <li><a target="_blank" href="http://www.chaodesi.fr" rel="noreferrer">france</a></li>
             </ul>
           </div>
         </div>

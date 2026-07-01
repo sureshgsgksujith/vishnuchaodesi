@@ -9,21 +9,16 @@ const HomeArtistToursSection = lazy(() => import("./HomeArtistToursSection"));
 const HomeRoommatesSection = lazy(() => import("./HomeRoommatesSection"));
 const HomeEventsSection = lazy(() => import("./HomeEventsSection"));
 const HomePopularServicesSection = lazy(() => import("./HomePopularServicesSection"));
-const HomeCareServicesSection = lazy(() => import("./HomeCareServicesSection"));
 const HomeJobsSection = lazy(() => import("./HomeJobsSection"));
 const HomeAstrologySection = lazy(() => import("./HomeAstrologySection"));
-const HomeTechnologySection = lazy(() => import("./HomeTechnologySection"));
 const HomeLawyersSection = lazy(() => import("./HomeLawyersSection"));
 const HomeTravelCarsSection = lazy(() => import("./HomeTravelCarsSection"));
-const HomeBuySellSection = lazy(() => import("./HomeBuySellSection"));
 const HomeBannerSliderSection = lazy(() => import("./HomeBannerSliderSection"));
 const HomeFeaturedListingsSection = lazy(() => import("./HomeFeaturedListingsSection"));
 const HomeCareFeaturedListingsSection = lazy(() =>
   import("./HomeFeaturedListingsSection").then((module) => ({ default: module.HomeCareFeaturedListingsSection }))
 );
 const HomePlansSection = lazy(() => import("./HomePlansSection"));
-const HomeFeaturedAreasSection = lazy(() => import("./HomeFeaturedAreasSection"));
-const HomeListBusinessSection = lazy(() => import("./HomeListBusinessSection"));
 const HomeFooterSection = lazy(() => import("./HomeFooterSection"));
 const HomeAdsSection = lazy(() => import("./HomeAdsSection"));
 
@@ -114,16 +109,10 @@ export default function HomePage() {
         <HomePopularServicesSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
-        <HomeCareServicesSection />
-      </ViewportDeferredSection>
-      <ViewportDeferredSection>
         <HomeJobsSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
         <HomeAstrologySection />
-      </ViewportDeferredSection>
-      <ViewportDeferredSection>
-        <HomeTechnologySection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
         <HomeLawyersSection />
@@ -132,25 +121,16 @@ export default function HomePage() {
         <HomeTravelCarsSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
-        <HomeBuySellSection />
-      </ViewportDeferredSection>
-      <ViewportDeferredSection>
         <HomeBannerSliderSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
         <HomePlansSection />
-      </ViewportDeferredSection>
-      <ViewportDeferredSection>
-        <HomeFeaturedAreasSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection minHeight={160}>
         <HomeAdsSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection minHeight={360}>
         <HomeChaoTvSection />
-      </ViewportDeferredSection>
-      <ViewportDeferredSection>
-        <HomeListBusinessSection />
       </ViewportDeferredSection>
       <ViewportDeferredSection minHeight={360}>
         <HomeFooterSection />

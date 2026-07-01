@@ -138,6 +138,10 @@ function buildCategoryHref(categoryName: string, city: string) {
   const params = new URLSearchParams();
   const publicSlug = publicCategorySlugFromName(categoryName);
 
+  if (publicSlug === "chao-tv") {
+    return "/chao-tv";
+  }
+
   if (publicSlug) {
     params.set("category", publicSlug);
   } else {

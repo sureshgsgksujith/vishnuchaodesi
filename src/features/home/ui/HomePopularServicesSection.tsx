@@ -208,7 +208,7 @@ export default function HomePopularServicesSection() {
                       <li><span>5</span> Easily manage leads, quotes, and bookings.</li>
                     </ul>
 
-                    <a href="#" className="cta-btn">Create Your Business Profile</a>
+                    <a href="/post-your-ads" className="cta-btn">Create Your Business Profile</a>
                   </div>
                 </div>
 
@@ -233,7 +233,7 @@ export default function HomePopularServicesSection() {
                       <li><span>5</span> Find services tailored to your needs.</li>
                     </ul>
 
-                    <a href="#" className="cta-btn">Find a Professional</a>
+                    <a href="/local-services" className="cta-btn">Find a Professional</a>
                   </div>
                 </div>
               </div>

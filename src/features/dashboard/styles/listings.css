@@ -1828,3 +1828,177 @@
     padding: 18px;
   }
 }
+
+@media (max-width: 991px) {
+  .login-reg .container {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .login-main.add-list {
+    width: min(100%, 920px);
+  }
+
+  .add-list-ste {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0 14px 10px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .add-list-ste-inn {
+    min-width: max-content;
+  }
+
+  .login-main.add-list .listing-section-card,
+  .login-main.add-list .listing-address-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .login-reg {
+    padding: 84px 0 64px;
+  }
+
+  .login-reg .container,
+  .login-reg .row {
+    margin-right: 0;
+    margin-left: 0;
+    padding-right: 0;
+    padding-left: 0;
+    width: 100%;
+  }
+
+  .login-main.add-list {
+    width: calc(100% - 18px);
+    max-width: none;
+  }
+
+  .login-main.add-list .login {
+    padding: 18px 14px;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .login-main.add-list form[class^="listing_form"],
+  .login-main.add-list form[class*=" listing_form"] {
+    min-width: 0;
+  }
+
+  .login-main.add-list form[class^="listing_form"] .row,
+  .login-main.add-list form[class*=" listing_form"] .row {
+    margin-right: -8px;
+    margin-left: -8px;
+  }
+
+  .login-main.add-list form[class^="listing_form"] [class*="col-"],
+  .login-main.add-list form[class*=" listing_form"] [class*="col-"] {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .login-main.add-list .form-control,
+  .login-main.add-list input,
+  .login-main.add-list select,
+  .login-main.add-list textarea {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .listing-section-card,
+  .listing-address-card {
+    padding: 16px 12px;
+  }
+
+  .listing-gallery-preview-grid {
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 10px;
+  }
+
+  .listing-upload-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .listing-upload-meta span {
+    max-width: 100%;
+  }
+
+  .listing-menu-grid {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .listing-menu-grid-row {
+    min-width: 0;
+  }
+
+  .listing-menu-thumb {
+    width: 52px;
+    height: 52px;
+  }
+
+  .listing-plan-modal {
+    width: min(100%, 620px);
+    max-height: calc(100vh - 28px);
+  }
+
+  .listing-menu-modal .row {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .listing-menu-modal .col-md-12,
+  .listing-menu-modal .col-md-6 {
+    padding-right: 0;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-reg {
+    padding-top: 76px;
+  }
+
+  .login-main.add-list {
+    width: calc(100% - 10px);
+  }
+
+  .login-main.add-list .login {
+    padding: 16px 10px;
+  }
+
+  .login-main.add-list form[class^="listing_form"] > h4,
+  .login-main.add-list form[class*=" listing_form"] > h4 {
+    min-height: 42px;
+    font-size: 18px;
+    padding: 8px 10px;
+  }
+
+  .login-main.add-list form[class^="listing_form"] h5,
+  .login-main.add-list form[class*=" listing_form"] h5 {
+    font-size: 15px;
+  }
+
+  .listing-menu-grid-cell,
+  .listing-menu-list-actions {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .listing-menu-list-actions {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .listing-plan-modal-backdrop {
+    align-items: flex-start;
+    padding: 8px;
+  }
+
+  .listing-plan-modal {
+    padding: 14px;
+  }
+
+  .listing-plan-modal-head h3 {
+    font-size: 20px;
+  }
+}

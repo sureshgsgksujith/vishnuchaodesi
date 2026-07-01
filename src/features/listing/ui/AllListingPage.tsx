@@ -55,7 +55,13 @@ const fallbackListingBanners: PageBanner[] = [
 type PublicCategory = NonNullable<PublicListingQuery["category"]>;
 type SortKey = "recent" | "rating" | "price-low" | "price-high";
 
-export default function AllListingPage() {
+type AllListingPageProps = {
+  lockedCategory?: PublicCategory;
+  includeAllCountries?: boolean;
+  pageTitle?: string;
+};
+
+export default function AllListingPage({ lockedCategory, includeAllCountries = false, pageTitle }: AllListingPageProps = {}) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { currentLocation, selectedLocation, locationRevision } = useHomeSelectedLocation();
@@ -88,17 +94,21 @@ export default function AllListingPage() {
   const [isSubmittingQuote, setIsSubmittingQuote] = useState(false);
 
   const categoryName = searchParams.get("categoryName") || "";
-  const category = getCategory(searchParams.get("category")) || categorySlugFromLabel(categoryName) || undefined;
+  const category = lockedCategory || getCategory(searchParams.get("category")) || categorySlugFromLabel(categoryName) || undefined;
+  const isChaoTvCategory = category === "chao-tv" || categoryName.trim().toLowerCase() === "chao tv";
   const subCategory = searchParams.get("subCategory") || "";
   const detailCategory = searchParams.get("detailCategory") || "";
+  const country = searchParams.get("country") || "";
+  const state = searchParams.get("state") || "";
   const city = searchParams.get("city") || "";
   const search = searchParams.get("search") || "";
   const sort = getSort(searchParams.get("sort"));
   const feature = searchParams.get("feature") || "";
   const rating = searchParams.get("rating") || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const activeCountry = selectedLocation.countryName || currentLocation.country || "";
+  const activeCountry = includeAllCountries ? country : selectedLocation.countryName || currentLocation.country || "";
   const isWaitingForCountry =
+    !includeAllCountries &&
     !selectedLocation.countryName &&
     (currentLocation.status === "idle" || currentLocation.status === "loading");
   const totalPages = useMemo(() => Math.max(1, Math.ceil(totalCount / PAGE_SIZE)), [totalCount]);
@@ -106,9 +116,12 @@ export default function AllListingPage() {
   const displayCount = feature || rating ? sortedItems.length : totalCount;
   const countryFacetItems = useMemo(() => filterListingsByCountry(facetItems, activeCountry), [activeCountry, facetItems]);
   const dynamicCategories = useMemo(() => buildCategoryOptions(countryFacetItems, category), [countryFacetItems, category]);
-  const activeCategoryName = category ? categoryLabel(category, dynamicCategories) : categoryName;
+  const activeCategoryName = pageTitle || (category ? categoryLabel(category, dynamicCategories) : categoryName);
   const categoryFacetItems = useMemo(() => getFacetItemsForCategory(countryFacetItems, category, categoryName), [countryFacetItems, category, categoryName]);
-  const dynamicCities = useMemo(() => uniqueValues(categoryFacetItems.map((item) => getListingCity(item))), [categoryFacetItems]);
+  const stateFacetItems = useMemo(() => filterListingsByState(categoryFacetItems, state), [categoryFacetItems, state]);
+  const dynamicCountries = useMemo(() => uniqueValues(facetItems.map((item) => getListingCountry(item))), [facetItems]);
+  const dynamicStates = useMemo(() => uniqueValues(categoryFacetItems.map((item) => getListingState(item))), [categoryFacetItems]);
+  const dynamicCities = useMemo(() => uniqueValues(stateFacetItems.map((item) => getListingCity(item))), [stateFacetItems]);
   const dynamicSubCategories = useMemo(() => uniqueValues(categoryFacetItems.map((item) => item.subCategory)), [categoryFacetItems]);
   const topBanners = useMemo(() => getBannersForSlot(pageBanners, "top"), [pageBanners]);
   const leftBanners = useMemo(() => getBannersForSlot(pageBanners, "left"), [pageBanners]);
@@ -125,6 +138,12 @@ export default function AllListingPage() {
       })
       .slice(0, 5);
   }, [categoryFacetItems]);
+
+  useEffect(() => {
+    if (isChaoTvCategory) {
+      navigate("/chao-tv", { replace: true });
+    }
+  }, [isChaoTvCategory, navigate]);
 
   useEffect(() => {
     setSearchDraft(search);
@@ -186,6 +205,10 @@ export default function AllListingPage() {
     let isActive = true;
 
     async function loadListings() {
+      if (isChaoTvCategory) {
+        return;
+      }
+
       if (isWaitingForCountry) {
         setIsLoading(true);
         return;
@@ -201,8 +224,10 @@ export default function AllListingPage() {
           subCategory,
           detailCategory,
           country: activeCountry || undefined,
+          state: includeAllCountries ? state || undefined : undefined,
           city,
           search,
+          excludeCategoryName: "Chao TV",
           page,
           pageSize: PAGE_SIZE,
           forceRefresh: locationRevision > 0,
@@ -228,7 +253,7 @@ export default function AllListingPage() {
     return () => {
       isActive = false;
     };
-  }, [activeCountry, category, categoryName, city, detailCategory, isWaitingForCountry, locationRevision, page, search, subCategory]);
+  }, [activeCountry, category, categoryName, city, detailCategory, includeAllCountries, isChaoTvCategory, isWaitingForCountry, locationRevision, page, search, state, subCategory]);
 
   useEffect(() => {
     let isActive = true;
@@ -240,12 +265,21 @@ export default function AllListingPage() {
       };
     }
 
+    if (isChaoTvCategory) {
+      setFacetItems([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
     setFacetItems([]);
 
     getPublicListings({
-      country: activeCountry || undefined,
+      category: lockedCategory,
+      country: includeAllCountries ? undefined : activeCountry || undefined,
+      excludeCategoryName: "Chao TV",
       page: 1,
-      pageSize: 200,
+      pageSize: includeAllCountries ? 1000 : 200,
       forceRefresh: locationRevision > 0,
     })
       .then((result) => {
@@ -262,7 +296,7 @@ export default function AllListingPage() {
     return () => {
       isActive = false;
     };
-  }, [activeCountry, isWaitingForCountry, locationRevision]);
+  }, [activeCountry, includeAllCountries, isChaoTvCategory, isWaitingForCountry, locationRevision, lockedCategory]);
 
   function updateQuery(updates: Record<string, string | number | null>) {
     const next = new URLSearchParams(searchParams);
@@ -415,10 +449,32 @@ export default function AllListingPage() {
                 </button>
               </form>
 
+              {includeAllCountries && dynamicCountries.length ? (
+                <SidebarCard title="Countries" icon="public">
+                  <select value={country} onChange={(event) => updateQuery({ country: event.target.value, state: null, city: null, page: 1 })}>
+                    <option value="">All Countries</option>
+                    {dynamicCountries.map((option) => (
+                      <option value={option} key={option}>{option}</option>
+                    ))}
+                  </select>
+                </SidebarCard>
+              ) : null}
+
+              {includeAllCountries && dynamicStates.length ? (
+                <SidebarCard title="States" icon="map">
+                  <select value={state} onChange={(event) => updateQuery({ state: event.target.value, city: null, page: 1 })}>
+                    <option value="">All States</option>
+                    {dynamicStates.map((option) => (
+                      <option value={option} key={option}>{option}</option>
+                    ))}
+                  </select>
+                </SidebarCard>
+              ) : null}
+
               {dynamicCities.length ? (
                 <SidebarCard title="Cities" icon="apps">
                   <select value={city} onChange={(event) => updateQuery({ city: event.target.value, page: 1 })}>
-                    <option value="">Select City</option>
+                    <option value="">{includeAllCountries ? "All Cities" : "Select City"}</option>
                     {dynamicCities.map((option) => (
                       <option value={option} key={option}>{option}</option>
                     ))}
@@ -426,7 +482,7 @@ export default function AllListingPage() {
                 </SidebarCard>
               ) : null}
 
-              {dynamicCategories.length ? (
+              {!lockedCategory && dynamicCategories.length ? (
                 <SidebarCard title="Categories" icon="apps">
                   <select value={category || ""} onChange={(event) => updateQuery({ category: event.target.value, categoryName: null, subCategory: null, page: 1 })}>
                     <option value="">All Category</option>
@@ -538,7 +594,15 @@ export default function AllListingPage() {
                   Total of <strong>{displayCount}</strong> business result(s) found.
                 </div>
                 <div className="public-filter-tags">
-                  {activeCategoryName ? <span>{activeCategoryName} <button type="button" onClick={() => updateQuery({ category: null, categoryName: null, subCategory: null, page: 1 })}>x</button></span> : null}
+                  {activeCategoryName ? (
+                    <span>
+                      {activeCategoryName}
+                      {!lockedCategory ? <button type="button" onClick={() => updateQuery({ category: null, categoryName: null, subCategory: null, page: 1 })}>x</button> : null}
+                    </span>
+                  ) : null}
+                  {country ? <span>{country} <button type="button" onClick={() => updateQuery({ country: null, state: null, city: null, page: 1 })}>x</button></span> : null}
+                  {state ? <span>{state} <button type="button" onClick={() => updateQuery({ state: null, city: null, page: 1 })}>x</button></span> : null}
+                  {city ? <span>{city} <button type="button" onClick={() => updateQuery({ city: null, page: 1 })}>x</button></span> : null}
                   {subCategory ? <span>{subCategory} <button type="button" onClick={() => updateQuery({ subCategory: null, page: 1 })}>x</button></span> : null}
                   {search ? <span>{search} <button type="button" onClick={() => updateQuery({ search: null, page: 1 })}>x</button></span> : null}
                   {feature ? <span>{feature} <button type="button" onClick={() => updateQuery({ feature: null, page: 1 })}>x</button></span> : null}
@@ -995,6 +1059,16 @@ function filterListingsByCountry(items: ListingSummary[], country: string) {
   return items.filter((item) => countriesMatch(getListingCountry(item), country));
 }
 
+function filterListingsByState(items: ListingSummary[], state: string) {
+  if (!state.trim()) {
+    return items;
+  }
+
+  const normalizedState = normalizeComparableValue(state);
+
+  return items.filter((item) => normalizeComparableValue(getListingState(item)) === normalizedState);
+}
+
 function categorySlugFromLabel(label: string): PublicCategory | "" {
   if (label === "Real Estate") return "real-estate";
   if (label === "Restaurants & Food") return "restaurants-food";
@@ -1057,6 +1131,10 @@ function getListingCountry(listing: ListingSummary) {
 
 function getListingCity(listing: ListingSummary) {
   return getString(listing.locationDetails, "city") || listing.city || "";
+}
+
+function getListingState(listing: ListingSummary) {
+  return getString(listing.locationDetails, "state");
 }
 
 function countriesMatch(left: string, right: string) {

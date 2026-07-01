@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import type { ReactNode } from "react";
 import HomeHeader from "../../home/ui/HomeHeader";
-import HomeListBusinessSection from "../../home/ui/HomeListBusinessSection";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 
 type AuthLayoutProps = {
@@ -40,7 +39,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
       {children}
 
-      <HomeListBusinessSection />
       <HomeFooterSection />
     </>
   );

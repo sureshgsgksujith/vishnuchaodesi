@@ -8,10 +8,16 @@ export default function HomeHeader() {
   const navigate = useNavigate();
   const logoTarget = useLogoNavigationTarget();
   const [showExplore, setShowExplore] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [searchText, setSearchText] = useState("");
   const exploreCategories = useExploreCategories();
 
   const closeExplore = () => setShowExplore(false);
+  const closeMobileMenu = () => setShowMobileMenu(false);
+  const closeAllPopups = () => {
+    closeExplore();
+    closeMobileMenu();
+  };
 
   function submitHeaderSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,6 +28,7 @@ export default function HomeHeader() {
       params.set("search", keyword);
     }
 
+    closeAllPopups();
     navigate(`/all-listing${params.toString() ? `?${params.toString()}` : ""}`);
   }
 
@@ -144,21 +151,34 @@ export default function HomeHeader() {
             </div>
 
             <div className="mob-menu">
-              <div className="mob-me-ic">
+              <div className="mob-me-ic" onClick={() => setShowMobileMenu(true)} role="button" aria-label="Open menu" tabIndex={0}>
                 <i className="material-icons">menu</i>
               </div>
 
-              <div className="mob-me-all">
-                <div className="mob-me-clo">
+              <div className={showMobileMenu ? "mob-me-all mobmenu-show" : "mob-me-all"}>
+                <div className="mob-me-clo" onClick={closeMobileMenu} role="button" aria-label="Close menu" tabIndex={0}>
                   <i className="material-icons">close</i>
                 </div>
+
+                <form className="chaodesi-mobile-search" onSubmit={submitHeaderSearch}>
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    placeholder="What are you looking for?"
+                    value={searchText}
+                    onChange={(event) => setSearchText(event.target.value)}
+                  />
+                  <button type="submit" aria-label="Search">
+                    <i className="material-icons">search</i>
+                  </button>
+                </form>
 
                 <div className="mv-bus">
                   <h4></h4>
                   <ul>
-                    <li><Link to="/login">Add business</Link></li>
-                    <li><Link to="/login">Sign in</Link></li>
-                    <li><Link to="/register">Create an account</Link></li>
+                    <li><Link to="/login" onClick={closeAllPopups}>Add business</Link></li>
+                    <li><Link to="/login" onClick={closeAllPopups}>Sign in</Link></li>
+                    <li><Link to="/register" onClick={closeAllPopups}>Create an account</Link></li>
                   </ul>
                 </div>
 
@@ -166,7 +186,7 @@ export default function HomeHeader() {
                   <h4>All Categories</h4>
                   <ul>
                     {exploreCategories.map((item) => (
-                      <li key={item.label}><Link to={item.href}>{item.label}</Link></li>
+                      <li key={item.label}><Link to={item.href} onClick={closeAllPopups}>{item.label}</Link></li>
                     ))}
                   </ul>
                 </div>

@@ -117,12 +117,13 @@ export type ListingUploadFiles = {
   offerFiles?: Array<{ file: File; marker: string }>;
 };
 
-export async function getMyListings(search = "", page = 1, pageSize = 10) {
+export async function getMyListings(search = "", page = 1, pageSize = 10, excludeCategoryName = "Chao TV") {
   const response = await apiClient.get<ListingListResponse>("/Listings/mine", {
     params: {
       page,
       pageSize,
       search: search || undefined,
+      excludeCategoryName: excludeCategoryName || undefined,
     },
     timeout: 8000,
   });
@@ -220,9 +221,11 @@ export type PublicListingQuery = {
   subCategory?: string;
   detailCategory?: string;
   country?: string;
+  state?: string;
   city?: string;
   locality?: string;
   search?: string;
+  excludeCategoryName?: string;
   page?: number;
   pageSize?: number;
   forceRefresh?: boolean;
@@ -238,9 +241,11 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
     subCategory: query.subCategory || "",
     detailCategory: query.detailCategory || "",
     country: query.country || "",
+    state: query.state || "",
     city: query.city || "",
     locality: query.locality || "",
     search: query.search || "",
+    excludeCategoryName: query.excludeCategoryName || "",
     page: query.page || 1,
     pageSize: query.pageSize || 10,
   });
@@ -264,9 +269,11 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
       pageSize: query.pageSize || 10,
       search: query.search || undefined,
       categoryName: isFurnitureHome ? "Furniture & Home" : isFashionLifestyle ? "Fashion & Lifestyle" : isBeautyServices ? "Beauty Services" : isBooksSportsHobbies ? "Books, Sports & Hobbies" : isEventsTickets ? "Events & Tickets" : isPetsAnimals ? "Pets & Animals" : isGroupsCommunities ? "Groups & Communities" : isChaoTv ? "Chao TV" : query.categoryName || undefined,
+      excludeCategoryName: query.excludeCategoryName || undefined,
       subCategory: query.subCategory || undefined,
       detailCategory: query.detailCategory || undefined,
       country: query.country || undefined,
+      state: query.state || undefined,
       city: query.city || undefined,
       locality: query.locality || undefined,
     },

@@ -210,7 +210,7 @@ export default function HomeRoommatesSection() {
           </div>
         </div>
 
-        <div className="why-roommates">
+        <div className="why-roommates" hidden>
           <div className="text-center why-title">
             <h3>Why Chao Desi Roommates & Rentals?</h3>
           </div>

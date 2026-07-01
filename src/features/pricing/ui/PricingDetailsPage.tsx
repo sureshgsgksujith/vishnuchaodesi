@@ -88,7 +88,8 @@ export default function PricingDetailsPage() {
 
   async function handlePlanAction(plan: PricingPlan) {
     if (!isAuthenticated) {
-      navigate(`/login?login=register&plan=${encodeURIComponent(plan.code)}`);
+      const returnUrl = `${location.pathname}${location.search}`;
+      navigate(`/login?returnUrl=${encodeURIComponent(returnUrl)}&plan=${encodeURIComponent(plan.code)}`);
       return;
     }
 

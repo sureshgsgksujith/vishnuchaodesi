@@ -28501,3 +28501,11 @@ select.ls-input {
                 position: static;
             }
         }
+
+.full-bot-book {
+    display: none !important;
+}
+
+.wed-foot-link-pop {
+    display: none !important;
+}

@@ -2342,6 +2342,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const duplicateListingId = numberOrNull(searchParams.get("duplicate") || undefined);
   const sourceListingId = editListingId || duplicateListingId;
   const isEditMode = Boolean(editListingId);
+  const forcedListingCategoryName = !isClassifiedMode && !isEditMode && searchParams.get("category") === "jobs" ? "Jobs" : "";
   const isRealEstateListing = !isClassifiedMode && isRealEstateCategory(form.categoryName);
   const isRestaurantListing = !isClassifiedMode && form.categoryName === "Restaurants & Food";
   const isRoommatesRentalListing = !isClassifiedMode && form.categoryName === "Roommates & Rentals";
@@ -2359,6 +2360,26 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       setCurrentStep(getClassifiedListingStepIndex(location.pathname));
     }
   }, [isClassifiedMode, location.pathname]);
+
+  useEffect(() => {
+    if (!forcedListingCategoryName) {
+      return;
+    }
+
+    setForm((currentForm) => {
+      if (currentForm.categoryName === forcedListingCategoryName && !currentForm.subCategory && !currentForm.detailCategory) {
+        return currentForm;
+      }
+
+      return {
+        ...currentForm,
+        categoryName: forcedListingCategoryName,
+        subCategory: "",
+        detailCategory: "",
+      };
+    });
+    setCategoryAttributes({});
+  }, [forcedListingCategoryName]);
 
   useEffect(() => {
     if (!pendingValidationScrollRef.current || !Object.keys(fieldErrors).length) {
@@ -2741,8 +2762,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }, [location.pathname, location.state, navigate]);
 
   const categoryOptions = useMemo(
-    () => includeCurrentValue(listingCategories.map((category) => category.name), form.categoryName),
-    [listingCategories, form.categoryName],
+    () => forcedListingCategoryName
+      ? [forcedListingCategoryName]
+      : includeCurrentValue(listingCategories.map((category) => category.name), form.categoryName),
+    [forcedListingCategoryName, listingCategories, form.categoryName],
   );
 
   const selectedListingCategory = useMemo(
@@ -5768,7 +5791,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         <InputColumn placeholder="Email Id" type="email" value={form.email} error={fieldErrors.email} onChange={(value) => updateField("email", value)} />
                       </div>
                       <h4>Category Selection</h4>
-                      <Select placeholder="Select Category*" value={form.categoryName} error={fieldErrors.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} />
+                      <Select placeholder="Select Category*" value={form.categoryName} error={fieldErrors.categoryName} options={categoryOptions} onChange={(value) => updateField("categoryName", value)} disabled={Boolean(forcedListingCategoryName)} />
                       <Select
                         placeholder="Select Sub Category*"
                         value={form.subCategory}

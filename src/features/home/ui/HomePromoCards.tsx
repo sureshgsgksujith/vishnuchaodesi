@@ -1,27 +1,33 @@
+import { Link } from "react-router-dom";
+
 const promoCards = [
   {
     image: "/template-17/images/icon/1.png",
     title: "24 Million Business",
     description: "Choose from a collection of handpicked luxury villas & apartments",
     linkText: "Explore Now",
+    href: "/real-estate-listings",
   },
   {
     image: "/template-17/images/icon/2.png",
     title: "500+ Service Experts",
     description: "Are you looking for the best Service Expert? We make it easy to hire the right professional",
     linkText: "Book Expert Now",
+    href: "/local-services",
   },
   {
     image: "/template-17/images/icon/3.png",
     title: "Find Your Next Job Now",
     description: "Search latest job openings online including IT, Sales, Banking, Fresher, Walk-ins, Part-time & more",
-    linkText: "Find you Job",
+    linkText: "Find Your Job",
+    href: "/all-listing?category=jobs",
   },
   {
     image: "/template-17/images/icon/4.png",
     title: "Sell & Buy Product Online",
     description: "Bizbook Online store. Everything you need to sell & buy online.",
     linkText: "Start Selling Online",
+    href: "/all-listing",
   },
 ];
 
@@ -37,7 +43,7 @@ export default function HomePromoCards() {
                   <img src={card.image} alt={card.title} loading="lazy" />
                   <h4>{card.title}</h4>
                   <p>{card.description}</p>
-                  <a href="#">{card.linkText}</a>
+                  <Link to={card.href}>{card.linkText}</Link>
                 </div>
               </li>
             ))}

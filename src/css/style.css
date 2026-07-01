@@ -26817,3 +26817,11 @@ a[data-command='p'],a[data-command=h2],a[data-command=h4] {
     transform: rotate(-45deg);
     transform: translate3d(-2px,-6px,8px) rotate(-45deg)
 }
+
+.full-bot-book {
+    display: none !important;
+}
+
+.wed-foot-link-pop {
+    display: none !important;
+}

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
-import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "./DashboardFooter";
@@ -25,7 +24,6 @@ export default function DashboardLayout({
   rightRail,
   mainContentClassName = "",
   showHeader = true,
-  showBottomCta = true,
 }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
@@ -81,31 +79,6 @@ export default function DashboardLayout({
         onClose={() => setIsSupportOpen(false)}
         onSubmit={handleSupportSubmit}
       />
-
-      {showBottomCta ? (
-        <section>
-          <div className="full-bot-book">
-            <div className="container">
-              <div className="row">
-                <div className="bot-book">
-                  <div className="col-md-12 bb-text">
-                    <h4>List your business for FREE</h4>
-                    <p>
-                      There are many variations of passages of Lorem Ipsum
-                      available, but the majority have suffered alteration in
-                      some form, by injected humour.
-                    </p>
-                    <Link to="/pricing-details">
-                      Add my business
-                      <i className="material-icons">arrow_forward</i>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       <DashboardFooter
         onOpenSupport={() => setIsSupportOpen(true)}

@@ -395,7 +395,7 @@ export default function HomeHeroSection() {
       const cityFilter = activeCity || undefined;
       const forceRefresh = locationReloadKey > 0;
       const [allListingsResult, ...categoryResults] = await Promise.allSettled([
-        getPublicListings({ city: cityFilter, page: 1, pageSize: 1, forceRefresh }),
+        getPublicListings({ city: cityFilter, excludeCategoryName: "Chao TV", page: 1, pageSize: 1, forceRefresh }),
         ...listingCategoryOptions.map((category) =>
           getPublicListings({ category: category.value, city: cityFilter, page: 1, pageSize: 1, forceRefresh }),
         ),
@@ -476,6 +476,11 @@ export default function HomeHeroSection() {
     const keywordCategory = getCategoryForSearchKeyword(keyword);
     const category = selectedCategory || keywordCategory;
     const city = activeCity;
+
+    if (category === "chao-tv") {
+      navigate("/chao-tv");
+      return;
+    }
 
     if (category) {
       params.set("category", category);

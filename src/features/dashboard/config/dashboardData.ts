@@ -244,13 +244,8 @@ export const dashboardPopularTags: FooterLinkItem[] = [
 ];
 
 export const dashboardFooterCountries = [
-  { label: "Australia", href: "http://www.chaodesi.au" },
-  { label: "UK", href: "http://www.chaodesi.uk" },
   { label: "USA", href: "http://www.chaodesi.usa" },
   { label: "India", href: "http://www.chaodesi.in" },
-  { label: "Germany", href: "http://www.chaodesi.ge" },
-  { label: "China", href: "http://www.chaodesi.ch" },
-  { label: "france", href: "http://www.chaodesi.fr" },
 ];
 
 export const dashboardSupportCategories = [

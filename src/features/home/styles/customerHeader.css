@@ -359,15 +359,110 @@
   margin: 0;
 }
 
+.chaodesi-customer-header .mob-menu {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.chaodesi-customer-header .mob-me-all {
+  z-index: 99999;
+}
+
+.chaodesi-customer-header .chaodesi-mobile-search {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  gap: 0;
+  margin: 58px 0 14px;
+  overflow: hidden;
+  border: 1px solid #d7dfec;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.chaodesi-customer-header .chaodesi-mobile-search input {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  border: 0;
+  padding: 0 12px;
+  color: #17233f;
+  font-size: 14px;
+}
+
+.chaodesi-customer-header .chaodesi-mobile-search button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: #0d6efd;
+  color: #fff;
+}
+
+.chaodesi-customer-header .chaodesi-mobile-search button i {
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+}
+
 @media (max-width: 992px) {
   .chaodesi-customer-header .hom-nav.db-open {
-    display: block;
-    min-height: auto;
+    display: flex;
+    align-items: center;
+    min-height: 58px;
+    gap: 12px;
   }
 
   .chaodesi-customer-header .top-ser,
   .chaodesi-customer-header .chaodesi-header-actions {
     display: none;
+  }
+
+  .chaodesi-customer-header .top-log {
+    width: auto;
+    max-width: min(58vw, 260px);
+    text-align: left;
+  }
+
+  .chaodesi-customer-header .top-log img,
+  .chaodesi-customer-header .top-log .ic-logo {
+    max-width: 100%;
+    max-height: 46px;
+    margin-top: 0;
+  }
+
+  .chaodesi-customer-header .menu {
+    margin-left: auto;
+  }
+
+  .chaodesi-customer-header .menu h4 {
+    font-size: 14px;
+    line-height: 1;
+    margin: 0;
+  }
+
+  .chaodesi-customer-header .mob-menu {
+    display: block;
+    margin-left: 0;
+  }
+
+  .chaodesi-customer-header .mob-me-ic {
+    position: static;
+    display: block;
+  }
+
+  .chaodesi-customer-header .mob-me-ic i {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+  }
+
+  .chaodesi-customer-header .mob-me-all {
+    width: min(340px, 92vw);
+    max-width: 92vw;
+    padding: 0 18px 80px;
   }
 
   .chaodesi-customer-header .chaodesi-pop-menu {
@@ -401,7 +496,46 @@
 }
 
 @media (max-width: 560px) {
+  .chaodesi-customer-header {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .chaodesi-customer-header .hom-nav.db-open {
+    gap: 9px;
+  }
+
+  .chaodesi-customer-header .top-log {
+    max-width: calc(100vw - 160px);
+  }
+
+  .chaodesi-customer-header .top-log img,
+  .chaodesi-customer-header .top-log .ic-logo {
+    max-height: 40px;
+  }
+
+  .chaodesi-customer-header .menu h4 {
+    max-width: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .chaodesi-customer-header .chaodesi-explore-categories ul {
     grid-template-columns: 1fr;
+  }
+
+  .chaodesi-customer-header .chaodesi-pop-menu {
+    top: 62px;
+    right: 8px;
+    left: 8px;
+    max-height: calc(100vh - 74px);
+    padding: 14px;
+  }
+
+  .chaodesi-customer-header .chaodesi-explore-modules a,
+  .chaodesi-customer-header .chaodesi-explore-categories a {
+    min-height: 38px;
+    padding: 7px 8px;
   }
 }

@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import {
   dashboardFooterCountries,
   dashboardHelpLinks,
-  dashboardPopularTags,
   dashboardTopCategories,
   dashboardTrendingCategories,
 } from "../config/dashboardData";
@@ -22,7 +21,7 @@ export default function DashboardFooter({
         <div className="container">
           <div className="row foot-supp">
             <h2>
-              <span>Free support:</span> +01 5426 24400 &nbsp;&nbsp;|&nbsp;&nbsp;
+              <span>Free support:</span> +1 248 430 4014 &nbsp;&nbsp;|&nbsp;&nbsp;
               <span>Email:</span> info@chaodesi.com
             </h2>
           </div>
@@ -62,28 +61,14 @@ export default function DashboardFooter({
             </div>
           </div>
 
-          <div className="row wed-foot-link-pop">
-            <div className="col-md-12">
-              <h4>Popular Tags</h4>
-              <ul>
-                {dashboardPopularTags.map((item, index) => (
-                  <li key={`${item.label}-${index}`}>
-                    <Link to={item.href}>{item.label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
           <div className="row wed-foot-link-1">
             <div className="col-md-4">
               <h4>Get In Touch</h4>
               <p>
-                Address: 28800 Orchard Lake Road, Suite 180 Farmington Hills,
-                U.S.A.
+                Address: 39555 Orchard Hill Place, Suite 203, Novi, MI 48375.
               </p>
               <p>
-                Phone: <a href="tel:+01542624400">+01 5426 24400</a>
+                Phone: <a href="tel:+12484304014">+1 248 430 4014</a>
               </p>
               <p>
                 Email: <a href="mailto:info@chaodesi.com">info@chaodesi.com</a>
@@ -118,7 +103,7 @@ export default function DashboardFooter({
               <h4>SOCIAL MEDIA</h4>
               <ul>
                 <li>
-                  <a target="_blank" rel="noreferrer" href="#">
+                  <a target="_blank" rel="noreferrer" href="https://www.linkedin.com/company/chaodesi/">
                     <img
                       src="/template-17/images/social/1.png"
                       alt=""
@@ -162,7 +147,7 @@ export default function DashboardFooter({
                   </a>
                 </li>
                 <li>
-                  <a target="_blank" rel="noreferrer" href="#">
+                  <a target="_blank" rel="noreferrer" href="https://www.youtube.com/@chaodesi860">
                     <img
                       src="/template-17/images/social/5.png"
                       alt=""
