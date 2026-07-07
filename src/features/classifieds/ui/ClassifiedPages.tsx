@@ -11,8 +11,9 @@ import {
 import { getListingCategoryTree, type ListingCategoryOption } from "../../dashboard/api/listingCategoriesApi";
 import { resolveListingImageUrl, setFallbackListingImage } from "../../dashboard/utils/listingImages";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
+import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
-import { useCurrentLocationLabel } from "../../home/hooks/useCurrentLocationLabel";
+import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import "../styles/classifieds.css";
 
 const CLASSIFIED_PAGE_SIZE = 12;
@@ -39,21 +40,41 @@ const classifiedCategoryImages: Record<string, string> = {
   "Electronics & Appliances": "/template-17/images/products/8.jpeg",
   "Pets & Animals": "/template-17/images/services/pets-1.jpg",
 };
-
-type ClassifiedDirectoryCard = {
-  name: string;
-  image: string;
-  count: number;
-  href: string;
-};
+const fallbackClassifiedHeroBanners: PageBanner[] = [
+  {
+    id: 0,
+    pageKey: "classifieds",
+    slot: "hero",
+    title: "Free classifieds near {location}",
+    subtitle: "Browse listings, compare counts, and post classified ads in your area.",
+    imageUrl: "/template-17/images/places/banne.png",
+    displayOrder: 1,
+    isActive: true,
+  },
+];
 
 export function ClassifiedsHomePage() {
   const [listings, setListings] = useState<ListingSummary[]>([]);
-  const [categoryCards, setCategoryCards] = useState<ClassifiedDirectoryCard[]>([]);
+  const [heroBanners, setHeroBanners] = useState<PageBanner[]>(fallbackClassifiedHeroBanners);
+  const [heroBannerIndex, setHeroBannerIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const currentLocation = useCurrentLocationLabel();
-  const currentCity = currentLocation.city || getCityFromLocationLabel(currentLocation.label);
+  const { activeCity, activeLocationLabel } = useHomeSelectedLocation();
+  const currentCity = activeCity;
+  const currentLocationLabel = activeLocationLabel || currentCity;
+  const visibleHeroBanners = useMemo(() => getBannersForSlot(heroBanners, "hero"), [heroBanners]);
+  const activeHeroBanner = visibleHeroBanners[heroBannerIndex] || visibleHeroBanners[0] || fallbackClassifiedHeroBanners[0];
+  const heroTitle = formatBannerText(activeHeroBanner.title, fallbackClassifiedHeroBanners[0].title, currentLocationLabel);
+  const heroSubtitle = formatBannerText(activeHeroBanner.subtitle, fallbackClassifiedHeroBanners[0].subtitle || "", currentLocationLabel);
+  const categoryCards = useMemo(
+    () => primaryClassifiedCategoryNames.map((name) => ({
+      name,
+      count: listings.filter((listing) => listing.subCategory === name).length,
+      href: buildClassifiedCategoryHref(name, currentCity || ""),
+      image: getClassifiedCategoryImage(name),
+    })),
+    [currentCity, listings],
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -62,35 +83,10 @@ export function ClassifiedsHomePage() {
       try {
         setIsLoading(true);
         setErrorMessage("");
-        const [listingResult, categoryTree] = await Promise.all([
-          getPublicListings({ categoryName: "Classifieds", city: currentCity || undefined, page: 1, pageSize: 12 }),
-          getListingCategoryTree().catch(() => []),
-        ]);
-
-        const categoryNames = buildClassifiedCategoryNames(categoryTree);
-        const countResults = await Promise.all(
-          categoryNames.map((name) =>
-            getPublicListings({
-              categoryName: "Classifieds",
-              subCategory: name,
-              city: currentCity || undefined,
-              page: 1,
-              pageSize: 1,
-            })
-              .then((result) => result.totalCount || 0)
-              .catch(() => 0),
-          ),
-        );
+        const listingResult = await getPublicListings({ categoryName: "Classifieds", city: currentCity || undefined, page: 1, pageSize: 12 });
 
         if (!isActive) return;
-        const categoryByName = new Map(categoryTree.map((item) => [item.name, item]));
         setListings(listingResult.items || []);
-        setCategoryCards(categoryNames.map((name, index) => ({
-          name,
-          image: getClassifiedCategoryImage(name, categoryByName.get(name)),
-          count: countResults[index] || 0,
-          href: buildClassifiedCategoryHref(name, currentCity),
-        })));
       } catch (error) {
         if (isActive) {
           setErrorMessage(getListingApiErrorMessage(error));
@@ -109,46 +105,97 @@ export function ClassifiedsHomePage() {
     };
   }, [currentCity]);
 
+  useEffect(() => {
+    let isActive = true;
+
+    getPageBanners("classifieds")
+      .then((items) => {
+        if (isActive) {
+          const nextBanners = getBannersForSlot(items, "hero");
+          setHeroBanners(nextBanners.length ? nextBanners : fallbackClassifiedHeroBanners);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setHeroBanners(fallbackClassifiedHeroBanners);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setHeroBannerIndex(0);
+  }, [visibleHeroBanners.length]);
+
+  useEffect(() => {
+    if (visibleHeroBanners.length <= 1) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setHeroBannerIndex((current) => (current + 1) % visibleHeroBanners.length);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [visibleHeroBanners.length]);
+
   return (
     <>
       <CustomerHeader />
       <main className="classified-template-page">
         <section className="modu-hom-ban ads-hom-ban classified-hero">
+          <div className="classified-hero-track" style={{ transform: `translateX(-${heroBannerIndex * 100}%)` }}>
+            {visibleHeroBanners.map((banner) => (
+              <ClassifiedHeroBannerSlide banner={banner} key={banner.id} />
+            ))}
+          </div>
           <div className="modu-hom-ban-inn">
             <div className="container">
               <div className="row">
-                <h1>Free classifieds near <strong>{currentCity || "you"}</strong></h1>
-                <p>Browse local categories, compare counts, and post classified ads in your area.</p>
+                <h1>{heroTitle}</h1>
+                {heroSubtitle ? <p>{heroSubtitle}</p> : null}
               </div>
             </div>
           </div>
+          {visibleHeroBanners.length > 1 ? (
+            <div className="classified-hero-dots" aria-label="Classified banner slides">
+              {visibleHeroBanners.map((banner, index) => (
+                <button
+                  type="button"
+                  className={index === heroBannerIndex ? "is-active" : ""}
+                  key={banner.id}
+                  onClick={() => setHeroBannerIndex(index)}
+                  aria-label={`Show banner ${index + 1}`}
+                />
+              ))}
+            </div>
+          ) : null}
         </section>
 
-        <section className="ad-modu-com ad-sec-pad asd-all-hom">
+        <section className="classified-category-section">
           <div className="container">
-            <div className="row">
-              <div className="plac-det-tit-inn">
-                <h2>Classified Categories</h2>
-              </div>
-              {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
-              {isLoading ? <div className="alert alert-info">Loading classified categories...</div> : null}
-              <div className="plac-hom-all-pla classified-category-grid">
-                <ul className="row">
-                  {categoryCards.map((category) => (
-                    <li className="col-lg-3 col-md-6 col-sm-6" key={category.name}>
-                      <Link className="plac-hom-box ad-box classified-category-card" to={category.href}>
-                        <div className="plac-hom-box-im">
-                          <img src={category.image} alt="" onError={setFallbackListingImage} />
-                        </div>
-                        <div className="ad-box-txt">
-                          <h3>{category.name}</h3>
-                          <span>{formatCount(category.count)} ads</span>
-                        </div>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <div className="classified-section-title">
+              <h2>Classified Categories</h2>
+            </div>
+            <div className="classified-category-grid">
+              <ul>
+                {categoryCards.map((item) => (
+                  <li key={item.name}>
+                    <Link className="classified-category-card" to={item.href}>
+                      <div className="plac-hom-box-im">
+                        <img src={item.image} alt="" onError={setFallbackListingImage} />
+                      </div>
+                      <div className="ad-box-txt">
+                        <h3>{item.name}</h3>
+                        <span>{formatCount(item.count)} ads</span>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>
@@ -159,6 +206,8 @@ export function ClassifiedsHomePage() {
               <div className="plac-det-tit-inn">
                 <h2>Today Popular Ads</h2>
               </div>
+              {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
+              {isLoading ? <div className="alert alert-info">Loading popular ads...</div> : null}
               <div className="plac-hom-all-pla">
                 <ul className="multiple-items1 classified-card-row">
                   {listings.slice(0, 5).map((listing) => (
@@ -187,6 +236,20 @@ export function ClassifiedsHomePage() {
       <HomeFooterSection />
     </>
   );
+}
+
+function ClassifiedHeroBannerSlide({ banner }: { banner: PageBanner }) {
+  const image = <img src={banner.imageUrl} alt={banner.altText || banner.title} loading="eager" onError={setFallbackListingImage} />;
+
+  if (banner.linkUrl) {
+    return (
+      <a className="classified-hero-slide" href={banner.linkUrl}>
+        {image}
+      </a>
+    );
+  }
+
+  return <div className="classified-hero-slide">{image}</div>;
 }
 
 export function ClassifiedAdsAllPage() {
@@ -743,11 +806,6 @@ function ClassifiedRelatedCard({ listing }: { listing: ListingSummary }) {
   );
 }
 
-function buildClassifiedCategoryNames(categoryTree: ListingCategoryOption[]) {
-  const names = categoryTree.map((item) => item.name).filter(Boolean);
-  return uniqueValues([...primaryClassifiedCategoryNames, ...names, ...fallbackCategoryNames]);
-}
-
 function getClassifiedCategoryImage(categoryName: string, category?: ListingCategoryOption) {
   if (category?.iconUrl) {
     return resolveListingImageUrl(category.iconUrl);
@@ -780,7 +838,7 @@ function getClassifiedSubcategoryImage(
   return getClassifiedCategoryImage(categoryName, category);
 }
 
-function buildClassifiedCategoryHref(categoryName: string, city?: string) {
+function buildClassifiedCategoryHref(categoryName: string, city: string) {
   const params = new URLSearchParams({ category: categoryName });
   if (city) {
     params.set("city", city);
@@ -801,6 +859,27 @@ function buildClassifiedSubcategoryHref(categoryName: string, detailCategory: st
   return `/classifieds/ads-all?${params.toString()}`;
 }
 
+function getBannersForSlot(banners: PageBanner[], slot: string) {
+  const matchingBanners = banners
+    .filter((banner) => banner.slot.trim().toLowerCase() === slot)
+    .sort((left, right) => left.displayOrder - right.displayOrder || left.id - right.id);
+
+  if (matchingBanners.length) {
+    return matchingBanners;
+  }
+
+  return banners
+    .filter((banner) => banner.isActive)
+    .sort((left, right) => left.displayOrder - right.displayOrder || left.id - right.id);
+}
+
+function formatBannerText(value: string | null | undefined, fallback: string, locationLabel: string) {
+  return (value?.trim() || fallback)
+    .replace(/\{location\}/gi, locationLabel || "you")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function buildClassifiedDetailOptions(category: ListingCategoryOption | undefined, listings: ListingSummary[]) {
   const fromTree = category ? category.subCategories.map((subCategory) => subCategory.name) : [];
   const fromListings = listings.map(getClassifiedSubcategory);
@@ -814,10 +893,6 @@ function countListingsByDetailCategory(listings: ListingSummary[], detailCategor
 function getClassifiedSubcategory(listing: ListingSummary) {
   const parsedOther = parseOtherInformation(listing.propertyDetails?.otherInformation);
   return getRecordString(parsedOther, "classifiedSubCategory") || listing.detailCategory || "";
-}
-
-function getCityFromLocationLabel(label?: string | null) {
-  return label?.split(",")[0]?.trim() || "";
 }
 
 function formatCount(count: number) {

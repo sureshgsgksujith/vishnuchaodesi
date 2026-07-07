@@ -30,6 +30,8 @@ export default function MyServiceBookingsPage() {
       [
         booking.bookingReference,
         booking.eventTitle,
+        booking.eventDate,
+        booking.eventTime,
         booking.venue,
         booking.city,
         booking.buyerName,
@@ -158,6 +160,10 @@ export default function MyServiceBookingsPage() {
                   </div>
 
                   <h3>{booking.eventTitle}</h3>
+                  <div className="dashboard-booking-event-date">
+                    <span className="material-icons" aria-hidden="true">event</span>
+                    {formatEventDateTime(booking.eventDate, booking.eventTime)}
+                  </div>
                   <p>{booking.venue || booking.city || "-"}</p>
 
                   <div className="dashboard-booking-ref">{booking.bookingReference}</div>
@@ -170,6 +176,14 @@ export default function MyServiceBookingsPage() {
                     <div>
                       <dt>Booked</dt>
                       <dd>{formatDate(booking.createdAt)}</dd>
+                    </div>
+                    <div>
+                      <dt>Event Date</dt>
+                      <dd>{formatEventDate(booking.eventDate)}</dd>
+                    </div>
+                    <div>
+                      <dt>Event Time</dt>
+                      <dd>{booking.eventTime || "-"}</dd>
                     </div>
                     <div>
                       <dt>Email</dt>
@@ -255,6 +269,35 @@ function formatDate(value?: string | null) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function formatEventDate(value?: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatEventDateTime(date?: string | null, time?: string | null) {
+  const dateText = formatEventDate(date);
+  const timeText = time || "";
+
+  if (dateText === "-" && !timeText) {
+    return "Event date not available";
+  }
+
+  return [dateText === "-" ? "" : dateText, timeText].filter(Boolean).join(" • ");
 }
 
 type PaginationProps = {

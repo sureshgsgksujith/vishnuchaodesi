@@ -51,7 +51,7 @@ export default function UserHomeHeader() {
     "/all-services-detailed.html",
   ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
   const addActionLabel = isServicePage ? "Add Service" : "Add Business";
-  const addActionHref = isServicePage ? "/dashboard/listings/new" : "/dashboard/listings/start";
+  const addActionHref = isServicePage ? "/dashboard/services/new" : "/dashboard/listings/start";
 
   const [showExplore, setShowExplore] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);

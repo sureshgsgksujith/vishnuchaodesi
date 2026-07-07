@@ -340,6 +340,28 @@
   margin: 0;
 }
 
+.dashboard-booking-event-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid #fed7aa;
+  border-radius: 6px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1.25;
+  margin: 0 0 8px;
+  padding: 6px 8px;
+}
+
+.dashboard-booking-event-date .material-icons {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+
 .dashboard-booking-ref {
   overflow-wrap: anywhere;
   border-radius: 6px;

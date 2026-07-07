@@ -12,6 +12,8 @@ export type EventTicketBooking = {
   bookingReference: string;
   listingId: number;
   eventTitle: string;
+  eventDate?: string | null;
+  eventTime?: string | null;
   venue?: string | null;
   city?: string | null;
   buyerName?: string | null;

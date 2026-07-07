@@ -19,7 +19,7 @@ import {
 import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import { getQuoteActionLabel, shouldShowQuoteAction } from "../utils/quoteVisibility";
-import { submitRequirement } from "../api/requirementsApi";
+import { submitJobApplication, submitRequirement } from "../api/requirementsApi";
 import { getMyProfile } from "../../dashboard/api/profileApi";
 import "../styles/publicListings.css";
 
@@ -202,6 +202,17 @@ function ListingDetail({
   const [quoteStatus, setQuoteStatus] = useState("");
   const [isQuoteProfileLoading, setIsQuoteProfileLoading] = useState(false);
   const [isQuoteSubmitting, setIsQuoteSubmitting] = useState(false);
+  const [isJobApplicationModalOpen, setIsJobApplicationModalOpen] = useState(false);
+  const [jobApplicationForm, setJobApplicationForm] = useState({
+    name: "",
+    email: "",
+    mobileNumber: "",
+    message: "",
+  });
+  const [jobResumeFile, setJobResumeFile] = useState<File | null>(null);
+  const [jobApplicationStatus, setJobApplicationStatus] = useState("");
+  const [isJobApplicationProfileLoading, setIsJobApplicationProfileLoading] = useState(false);
+  const [isJobApplicationSubmitting, setIsJobApplicationSubmitting] = useState(false);
   const scrollingRelatedListings = relatedListings.length > 1 ? [...relatedListings, ...relatedListings] : relatedListings;
   const relatedScrollDuration = `${Math.max(72, relatedListings.length * 18)}s`;
   const country = getString(listing.locationDetails, "country");
@@ -230,8 +241,12 @@ function ListingDetail({
   const isRealEstateListing = listing.categoryName === "Real Estate";
   const isRoommatesRentalListing = listing.categoryName === "Roommates & Rentals";
   const isLocalServiceListing = isLocalServiceDetailListing(listing);
+  const isJobsListing = listing.categoryName === "Jobs";
+  const showReviewSections = !isJobsListing;
   const showQuoteAction = shouldShowQuoteAction(listing);
+  const showEnquiryAction = !isJobsListing && showQuoteAction;
   const quoteActionLabel = getQuoteActionLabel(listing);
+  const recruiterContactHref = getRecruiterContactHref(email, phone);
   const nearbyLocation = getNearbyLocation(listing);
   const savedNearbyServices = getSavedNearbyServices(listing);
   const postedDetailSections = getPostedDetailSections(listing);
@@ -240,7 +255,7 @@ function ListingDetail({
     { href: "#ld-details", icon: "fact_check", label: "Details", show: postedDetailSections.length > 0 },
     { href: "#ld-off", icon: "style", label: "Offers", show: offers.length > 0 },
     { href: "#location", icon: "map", label: "Location", show: true },
-    { href: "#ld-rev", icon: "star_half", label: "Write Review", show: true },
+    { href: "#ld-rev", icon: "star_half", label: "Write Review", show: showReviewSections },
     { href: "#claim", icon: "store", label: "Claim business", show: true },
   ];
 
@@ -405,6 +420,92 @@ function ListingDetail({
     }
   }
 
+  async function openJobApplicationModal() {
+    if (!isCustomerAuthenticated()) {
+      setLoginPrompt({
+        title: "Login required",
+        message: "Please login to apply for this job.",
+      });
+      return;
+    }
+
+    if (isOwnerViewing) {
+      setLoginPrompt({
+        title: "Owner action not needed",
+        message: "You are the owner of this job listing. You do not need to apply for your own post.",
+      });
+      return;
+    }
+
+    setIsJobApplicationModalOpen(true);
+    setJobApplicationStatus("");
+    setJobResumeFile(null);
+    setJobApplicationForm({
+      name: localStorage.getItem("fullName") || localStorage.getItem("customer_name") || "",
+      email: localStorage.getItem("email") || "",
+      mobileNumber: localStorage.getItem("mobileNumber") || "",
+      message: "",
+    });
+    setIsJobApplicationProfileLoading(true);
+
+    try {
+      const { profile } = await getMyProfile();
+      setJobApplicationForm((current) => ({
+        ...current,
+        name: profile.fullName || current.name,
+        email: profile.email || current.email,
+        mobileNumber: profile.mobileNumber || current.mobileNumber,
+      }));
+    } finally {
+      setIsJobApplicationProfileLoading(false);
+    }
+  }
+
+  async function submitJobApplicationForm(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setJobApplicationStatus("");
+
+    if (!jobResumeFile) {
+      setJobApplicationStatus("Please upload your resume.");
+      return;
+    }
+
+    const extension = `.${jobResumeFile.name.split(".").pop() || ""}`.toLowerCase();
+    if (![".pdf", ".doc", ".docx"].includes(extension)) {
+      setJobApplicationStatus("Resume must be a PDF, DOC, or DOCX file.");
+      return;
+    }
+
+    if (jobResumeFile.size > 10 * 1024 * 1024) {
+      setJobApplicationStatus("Resume file size must be 10 MB or less.");
+      return;
+    }
+
+    setIsJobApplicationSubmitting(true);
+    try {
+      await submitJobApplication({
+        listingId: listing.id,
+        name: jobApplicationForm.name,
+        email: jobApplicationForm.email,
+        mobileNumber: jobApplicationForm.mobileNumber,
+        message: jobApplicationForm.message,
+        pageUrl: `${window.location.origin}/listing-details?id=${listing.id}`,
+        resume: jobResumeFile,
+      });
+      setJobApplicationStatus("Your application has been sent successfully.");
+      setJobApplicationForm((current) => ({ ...current, message: "" }));
+      setJobResumeFile(null);
+      window.setTimeout(() => {
+        setIsJobApplicationModalOpen(false);
+        setJobApplicationStatus("");
+      }, 1400);
+    } catch {
+      setJobApplicationStatus("Unable to submit application. Please try again.");
+    } finally {
+      setIsJobApplicationSubmitting(false);
+    }
+  }
+
   if (isRoommatesRentalListing) {
     return (
       <RoommatesRentalDetail
@@ -441,7 +542,6 @@ function ListingDetail({
     return (
       <LocalServiceDetail
         listing={listing}
-        relatedListings={relatedListings}
         galleryImages={galleryImages}
         postedDetailSections={postedDetailSections}
         reviews={reviews}
@@ -644,8 +744,9 @@ function ListingDetail({
                   </TemplateSection>
                 ) : null}
 
-                {!listing.totalReviews ? <div className="spa-first-review">Be the First One To Review This Listing!!!</div> : null}
+                {showReviewSections && !listing.totalReviews ? <div className="spa-first-review">Be the First One To Review This Listing!!!</div> : null}
 
+                {showReviewSections ? (
                 <TemplateSection id="ld-rev" eyebrow="Write Your" title="Reviews">
                   <div className="list-pg-inn-sp">
                     <div className="list-pg-write-rev">
@@ -683,6 +784,7 @@ function ListingDetail({
                     </div>
                   </div>
                 </TemplateSection>
+                ) : null}
 
                 {loginPrompt ? (
                   <LoginRequiredPrompt
@@ -692,6 +794,7 @@ function ListingDetail({
                   />
                 ) : null}
 
+                {showReviewSections ? (
                 <section id="ld-user-reviews" className="pglist-p3 pglist-bg pglist-p-com">
                   <div className="pglist-p-com-ti">
                     <h3><span>User</span> Reviews</h3>
@@ -713,6 +816,7 @@ function ListingDetail({
                     ) : null}
                   </div>
                 </section>
+                ) : null}
               </div>
 
               <div className="list-pg-rt col-md-4">
@@ -724,7 +828,7 @@ function ListingDetail({
                     </div>
                     <div className="pg-list-1-left">
                       <h1>{listing.title}</h1>
-                      <CompactRatingSummary rating={displayRating} reviews={reviews} totalReviews={listing.totalReviews || 0} />
+                      {showReviewSections ? <CompactRatingSummary rating={displayRating} reviews={reviews} totalReviews={listing.totalReviews || 0} /> : null}
                       <div className="list-number pag-p1-phone">
                         <ul>
                           {address ? <li className="ic-addr">{address}</li> : null}
@@ -735,28 +839,37 @@ function ListingDetail({
                       </div>
                     </div>
                     <div className="list-ban-btn">
-                      <ul className="row">
-                        <li>{phone ? <a href={`tel:${phone}`} className="cta cta-call">Call Now</a> : <span className="cta cta-call">Call Now</span>}</li>
-                        {showQuoteAction ? (
-                          <li>
-                            <button type="button" className="pulse cta cta-get public-detail-quote-button" onClick={openQuoteModal}>
-                              {quoteActionLabel}
-                            </button>
-                          </li>
-                        ) : null}
+                      <ul className={isJobsListing ? "row public-job-detail-actions" : "row"}>
+                        {isJobsListing ? (
+                          <>
+                            <li><button type="button" className="cta cta-get public-job-apply-button" onClick={openJobApplicationModal}>Apply Now</button></li>
+                            <li><a href={recruiterContactHref} className="cta cta-call">Contact Recruiter</a></li>
+                          </>
+                        ) : (
+                          <>
+                            <li>{phone ? <a href={`tel:${phone}`} className="cta cta-call">Call Now</a> : <span className="cta cta-call">Call Now</span>}</li>
+                            {showEnquiryAction ? (
+                              <li>
+                                <button type="button" className="pulse cta cta-get public-detail-quote-button" onClick={openQuoteModal}>
+                                  {quoteActionLabel}
+                                </button>
+                              </li>
+                            ) : null}
+                          </>
+                        )}
                       </ul>
                     </div>
                     <div className="pg-list-oths">
                       <ul>
                         <li><span className="cta cta-like"><i className="material-icons">visibility</i><b>{listing.views || 0}</b> VIEWS</span></li>
                         {whatsapp ? <li><a href={`https://wa.me/${numbersOnly(whatsapp)}`} className="cta cta-rev" target="_blank" rel="noreferrer"><i className="material-icons">chat</i>WhatsApp</a></li> : null}
-                        <li><button type="button" className="public-share-button"><i className="material-icons">share</i>Share</button></li>
+                        {!isJobsListing ? <li><button type="button" className="public-share-button" onClick={() => shareListing(listing)}><i className="material-icons">share</i>Share</button></li> : null}
                       </ul>
                     </div>
                   </div>
                 </div>
 
-                {isQuoteModalOpen ? (
+                {!isJobsListing && isQuoteModalOpen ? (
                   <ListingQuoteModal
                     form={quoteForm}
                     isProfileLoading={isQuoteProfileLoading}
@@ -767,6 +880,21 @@ function ListingDetail({
                     onChange={(updates) => setQuoteForm((current) => ({ ...current, ...updates }))}
                     onClose={() => setIsQuoteModalOpen(false)}
                     onSubmit={submitQuoteForm}
+                  />
+                ) : null}
+
+                {isJobsListing && isJobApplicationModalOpen ? (
+                  <JobApplicationModal
+                    form={jobApplicationForm}
+                    isProfileLoading={isJobApplicationProfileLoading}
+                    isSubmitting={isJobApplicationSubmitting}
+                    listing={listing}
+                    resumeFile={jobResumeFile}
+                    status={jobApplicationStatus}
+                    onChange={(updates) => setJobApplicationForm((current) => ({ ...current, ...updates }))}
+                    onClose={() => setIsJobApplicationModalOpen(false)}
+                    onResumeChange={setJobResumeFile}
+                    onSubmit={submitJobApplicationForm}
                   />
                 ) : null}
 
@@ -851,7 +979,7 @@ function ListingDetail({
                             </div>
                           ) : null}
                           <div className="rel-list-txt-box">
-                            <span className="rat-small-num">{Number(item.averageRating || item.rating || 0).toFixed(1)}</span>
+                            {!isJobsListing ? <span className="rat-small-num">{Number(item.averageRating || item.rating || 0).toFixed(1)}</span> : null}
                             <span className="rat-more-cta-ic">More details</span>
                           </div>
                           <Link to={`/listing-details?id=${item.id}`} className="fclick" aria-label={item.title}></Link>
@@ -871,7 +999,6 @@ function ListingDetail({
 
 function LocalServiceDetail({
   listing,
-  relatedListings,
   galleryImages,
   postedDetailSections,
   reviews,
@@ -897,7 +1024,6 @@ function LocalServiceDetail({
   onQuoteSubmit,
 }: {
   listing: ListingSummary;
-  relatedListings: ListingSummary[];
   galleryImages: string[];
   postedDetailSections: PostedDetailSection[];
 } & ListingInteractionProps) {
@@ -919,7 +1045,6 @@ function LocalServiceDetail({
   const todaysHours = getTodayHours(businessHours);
   const contactRows = getLocalServiceContactRows(listing, phone, email, whatsapp, website?.label || "");
   const infoRows = getLocalServiceInfoRows(listing, details);
-  const relatedServices = relatedListings.slice(0, 5);
   const quickNavItems = [
     { href: "#lsd-about", icon: "person", label: "Overview", show: true },
     { href: "#lsd-features", icon: "check_circle", label: "Features", show: features.length > 0 },
@@ -952,16 +1077,10 @@ function LocalServiceDetail({
           <nav className="public-local-service-crumb" aria-label="breadcrumb">
             <Link to="/">Home</Link>
             <span>/</span>
-            <Link to="/local-services">Local Services</Link>
-            <span>/</span>
             <span>{listing.title}</span>
           </nav>
           <div className="public-local-service-hero-grid">
             <div>
-              <span className="public-local-service-badge">
-                <i className="material-icons" aria-hidden="true">{getLocalServiceCategoryIcon(listing)}</i>
-                {details.categoryLabel}
-              </span>
               <h1>{listing.title}</h1>
               <p>{details.summary || listing.description || "Local service details are available from this provider."}</p>
               <div className="public-local-service-meta">
@@ -1194,23 +1313,6 @@ function LocalServiceDetail({
             </aside>
           </div>
 
-          {relatedServices.length ? (
-            <section className="public-local-service-related">
-              <h2>Related local services</h2>
-              <div>
-                {relatedServices.map((item) => (
-                  <Link to={`/listing-details?id=${item.id}`} key={item.id}>
-                    {item.primaryImageUrl || item.imageUrls?.[0] ? (
-                      <img src={resolveListingImageUrl(item.primaryImageUrl || item.imageUrls?.[0])} alt="" onError={hideBrokenImage} loading="lazy" />
-                    ) : null}
-                    <strong>{item.title}</strong>
-                    <span>{[item.subCategory, item.city].filter(Boolean).join(", ")}</span>
-                    <b>{formatPrice(item.price, country)}</b>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          ) : null}
         </div>
       </section>
 
@@ -1327,7 +1429,13 @@ function RoommatesRentalDetail({
     ? `${formatCurrencyAmount(Number(details.monthlyRent), country)}`
     : formatPrice(listing.price, country);
   const priceSuffix = details.monthlyRent || listing.price ? "/ Month" : "";
-  const availableText = details.availableFrom ? formatShortDate(details.availableFrom) || details.availableFrom : "Contact advertiser";
+  const availableText = details.availableFrom ? formatShortDate(details.availableFrom) || details.availableFrom : "";
+  const roomHighlightFacts = [
+    { icon: "payments", label: "Rent", value: `${displayPrice} ${priceSuffix}`.trim() },
+    { icon: "meeting_room", label: "Room Type", value: normalizeRoommateDisplayText(details.roomType) },
+    { icon: "bathtub", label: "Bathroom", value: getRoommateCountText(details.bathrooms) },
+    { icon: "home", label: "Property Type", value: normalizeRoommateDisplayText(details.propertyType) },
+  ].filter((item) => item.value);
 
   return (
     <article className="public-room-detail">
@@ -1351,7 +1459,7 @@ function RoommatesRentalDetail({
           <h1>{listing.title}</h1>
           <div className="public-room-hero-meta">
             {address ? <span><i className="material-icons" aria-hidden="true">location_on</i>{address}</span> : null}
-            <span><i className="material-icons" aria-hidden="true">event_available</i>Available from: {availableText}</span>
+            {availableText ? <span><i className="material-icons" aria-hidden="true">event_available</i>Available from: {availableText}</span> : null}
             {details.roomType ? <span><i className="material-icons" aria-hidden="true">meeting_room</i>{details.roomType}</span> : null}
             {details.preferredGender ? <span><i className="material-icons" aria-hidden="true">wc</i>{details.preferredGender}</span> : null}
           </div>
@@ -1391,10 +1499,9 @@ function RoommatesRentalDetail({
               <div className="public-room-card public-room-card-pad">
                 <RoomSectionTitle title="Room Highlights" description="Everything a renter needs to know before contacting the advertiser." />
                 <div className="public-room-facts">
-                  <RoomFact icon="payments" label="Rent" value={`${displayPrice} ${priceSuffix}`.trim()} />
-                  <RoomFact icon="meeting_room" label="Room Type" value={details.roomType || listing.detailCategory || listing.subCategory || "Room"} />
-                  <RoomFact icon="bathtub" label="Bathroom" value={details.bathrooms || "Contact advertiser"} />
-                  <RoomFact icon="home" label="Property Type" value={details.propertyType || listing.subCategory || "Rental"} />
+                  {roomHighlightFacts.map((item) => (
+                    <RoomFact icon={item.icon} label={item.label} value={item.value} key={item.label} />
+                  ))}
                 </div>
               </div>
 
@@ -1538,7 +1645,7 @@ function RoommatesRentalDetail({
               <div className="public-room-card public-room-card-pad">
                 <RoomSectionTitle title="Listing Details" />
                 <ul className="public-room-list">
-                  <li><i className="material-icons" aria-hidden="true">calendar_today</i><span>Posted {formatMonthYear(listing.createdAt)} and available from {availableText}.</span></li>
+                  <li><i className="material-icons" aria-hidden="true">calendar_today</i><span>{availableText ? `Posted ${formatMonthYear(listing.createdAt)} and available from ${availableText}.` : `Posted ${formatMonthYear(listing.createdAt)}.`}</span></li>
                   {details.utilitiesIncluded ? <li><i className="material-icons" aria-hidden="true">verified_user</i><span>Utilities included: {details.utilitiesIncluded}.</span></li> : null}
                   {details.preferredOccupation ? <li><i className="material-icons" aria-hidden="true">groups</i><span>Suitable for {details.preferredOccupation.toLowerCase()} renters.</span></li> : null}
                   {address ? <li><i className="material-icons" aria-hidden="true">place</i><span>{address}</span></li> : null}
@@ -1751,6 +1858,83 @@ function ListingQuoteModal({
         {status ? <div className="public-quote-status">{status}</div> : null}
         <button type="submit" disabled={isProfileLoading || isSubmitting || !form.email}>
           {isProfileLoading ? "Loading..." : isSubmitting ? "Submitting..." : "Submit Enquiry"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function JobApplicationModal({
+  form,
+  isProfileLoading,
+  isSubmitting,
+  listing,
+  resumeFile,
+  status,
+  onChange,
+  onClose,
+  onResumeChange,
+  onSubmit,
+}: {
+  form: { name: string; email: string; mobileNumber: string; message: string };
+  isProfileLoading: boolean;
+  isSubmitting: boolean;
+  listing: ListingSummary;
+  resumeFile: File | null;
+  status: string;
+  onChange: (updates: Partial<{ name: string; email: string; mobileNumber: string; message: string }>) => void;
+  onClose: () => void;
+  onResumeChange: (file: File | null) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <div className="public-quote-modal-backdrop" role="dialog" aria-modal="true">
+      <form className="public-quote-modal public-detail-quote-modal public-job-application-modal" onSubmit={onSubmit}>
+        <div className="public-quote-ribbon">Job Application</div>
+        <button type="button" className="public-quote-close" aria-label="Close" onClick={onClose}>x</button>
+        <h2>Apply Now</h2>
+        <p>{listing.title}</p>
+        <input
+          type="text"
+          placeholder="Enter name*"
+          required
+          value={form.name}
+          onChange={(event) => onChange({ name: event.target.value })}
+        />
+        <input
+          type="email"
+          placeholder="Email*"
+          readOnly
+          required
+          value={form.email}
+        />
+        <input
+          type="tel"
+          placeholder="Phone number*"
+          required
+          value={form.mobileNumber}
+          onChange={(event) => onChange({ mobileNumber: event.target.value })}
+        />
+        <label className="public-job-resume-field">
+          <span>Resume*</span>
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            required
+            onChange={(event) => onResumeChange(event.target.files?.[0] || null)}
+          />
+        </label>
+        <div className="public-job-resume-note">
+          {resumeFile ? resumeFile.name : "PDF, DOC, or DOCX up to 10 MB"}
+        </div>
+        <textarea
+          placeholder="Cover note or message"
+          value={form.message}
+          onChange={(event) => onChange({ message: event.target.value })}
+        />
+        {status ? <div className="public-quote-status">{status}</div> : null}
+        <button type="submit" disabled={isProfileLoading || isSubmitting || !form.email}>
+          {isProfileLoading ? "Loading..." : isSubmitting ? "Submitting..." : "Submit Application"}
         </button>
       </form>
     </div>
@@ -2028,7 +2212,6 @@ const localServiceCategoryNames = new Set([
   "Travel & Accommodation",
   "Health & Wellness",
   "Beauty Services",
-  "Care Services",
 ]);
 
 const localServiceSubCategoryNames = new Set([
@@ -2245,20 +2428,6 @@ function splitTextList(value: string) {
     .filter(Boolean);
 }
 
-function getLocalServiceCategoryIcon(listing: ListingSummary) {
-  const text = `${listing.categoryName} ${listing.subCategory} ${listing.detailCategory}`.toLowerCase();
-
-  if (text.includes("real estate")) return "home";
-  if (text.includes("wedding") || text.includes("event")) return "celebration";
-  if (text.includes("food") || text.includes("catering")) return "restaurant";
-  if (text.includes("health") || text.includes("care")) return "health_and_safety";
-  if (text.includes("travel")) return "flight";
-  if (text.includes("tax") || text.includes("financial")) return "account_balance";
-  if (text.includes("lesson") || text.includes("tuition")) return "school";
-  if (text.includes("beauty")) return "spa";
-  return "design_services";
-}
-
 function getContactIcon(label: string) {
   const normalizedLabel = label.toLowerCase();
 
@@ -2275,14 +2444,14 @@ function getRoommatesRentalDisplayDetails(listing: ListingSummary) {
 
   return {
     description: getRoommateAttributeValue(attributes, "description") || listing.description,
-    propertyType: getRoommateAttributeValue(attributes, "property_type", "propertyType") || listing.subCategory,
+    propertyType: getRoommateAttributeValue(attributes, "property_type", "propertyType"),
     neighborhood: getRoommateAttributeValue(attributes, "neighborhood"),
     monthlyRent,
     securityDeposit: getRoommateNumber(attributes, "security_deposit", "securityDeposit"),
     utilitiesIncluded: getRoommateBooleanText(attributes, "utilities_included", "utilitiesIncluded"),
     leaseDuration: getRoommateAttributeValue(attributes, "lease_duration", "leaseDuration"),
     availableFrom: getRoommateAttributeValue(attributes, "available_from", "availableFrom"),
-    roomType: getRoommateAttributeValue(attributes, "room_type", "roomType") || listing.detailCategory,
+    roomType: getRoommateAttributeValue(attributes, "room_type", "roomType"),
     bedrooms: getRoommateAttributeValue(attributes, "bedrooms", "number_of_bedrooms", "numberOfBedrooms"),
     bathrooms: getRoommateAttributeValue(attributes, "bathrooms"),
     furnishingType: getRoommateAttributeValue(attributes, "furnishing_type", "furnishingType"),
@@ -2391,7 +2560,10 @@ function getRoommateAttributeValue(record: Record<string, unknown>, ...keys: str
     const value = record[key];
 
     if (typeof value === "string" && value.trim()) {
-      return value.trim();
+      const normalized = normalizeRoommateDisplayText(value);
+      if (normalized) {
+        return normalized;
+      }
     }
 
     if (typeof value === "number" && Number.isFinite(value)) {
@@ -2406,6 +2578,29 @@ function getRoommateAttributeValue(record: Record<string, unknown>, ...keys: str
   return "";
 }
 
+function normalizeRoommateDisplayText(value: string | null | undefined) {
+  const normalized = (value || "").trim();
+  if (!normalized) {
+    return "";
+  }
+
+  const key = normalized.toLowerCase();
+  if (["contact advertiser", "contact provider", "not listed", "not available", "n/a", "na", "null", "undefined", "-"].includes(key)) {
+    return "";
+  }
+
+  return normalized;
+}
+
+function getRoommateCountText(value: string | null | undefined) {
+  const normalized = normalizeRoommateDisplayText(value);
+  if (!normalized || !/\d/.test(normalized)) {
+    return "";
+  }
+
+  return normalized;
+}
+
 function getRoommateNumber(record: Record<string, unknown>, ...keys: string[]) {
   for (const key of keys) {
     const value = record[key];
@@ -2415,7 +2610,12 @@ function getRoommateNumber(record: Record<string, unknown>, ...keys: string[]) {
     }
 
     if (typeof value === "string") {
-      const parsed = Number(value.replace(/,/g, ""));
+      const normalized = normalizeRoommateDisplayText(value);
+      if (!normalized) {
+        continue;
+      }
+
+      const parsed = Number(normalized.replace(/,/g, ""));
       if (Number.isFinite(parsed)) {
         return parsed;
       }
@@ -2882,6 +3082,32 @@ function RatingStars({ rating }: { rating: number }) {
       ))}
     </span>
   );
+}
+
+function getRecruiterContactHref(email: string, phone: string) {
+  if (email) {
+    return `mailto:${email}`;
+  }
+
+  if (phone) {
+    return `tel:${phone}`;
+  }
+
+  return "#company-info";
+}
+
+function shareListing(listing: ListingSummary) {
+  const url = typeof window !== "undefined" ? `${window.location.origin}/listing-details?id=${listing.id}` : "";
+  const title = listing.title || "Listing";
+
+  if (typeof navigator !== "undefined" && "share" in navigator && url) {
+    void navigator.share({ title, url }).catch(() => undefined);
+    return;
+  }
+
+  if (typeof navigator !== "undefined" && navigator.clipboard && url) {
+    void navigator.clipboard.writeText(url);
+  }
 }
 
 function getCategorySlug(listing: ListingSummary): PublicListingQuery["category"] {

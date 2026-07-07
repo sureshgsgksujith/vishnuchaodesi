@@ -27,6 +27,7 @@ const AllListingsPage = lazy(() => import("../../features/dashboard/ui/AllListin
 const ListingFormPage = lazy(() => import("../../features/dashboard/ui/ListingFormPage"));
 const ListingPreviewPage = lazy(() => import("../../features/dashboard/ui/ListingPreviewPage"));
 const ListingStartPage = lazy(() => import("../../features/dashboard/ui/ListingStartPage"));
+const ServiceOnboardingPage = lazy(() => import("../../features/dashboard/ui/ServiceOnboardingPage"));
 const PricingDetailsPage = lazy(() => import("../../features/pricing/ui/PricingDetailsPage"));
 const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPage"));
 const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
@@ -124,6 +125,7 @@ export function AppRouter() {
     "/dashboard/all-listing",
     "/dashboard/listings/new",
     "/dashboard/listings/start",
+    "/dashboard/services/new",
     "/dashboard/listings/:listingId/edit",
     "/dashboard/listings/:listingId/preview",
     "/dashboard/classifieds/step-1",
@@ -197,6 +199,7 @@ export function AppRouter() {
       <Route path="/dashboard/all-listing" element={<ProtectedCustomerRoute><AllListingsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/start" element={<ProtectedCustomerRoute><ListingStartPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/new" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/services/new" element={<ProtectedCustomerRoute><ServiceOnboardingPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/edit" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/preview" element={<ProtectedCustomerRoute><ListingPreviewPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/classifieds/step-1" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />

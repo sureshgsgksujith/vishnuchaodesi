@@ -845,14 +845,13 @@ const booksHobbyClubFields: CategoryAttributeField[] = [
 ];
 
 const vehicleCoreFields: CategoryAttributeField[] = [
-  { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "vehicle_type", label: "Vehicle Type", options: vehicleSubCategoryOptions, isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "brand", label: "Make", options: vehicleBrandOptions, isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "model", label: "Model", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "variant", label: "Variant / Trim", sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "yearOfManufacture", label: "Year", type: "number", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "vin", label: "VIN (optional/private)", sectionName: "Vehicle Information", sectionOrder: 1 },
-  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Vehicle Information", sectionOrder: 1 },
+  { key: "listing_title", label: "Listing Title", isRequired: true, sectionName: "Vehicle Details", sectionOrder: 1 },
+  { key: "brand", label: "Make", options: vehicleBrandOptions, isRequired: true, sectionName: "Vehicle Details", sectionOrder: 1 },
+  { key: "model", label: "Model", isRequired: true, sectionName: "Vehicle Details", sectionOrder: 1 },
+  { key: "variant", label: "Variant / Trim", sectionName: "Vehicle Details", sectionOrder: 1 },
+  { key: "yearOfManufacture", label: "Year", type: "number", isRequired: true, sectionName: "Vehicle Details", sectionOrder: 1 },
+  { key: "vin", label: "VIN (optional/private)", sectionName: "Vehicle Details", sectionOrder: 1 },
+  { key: "description", label: "Description", type: "textarea", isRequired: true, sectionName: "Vehicle Details", sectionOrder: 1 },
   { key: "vehicleCondition", label: "Condition", options: vehicleConditionOptions, isRequired: true, sectionName: "Vehicle Condition", sectionOrder: 3 },
   { key: "ownershipTypeVehicle", label: "Ownership", options: ["First Owner", "Second Owner", "Multiple Owners"], sectionName: "Vehicle Condition", sectionOrder: 3 },
   { key: "ownerCount", label: "Number of Owners", type: "number", sectionName: "Vehicle History", sectionOrder: 9 },
@@ -2812,7 +2811,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       form.categoryName,
       form.subCategory,
       categoryAttributes,
-    ),
+    )
+      .filter((field) => form.categoryName !== "Vehicles" || !isVehicleTypeFieldKey(field.key))
+      .map((field) => normalizeVehiclePostingField(field, form.categoryName)),
     [dynamicCategoryFields, form.categoryName, form.detailCategory, form.subCategory, categoryAttributes],
   );
   const hasDynamicCategoryFields = !isRealEstateListing && effectiveDynamicCategoryFields.length > 0;
@@ -12352,6 +12353,14 @@ function normalizeFieldKey(key: string) {
 
 function isVehicleTypeFieldKey(key: string) {
   return ["vehicletype", "vehicle_type"].includes(normalizeFieldKey(key));
+}
+
+function normalizeVehiclePostingField(field: CategoryAttributeField, categoryName: string): CategoryAttributeField {
+  if (categoryName !== "Vehicles" || field.sectionName?.trim().toLowerCase() !== "vehicle information") {
+    return field;
+  }
+
+  return { ...field, sectionName: "Vehicle Details" };
 }
 
 function isVehicleBrandBusinessFieldKey(key: string) {

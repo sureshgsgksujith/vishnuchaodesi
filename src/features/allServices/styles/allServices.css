@@ -213,6 +213,17 @@
   margin: 0 0 18px;
 }
 
+.all-services-inline-status {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  color: #9a3412;
+  font-size: 13px;
+  font-weight: 800;
+  margin: 0 0 14px;
+  padding: 10px 12px;
+}
+
 .all-services-filter-row button {
   align-items: center;
   background: #ffffff;

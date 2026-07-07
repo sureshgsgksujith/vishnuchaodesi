@@ -27,34 +27,6 @@ type FeaturedListingGroup = {
   items: FeaturedListingCard[];
 };
 
-type FeaturedListingCategory =
-  "real-estate" |
-  "restaurants-food" |
-  "vehicles" |
-  "furniture-home-decor" |
-  "electronics-appliances" |
-  "care-services";
-
-function buildListingGroupHref(
-  category: FeaturedListingCategory,
-  listing?: ListingSummary,
-  selectedCity?: string,
-  subCategory?: string,
-) {
-  const params = new URLSearchParams({ category });
-  const city = listing?.city || selectedCity;
-
-  if (subCategory) {
-    params.set("subCategory", subCategory);
-  }
-
-  if (city) {
-    params.set("city", city);
-  }
-
-  return `/all-listing?${params.toString()}`;
-}
-
 function getLocationDetailValue(listing: ListingSummary, key: string) {
   const value = listing.locationDetails?.[key];
   return value === undefined || value === null ? "" : String(value).trim();
@@ -69,9 +41,7 @@ function getListingLocationLabel(listing: ListingSummary, selectedCity?: string)
 
 function mapListingsToCards(
   listings: ListingSummary[],
-  category: FeaturedListingCategory,
   selectedCity?: string,
-  subCategory?: string,
 ) {
   return [...listings]
     .sort(
@@ -84,7 +54,7 @@ function mapListingsToCards(
     image: resolveListingImageUrl(listing.primaryImageUrl || listing.imageUrls?.[0]),
     location: getListingLocationLabel(listing, selectedCity),
     rating: listing.rating || 5,
-    href: buildListingGroupHref(category, listing, selectedCity, subCategory),
+    href: `/listing-details?id=${encodeURIComponent(String(listing.id))}`,
   }));
 }
 
@@ -127,31 +97,31 @@ function useFeaturedListingGroups() {
 
       if (realEstateResult.status === "fulfilled") {
         setRealEstateItems(
-          mapListingsToCards(realEstateResult.value.items, "real-estate", activeCity),
+          mapListingsToCards(realEstateResult.value.items, activeCity),
         );
       }
 
       if (restaurantResult.status === "fulfilled") {
         setRestaurantItems(
-          mapListingsToCards(restaurantResult.value.items, "restaurants-food", activeCity),
+          mapListingsToCards(restaurantResult.value.items, activeCity),
         );
       }
 
       if (vehicleResult.status === "fulfilled") {
         setVehicleItems(
-          mapListingsToCards(vehicleResult.value.items, "vehicles", activeCity),
+          mapListingsToCards(vehicleResult.value.items, activeCity),
         );
       }
 
       if (furnitureResult.status === "fulfilled") {
         setFurnitureItems(
-          mapListingsToCards(furnitureResult.value.items, "furniture-home-decor", activeCity),
+          mapListingsToCards(furnitureResult.value.items, activeCity),
         );
       }
 
       if (electronicsResult.status === "fulfilled") {
         setElectronicsItems(
-          mapListingsToCards(electronicsResult.value.items, "electronics-appliances", activeCity),
+          mapListingsToCards(electronicsResult.value.items, activeCity),
         );
       }
     });
@@ -238,7 +208,7 @@ function useCareFeaturedListingGroup() {
         }
 
         setCareServiceItems(
-          mapListingsToCards(result.items, "care-services", activeCity),
+          mapListingsToCards(result.items, activeCity),
         );
       })
       .catch(() => {

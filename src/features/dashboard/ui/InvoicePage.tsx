@@ -24,6 +24,8 @@ type InvoiceRecord = {
   buyerName: string;
   buyerEmail: string;
   buyerPhone: string;
+  eventDate?: string | null;
+  eventTime?: string | null;
   lines: Array<{ label: string; quantity: number; amount: number }>;
 };
 
@@ -326,11 +328,13 @@ function buildInvoices(
   bookings
     .filter((booking) => isPaidStatus(booking.paymentStatus))
     .forEach((booking) => {
+      const eventDateText = formatEventDateTime(booking.eventDate, booking.eventTime);
+      const locationText = booking.venue || booking.city || "Event ticket booking";
       records.push({
         id: `event-${booking.id}`,
         type: "Event",
         name: booking.eventTitle,
-        description: booking.venue || booking.city || "Event ticket booking",
+        description: [eventDateText, locationText].filter(Boolean).join(" | "),
         reference: booking.bookingReference,
         paymentDate: booking.paidAt || booking.createdAt,
         amount: booking.totalAmount,
@@ -340,6 +344,8 @@ function buildInvoices(
         buyerName: booking.buyerName || fullName,
         buyerEmail: booking.buyerEmail || profile?.email || "",
         buyerPhone: booking.buyerPhone || profile?.mobileNumber || "",
+        eventDate: booking.eventDate,
+        eventTime: booking.eventTime,
         lines: booking.items.length
           ? booking.items.map((item) => ({
               label: item.name,
@@ -379,6 +385,9 @@ function filterInvoices(invoices: InvoiceRecord[], search: string) {
       invoice.buyerName,
       invoice.buyerEmail,
       invoice.buyerPhone,
+      invoice.eventDate,
+      invoice.eventTime,
+      formatEventDateTime(invoice.eventDate, invoice.eventTime),
       formatDate(invoice.paymentDate),
       formatCurrencyAmount(invoice.amount, invoice.currency),
     ]
@@ -403,6 +412,15 @@ function downloadInvoice(invoice: InvoiceRecord, profile: UserProfileFormValues 
 }
 
 function buildInvoiceHtml(invoice: InvoiceRecord, profile: UserProfileFormValues | null) {
+  const eventMeta = invoice.type === "Event"
+    ? `
+        <div class="box">
+          <div class="label">Event Date</div>
+          <div class="value">${escapeHtml(formatEventDate(invoice.eventDate))}</div>
+          <div class="muted">${escapeHtml(invoice.eventTime || "")}</div>
+        </div>
+      `
+    : "";
   const lines = invoice.lines
     .map(
       (line) => `
@@ -459,6 +477,7 @@ function buildInvoiceHtml(invoice: InvoiceRecord, profile: UserProfileFormValues
           <div class="value">${escapeHtml(formatDate(invoice.paymentDate))}</div>
           <div class="muted">${escapeHtml(invoice.status)} via ${escapeHtml(invoice.provider)}</div>
         </div>
+        ${eventMeta}
       </div>
       <table>
         <thead>
@@ -513,6 +532,31 @@ function formatDate(value?: string | null) {
     month: "short",
     year: "numeric",
   }).format(date);
+}
+
+function formatEventDate(value?: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatEventDateTime(date?: string | null, time?: string | null) {
+  const dateText = formatEventDate(date);
+  const parts = [dateText === "-" ? "" : dateText, time || ""].filter(Boolean);
+
+  return parts.length ? `Event date: ${parts.join(" ")}` : "";
 }
 
 function sanitizeFileName(value: string) {

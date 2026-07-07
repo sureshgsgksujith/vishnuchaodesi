@@ -28,6 +28,7 @@ export default function HomeHeader() {
     "/all-services-detailed.html",
   ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
   const addActionLabel = isServicePage ? "Add Service" : "Add business";
+  const addActionHref = isServicePage ? "/login?returnUrl=/dashboard/services/new" : "/login";
 
   function submitHeaderSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -112,9 +113,9 @@ export default function HomeHeader() {
                         </Link>
                       </li>
                       <li>
-                        <Link to="/login" onClick={closeExplore}>
+                        <Link to={addActionHref} onClick={closeExplore}>
                           <i className="material-icons">store</i>
-                          {" "}Add your business
+                          {" "}{isServicePage ? "Add your service" : "Add your business"}
                         </Link>
                       </li>
                     </ul>
@@ -149,7 +150,7 @@ export default function HomeHeader() {
             <div className="chaodesi-header-actions">
               <ul className="bl">
                 <li>
-                  <Link to="/login">{addActionLabel}</Link>
+                  <Link to={addActionHref}>{addActionLabel}</Link>
                 </li>
                 <li>
                   <Link to="/login">Sign in</Link>
@@ -186,7 +187,7 @@ export default function HomeHeader() {
                 <div className="mv-bus">
                   <h4></h4>
                   <ul>
-                    <li><Link to="/login" onClick={closeAllPopups}>{addActionLabel}</Link></li>
+                    <li><Link to={addActionHref} onClick={closeAllPopups}>{addActionLabel}</Link></li>
                     <li><Link to="/login" onClick={closeAllPopups}>Sign in</Link></li>
                     <li><Link to="/register" onClick={closeAllPopups}>Create an account</Link></li>
                   </ul>

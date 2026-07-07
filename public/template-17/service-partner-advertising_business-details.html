@@ -1,0 +1,1097 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Post Your Business - List Your Services on Chao Desi</title>
+    <!--== META TAGS ==-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#76cef1">
+    <meta property="og:image" content="images/home/logo-white.png">
+    <meta name="description" content="List your business on Chao Desi in 4 easy steps. Add your basic details, category, photos and get discovered by local customers.">
+    <meta name="keyword" content="post your business, list your business, add business, Chao Desi service partner, advertise business">
+    <!--== FAV ICON(BROWSER TAB ICON) ==-->
+    <link rel="shortcut icon" href="images/fav.png" type="image/x-icon">
+    <!--== GOOGLE FONTS ==-->
+    <link href="https://fonts.googleapis.com/css?family=Oswald:700|Source+Sans+Pro:300,400,600,700&display=swap" rel="stylesheet">
+    <!--== WEB ICON FONTS ==-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--== CSS FILES ==-->
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="css/theme-color.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="js/html5shiv.js"></script>
+        <script src="js/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body class="spa-biz-page">
+    <!-- Preloader -->
+    <div id="preloader">
+        <div id="status">&nbsp;</div>
+    </div>
+
+    <!-- ===== HEADER / NAV ===== -->
+    <section>
+        <div class="str ind2-home">
+            <div>
+                <div class="hom-top">
+                    <div class="container">
+                        <div class="row">
+                            <div class="hom-nav ">
+                                <a href="index.html" class="top-log">
+                                    <img src="images/home/logo-white.png" alt="" loading="eager" class="ic-logo">
+                                </a>
+                                <div class="menu">
+                                    <h4>Explore</h4>
+                                </div>
+                                <div class="pop-menu">
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="top-exp-menu"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="top-ser">
+                                    <form name="filter_form" id="filter_form" class="filter_form">
+                                        <ul>
+                                            <li class="sr-sea">
+                                                <input type="text" autocomplete="off" id="top-select-search" placeholder="What are you looking for?">
+                                                <ul id="tser-res1" class="tser-res tser-res2"></ul>
+                                            </li>
+                                            <li class="sbtn">
+                                                <button type="button" class="btn btn-success" id="top_filter_submit">
+                                                    <i class="material-icons">&nbsp;</i>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </form>
+                                </div>
+                                <ul class="bl">
+                                    <li><a href="login.html">Add business</a></li>
+                                    <li><a href="login.html">Sign in</a></li>
+                                    <li><a href="login.html?login=register">Create an account</a></li>
+                                </ul>
+                                <div class="mob-menu">
+                                    <div class="mob-me-ic">
+                                        <i class="material-icons">menu</i>
+                                    </div>
+                                    <div class="mob-me-all">
+                                        <div class="mob-me-clo">
+                                            <i class="material-icons">close</i>
+                                        </div>
+                                        <div class="mv-bus">
+                                            <h4></h4>
+                                            <ul>
+                                                <li><a href="login.html">Add business</a></li>
+                                                <li><a href="login.html">Sign in</a></li>
+                                                <li><a href="login.html?login=register">Create an account</a></li>
+                                            </ul>
+                                        </div>
+                                        <div class="mv-cate">
+                                            <h4>Local Services</h4>
+                                            <ul>
+                                                <li><a href="all-services.html">All Services</a></li>
+                                                <li><a href="local-services.html">Financial &amp; Taxation Services</a></li>
+                                                <li><a href="local-services.html">Real Estate Services</a></li>
+                                                <li><a href="local-services.html">Wedding &amp; Events</a></li>
+                                                <li><a href="local-services.html">Food &amp; Catering</a></li>
+                                                <li><a href="local-services.html">Health &amp; Wellness</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PROMO BANNER (Sulekha-style) ===== -->
+    <div class="spaw-promo-bar" id="spawPromoBar">
+        <span>Get up to 10% off. List your service now! Use code <strong>CHAODESI10</strong></span>
+        <button type="button" class="spaw-promo-close" id="spawPromoClose" aria-label="Close">&times;</button>
+    </div>
+
+    <!-- ===== WIZARD PAGE HEAD ===== -->
+    <section class="spaw-page-head">
+        <div class="container">
+            <nav class="spaw-crumb" aria-label="breadcrumb">
+                <a href="index.html">Home</a>
+                <span>/</span>
+                <a href="all-services.html">All Services</a>
+                <span>/</span>
+                <span class="spaw-crumb-cur">Post Your Business</span>
+            </nav>
+            <h1 id="spawStepTitle">Enter basic information</h1>
+            <p id="spawStepSubtitle">Complete these quick steps to list your business and start getting enquiries from local customers.</p>
+
+            <div class="spaw-stepper" id="spawStepper">
+                <div class="spaw-step-item active" data-step="1" title="Basic Details">
+                    <span class="spaw-step-circle">1</span>
+                </div>
+                <span class="spaw-step-track"></span>
+                <div class="spaw-step-item" data-step="2" title="Select your service">
+                    <span class="spaw-step-circle">2</span>
+                </div>
+                <span class="spaw-step-track"></span>
+                <div class="spaw-step-item" data-step="3" title="Complete your profile">
+                    <span class="spaw-step-circle">3</span>
+                </div>
+                <span class="spaw-step-track"></span>
+                <div class="spaw-step-item" data-step="4" title="Review and submit">
+                    <span class="spaw-step-circle">4</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WIZARD BODY ===== -->
+    <section class="spaw-wrap">
+        <div class="container">
+
+            <div class="spaw-layout" id="spawLayout">
+                <div class="spaw-main">
+                    <form id="spawForm" novalidate>
+
+                        <!-- STEP 1 : BASIC DETAILS -->
+                        <div class="spaw-panel active" data-panel="1">
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">How would you classify your profession? <span class="spaw-req">*</span></label>
+                                <div class="spaw-prof-grid" id="spawProfessionGrid">
+                                    <label class="spaw-prof-card active">
+                                        <input type="radio" name="profession_type" value="Local Professional" class="spaw-track" data-desc="Individuals who offer services at your doorstep (e.g., Beautician, Astrologer)." data-tip-icon="local-professional" checked>
+                                        <span class="spaw-prof-radio"></span>
+                                        <span class="spaw-prof-text">
+                                            <strong>Local Professional</strong>
+                                            <em>Individuals who offer services at your doorstep (e.g., Beautician, Astrologer).</em>
+                                        </span>
+                                    </label>
+                                    <label class="spaw-prof-card">
+                                        <input type="radio" name="profession_type" value="Business Center / Local Retailer / Showroom" class="spaw-track" data-desc="Customers visit your location to access the service (e.g., Beauty salon, Grocery store)." data-tip-icon="business-center">
+                                        <span class="spaw-prof-radio"></span>
+                                        <span class="spaw-prof-text">
+                                            <strong>Business Center / Local Retailer / Showroom</strong>
+                                            <em>Customers visit provider's location to access service (e.g., Beauty salon, Grocery store).</em>
+                                        </span>
+                                    </label>
+                                    <label class="spaw-prof-card">
+                                        <input type="radio" name="profession_type" value="Brand" class="spaw-track" data-desc="Customers are already familiar with the brand of your service/product (e.g., a well-known retail chain)." data-tip-icon="brand">
+                                        <span class="spaw-prof-radio"></span>
+                                        <span class="spaw-prof-text">
+                                            <strong>Brand</strong>
+                                            <em>Customers are familiar with the brand of your service/product (e.g., ABC Mobiles).</em>
+                                        </span>
+                                    </label>
+                                    <label class="spaw-prof-card">
+                                        <input type="radio" name="profession_type" value="Agent" class="spaw-track" data-desc="A mediator between the user and service providers (e.g., Real estate agent)." data-tip-icon="agent">
+                                        <span class="spaw-prof-radio"></span>
+                                        <span class="spaw-prof-text">
+                                            <strong>Agent</strong>
+                                            <em>A mediator between user and service providers (e.g., Real estate agent).</em>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawBusinessName">What is your business name? <span class="spaw-req">*</span><small>(Min. 3 characters)</small></label>
+                                <input type="text" id="spawBusinessName" name="business_name" class="spaw-input spaw-track" placeholder="Business name" minlength="3" required>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawTagline">What is your business tagline?</label>
+                                <input type="text" id="spawTagline" name="business_tagline" class="spaw-input spaw-track" placeholder="Business tagline">
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">What is your primary business location? <span class="spaw-req">*</span></label>
+                                <input type="text" name="business_location" class="spaw-input spaw-track" placeholder="Location" required style="margin-bottom:10px;">
+                                <input type="text" name="business_city" class="spaw-input spaw-track" placeholder="City" required style="margin-bottom:10px;">
+                                <input type="text" name="business_zip" class="spaw-input spaw-track" placeholder="Zipcode" required>
+                            </div>
+
+                            <div class="spaw-check-row">
+                                <label class="spaw-checkbox"><input type="checkbox" id="spawOtherBranches"><span></span> Do you wish to add other branches</label>
+                            </div>
+                            <div class="spaw-branch-wrap" id="spawBranchWrap" style="display:none;">
+                                <div class="spaw-branch-list" id="spawBranchList"></div>
+                                <button type="button" class="spaw-add-link" id="spawAddBranch"><i class="material-icons">add</i> Add another branch</button>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawContactName">Business contact name <span class="spaw-req">*</span></label>
+                                <input type="text" id="spawContactName" name="contact_name" class="spaw-input spaw-track" placeholder="Contact name" required>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawEmail">Email <span class="spaw-req">*</span><small>Responses and dashboard features can be accessed only through this email</small></label>
+                                <input type="email" id="spawEmail" name="business_email" class="spaw-input spaw-track" placeholder="Email address" required>
+                            </div>
+                            <div class="spaw-check-row">
+                                <label class="spaw-checkbox"><input type="checkbox" id="spawSecEmailToggle"><span></span> Do you wish to add secondary email</label>
+                            </div>
+                            <div class="spaw-field-block" id="spawSecEmailWrap" style="display:none;">
+                                <input type="email" name="secondary_email" class="spaw-input" placeholder="Secondary email address">
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawPhone">Phone <span class="spaw-req">*</span><small>All responses will be directed to the latest phone number updated here. Phone number can be edited only once.</small></label>
+                                <div class="spaw-phone-group">
+                                    <select class="spaw-phone-code" name="phone_code">
+                                        <option value="+1" selected>US (+1)</option>
+                                        <option value="+91">IN (+91)</option>
+                                        <option value="+44">UK (+44)</option>
+                                        <option value="+61">AU (+61)</option>
+                                        <option value="+971">UAE (+971)</option>
+                                    </select>
+                                    <input type="tel" id="spawPhone" name="business_phone" class="spaw-input spaw-track" placeholder="Contact number" required>
+                                </div>
+                            </div>
+                            <div class="spaw-check-row">
+                                <label class="spaw-checkbox"><input type="checkbox" id="spawSecPhoneToggle"><span></span> Do you wish to add secondary phone</label>
+                            </div>
+                            <div class="spaw-field-block" id="spawSecPhoneWrap" style="display:none;">
+                                <input type="tel" name="secondary_phone" class="spaw-input" placeholder="Secondary phone number">
+                            </div>
+
+                            <div class="spaw-check-row">
+                                <label class="spaw-checkbox"><input type="checkbox" id="spawWhatsappToggle"><span></span> Do you wish to add WhatsApp no</label>
+                            </div>
+                            <div class="spaw-field-block" id="spawWhatsappWrap" style="display:none;">
+                                <input type="tel" name="whatsapp_number" class="spaw-input" placeholder="WhatsApp number">
+                            </div>
+
+                            <div class="spaw-check-row">
+                                <label class="spaw-checkbox"><input type="checkbox" id="spawLandlineToggle"><span></span> Do you wish to add landline phone</label>
+                            </div>
+                            <div class="spaw-field-block" id="spawLandlineWrap" style="display:none;">
+                                <input type="tel" name="landline_number" class="spaw-input" placeholder="Landline number">
+                            </div>
+                        </div>
+
+                        <!-- STEP 2 : SELECT YOUR SERVICE -->
+                        <div class="spaw-panel" data-panel="2">
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawServiceSearch">What service do you provide? <span class="spaw-req">*</span><small>Start typing and choose from the suggestions (e.g., Astrologer, Plumber, Tax Consultant)</small></label>
+                                <div class="spaw-search-wrap">
+                                    <i class="material-icons">search</i>
+                                    <input type="text" id="spawServiceSearch" class="spaw-input spaw-track" placeholder="Eg: Astrologer, Plumber, Real estate service" autocomplete="off" required>
+                                    <ul id="spawServiceSuggest" class="spaw-suggest-list"></ul>
+                                </div>
+                                <input type="hidden" id="spawPrimaryService" name="primary_service">
+                            </div>
+
+                            <div class="spaw-selected-service" id="spawSelectedServiceBox" style="display:none;">
+                                <div class="spaw-selected-head">
+                                    <i class="material-icons">check_circle</i>
+                                    <div>
+                                        <strong id="spawSelectedServiceName"></strong>
+                                        <span id="spawSelectedParentCat"></span>
+                                    </div>
+                                    <button type="button" class="spaw-link-btn" id="spawChangeService">Change</button>
+                                </div>
+                            </div>
+
+                            <div class="spaw-field-block" id="spawSubServicesBlock" style="display:none;">
+                                <label class="spaw-label">Select all services you offer <span class="spaw-req">*</span><small>Choose every service type you genuinely provide — this helps match you with customer enquiries.</small></label>
+                                <div class="spaw-check-grid" id="spawSubServicesGrid"></div>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">Which cities / areas do you serve? <span class="spaw-req">*</span></label>
+                                <div class="spaw-tag-input">
+                                    <div class="spaw-tag-chips" id="spawAreasChips"></div>
+                                    <input type="text" id="spawAreasInput" placeholder="Type a city or area and press Enter">
+                                </div>
+                                <input type="hidden" name="service_areas" id="spawAreasHidden" class="spaw-track" required>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">How do you deliver your service? <span class="spaw-req">*</span></label>
+                                <div class="spaw-prof-grid spaw-delivery-grid">
+                                    <label class="spaw-prof-card">
+                                        <input type="radio" name="service_delivery" value="At customer location" class="spaw-track" required>
+                                        <span class="spaw-prof-radio"></span>
+                                        <span class="spaw-prof-text"><strong>At customer location</strong><em>I visit the customer's home or office.</em></span>
+                                    </label>
+                                    <label class="spaw-prof-card">
+                                        <input type="radio" name="service_delivery" value="At my business location" class="spaw-track">
+                                        <span class="spaw-prof-radio"></span>
+                                        <span class="spaw-prof-text"><strong>At my business location</strong><em>Customers visit my shop, salon or office.</em></span>
+                                    </label>
+                                    <label class="spaw-prof-card">
+                                        <input type="radio" name="service_delivery" value="Both" class="spaw-track">
+                                        <span class="spaw-prof-radio"></span>
+                                        <span class="spaw-prof-text"><strong>Both</strong><em>I offer services at customer location and at my business.</em></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawYearsBusiness">Years in business / experience</label>
+                                <select id="spawYearsBusiness" name="years_in_business" class="spaw-input spaw-track">
+                                    <option value="">Select</option>
+                                    <option>Less than 1 year</option>
+                                    <option>1 - 3 years</option>
+                                    <option>3 - 5 years</option>
+                                    <option>5 - 10 years</option>
+                                    <option>10+ years</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3 : COMPLETE YOUR PROFILE -->
+                        <div class="spaw-panel" data-panel="3">
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawDescription">Tell customers about your business <span class="spaw-req">*</span><small>Write 40–150 words about your experience, specialties and what makes you unique.</small></label>
+                                <textarea id="spawDescription" name="business_description" class="spaw-input spaw-textarea spaw-track" rows="5" placeholder="Describe your experience, specialties, certifications, and service guarantees..." required></textarea>
+                                <div class="spaw-char-count"><span id="spawDescCount">0</span> / 500 characters</div>
+                            </div>
+
+                            <div class="spaw-field-block spaw-row-2">
+                                <div>
+                                    <label class="spaw-label" for="spawYearEstablished">Year established</label>
+                                    <input type="number" id="spawYearEstablished" name="year_established" class="spaw-input spaw-track" placeholder="e.g., 2015" min="1950" max="2026">
+                                </div>
+                                <div>
+                                    <label class="spaw-label" for="spawTeamSize">Team size</label>
+                                    <select id="spawTeamSize" name="team_size" class="spaw-input">
+                                        <option value="">Select</option>
+                                        <option>Just me</option>
+                                        <option>2 - 5 people</option>
+                                        <option>6 - 10 people</option>
+                                        <option>11 - 25 people</option>
+                                        <option>25+ people</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">Business logo / profile photo</label>
+                                <label class="spaw-upload-box" id="spawLogoUpload">
+                                    <input type="file" id="spawLogoFile" accept="image/*" hidden>
+                                    <span class="spaw-upload-empty"><i class="material-icons">add_a_photo</i><span>Upload logo</span></span>
+                                    <img class="spaw-upload-preview" alt="" style="display:none;">
+                                </label>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">Business photos <small>(add up to 6 — work samples, shop, team)</small></label>
+                                <div class="spaw-gallery-grid" id="spawGalleryGrid">
+                                    <label class="spaw-gallery-add" id="spawGalleryAdd">
+                                        <input type="file" id="spawGalleryFile" accept="image/*" multiple hidden>
+                                        <i class="material-icons">add</i>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">Working days &amp; hours</label>
+                                <div class="spaw-days-grid">
+                                    <label class="spaw-day-chip"><input type="checkbox" name="working_days" value="Mon" checked><span>Mon</span></label>
+                                    <label class="spaw-day-chip"><input type="checkbox" name="working_days" value="Tue" checked><span>Tue</span></label>
+                                    <label class="spaw-day-chip"><input type="checkbox" name="working_days" value="Wed" checked><span>Wed</span></label>
+                                    <label class="spaw-day-chip"><input type="checkbox" name="working_days" value="Thu" checked><span>Thu</span></label>
+                                    <label class="spaw-day-chip"><input type="checkbox" name="working_days" value="Fri" checked><span>Fri</span></label>
+                                    <label class="spaw-day-chip"><input type="checkbox" name="working_days" value="Sat"><span>Sat</span></label>
+                                    <label class="spaw-day-chip"><input type="checkbox" name="working_days" value="Sun"><span>Sun</span></label>
+                                </div>
+                            </div>
+
+                            <div class="spaw-field-block spaw-row-2">
+                                <div>
+                                    <label class="spaw-label" for="spawOpenTime">Opening time</label>
+                                    <input type="time" id="spawOpenTime" name="opening_time" class="spaw-input" value="09:00">
+                                </div>
+                                <div>
+                                    <label class="spaw-label" for="spawCloseTime">Closing time</label>
+                                    <input type="time" id="spawCloseTime" name="closing_time" class="spaw-input" value="18:00">
+                                </div>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">Payment modes accepted</label>
+                                <div class="spaw-check-grid spaw-pay-grid">
+                                    <label class="spaw-check-pill"><input type="checkbox" name="payment_modes" value="Cash" checked><span>Cash</span></label>
+                                    <label class="spaw-check-pill"><input type="checkbox" name="payment_modes" value="Credit Card"><span>Credit Card</span></label>
+                                    <label class="spaw-check-pill"><input type="checkbox" name="payment_modes" value="Debit Card"><span>Debit Card</span></label>
+                                    <label class="spaw-check-pill"><input type="checkbox" name="payment_modes" value="UPI / Zelle"><span>UPI / Zelle</span></label>
+                                    <label class="spaw-check-pill"><input type="checkbox" name="payment_modes" value="PayPal"><span>PayPal</span></label>
+                                    <label class="spaw-check-pill"><input type="checkbox" name="payment_modes" value="Cheque"><span>Cheque</span></label>
+                                </div>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label" for="spawWebsite">Website <small>(optional)</small></label>
+                                <input type="url" id="spawWebsite" name="business_website" class="spaw-input spaw-track" placeholder="https://www.yourbusiness.com">
+                            </div>
+
+                            <div class="spaw-field-block spaw-row-2">
+                                <div>
+                                    <label class="spaw-label" for="spawFacebook">Facebook</label>
+                                    <input type="url" id="spawFacebook" name="facebook_url" class="spaw-input" placeholder="Facebook page URL">
+                                </div>
+                                <div>
+                                    <label class="spaw-label" for="spawInstagram">Instagram</label>
+                                    <input type="url" id="spawInstagram" name="instagram_url" class="spaw-input" placeholder="Instagram profile URL">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4 : REVIEW & SUBMIT -->
+                        <div class="spaw-panel" data-panel="4">
+                            <p class="spaw-review-intro">Please review your business details below. You can edit any section before submitting your listing for verification.</p>
+
+                            <div class="spaw-review-card">
+                                <h4>Basic information <a href="javascript:void(0)" data-goto="1">Edit</a></h4>
+                                <div id="spawReviewBasic"></div>
+                            </div>
+                            <div class="spaw-review-card">
+                                <h4>Service &amp; category <a href="javascript:void(0)" data-goto="2">Edit</a></h4>
+                                <div id="spawReviewService"></div>
+                            </div>
+                            <div class="spaw-review-card">
+                                <h4>Business profile <a href="javascript:void(0)" data-goto="3">Edit</a></h4>
+                                <div id="spawReviewProfile"></div>
+                            </div>
+
+                            <div class="spaw-field-block">
+                                <label class="spaw-label">Choose your listing plan</label>
+                                <div class="spaw-plan-grid">
+                                    <label class="spaw-plan-card active">
+                                        <input type="radio" name="listing_plan" value="Free Listing" checked>
+                                        <span class="spaw-plan-badge">Recommended</span>
+                                        <strong>Free Listing</strong>
+                                        <p>List your business for free and get discovered by local customers on Chao Desi.</p>
+                                        <ul>
+                                            <li>Business profile page</li>
+                                            <li>Customer enquiries via email &amp; phone</li>
+                                            <li>Appear in local service search</li>
+                                        </ul>
+                                    </label>
+                                    <label class="spaw-plan-card spaw-plan-premium">
+                                        <input type="radio" name="listing_plan" value="Premium Listing">
+                                        <strong>Premium Listing</strong>
+                                        <p>Get priority placement and more visibility in your category.</p>
+                                        <ul>
+                                            <li>Featured in category listings</li>
+                                            <li>Priority customer leads</li>
+                                            <li>Verified badge on profile</li>
+                                        </ul>
+                                        <em>Contact us for pricing</em>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="spaw-check-row spaw-terms-row">
+                                <label class="spaw-checkbox"><input type="checkbox" id="spawTermsCheck" class="spaw-track" required><span></span> I agree to the <a href="terms-of-use.html" target="_blank">Terms of Use</a> and confirm that the information provided above is accurate.</label>
+                            </div>
+                        </div>
+
+                    </form>
+
+                    <div class="spaw-actions">
+                        <button type="button" class="spaw-btn spaw-btn-back" id="spawBackBtn" style="visibility:hidden;"><i class="material-icons">arrow_back</i> Back</button>
+                        <div class="spaw-actions-right">
+                            <button type="button" class="spaw-btn spaw-btn-next" id="spawNextBtn">Next</button>
+                            <button type="button" class="spaw-btn spaw-btn-submit" id="spawSubmitBtn" style="display:none;">Submit for Review</button>
+                        </div>
+                    </div>
+                </div>
+
+                <aside class="spaw-side">
+                    <div class="spaw-side-card spaw-progress-card">
+                        <div class="spaw-progress-head">
+                            <span>Completion status</span>
+                            <b id="spawPercentText">0% completed</b>
+                        </div>
+                        <div class="spaw-progress-track">
+                            <span class="spaw-progress-fill" id="spawProgressFill"></span>
+                        </div>
+                    </div>
+                    <div class="spaw-side-card spaw-tip-card" id="spawTipCard"></div>
+                </aside>
+            </div>
+
+            <div class="spaw-success" id="spawSuccess" style="display:none;">
+                <i class="material-icons">check_circle</i>
+                <h2>You're all set!</h2>
+                <p>Thanks for submitting your business details. Our team will review your listing and notify you at the email/phone provided once it goes live.</p>
+                <a href="index.html" class="spaw-btn spaw-btn-next">Back to Home</a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <section class=" wed-hom-footer">
+        <div class="container">
+            <div class="row foot-supp">
+                <h2><span>Free support:</span> +01 5426 24400 &nbsp;&nbsp;|&nbsp;&nbsp; <span>Email:</span> info@chaodesi.com</h2>
+            </div>
+            <div class="row wed-foot-link">
+                <div class="col-md-4 foot-tc-mar-t-o">
+                    <h4>Local Services</h4>
+                    <ul>
+                        <li><a href="all-services.html">All Services</a></li>
+                        <li><a href="local-services.html">Financial &amp; Taxation Services</a></li>
+                        <li><a href="local-services.html">Real Estate Services</a></li>
+                        <li><a href="local-services.html">Wedding &amp; Events</a></li>
+                        <li><a href="local-services.html">Lessons/Tuitions</a></li>
+                        <li><a href="local-services.html">Food &amp; Catering</a></li>
+                        <li><a href="local-services.html">Home &amp; Business Needs</a></li>
+                        <li><a href="local-services.html">Travel &amp; Accommodation</a></li>
+                        <li><a href="local-services.html">Health &amp; Wellness</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>Explore</h4>
+                    <ul>
+                        <li><a href="all-listing.html">All Listings</a></li>
+                        <li><a href="service-experts/index.html">Service Experts</a></li>
+                        <li><a href="jobs/index.html">Jobs</a></li>
+                        <li><a href="events.html">Events</a></li>
+                        <li><a href="products.html">Products</a></li>
+                        <li><a href="coupons.html">Coupons</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h4>HELP &amp; SUPPORT</h4>
+                    <ul>
+                        <li><a href="about.html">About us</a></li>
+                        <li><a href="faq.html">FAQ</a></li>
+                        <li><a href="feedback.html">Feedback</a></li>
+                        <li><a href="contact-us.html">Contact us</a></li>
+                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
+                        <li><a href="terms-of-use.html">Terms of Use</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row wed-foot-link-1">
+                <div class="col-md-4">
+                    <h4>Get In Touch</h4>
+                    <p>Address: 28800 Orchard Lake Road, Suite 180 Farmington Hills, U.S.A.</p>
+                    <p>Phone: <a href="tel:+01 5426 24400">+01 5426 24400</a></p>
+                    <p>Email: <a href="mailto:info@chaodesi.com">info@chaodesi.com</a></p>
+                </div>
+                <div class="col-md-4 fot-app">
+                    <h4>DOWNLOAD OUR FREE MOBILE APPS</h4>
+                    <ul>
+                        <li><a href=""><img src="images/gstore.png" alt="" loading="lazy"></a></li>
+                        <li><a href=""><img src="images/astore.png" alt="" loading="lazy"></a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 fot-soc">
+                    <h4>SOCIAL MEDIA</h4>
+                    <ul>
+                        <li><a target="_blank" href=""><img src="images/social/1.png" alt="" loading="lazy"></a></li>
+                        <li><a target="_blank" href="https://twitter.com/"><img src="images/social/2.png" alt="" loading="lazy"></a></li>
+                        <li><a target="_blank" href="https://www.facebook.com/"><img src="images/social/3.png" alt="" loading="lazy"></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="cr">
+            <div class="container">
+                <div class="row">
+                    <p>Copyright © 2025
+                        <a href="https://chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by
+                        <a href="https://chaodesi.com/" target="_blank">Symplore</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="fqui-menu"></div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/select-opt.js"></script>
+    <script src="js/blazy.min.js"></script>
+    <script src="js/slick.js"></script>
+    <script src="js/custom.js"></script>
+    <script src="js/jquery.validate.min.js"></script>
+    <script src="js/custom_validation.js"></script>
+    <script>
+        (function () {
+            var currentStep = 1;
+            var maxStepReached = 1;
+            var totalSteps = 4;
+
+            var stepMeta = {
+                1: { title: 'Enter basic information', subtitle: 'Tell us about your business name, location and contact details.' },
+                2: { title: 'Select your service', subtitle: 'Choose your primary service and map all the services you offer.' },
+                3: { title: 'Complete your profile', subtitle: 'Add photos, description, working hours and payment details to build trust.' },
+                4: { title: 'Review and submit', subtitle: 'Review your listing details and submit for verification.' }
+            };
+
+            var serviceCatalog = [
+                { name: 'Tax Consultant', parent: 'Financial & Legal Services', subs: ['Tax Preparation', 'Tax Planning', 'IRS Audit Support', 'Bookkeeping'] },
+                { name: 'Accountant', parent: 'Financial & Legal Services', subs: ['Personal Tax Filing', 'Business Accounting', 'Payroll Processing', 'Bookkeeping'] },
+                { name: 'Immigration Services', parent: 'Financial & Legal Services', subs: ['Visa Assistance', 'Green Card', 'Citizenship', 'Work Permit'] },
+                { name: 'Real Estate Agent', parent: 'Real Estate Services', subs: ['Buying Agent', 'Selling Agent', 'Rental Agent', 'Commercial Agent'] },
+                { name: 'Property Management', parent: 'Real Estate Services', subs: ['Tenant Screening', 'Rent Collection', 'Maintenance', 'Property Inspection'] },
+                { name: 'Wedding Photographer', parent: 'Wedding & Events', subs: ['Pre-wedding Shoot', 'Wedding Day Coverage', 'Candid Photography', 'Album Design'] },
+                { name: 'DJ Services', parent: 'Wedding & Events', subs: ['Wedding DJ', 'Party DJ', 'Punjabi DJ', 'Bollywood DJ'] },
+                { name: 'Event Planner', parent: 'Wedding & Events', subs: ['Wedding Planning', 'Birthday Events', 'Corporate Events', 'Destination Wedding'] },
+                { name: 'Bridal Makeup Artist', parent: 'Wedding & Events', subs: ['Bridal Makeup', 'Party Makeup', 'Mehndi Artist', 'Hair Styling'] },
+                { name: 'Catering Services', parent: 'Food & Catering', subs: ['Wedding Catering', 'Party Catering', 'Vegetarian Catering', 'Tiffin Service'] },
+                { name: 'Homemade Indian Food', parent: 'Food & Catering', subs: ['Lunch Delivery', 'Dinner Delivery', 'Snacks', 'Festival Specials'] },
+                { name: 'Dentist', parent: 'Health & Wellness', subs: ['General Dentistry', 'Teeth Cleaning', 'Root Canal', 'Cosmetic Dentistry'] },
+                { name: 'Yoga Classes', parent: 'Health & Wellness', subs: ['Group Yoga', 'Private Yoga', 'Prenatal Yoga', 'Online Yoga'] },
+                { name: 'Ayurvedic Spa', parent: 'Health & Wellness', subs: ['Ayurvedic Massage', 'Panchakarma', 'Herbal Treatments', 'Wellness Consultation'] },
+                { name: 'Hindu Priest', parent: 'Religious & Community Services', subs: ['Wedding Ceremony', 'House Warming', 'Naming Ceremony', 'Puja Services'] },
+                { name: 'Astrologer', parent: 'Religious & Community Services', subs: ['Horoscope Reading', 'Match Making', 'Vastu Consultation', 'Gemstone Advice'] },
+                { name: 'Dance Classes', parent: 'Lessons / Tuitions', subs: ['Bharatanatyam', 'Kathak', 'Bollywood Dance', 'Hip Hop Dance'] },
+                { name: 'Music Classes', parent: 'Lessons / Tuitions', subs: ['Vocal Music', 'Carnatic Music', 'Hindustani Music', 'Instrument Classes'] },
+                { name: 'Math Tutor', parent: 'Lessons / Tuitions', subs: ['Algebra', 'Calculus', 'ACT Prep', 'SAT Prep'] },
+                { name: 'Plumber', parent: 'Home & Business Needs', subs: ['Pipe Repair', 'Drain Cleaning', 'Water Heater', 'Emergency Plumbing'] },
+                { name: 'Home Cleaning', parent: 'Home & Business Needs', subs: ['Deep Cleaning', 'Move-in Cleaning', 'Regular Cleaning', 'Carpet Cleaning'] },
+                { name: 'Movers & Packers', parent: 'Home & Business Needs', subs: ['Local Moving', 'Interstate Moving', 'Packing Services', 'Storage'] },
+                { name: 'Travel Agent', parent: 'Travel & Accommodation', subs: ['Flight Booking', 'Tour Packages', 'Honeymoon Trips', 'Visa Travel Help'] },
+                { name: 'Car Rental', parent: 'Travel & Accommodation', subs: ['Airport Pickup', 'Daily Rental', 'Chauffeur Service', 'Outstation Trips'] }
+            ];
+
+            var selectedService = null;
+
+            var spawIconSvg = {
+                'local-professional': '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ff7a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg>',
+                'business-center': '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ff7a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+                'brand': '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ff7a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>',
+                'agent': '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ff7a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+                'category': '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ff7a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+                'photo': '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ff7a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+                'review': '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#ff7a00" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+            };
+
+            function spawTipIcon(key) {
+                return '<div class="spaw-tip-head">' + (spawIconSvg[key] || spawIconSvg['local-professional']) + '</div>';
+            }
+
+            var spawTips = {
+                1: function () {
+                    var $checked = $('input[name="profession_type"]:checked');
+                    var title = $checked.val() || 'Local Professional';
+                    var desc = $checked.data('desc') || '';
+                    var iconKey = $checked.data('tip-icon') || 'local-professional';
+                    return spawTipIcon(iconKey) +
+                        '<h4>' + title + '</h4><p>' + desc + '</p>' +
+                        '<h5>Business name</h5>' +
+                        '<ul class="spaw-tip-list">' +
+                        '<li>Keep it short, memorable and easy to spell.</li>' +
+                        '<li>Use your own name for personal services.</li>' +
+                        '<li>Avoid special characters or ALL CAPS.</li>' +
+                        '</ul>' +
+                        '<h5>Business tagline</h5>' +
+                        '<p class="spaw-tip-note">A short tagline (5–8 words) helps customers instantly understand what you offer.</p>';
+                },
+                2: function () {
+                    return spawTipIcon('category') +
+                        '<h4>Service mapping</h4>' +
+                        '<p>Choose your primary service and select all related sub-services you offer. Accurate mapping helps match you with the right customer enquiries.</p>' +
+                        '<ul class="spaw-tip-list">' +
+                        '<li>Pick the service that best describes your main offering.</li>' +
+                        '<li>Select every sub-service you genuinely provide.</li>' +
+                        '<li>Add all cities and areas you can serve.</li>' +
+                        '</ul>';
+                },
+                3: function () {
+                    return spawTipIcon('photo') +
+                        '<h4>Build credibility</h4>' +
+                        '<p>Profiles with a logo and at least 3 photos get significantly more customer enquiries.</p>' +
+                        '<ul class="spaw-tip-list">' +
+                        '<li>Write a clear description highlighting your experience.</li>' +
+                        '<li>Upload real photos of your work, shop or team.</li>' +
+                        '<li>Add working hours and payment modes customers expect.</li>' +
+                        '</ul>';
+                },
+                4: function () {
+                    return spawTipIcon('review') +
+                        '<h4>Almost done!</h4>' +
+                        '<p>Review every section carefully before submitting. Our team will verify your listing within 24–48 hours.</p>' +
+                        '<ul class="spaw-tip-list">' +
+                        '<li>Double-check phone number and email.</li>' +
+                        '<li>Ensure all selected services are accurate.</li>' +
+                        '<li>Start with the free listing — upgrade anytime.</li>' +
+                        '</ul>';
+                }
+            };
+
+            function updateTipCard() {
+                var fn = spawTips[currentStep];
+                if (fn) { $('#spawTipCard').html(fn()); }
+            }
+
+            function updateStepHead() {
+                var meta = stepMeta[currentStep] || stepMeta[1];
+                $('#spawStepTitle').text(meta.title);
+                $('#spawStepSubtitle').text(meta.subtitle);
+            }
+
+            function updateStepper() {
+                $('.spaw-step-item').each(function () {
+                    var step = parseInt($(this).data('step'), 10);
+                    $(this).removeClass('active completed');
+                    if (step < currentStep) {
+                        $(this).addClass('completed');
+                        $(this).find('.spaw-step-circle').html('<i class="material-icons">check</i>');
+                    } else if (step === currentStep) {
+                        $(this).addClass('active');
+                        $(this).find('.spaw-step-circle').text(step);
+                    } else {
+                        $(this).find('.spaw-step-circle').text(step);
+                    }
+                });
+                $('.spaw-step-track').each(function (idx) {
+                    $(this).toggleClass('filled', (idx + 1) < currentStep);
+                });
+            }
+
+            function updateProgress() {
+                var total = 0, filled = 0;
+                var seenNames = {};
+                $('#spawForm .spaw-track').each(function () {
+                    var $el = $(this);
+                    var type = ($el.attr('type') || '').toLowerCase();
+                    if (type === 'radio' || type === 'checkbox') {
+                        var name = $el.attr('name') || $el.attr('id');
+                        if (seenNames[name]) { return; }
+                        seenNames[name] = true;
+                        total++;
+                        if ($('input[name="' + name + '"]:checked').length || $el.is(':checked')) { filled++; }
+                    } else {
+                        total++;
+                        if ($.trim($el.val()) !== '') { filled++; }
+                    }
+                });
+                var pct = total ? Math.round((filled / total) * 100) : 0;
+                $('#spawPercentText').text(pct + '% completed');
+                $('#spawProgressFill').css('width', pct + '%');
+            }
+
+            function showStep(step) {
+                currentStep = step;
+                $('.spaw-panel').removeClass('active');
+                $('.spaw-panel[data-panel="' + step + '"]').addClass('active');
+                updateStepper();
+                updateStepHead();
+                updateTipCard();
+                $('#spawBackBtn').css('visibility', step === 1 ? 'hidden' : 'visible');
+                if (step === totalSteps) {
+                    $('#spawNextBtn').hide();
+                    $('#spawSubmitBtn').show();
+                } else {
+                    $('#spawNextBtn').show();
+                    $('#spawSubmitBtn').hide();
+                }
+                $('html, body').animate({ scrollTop: $('.spaw-page-head').offset().top - 90 }, 300);
+            }
+
+            function validatePanel(step) {
+                if (step === 2) {
+                    if (!selectedService) {
+                        $('#spawServiceSearch')[0].setCustomValidity('Please select a service from the suggestions.');
+                        $('#spawServiceSearch')[0].reportValidity();
+                        return false;
+                    }
+                    $('#spawServiceSearch')[0].setCustomValidity('');
+                    if ($('#spawSubServicesGrid input:checked').length === 0) {
+                        alert('Please select at least one sub-service you offer.');
+                        return false;
+                    }
+                    if ($.trim($('#spawAreasHidden').val()) === '') {
+                        alert('Please add at least one city or area you serve.');
+                        return false;
+                    }
+                }
+                var valid = true;
+                var $panel = $('.spaw-panel[data-panel="' + step + '"]');
+                $panel.find('[required]').each(function () {
+                    if (this.checkValidity && !this.checkValidity()) {
+                        this.reportValidity();
+                        valid = false;
+                        return false;
+                    }
+                });
+                return valid;
+            }
+
+            function fieldRow(label, value) {
+                if (!value) { return ''; }
+                return '<div class="spaw-review-row"><span>' + label + '</span><span>' + value + '</span></div>';
+            }
+
+            function getCheckedLabels(name) {
+                return $('input[name="' + name + '"]:checked').map(function () {
+                    return $(this).val();
+                }).get().join(', ');
+            }
+
+            function populateReview() {
+                var basic = '';
+                basic += fieldRow('Profession type', $('input[name="profession_type"]:checked').val());
+                basic += fieldRow('Business name', $('#spawBusinessName').val());
+                basic += fieldRow('Tagline', $('#spawTagline').val());
+                basic += fieldRow('Location', [$('input[name="business_location"]').val(), $('input[name="business_city"]').val(), $('input[name="business_zip"]').val()].filter(Boolean).join(', '));
+                basic += fieldRow('Contact name', $('#spawContactName').val());
+                basic += fieldRow('Email', $('#spawEmail').val());
+                basic += fieldRow('Phone', $('select[name="phone_code"]').val() + ' ' + $('#spawPhone').val());
+                $('#spawReviewBasic').html(basic || '<p class="spaw-tip-note">No details added yet.</p>');
+
+                var svc = '';
+                svc += fieldRow('Primary service', selectedService ? selectedService.name : '');
+                svc += fieldRow('Parent category', selectedService ? selectedService.parent : '');
+                svc += fieldRow('Services offered', getCheckedLabels('sub_services'));
+                svc += fieldRow('Areas served', $('#spawAreasHidden').val().split(',').filter(Boolean).join(', '));
+                svc += fieldRow('Service delivery', $('input[name="service_delivery"]:checked').val());
+                svc += fieldRow('Years in business', $('#spawYearsBusiness').val());
+                $('#spawReviewService').html(svc || '<p class="spaw-tip-note">No details added yet.</p>');
+
+                var profile = '';
+                profile += fieldRow('Description', $('#spawDescription').val());
+                profile += fieldRow('Year established', $('#spawYearEstablished').val());
+                profile += fieldRow('Team size', $('#spawTeamSize').val());
+                profile += fieldRow('Logo uploaded', $('#spawLogoUpload').hasClass('has-image') ? 'Yes' : 'No');
+                profile += fieldRow('Photos uploaded', $('#spawGalleryGrid .spaw-gallery-item').length + ' added');
+                profile += fieldRow('Working days', getCheckedLabels('working_days'));
+                profile += fieldRow('Working hours', $('#spawOpenTime').val() + ' – ' + $('#spawCloseTime').val());
+                profile += fieldRow('Payment modes', getCheckedLabels('payment_modes'));
+                profile += fieldRow('Website', $('#spawWebsite').val());
+                profile += fieldRow('Facebook', $('#spawFacebook').val());
+                profile += fieldRow('Instagram', $('#spawInstagram').val());
+                profile += fieldRow('Listing plan', $('input[name="listing_plan"]:checked').val());
+                $('#spawReviewProfile').html(profile || '<p class="spaw-tip-note">No details added yet.</p>');
+            }
+
+            function renderSubServices(service) {
+                var html = '';
+                service.subs.forEach(function (sub, i) {
+                    html += '<label class="spaw-check-pill"><input type="checkbox" name="sub_services" value="' + sub + '"' + (i === 0 ? ' checked' : '') + '><span>' + sub + '</span></label>';
+                });
+                $('#spawSubServicesGrid').html(html);
+                $('#spawSubServicesBlock').show();
+            }
+
+            function selectService(service) {
+                selectedService = service;
+                $('#spawPrimaryService').val(service.name);
+                $('#spawServiceSearch').val(service.name);
+                $('#spawSelectedServiceName').text(service.name);
+                $('#spawSelectedParentCat').text('Parent category: ' + service.parent);
+                $('#spawSelectedServiceBox').show();
+                $('#spawServiceSuggest').hide();
+                renderSubServices(service);
+                updateProgress();
+            }
+
+            function clearServiceSelection() {
+                selectedService = null;
+                $('#spawPrimaryService').val('');
+                $('#spawServiceSearch').val('').focus();
+                $('#spawSelectedServiceBox').hide();
+                $('#spawSubServicesBlock').hide();
+                $('#spawSubServicesGrid').empty();
+            }
+
+            function filterServices(query) {
+                query = $.trim(query).toLowerCase();
+                if (query.length < 2) { return []; }
+                return serviceCatalog.filter(function (s) {
+                    return s.name.toLowerCase().indexOf(query) !== -1 ||
+                        s.parent.toLowerCase().indexOf(query) !== -1 ||
+                        s.subs.some(function (sub) { return sub.toLowerCase().indexOf(query) !== -1; });
+                }).slice(0, 8);
+            }
+
+            /* ---- Stepper navigation ---- */
+            $('.spaw-step-item').on('click', function () {
+                var step = parseInt($(this).data('step'), 10);
+                if (step <= maxStepReached) {
+                    if (step === totalSteps) { populateReview(); }
+                    showStep(step);
+                }
+            });
+
+            $('#spawNextBtn').on('click', function () {
+                if (!validatePanel(currentStep)) { return; }
+                if (currentStep === totalSteps - 1) { populateReview(); }
+                maxStepReached = Math.max(maxStepReached, currentStep + 1);
+                showStep(currentStep + 1);
+            });
+
+            $('#spawBackBtn').on('click', function () { showStep(currentStep - 1); });
+
+            $('.spaw-review-card a[data-goto]').on('click', function () {
+                showStep(parseInt($(this).data('goto'), 10));
+            });
+
+            $('#spawSubmitBtn').on('click', function () {
+                if (!validatePanel(4)) { return; }
+                $('#spawLayout').hide();
+                $('#spawStepper').hide();
+                $('#spawSuccess').show();
+                $('html, body').animate({ scrollTop: $('.spaw-page-head').offset().top - 90 }, 300);
+            });
+
+            /* ---- Profession & delivery cards ---- */
+            $('.spaw-prof-card').on('click', function () {
+                var $group = $(this).closest('.spaw-prof-grid');
+                $group.find('.spaw-prof-card').removeClass('active');
+                $(this).addClass('active');
+                $(this).find('input[type="radio"]').prop('checked', true);
+                if ($group.is('#spawProfessionGrid')) { updateTipCard(); }
+                updateProgress();
+            });
+
+            /* ---- Plan cards ---- */
+            $('.spaw-plan-card').on('click', function () {
+                $('.spaw-plan-card').removeClass('active');
+                $(this).addClass('active');
+                $(this).find('input[type="radio"]').prop('checked', true);
+            });
+
+            /* ---- Checkbox reveal toggles ---- */
+            function bindToggle(checkboxId, wrapId) {
+                $(checkboxId).on('change', function () {
+                    $(wrapId).slideToggle(180, function () {
+                        if (!$(checkboxId).is(':checked')) { $(wrapId).find('input').val(''); }
+                    });
+                });
+            }
+            bindToggle('#spawSecEmailToggle', '#spawSecEmailWrap');
+            bindToggle('#spawSecPhoneToggle', '#spawSecPhoneWrap');
+            bindToggle('#spawWhatsappToggle', '#spawWhatsappWrap');
+            bindToggle('#spawLandlineToggle', '#spawLandlineWrap');
+
+            /* ---- Other branches ---- */
+            function addBranchRow() {
+                var $row = $('<div class="spaw-branch-item"><input type="text" name="branch_location[]" placeholder="Branch location"><input type="text" name="branch_city[]" placeholder="City"><input type="text" name="branch_zip[]" placeholder="Zipcode"><button type="button" class="spaw-branch-remove"><i class="material-icons">close</i></button></div>');
+                $row.find('.spaw-branch-remove').on('click', function () { $row.remove(); });
+                $('#spawBranchList').append($row);
+            }
+            $('#spawOtherBranches').on('change', function () {
+                $('#spawBranchWrap').slideToggle(180);
+                if ($(this).is(':checked') && $('#spawBranchList').children().length === 0) { addBranchRow(); }
+            });
+            $('#spawAddBranch').on('click', addBranchRow);
+
+            /* ---- Service search autocomplete ---- */
+            $('#spawServiceSearch').on('input focus', function () {
+                var results = filterServices($(this).val());
+                if (!results.length) { $('#spawServiceSuggest').hide(); return; }
+                var html = '';
+                results.forEach(function (s) {
+                    html += '<li data-name="' + s.name + '"><strong>' + s.name + '</strong><span>' + s.parent + '</span></li>';
+                });
+                $('#spawServiceSuggest').html(html).show();
+            });
+
+            $('#spawServiceSuggest').on('click', 'li', function () {
+                var name = $(this).data('name');
+                var service = serviceCatalog.find(function (s) { return s.name === name; });
+                if (service) { selectService(service); }
+            });
+
+            $('#spawChangeService').on('click', clearServiceSelection);
+
+            $(document).on('click', function (e) {
+                if (!$(e.target).closest('.spaw-search-wrap').length) {
+                    $('#spawServiceSuggest').hide();
+                }
+            });
+
+            /* ---- Tag input for areas ---- */
+            function setupTagInput(inputSel, chipsSel, hiddenSel) {
+                var values = [];
+                function render() {
+                    var html = '';
+                    values.forEach(function (v, i) {
+                        html += '<span class="spaw-chip">' + v + '<i class="material-icons" data-idx="' + i + '">close</i></span>';
+                    });
+                    $(chipsSel).html(html);
+                    if (hiddenSel) { $(hiddenSel).val(values.join(',')).trigger('change'); }
+                    updateProgress();
+                }
+                $(inputSel).on('keydown', function (e) {
+                    if (e.key === 'Enter' || e.keyCode === 13) {
+                        e.preventDefault();
+                        var val = $.trim($(this).val());
+                        if (val !== '' && values.indexOf(val) === -1) { values.push(val); render(); }
+                        $(this).val('');
+                    }
+                });
+                $(chipsSel).on('click', '.material-icons', function () {
+                    values.splice(parseInt($(this).data('idx'), 10), 1);
+                    render();
+                });
+            }
+            setupTagInput('#spawAreasInput', '#spawAreasChips', '#spawAreasHidden');
+
+            /* ---- Description char count ---- */
+            $('#spawDescription').on('input', function () {
+                var len = $(this).val().length;
+                if (len > 500) { $(this).val($(this).val().substring(0, 500)); len = 500; }
+                $('#spawDescCount').text(len);
+                updateProgress();
+            });
+
+            /* ---- Image uploads ---- */
+            function setupSingleUpload(fileInputSel, boxSel) {
+                $(fileInputSel).on('change', function (e) {
+                    var file = e.target.files && e.target.files[0];
+                    if (!file) { return; }
+                    var url = URL.createObjectURL(file);
+                    var $box = $(boxSel);
+                    $box.find('.spaw-upload-empty').hide();
+                    $box.find('.spaw-upload-preview').attr('src', url).show();
+                    $box.addClass('has-image');
+                });
+            }
+            setupSingleUpload('#spawLogoFile', '#spawLogoUpload');
+
+            $('#spawGalleryFile').on('change', function (e) {
+                var files = Array.prototype.slice.call(e.target.files || []);
+                var currentCount = $('#spawGalleryGrid .spaw-gallery-item').length;
+                files.slice(0, 6 - currentCount).forEach(function (file) {
+                    var url = URL.createObjectURL(file);
+                    var $item = $('<div class="spaw-gallery-item"><img src="' + url + '" alt=""><span class="spaw-gallery-remove"><i class="material-icons">close</i></span></div>');
+                    $item.find('.spaw-gallery-remove').on('click', function () { $item.remove(); toggleGalleryAdd(); });
+                    $('#spawGalleryAdd').before($item);
+                });
+                toggleGalleryAdd();
+                $(this).val('');
+            });
+            function toggleGalleryAdd() {
+                $('#spawGalleryAdd').toggle($('#spawGalleryGrid .spaw-gallery-item').length < 6);
+            }
+
+            $('#spawForm').on('input change', function () { updateProgress(); });
+
+            $('#spawPromoClose').on('click', function () {
+                $('#spawPromoBar').slideUp(200);
+            });
+
+            updateStepper();
+            updateStepHead();
+            updateTipCard();
+            updateProgress();
+        })();
+    </script>
+</body>
+
+</html>

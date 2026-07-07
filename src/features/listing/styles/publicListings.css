@@ -700,6 +700,11 @@
   width: 100%;
 }
 
+.public-quote-modal input[type="file"] {
+  cursor: pointer;
+  padding: 9px 12px;
+}
+
 .public-quote-modal input[readonly] {
   background: #f6f7f9;
   color: #4b5563;
@@ -738,6 +743,28 @@
   cursor: pointer;
   font: inherit;
   text-align: center;
+}
+
+.public-job-apply-button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  text-align: center;
+  width: 100%;
+}
+
+.public-job-resume-field {
+  color: #2d3746;
+  display: grid;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 6px;
+}
+
+.public-job-resume-note {
+  color: #677387;
+  font-size: 12px;
+  margin-top: -4px;
 }
 
 .public-detail-quote-button:hover,
@@ -1665,24 +1692,6 @@
   display: grid;
   gap: 34px;
   grid-template-columns: minmax(0, 1fr) 340px;
-}
-
-.public-local-service-badge {
-  align-items: center;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  display: inline-flex;
-  font-size: 14px;
-  font-weight: 800;
-  gap: 7px;
-  margin-bottom: 14px;
-  padding: 7px 14px;
-}
-
-.public-local-service-badge i {
-  color: #ffb266;
-  font-size: 18px;
 }
 
 .public-local-service-hero h1 {
@@ -3417,6 +3426,34 @@
   .public-room-btn {
     width: 100%;
   }
+}
+
+.public-job-detail-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr;
+  margin: 0;
+}
+
+.public-job-detail-actions li {
+  padding: 0;
+  width: 100%;
+}
+
+.public-job-detail-actions .cta,
+.public-job-detail-actions button.cta {
+  align-items: center;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 900;
+  justify-content: center;
+  min-height: 42px;
+  text-decoration: none;
+  width: 100%;
 }
 
 @media (max-width: 420px) {

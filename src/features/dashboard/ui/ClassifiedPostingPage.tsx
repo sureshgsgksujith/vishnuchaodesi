@@ -252,7 +252,10 @@ export default function ClassifiedPostingPage() {
   );
 
   const visibleDynamicFields = useMemo(
-    () => dynamicFields.filter((field) => shouldShowClassifiedField(field, draft.category, draft.subCategory, draft.customFields)),
+    () => dynamicFields
+      .filter((field) => shouldShowClassifiedField(field, draft.category, draft.subCategory, draft.customFields))
+      .filter((field) => !isClassifiedVehicleTypeField(field, draft.category))
+      .map((field) => normalizeClassifiedVehicleField(field, draft.category)),
     [draft.category, draft.customFields, draft.subCategory, dynamicFields],
   );
 
@@ -500,6 +503,7 @@ export default function ClassifiedPostingPage() {
     setIsSubmitting(true);
 
     try {
+      const submitCustomFields = sanitizeClassifiedCustomFields(draft.category, draft.customFields);
       const imageUrls = [
         ...existingImageUrls,
         ...galleryFiles.map((_, index) => `${galleryMarkerPrefix}${index}__`),
@@ -517,8 +521,8 @@ export default function ClassifiedPostingPage() {
             otherInformation: JSON.stringify({
               classifiedCategory: draft.category.trim(),
               classifiedSubCategory: draft.subCategory.trim(),
-              categoryAttributes: draft.customFields,
-              customFields: draft.customFields,
+              categoryAttributes: submitCustomFields,
+              customFields: submitCustomFields,
             }),
           },
           priceDetails: {
@@ -1412,6 +1416,38 @@ function getClassifiedFieldValue(values: Record<string, string>, ...keys: string
 
 function normalizeClassifiedFieldKey(key: string) {
   return key.replace(/[^a-z0-9_]/gi, "").toLowerCase();
+}
+
+function isClassifiedVehiclesCategory(categoryName: string) {
+  return categoryName.trim().toLowerCase() === "vehicles";
+}
+
+function isClassifiedVehicleTypeField(field: ListingCategoryFieldDefinition, categoryName: string) {
+  if (!isClassifiedVehiclesCategory(categoryName)) {
+    return false;
+  }
+
+  const key = normalizeClassifiedFieldKey(field.fieldKey);
+  const label = field.label.trim().toLowerCase();
+  return ["vehicletype", "vehicle_type"].includes(key) || label === "vehicle type";
+}
+
+function normalizeClassifiedVehicleField(field: ListingCategoryFieldDefinition, categoryName: string): ListingCategoryFieldDefinition {
+  if (!isClassifiedVehiclesCategory(categoryName) || field.sectionName.trim().toLowerCase() !== "vehicle information") {
+    return field;
+  }
+
+  return { ...field, sectionName: "Vehicle Details" };
+}
+
+function sanitizeClassifiedCustomFields(categoryName: string, customFields: Record<string, string>) {
+  if (!isClassifiedVehiclesCategory(categoryName)) {
+    return customFields;
+  }
+
+  return Object.fromEntries(
+    Object.entries(customFields).filter(([key]) => !["vehicletype", "vehicle_type"].includes(normalizeClassifiedFieldKey(key))),
+  );
 }
 
 function ClassifiedDynamicFields({

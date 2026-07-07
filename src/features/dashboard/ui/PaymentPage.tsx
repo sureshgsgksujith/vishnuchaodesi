@@ -299,6 +299,7 @@ export default function PaymentPage() {
                   <th>No</th>
                   <th>Event</th>
                   <th>Booking Ref</th>
+                  <th>Event Date</th>
                   <th>Tickets</th>
                   <th>Payment</th>
                   <th>Paid Date</th>
@@ -309,7 +310,7 @@ export default function PaymentPage() {
               <tbody>
                 {isLoadingBookings ? (
                   <tr>
-                    <td colSpan={8} className="dashboard-empty-row">Loading event payments...</td>
+                    <td colSpan={9} className="dashboard-empty-row">Loading event payments...</td>
                   </tr>
                 ) : pagedEventPayments.length > 0 ? (
                   pagedEventPayments.map((booking, index) => (
@@ -323,6 +324,12 @@ export default function PaymentPage() {
                       </td>
                       <td>
                         <span className="dashboard-payment-ref">{booking.bookingReference}</span>
+                      </td>
+                      <td>
+                        <div className="dashboard-booking-title">
+                          <strong>{formatEventDate(booking.eventDate)}</strong>
+                          <span>{booking.eventTime || "-"}</span>
+                        </div>
                       </td>
                       <td>
                         <TicketLines booking={booking} />
@@ -347,7 +354,7 @@ export default function PaymentPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="dashboard-empty-row">No event ticket payments found.</td>
+                    <td colSpan={9} className="dashboard-empty-row">No event ticket payments found.</td>
                   </tr>
                 )}
               </tbody>
@@ -615,6 +622,8 @@ function filterPaymentBookings(bookings: EventTicketBooking[], search: string) {
       booking.eventTitle,
       booking.venue,
       booking.city,
+      booking.eventDate,
+      booking.eventTime,
       booking.bookingReference,
       booking.paymentProvider,
       booking.paymentStatus,
@@ -624,6 +633,7 @@ function filterPaymentBookings(bookings: EventTicketBooking[], search: string) {
       booking.buyerPhone,
       booking.items.map((item) => `${item.name} ${item.quantity}`).join(" "),
       formatCurrencyAmount(booking.totalAmount),
+      formatEventDate(booking.eventDate),
       formatDate(booking.paidAt),
     ]
       .filter(Boolean)
@@ -712,6 +722,24 @@ function formatDate(value?: string | null) {
 
   if (Number.isNaN(date.getTime())) {
     return "-";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatEventDate(value?: string | null) {
+  if (!value) {
+    return "-";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
   }
 
   return new Intl.DateTimeFormat("en-US", {
