@@ -124,6 +124,11 @@ export default function LoginPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [banners, setBanners] = useState<PageBanner[]>(fallbackLoginBanners);
+  const bannerPageKey = mode === "register" ? "register" : mode === "forgot" ? "forgot-password" : "login";
+  const fallbackBanners = useMemo(
+    () => fallbackLoginBanners.map((banner) => ({ ...banner, pageKey: bannerPageKey })),
+    [bannerPageKey],
+  );
 
   useEffect(() => {
     setMode(initialMode);
@@ -142,22 +147,22 @@ export default function LoginPage() {
   useEffect(() => {
     let isActive = true;
 
-    getPageBanners("login")
+    getPageBanners(bannerPageKey)
       .then((items) => {
         if (isActive) {
-          setBanners(items.length ? items : fallbackLoginBanners);
+          setBanners(items.length ? items : fallbackBanners);
         }
       })
       .catch(() => {
         if (isActive) {
-          setBanners(fallbackLoginBanners);
+          setBanners(fallbackBanners);
         }
       });
 
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [bannerPageKey, fallbackBanners]);
 
   useEffect(() => {
     if (resendSeconds <= 0) return;
@@ -272,6 +277,9 @@ export default function LoginPage() {
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) {
+      return;
+    }
 
     if (!registerPassword.trim()) {
       setRegisterMessage("Please enter password.");
@@ -337,6 +345,9 @@ export default function LoginPage() {
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) {
+      return;
+    }
 
     try {
       setLoading(true);
@@ -531,10 +542,16 @@ export default function LoginPage() {
 
                         <button
                           type="submit"
-                          className="btn btn-primary w-100"
+                          className="btn btn-primary w-100 app-loading-button"
                           disabled={loading}
+                          aria-busy={loading}
                         >
-                          {loading ? "Please wait..." : "Sign in"}
+                          {loading ? (
+                            <>
+                              <span className="app-button-spinner" aria-hidden="true"></span>
+                              Please wait...
+                            </>
+                          ) : "Sign in"}
                         </button>
                       </form>
 
@@ -722,10 +739,16 @@ export default function LoginPage() {
 
                         <button
                           type="submit"
-                          className="btn btn-primary w-100"
+                          className="btn btn-primary w-100 app-loading-button"
                           disabled={loading || !registerOtpVerified}
+                          aria-busy={loading}
                         >
-                          {loading ? "Please wait..." : "Register Now"}
+                          {loading ? (
+                            <>
+                              <span className="app-button-spinner" aria-hidden="true"></span>
+                              Please wait...
+                            </>
+                          ) : "Register Now"}
                         </button>
                       </form>
 

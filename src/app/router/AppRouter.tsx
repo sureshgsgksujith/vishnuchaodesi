@@ -27,7 +27,7 @@ const AllListingsPage = lazy(() => import("../../features/dashboard/ui/AllListin
 const ListingFormPage = lazy(() => import("../../features/dashboard/ui/ListingFormPage"));
 const ListingPreviewPage = lazy(() => import("../../features/dashboard/ui/ListingPreviewPage"));
 const ListingStartPage = lazy(() => import("../../features/dashboard/ui/ListingStartPage"));
-const ServiceOnboardingPage = lazy(() => import("../../features/dashboard/ui/ServiceOnboardingPage"));
+const ServicePartnerPostingPage = lazy(() => import("../../features/dashboard/ui/ServicePartnerPostingPage"));
 const PricingDetailsPage = lazy(() => import("../../features/pricing/ui/PricingDetailsPage"));
 const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPage"));
 const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
@@ -35,6 +35,7 @@ const EventDetailPage = lazy(() => import("../../features/listing/ui/EventDetail
 const LocalServicesPage = lazy(() => import("../../features/localServices/ui/LocalServicesPage"));
 const AllServicesPage = lazy(() => import("../../features/allServices/ui/AllServicesPage"));
 const AllServicesDetailedPage = lazy(() => import("../../features/allServices/ui/AllServicesDetailedPage"));
+const AllServiceProviderDetailsPage = lazy(() => import("../../features/allServices/ui/AllServiceProviderDetailsPage"));
 const ChaoTvPage = lazy(() => import("../../features/chaoTv/ChaoTvPage"));
 const ClassifiedsHomePage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
@@ -151,6 +152,8 @@ export function AppRouter() {
     "/all-services.html",
     "/all-services-detailed",
     "/all-services-detailed.html",
+    "/local-service-details",
+    "/local-service-details.html",
     "/local-services",
     "/local-services.html",
     "/all-listing",
@@ -199,7 +202,14 @@ export function AppRouter() {
       <Route path="/dashboard/all-listing" element={<ProtectedCustomerRoute><AllListingsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/start" element={<ProtectedCustomerRoute><ListingStartPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/new" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/services/new" element={<ProtectedCustomerRoute><ServiceOnboardingPage /></ProtectedCustomerRoute>} />
+      <Route
+        path="/dashboard/services/new"
+        element={
+          <ProtectedCustomerRoute>
+            <ServicePartnerPostingPage />
+          </ProtectedCustomerRoute>
+        }
+      />
       <Route path="/dashboard/listings/:listingId/edit" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/preview" element={<ProtectedCustomerRoute><ListingPreviewPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/classifieds/step-1" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
@@ -227,6 +237,9 @@ export function AppRouter() {
       <Route path="/all-services.html" element={<Navigate to="/all-services" replace />} />
       <Route path="/all-services-detailed" element={<AllServicesDetailedPage />} />
       <Route path="/all-services-detailed.html" element={<AllServicesDetailedPage />} />
+      <Route path="/local-service-details/:postingId" element={<AllServiceProviderDetailsPage />} />
+      <Route path="/local-service-details" element={<AllServiceProviderDetailsPage />} />
+      <Route path="/local-service-details.html" element={<AllServiceProviderDetailsPage />} />
       <Route path="/all-listing" element={<AllListingPage />} />
       <Route path="/real-estate-listings" element={<AllListingPage lockedCategory="real-estate" includeAllCountries pageTitle="Real Estate" />} />
       <Route path="/chao-tv" element={<ChaoTvPage />} />

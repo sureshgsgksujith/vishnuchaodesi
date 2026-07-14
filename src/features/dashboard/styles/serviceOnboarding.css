@@ -282,6 +282,155 @@
   grid-column: 1 / -1;
 }
 
+.service-onboarding-location-section {
+  border-top: 1px solid #e6edf5;
+  display: grid;
+  gap: 14px;
+  margin-top: 26px;
+  padding-top: 24px;
+}
+
+.service-onboarding-section-heading {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.service-onboarding-section-heading h2 {
+  color: #132034;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.service-onboarding-section-heading p {
+  color: #637188;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 5px 0 0;
+}
+
+.service-onboarding-section-heading button {
+  align-items: center;
+  background: #0f8f6f;
+  border: 0;
+  border-radius: 7px;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 900;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 13px;
+}
+
+.service-onboarding-section-heading i {
+  font-size: 19px;
+}
+
+.service-onboarding-location-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.service-onboarding-location-card {
+  background: #fbfdff;
+  border: 1px solid #d8e4ef;
+  border-radius: 8px;
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+.service-onboarding-location-card header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.service-onboarding-location-card header > div {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 250px);
+  min-width: 0;
+}
+
+.service-onboarding-location-card header span {
+  background: #fff3e6;
+  border-radius: 999px;
+  color: #c05621;
+  display: inline-flex;
+  font-size: 11px;
+  font-weight: 900;
+  min-height: 24px;
+  padding: 5px 10px;
+  text-transform: uppercase;
+}
+
+.service-onboarding-location-card header input {
+  border: 1px solid #d5e0ec;
+  border-radius: 7px;
+  color: #152238;
+  font-size: 14px;
+  font-weight: 900;
+  min-height: 38px;
+  min-width: 0;
+  padding: 0 11px;
+}
+
+.service-onboarding-location-card header button {
+  align-items: center;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 7px;
+  color: #be123c;
+  cursor: pointer;
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  width: 40px;
+}
+
+.service-onboarding-location-card header button i {
+  font-size: 19px;
+}
+
+.service-onboarding-location-grid {
+  margin-top: 0;
+}
+
+.service-onboarding-address-search {
+  z-index: 5;
+}
+
+.service-onboarding-address-menu {
+  max-height: 244px;
+}
+
+.service-onboarding-address-menu button {
+  grid-template-columns: 34px minmax(0, 1fr);
+}
+
+.service-onboarding-address-menu b {
+  background: #eaf3ff;
+  border-radius: 999px;
+  color: #0f63ff;
+  height: 28px;
+  width: 28px;
+}
+
+.service-onboarding-address-menu b i {
+  color: inherit;
+  font-size: 18px;
+}
+
 .service-onboarding-actions {
   align-items: center;
   border-top: 1px solid #e6edf5;
@@ -1065,6 +1214,25 @@
   .service-onboarding-checkbox-grid,
   .service-onboarding-package-grid {
     grid-template-columns: 1fr;
+  }
+
+  .service-onboarding-section-heading,
+  .service-onboarding-location-card header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .service-onboarding-section-heading button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .service-onboarding-location-card header > div {
+    grid-template-columns: 1fr;
+  }
+
+  .service-onboarding-location-card header button {
+    width: 100%;
   }
 
   .service-onboarding-phone-field,

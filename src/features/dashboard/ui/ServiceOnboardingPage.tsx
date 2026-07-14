@@ -7,6 +7,8 @@ import {
   type AllServiceSubCategoryOption,
 } from "../../allServices/api/allServiceDirectoryApi";
 import { createAllServicePosting, type AllServicePostingPayload } from "../api/allServicePostingsApi";
+import { getAllServicePricingPlans, type AllServicePricingPlan } from "../api/allServicePricingPlansApi";
+import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 import "../styles/serviceOnboarding.css";
@@ -90,6 +92,90 @@ type ServicePostingForm = {
   packageCode: string;
 };
 
+type ServicePlanCard = {
+  code: string;
+  name: string;
+  price: number;
+  currency: string;
+  durationDays: number;
+  description: string;
+  features: string[];
+  isHighlighted: boolean;
+};
+
+const fallbackServicePlans: ServicePlanCard[] = [
+  {
+    code: "SERVICE_STARTER",
+    name: "Starter Visibility",
+    price: 49,
+    currency: "USD",
+    durationDays: 30,
+    description: "Basic paid placement for service providers.",
+    features: ["30 days validity", "Standard category placement", "Customer enquiry notifications"],
+    isHighlighted: false,
+  },
+  {
+    code: "SERVICE_GROWTH",
+    name: "Growth Boost",
+    price: 99,
+    currency: "USD",
+    durationDays: 60,
+    description: "Improved visibility for more customer reach.",
+    features: ["60 days validity", "Improved search placement", "More service areas"],
+    isHighlighted: false,
+  },
+  {
+    code: "SERVICE_PREMIUM",
+    name: "Premium Spotlight",
+    price: 199,
+    currency: "USD",
+    durationDays: 90,
+    description: "Priority category placement for stronger customer reach.",
+    features: ["90 days validity", "Priority placement", "Premium badge"],
+    isHighlighted: true,
+  },
+];
+
+function mapServicePlan(plan: AllServicePricingPlan): ServicePlanCard {
+  return {
+    code: plan.code,
+    name: plan.name,
+    price: plan.price,
+    currency: plan.currency || "USD",
+    durationDays: plan.durationDays,
+    description: plan.tagline || "Service provider package.",
+    features: plan.features,
+    isHighlighted: plan.isHighlighted,
+  };
+}
+
+type ServicePostingLocation = {
+  id: string;
+  label: string;
+  formattedAddress: string;
+  streetAddress: string;
+  suite: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  latitude: string;
+  longitude: string;
+};
+
+type ServicePostingLocationField = keyof Omit<ServicePostingLocation, "id">;
+
+type AddressSuggestion = {
+  displayName: string;
+  latitude: string;
+  longitude: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
 const initialForm: ServicePostingForm = {
   providerType: "professional",
   businessName: "",
@@ -105,14 +191,63 @@ const initialForm: ServicePostingForm = {
   phoneCountryCode: "US (+1)",
   phoneNumber: "",
   verificationMethod: "sms",
-  packageCode: "base",
+  packageCode: "SERVICE_STARTER",
 };
+
+function createBlankServiceLocation(index = 0): ServicePostingLocation {
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    label: index === 0 ? "Primary location" : `Service location ${index + 1}`,
+    formattedAddress: "",
+    streetAddress: "",
+    suite: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "United States",
+    latitude: "",
+    longitude: "",
+  };
+}
+
+function getServiceLocationDisplay(location?: ServicePostingLocation) {
+  if (!location) {
+    return "";
+  }
+
+  return location.formattedAddress.trim() || [
+    location.streetAddress,
+    location.suite,
+    location.city,
+    location.state,
+    location.postalCode,
+    location.country,
+  ].map((part) => part.trim()).filter(Boolean).join(", ");
+}
+
+function toServiceLocationPayload(location: ServicePostingLocation, index: number) {
+  return {
+    label: location.label.trim() || (index === 0 ? "Primary location" : `Service location ${index + 1}`),
+    formattedAddress: getServiceLocationDisplay(location),
+    streetAddress: location.streetAddress.trim(),
+    suite: location.suite.trim(),
+    city: location.city.trim(),
+    state: location.state.trim(),
+    postalCode: location.postalCode.trim(),
+    country: location.country.trim(),
+    latitude: location.latitude.trim(),
+    longitude: location.longitude.trim(),
+    isPrimary: index === 0,
+  };
+}
 
 export default function ServiceOnboardingPage() {
   const [activeStep, setActiveStep] = useState(0);
   const [form, setForm] = useState<ServicePostingForm>(initialForm);
+  const [serviceLocations, setServiceLocations] = useState<ServicePostingLocation[]>(() => [createBlankServiceLocation()]);
   const [openDays, setOpenDays] = useState(["Mon", "Tue", "Wed", "Thu", "Fri"]);
   const [categories, setCategories] = useState<AllServiceCategoryOption[]>([]);
+  const [servicePlans, setServicePlans] = useState<ServicePlanCard[]>(fallbackServicePlans);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [selectedDetailedIds, setSelectedDetailedIds] = useState<number[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
@@ -124,6 +259,7 @@ export default function ServiceOnboardingPage() {
     () => categories.find((category) => category.id === selectedCategoryId) || null,
     [categories, selectedCategoryId],
   );
+  const primaryServiceLocation = useMemo(() => getServiceLocationDisplay(serviceLocations[0]), [serviceLocations]);
   const progress = Math.round(((activeStep + 1) / setupSteps.length) * 100);
   const heading = useMemo(() => getStepHeading(activeStep), [activeStep]);
 
@@ -156,8 +292,133 @@ export default function ServiceOnboardingPage() {
     };
   }, []);
 
+  useEffect(() => {
+    getAllServicePricingPlans()
+      .then((plans) => {
+        const mappedPlans = plans.map(mapServicePlan);
+        if (mappedPlans.length) {
+          setServicePlans(mappedPlans);
+          if (!mappedPlans.some((plan) => plan.code === form.packageCode)) {
+            updateField("packageCode", mappedPlans[0].code);
+          }
+        }
+      })
+      .catch(() => setServicePlans(fallbackServicePlans));
+  }, []);
+
+  useEffect(() => {
+    const pendingLookups = serviceLocations
+      .map((location) => {
+        const postalCode = location.postalCode.trim();
+
+        if (!/^\d{5}$/.test(postalCode) && !/^\d{6}$/.test(postalCode)) {
+          return null;
+        }
+
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => {
+          lookupPostalCodeLocation(postalCode, location.country || undefined, controller.signal)
+            .then((postalLocation) => {
+              if (!postalLocation) {
+                return;
+              }
+
+              setServiceLocations((currentLocations) =>
+                currentLocations.map((currentLocation) => {
+                  if (currentLocation.id !== location.id || currentLocation.postalCode.trim() !== postalCode) {
+                    return currentLocation;
+                  }
+
+                  return {
+                    ...currentLocation,
+                    city: postalLocation.city || currentLocation.city,
+                    state: postalLocation.state || currentLocation.state,
+                    country: postalLocation.country || currentLocation.country,
+                    latitude: postalLocation.latitude || currentLocation.latitude,
+                    longitude: postalLocation.longitude || currentLocation.longitude,
+                  };
+                }),
+              );
+            })
+            .catch((error) => {
+              if (error instanceof DOMException && error.name === "AbortError") {
+                return;
+              }
+            });
+        }, 500);
+
+        return { controller, timeoutId };
+      })
+      .filter((lookup): lookup is { controller: AbortController; timeoutId: number } => Boolean(lookup));
+
+    return () => {
+      pendingLookups.forEach((lookup) => {
+        lookup.controller.abort();
+        window.clearTimeout(lookup.timeoutId);
+      });
+    };
+  }, [serviceLocations.map((location) => `${location.id}:${location.postalCode}:${location.country}`).join("|")]);
+
   function updateField<K extends keyof ServicePostingForm>(key: K, value: ServicePostingForm[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+    setNotice("");
+    setErrorMessage("");
+  }
+
+  function updateServiceLocation(locationId: string, field: ServicePostingLocationField, value: string) {
+    setServiceLocations((currentLocations) =>
+      currentLocations.map((location) => (
+        location.id === locationId
+          ? {
+              ...location,
+              [field]: value,
+              formattedAddress: field === "formattedAddress"
+                ? value
+                : field === "streetAddress" || field === "suite" || field === "city" || field === "state" || field === "postalCode" || field === "country"
+                ? ""
+                : location.formattedAddress,
+            }
+          : location
+      )),
+    );
+    setNotice("");
+    setErrorMessage("");
+  }
+
+  function selectServiceAddress(locationId: string, suggestion: AddressSuggestion) {
+    setServiceLocations((currentLocations) =>
+      currentLocations.map((location) => (
+        location.id === locationId
+          ? {
+              ...location,
+              formattedAddress: suggestion.displayName,
+              streetAddress: suggestion.streetAddress || location.streetAddress,
+              city: suggestion.city || location.city,
+              state: suggestion.state || location.state,
+              postalCode: suggestion.postalCode || location.postalCode,
+              country: suggestion.country || location.country,
+              latitude: suggestion.latitude,
+              longitude: suggestion.longitude,
+            }
+          : location
+      )),
+    );
+    setNotice("");
+    setErrorMessage("");
+  }
+
+  function addServiceLocation() {
+    setServiceLocations((currentLocations) => [...currentLocations, createBlankServiceLocation(currentLocations.length)]);
+    setNotice("");
+    setErrorMessage("");
+  }
+
+  function removeServiceLocation(locationId: string) {
+    setServiceLocations((currentLocations) =>
+      currentLocations.length <= 1
+        ? currentLocations
+        : currentLocations.filter((location) => location.id !== locationId),
+    );
     setNotice("");
     setErrorMessage("");
   }
@@ -209,6 +470,18 @@ export default function ServiceOnboardingPage() {
     setNotice("");
     setErrorMessage("");
 
+    if (activeStep === 0) {
+      if (!form.businessName.trim()) {
+        setErrorMessage("Business or professional name is required.");
+        return;
+      }
+
+      if (!primaryServiceLocation) {
+        setErrorMessage("Add at least one service posting location.");
+        return;
+      }
+    }
+
     if (activeStep === 1) {
       if (!selectedCategory) {
         setErrorMessage("Select a service category.");
@@ -231,6 +504,10 @@ export default function ServiceOnboardingPage() {
   }
 
   async function submitPosting(saveAsDraft: boolean) {
+    if (isSubmitting) {
+      return;
+    }
+
     setNotice("");
     setErrorMessage("");
 
@@ -246,11 +523,22 @@ export default function ServiceOnboardingPage() {
       return;
     }
 
+    if (!primaryServiceLocation) {
+      setErrorMessage("Add at least one service posting location.");
+      setActiveStep(0);
+      return;
+    }
+
+    const normalizedServiceLocations = serviceLocations
+      .map(toServiceLocationPayload)
+      .filter((location) => location.formattedAddress);
+
     const payload: AllServicePostingPayload = {
       providerType: form.providerType,
       businessName: form.businessName.trim(),
       tagline: form.tagline.trim(),
-      primaryServiceLocation: form.primaryServiceLocation.trim(),
+      primaryServiceLocation,
+      serviceLocations: normalizedServiceLocations,
       allServiceCategoryId: selectedCategory.id,
       serviceName: form.serviceName.trim() || selectedCategory.name,
       selectedDetailedCategoryIds: selectedDetailedIds,
@@ -331,7 +619,15 @@ export default function ServiceOnboardingPage() {
 
             <form className="service-onboarding-form" onSubmit={handleFormSubmit}>
               {activeStep === 0 ? (
-                <BusinessProfileStep form={form} onFieldChange={updateField} />
+                <BusinessProfileStep
+                  form={form}
+                  serviceLocations={serviceLocations}
+                  onAddLocation={addServiceLocation}
+                  onFieldChange={updateField}
+                  onLocationFieldChange={updateServiceLocation}
+                  onRemoveLocation={removeServiceLocation}
+                  onSelectAddress={selectServiceAddress}
+                />
               ) : null}
               {activeStep === 1 ? (
                 <ServiceOfferStep
@@ -361,18 +657,32 @@ export default function ServiceOnboardingPage() {
               {activeStep === 4 ? (
                 <PackageStep
                   form={form}
+                  primaryServiceLocation={primaryServiceLocation}
                   selectedCategory={selectedCategory}
                   selectedCount={selectedDetailedIds.length}
+                  servicePlans={servicePlans}
                   onChoosePackage={(value) => updateField("packageCode", value)}
                 />
               ) : null}
 
               <div className="service-onboarding-actions">
                 {activeStep === 0 ? <Link to="/all-services">Back</Link> : <button type="button" onClick={goBack}>Back</button>}
-                <button type="button" onClick={() => submitPosting(true)} disabled={isSubmitting}>Save draft</button>
+                <button type="button" className="app-loading-button" onClick={() => submitPosting(true)} disabled={isSubmitting} aria-busy={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <span className="app-button-spinner" aria-hidden="true"></span>
+                      Saving...
+                    </>
+                  ) : "Save draft"}
+                </button>
                 {activeStep === setupSteps.length - 1 ? (
-                  <button type="button" className="service-onboarding-primary" onClick={() => submitPosting(false)} disabled={isSubmitting}>
-                    {isSubmitting ? "Submitting..." : "Submit for approval"}
+                  <button type="button" className="service-onboarding-primary app-loading-button" onClick={() => submitPosting(false)} disabled={isSubmitting} aria-busy={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <span className="app-button-spinner" aria-hidden="true"></span>
+                        Submitting...
+                      </>
+                    ) : "Submit for approval"}
                   </button>
                 ) : (
                   <button type="button" className="service-onboarding-primary" onClick={goNext}>
@@ -411,10 +721,20 @@ export default function ServiceOnboardingPage() {
 
 function BusinessProfileStep({
   form,
+  serviceLocations,
+  onAddLocation,
   onFieldChange,
+  onLocationFieldChange,
+  onRemoveLocation,
+  onSelectAddress,
 }: {
   form: ServicePostingForm;
+  serviceLocations: ServicePostingLocation[];
+  onAddLocation: () => void;
   onFieldChange: <K extends keyof ServicePostingForm>(key: K, value: ServicePostingForm[K]) => void;
+  onLocationFieldChange: (locationId: string, field: ServicePostingLocationField, value: string) => void;
+  onRemoveLocation: (locationId: string) => void;
+  onSelectAddress: (locationId: string, suggestion: AddressSuggestion) => void;
 }) {
   return (
     <>
@@ -458,17 +778,252 @@ function BusinessProfileStep({
             onChange={(event) => onFieldChange("tagline", event.target.value)}
           />
         </label>
+      </div>
+
+      <ServicePostingLocations
+        locations={serviceLocations}
+        onAddLocation={onAddLocation}
+        onFieldChange={onLocationFieldChange}
+        onRemoveLocation={onRemoveLocation}
+        onSelectAddress={onSelectAddress}
+      />
+    </>
+  );
+}
+
+function ServicePostingLocations({
+  locations,
+  onAddLocation,
+  onFieldChange,
+  onRemoveLocation,
+  onSelectAddress,
+}: {
+  locations: ServicePostingLocation[];
+  onAddLocation: () => void;
+  onFieldChange: (locationId: string, field: ServicePostingLocationField, value: string) => void;
+  onRemoveLocation: (locationId: string) => void;
+  onSelectAddress: (locationId: string, suggestion: AddressSuggestion) => void;
+}) {
+  return (
+    <section className="service-onboarding-location-section">
+      <div className="service-onboarding-section-heading">
+        <div>
+          <h2>Posting locations</h2>
+          <p>Add every branch or service area where customers can find this posting.</p>
+        </div>
+        <button type="button" onClick={onAddLocation}>
+          <i className="material-icons">add_location_alt</i>
+          Add location
+        </button>
+      </div>
+
+      <div className="service-onboarding-location-stack">
+        {locations.map((location, index) => (
+          <ServiceLocationCard
+            index={index}
+            key={location.id}
+            location={location}
+            canRemove={locations.length > 1}
+            onFieldChange={onFieldChange}
+            onRemove={onRemoveLocation}
+            onSelectAddress={onSelectAddress}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ServiceLocationCard({
+  index,
+  location,
+  canRemove,
+  onFieldChange,
+  onRemove,
+  onSelectAddress,
+}: {
+  index: number;
+  location: ServicePostingLocation;
+  canRemove: boolean;
+  onFieldChange: (locationId: string, field: ServicePostingLocationField, value: string) => void;
+  onRemove: (locationId: string) => void;
+  onSelectAddress: (locationId: string, suggestion: AddressSuggestion) => void;
+}) {
+  return (
+    <article className="service-onboarding-location-card">
+      <header>
+        <div>
+          <span>{index === 0 ? "Primary" : `Location ${index + 1}`}</span>
+          <input
+            aria-label="Location label"
+            value={location.label}
+            onChange={(event) => onFieldChange(location.id, "label", event.target.value)}
+          />
+        </div>
+        {canRemove ? (
+          <button type="button" onClick={() => onRemove(location.id)} aria-label="Remove location">
+            <i className="material-icons">delete</i>
+          </button>
+        ) : null}
+      </header>
+
+      <AddressSearchInput
+        location={location}
+        onChange={(value) => onFieldChange(location.id, "formattedAddress", value)}
+        onSelect={(suggestion) => onSelectAddress(location.id, suggestion)}
+      />
+
+      <div className="service-onboarding-field-grid service-onboarding-location-grid">
         <label className="service-onboarding-wide-field">
-          <span>Primary service location</span>
+          <span>Street address or service area</span>
           <input
             type="text"
-            placeholder="City, state, ZIP code, or service area"
-            value={form.primaryServiceLocation}
-            onChange={(event) => onFieldChange("primaryServiceLocation", event.target.value)}
+            value={location.streetAddress}
+            onChange={(event) => onFieldChange(location.id, "streetAddress", event.target.value)}
+            placeholder="Street address, neighborhood, or service area"
+          />
+        </label>
+        <label>
+          <span>Suite / unit</span>
+          <input
+            type="text"
+            value={location.suite}
+            onChange={(event) => onFieldChange(location.id, "suite", event.target.value)}
+            placeholder="Suite, floor, unit"
+          />
+        </label>
+        <label>
+          <span>Zipcode</span>
+          <input
+            type="text"
+            value={location.postalCode}
+            onChange={(event) => onFieldChange(location.id, "postalCode", event.target.value)}
+            placeholder="Enter zipcode"
+          />
+        </label>
+        <label>
+          <span>City</span>
+          <input
+            type="text"
+            value={location.city}
+            onChange={(event) => onFieldChange(location.id, "city", event.target.value)}
+            placeholder="City"
+          />
+        </label>
+        <label>
+          <span>State</span>
+          <input
+            type="text"
+            value={location.state}
+            onChange={(event) => onFieldChange(location.id, "state", event.target.value)}
+            placeholder="State"
+          />
+        </label>
+        <label>
+          <span>Country</span>
+          <input
+            type="text"
+            value={location.country}
+            onChange={(event) => onFieldChange(location.id, "country", event.target.value)}
+            placeholder="Country"
           />
         </label>
       </div>
-    </>
+    </article>
+  );
+}
+
+function AddressSearchInput({
+  location,
+  onChange,
+  onSelect,
+}: {
+  location: ServicePostingLocation;
+  onChange: (value: string) => void;
+  onSelect: (suggestion: AddressSuggestion) => void;
+}) {
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const query = location.formattedAddress;
+
+  useEffect(() => {
+    const trimmedQuery = query.trim();
+
+    if (trimmedQuery.length < 4) {
+      setSuggestions([]);
+      setIsOpen(false);
+      setIsLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      setIsLoading(true);
+      searchAddressSuggestions(trimmedQuery, location.country, controller.signal)
+        .then((items) => {
+          setSuggestions(items);
+          setIsOpen(items.length > 0);
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setSuggestions([]);
+            setIsOpen(false);
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setIsLoading(false);
+          }
+        });
+    }, 550);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, [location.country, query]);
+
+  return (
+    <label className="service-onboarding-search-field service-onboarding-dropdown-field service-onboarding-address-search">
+      <span>Search address</span>
+      <div className="service-onboarding-input-wrap">
+        <input
+          type="text"
+          value={query}
+          onBlur={() => window.setTimeout(() => setIsOpen(false), 120)}
+          onChange={(event) => {
+            onChange(event.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => {
+            if (suggestions.length) {
+              setIsOpen(true);
+            }
+          }}
+          placeholder="Search street, city, zipcode, or business area"
+        />
+        <i className="material-icons">{isLoading ? "sync" : "search"}</i>
+      </div>
+      {isOpen ? (
+        <div className="service-onboarding-dropdown-menu service-onboarding-address-menu">
+          {suggestions.map((suggestion) => (
+            <button
+              key={`${suggestion.displayName}-${suggestion.latitude}-${suggestion.longitude}`}
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                onSelect(suggestion);
+                setIsOpen(false);
+              }}
+            >
+              <b><i className="material-icons">place</i></b>
+              <span>{suggestion.displayName}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </label>
   );
 }
 
@@ -793,49 +1348,122 @@ function ContactStep({
 
 function PackageStep({
   form,
+  primaryServiceLocation,
   selectedCategory,
   selectedCount,
+  servicePlans,
   onChoosePackage,
 }: {
   form: ServicePostingForm;
+  primaryServiceLocation: string;
   selectedCategory: AllServiceCategoryOption | null;
   selectedCount: number;
+  servicePlans: ServicePlanCard[];
   onChoosePackage: (value: string) => void;
 }) {
   return (
     <div className="service-onboarding-card-section">
       <div className="service-onboarding-package-head">
-        <span>{selectedCategory?.name || "Service"} - {form.primaryServiceLocation || "Service area"}</span>
+        <span>{selectedCategory?.name || "Service"} - {primaryServiceLocation || "Service area"}</span>
         <h2>Review and choose a package</h2>
         <p>{selectedCount} detailed service{selectedCount === 1 ? "" : "s"} selected for admin approval.</p>
       </div>
 
       <div className="service-onboarding-package-grid">
-        <article className={form.packageCode === "base" ? "is-selected" : ""}>
-          <header className="is-blue">1 Month</header>
-          <h3>Base</h3>
-          <strong>$50</strong>
-          <ul>
-            <li>30 days validity</li>
-            <li>Standard response visibility</li>
-            <li>Basic service listing placement</li>
-          </ul>
-          <button type="button" onClick={() => onChoosePackage("base")}>Select Base</button>
-        </article>
-        <article className={form.packageCode === "starter" ? "is-selected" : ""}>
-          <header className="is-purple">2 Months</header>
-          <h3>Starter</h3>
-          <strong>$75</strong>
-          <ul>
-            <li>60 days validity</li>
-            <li>More customer response visibility</li>
-            <li>Priority listing signal</li>
-          </ul>
-          <button type="button" onClick={() => onChoosePackage("starter")}>Select Starter</button>
-        </article>
+        {servicePlans.map((plan, index) => (
+          <article className={form.packageCode === plan.code ? "is-selected" : ""} key={plan.code}>
+            <header className={plan.isHighlighted || index % 2 === 1 ? "is-purple" : "is-blue"}>{plan.durationDays} Days</header>
+            <h3>{plan.name}</h3>
+            <strong>{formatServicePlanPrice(plan)}</strong>
+            <ul>
+              {(plan.features.length ? plan.features : [plan.description]).slice(0, 4).map((feature) => (
+                <li key={feature}>{feature}</li>
+              ))}
+            </ul>
+            <button type="button" onClick={() => onChoosePackage(plan.code)}>Select {plan.name}</button>
+          </article>
+        ))}
       </div>
     </div>
   );
+}
+
+function formatServicePlanPrice(plan: ServicePlanCard) {
+  if (plan.price <= 0) {
+    return "Free";
+  }
+
+  return `${plan.currency || "USD"} ${plan.price}`;
+}
+
+type NominatimAddressResult = {
+  display_name?: string;
+  lat?: string;
+  lon?: string;
+  address?: {
+    house_number?: string;
+    road?: string;
+    pedestrian?: string;
+    neighbourhood?: string;
+    suburb?: string;
+    city?: string;
+    town?: string;
+    village?: string;
+    municipality?: string;
+    state?: string;
+    province?: string;
+    postcode?: string;
+    country?: string;
+  };
+};
+
+async function searchAddressSuggestions(query: string, country: string, signal: AbortSignal): Promise<AddressSuggestion[]> {
+  const url = new URL(import.meta.env.VITE_ADDRESS_SEARCH_URL || "https://nominatim.openstreetmap.org/search");
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("limit", "6");
+  url.searchParams.set("q", query);
+
+  if (/^[a-z]{2}$/i.test(country.trim())) {
+    url.searchParams.set("countrycodes", country.trim().toLowerCase());
+  }
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Accept: "application/json",
+    },
+    signal,
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const results = (await response.json()) as NominatimAddressResult[];
+  return results.map(mapAddressSuggestion).filter((item): item is AddressSuggestion => Boolean(item));
+}
+
+function mapAddressSuggestion(result: NominatimAddressResult): AddressSuggestion | null {
+  if (!result.display_name) {
+    return null;
+  }
+
+  const address = result.address || {};
+  const streetAddress = [
+    address.house_number,
+    address.road || address.pedestrian || address.neighbourhood || address.suburb,
+  ].filter(Boolean).join(" ");
+
+  return {
+    displayName: result.display_name,
+    latitude: result.lat || "",
+    longitude: result.lon || "",
+    streetAddress,
+    city: address.city || address.town || address.village || address.municipality || "",
+    state: address.state || address.province || "",
+    postalCode: address.postcode || "",
+    country: address.country || "",
+  };
 }
 
 function getStepHeading(step: number) {

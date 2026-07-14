@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
@@ -14,6 +14,7 @@ import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
+import "../../listing/styles/publicListings.css";
 import "../styles/classifieds.css";
 
 const CLASSIFIED_PAGE_SIZE = 12;
@@ -52,9 +53,37 @@ const fallbackClassifiedHeroBanners: PageBanner[] = [
     isActive: true,
   },
 ];
+const fallbackClassifiedLeftBanners: PageBanner[] = [
+  {
+    id: -1,
+    pageKey: "classifieds",
+    slot: "left",
+    title: "Sidebar banner",
+    imageUrl: "/template-17/images/ads/ads1.jpg",
+    displayOrder: 1,
+    isActive: true,
+  },
+];
+const fallbackClassifiedTopBanners: PageBanner[] = [
+  {
+    id: -2,
+    pageKey: "classifieds",
+    slot: "top",
+    title: "Classified listing banner",
+    imageUrl: "/template-17/images/ads/32207ads.png",
+    displayOrder: 1,
+    isActive: true,
+  },
+];
+const fallbackClassifiedListBanners = [
+  ...fallbackClassifiedTopBanners,
+  ...fallbackClassifiedLeftBanners,
+];
 
 export function ClassifiedsHomePage() {
   const [listings, setListings] = useState<ListingSummary[]>([]);
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({});
+  const [areCategoryCountsLoading, setAreCategoryCountsLoading] = useState(true);
   const [heroBanners, setHeroBanners] = useState<PageBanner[]>(fallbackClassifiedHeroBanners);
   const [heroBannerIndex, setHeroBannerIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -69,11 +98,16 @@ export function ClassifiedsHomePage() {
   const categoryCards = useMemo(
     () => primaryClassifiedCategoryNames.map((name) => ({
       name,
-      count: listings.filter((listing) => listing.subCategory === name).length,
+      count: categoryCounts[name],
       href: buildClassifiedCategoryHref(name, currentCity || ""),
       image: getClassifiedCategoryImage(name),
     })),
-    [currentCity, listings],
+    [categoryCounts, currentCity],
+  );
+  const popularListings = useMemo(() => listings.slice(0, 12), [listings]);
+  const popularMarqueeListings = useMemo(
+    () => (popularListings.length > 1 ? [...popularListings, ...popularListings] : popularListings),
+    [popularListings],
   );
 
   useEffect(() => {
@@ -99,6 +133,46 @@ export function ClassifiedsHomePage() {
     }
 
     void loadData();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentCity]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadCategoryCounts() {
+      try {
+        setAreCategoryCountsLoading(true);
+        const countEntries = await Promise.all(
+          primaryClassifiedCategoryNames.map(async (name) => {
+            const result = await getPublicListings({
+              categoryName: "Classifieds",
+              subCategory: name,
+              city: currentCity || undefined,
+              page: 1,
+              pageSize: 1,
+            });
+
+            return [name, result.totalCount || 0] as const;
+          }),
+        );
+
+        if (!isActive) return;
+        setCategoryCounts(Object.fromEntries(countEntries));
+      } catch {
+        if (isActive) {
+          setCategoryCounts({});
+        }
+      } finally {
+        if (isActive) {
+          setAreCategoryCountsLoading(false);
+        }
+      }
+    }
+
+    void loadCategoryCounts();
 
     return () => {
       isActive = false;
@@ -190,7 +264,7 @@ export function ClassifiedsHomePage() {
                       </div>
                       <div className="ad-box-txt">
                         <h3>{item.name}</h3>
-                        <span>{formatCount(item.count)} ads</span>
+                        <span>{formatCategoryCount(item.count, areCategoryCountsLoading)} ads</span>
                       </div>
                     </Link>
                   </li>
@@ -200,18 +274,20 @@ export function ClassifiedsHomePage() {
           </div>
         </section>
 
-        <section className="ad-modu-com ad-sec-pad plac-deta-sec">
+        <section className="ad-modu-com ad-sec-pad plac-deta-sec classified-popular-section">
           <div className="container">
             <div className="row">
-              <div className="plac-det-tit-inn">
-                <h2>Today Popular Ads</h2>
+              <div className="classified-popular-head">
+                <div className="plac-det-tit-inn">
+                  <h2>Today Popular Ads</h2>
+                </div>
               </div>
               {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
               {isLoading ? <div className="alert alert-info">Loading popular ads...</div> : null}
-              <div className="plac-hom-all-pla">
-                <ul className="multiple-items1 classified-card-row">
-                  {listings.slice(0, 5).map((listing) => (
-                    <li key={listing.id}>
+              <div className="plac-hom-all-pla classified-popular-scroll">
+                <ul className={`multiple-items1 classified-card-row classified-popular-row${popularListings.length > 1 ? " is-marquee" : ""}`}>
+                  {popularMarqueeListings.map((listing, index) => (
+                    <li key={`${listing.id}-${index}`} aria-hidden={index >= popularListings.length}>
                       <ClassifiedAdCard listing={listing} />
                     </li>
                   ))}
@@ -252,12 +328,36 @@ function ClassifiedHeroBannerSlide({ banner }: { banner: PageBanner }) {
   return <div className="classified-hero-slide">{image}</div>;
 }
 
+function ClassifiedListingBanner({ banners, className, index }: { banners: PageBanner[]; className: string; index: number }) {
+  const banner = banners[index] || banners[0];
+
+  if (!banner) {
+    return null;
+  }
+
+  const image = (
+    <>
+      <span>Ad</span>
+      <img src={banner.imageUrl} alt={banner.altText || banner.title} loading="lazy" onError={setFallbackListingImage} />
+    </>
+  );
+
+  return (
+    <div className={className}>
+      {banner.linkUrl ? <a href={banner.linkUrl}>{image}</a> : image}
+    </div>
+  );
+}
+
 export function ClassifiedAdsAllPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [facets, setFacets] = useState<ListingSummary[]>([]);
   const [categoryFacetListings, setCategoryFacetListings] = useState<ListingSummary[]>([]);
   const [categories, setCategories] = useState<ListingCategoryOption[]>([]);
+  const [pageBanners, setPageBanners] = useState<PageBanner[]>(fallbackClassifiedListBanners);
+  const [topBannerIndex, setTopBannerIndex] = useState(0);
+  const [leftBannerIndex, setLeftBannerIndex] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -383,17 +483,78 @@ export function ClassifiedAdsAllPage() {
     () => buildClassifiedDetailOptions(selectedCategoryTree, categoryFacetListings),
     [categoryFacetListings, selectedCategoryTree],
   );
-  const subcategoryCards = useMemo(
-    () => detailOptions.map((name) => ({
-      name,
-      image: getClassifiedSubcategoryImage(category, name, selectedCategoryTree),
-      count: countListingsByDetailCategory(categoryFacetListings, name),
-      href: buildClassifiedSubcategoryHref(category, name, city, search),
-    })),
-    [category, categoryFacetListings, city, detailOptions, search, selectedCategoryTree],
-  );
   const cityOptions = useMemo(() => uniqueValues(facets.map(buildCityText)), [facets]);
+  const topBanners = useMemo(() => getBannersForSlot(pageBanners, "top"), [pageBanners]);
+  const leftBanners = useMemo(() => getBannersForSlot(pageBanners, "left"), [pageBanners]);
+  const topClassifiedAds = useMemo(() => {
+    const source = (category ? categoryFacetListings : facets).length
+      ? (category ? categoryFacetListings : facets)
+      : items;
+
+    return [...source]
+      .sort((left, right) => getListingTime(right) - getListingTime(left))
+      .slice(0, 5);
+  }, [category, categoryFacetListings, facets, items]);
+  const pageHeading = detailCategory || category || "Classified Ads";
   const totalPages = Math.max(1, Math.ceil(totalCount / CLASSIFIED_PAGE_SIZE));
+
+  useEffect(() => {
+    let isActive = true;
+
+    getPageBanners("classifieds")
+      .then((items) => {
+        if (isActive) {
+          const postedTopBanners = getBannersForSlot(items, "top");
+          const postedLeftBanners = getBannersForSlot(items, "left");
+
+          setPageBanners([
+            ...(postedTopBanners.length ? postedTopBanners : fallbackClassifiedTopBanners),
+            ...(postedLeftBanners.length ? postedLeftBanners : fallbackClassifiedLeftBanners),
+          ]);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setPageBanners(fallbackClassifiedListBanners);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    setTopBannerIndex(0);
+  }, [topBanners.length]);
+
+  useEffect(() => {
+    setLeftBannerIndex(0);
+  }, [leftBanners.length]);
+
+  useEffect(() => {
+    if (topBanners.length <= 1) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setTopBannerIndex((current) => (current + 1) % topBanners.length);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [topBanners.length]);
+
+  useEffect(() => {
+    if (leftBanners.length <= 1) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setLeftBannerIndex((current) => (current + 1) % leftBanners.length);
+    }, 6000);
+
+    return () => window.clearInterval(intervalId);
+  }, [leftBanners.length]);
 
   function updateQuery(updates: Record<string, string | number | null>) {
     const next = new URLSearchParams(searchParams);
@@ -412,106 +573,107 @@ export function ClassifiedAdsAllPage() {
       <CustomerHeader />
       <main className="classified-template-page">
         <section className="event-body ad-modu-com classified-list-page">
-          <div className="container">
-            <div className="row">
-              <aside className="col-md-3 fil-mob-view classified-filter-panel">
-                <div className="ban-search">
-                  <h1>{detailCategory || category ? `${detailCategory || category} Ads` : "Classified Ads"}</h1>
-                  <p>{totalCount} ads found</p>
-                  <form onSubmit={(event) => event.preventDefault()}>
-                    <ul className="row">
-                      <li className="sr-sea">
-                        <input value={search} onChange={(event) => updateQuery({ search: event.target.value, page: 1 })} placeholder="Search ads in your city..." />
-                      </li>
-                      <li className="sr-cit">
-                        <select value={city} onChange={(event) => updateQuery({ city: event.target.value, page: 1 })}>
-                          <option value="">All City</option>
-                          {cityOptions.map((option) => (
-                            <option value={option} key={option}>{option}</option>
-                          ))}
-                        </select>
-                      </li>
-                      <li className="sr-cate">
-                        <select value={category} onChange={(event) => updateQuery({ category: event.target.value, detailCategory: null, page: 1 })}>
-                          <option value="">All Category</option>
-                          {categoryOptions.map((option) => (
-                            <option value={option} key={option}>{option}</option>
-                          ))}
-                        </select>
-                      </li>
-                      <li className="sr-cate">
-                        <select value={detailCategory} onChange={(event) => updateQuery({ detailCategory: event.target.value, page: 1 })} disabled={!category}>
-                          <option value="">All Subcategory</option>
-                          {detailOptions.map((option) => (
-                            <option value={option} key={option}>{option}</option>
-                          ))}
-                        </select>
-                      </li>
-                    </ul>
-                  </form>
-                  <div className="filt-com lhs-ads">
-                    <div className="ads-box">
-                      <Link to="/pricing-details">
-                        <span>Ad</span>
-                        <img src="/template-17/images/ads/ads1.jpg" alt="" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </aside>
+          <div className="public-listing-shell classified-public-shell">
+            <aside className="public-filter-panel classified-filter-panel">
+              <div className="public-filter-title">
+                <h1>{pageHeading}</h1>
+                <nav aria-label="Breadcrumb">
+                  <Link to="/">Home</Link>
+                  <Link to="/classifieds/index">Classifieds</Link>
+                  {category ? <span>{category}</span> : null}
+                  {detailCategory ? <span>{detailCategory}</span> : null}
+                </nav>
+              </div>
 
-              <div className="col-md-9 us-ppg-com">
-                {category && !detailCategory && subcategoryCards.length ? (
-                  <div className="classified-subcategory-section">
-                    <div className="classified-directory-header">
-                      <div>
-                        <span>Browse {category}</span>
-                        <h2>Choose a subcategory</h2>
-                      </div>
-                      <Link to={`/classifieds/ads-all${city ? `?city=${encodeURIComponent(city)}` : ""}`}>Change category</Link>
-                    </div>
-                    <div className="classified-subcategory-grid">
-                      {subcategoryCards.map((item) => (
-                        <Link className="classified-subcategory-card" to={item.href} key={item.name}>
-                          <img src={item.image} alt="" onError={setFallbackListingImage} />
-                          <strong>{item.name}</strong>
-                          <span>{formatCount(item.count)} ads</span>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                <ul id="intseres" className="events-wrapper classified-list-results">
-                  <div className="listng-res">
-                    <div className="count_no">
-                      {category && !detailCategory ? (
-                        <>Choose a subcategory to view matching ads.</>
-                      ) : (
-                        <>Total of <span>{totalCount}</span> ads found.</>
-                      )}
-                    </div>
-                    <div className="list-res-selt"></div>
-                  </div>
-                  {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
-                  {category && !detailCategory ? null : (
-                    <>
-                      {isLoading ? <div className="alert alert-info">Loading ads...</div> : null}
-                      {!isLoading && !items.length ? <div className="classified-empty">No classified ads found.</div> : null}
-                      {items.map((listing) => (
-                        <li key={listing.id}>
-                          <ClassifiedAdCard listing={listing} />
-                        </li>
-                      ))}
-                    </>
-                  )}
-                </ul>
-                {category && !detailCategory ? null : (
-                  <div className="classified-pagination">
-                    <button type="button" disabled={page <= 1} onClick={() => updateQuery({ page: page - 1 })}>Previous</button>
-                    <strong>{page} / {totalPages}</strong>
-                    <button type="button" disabled={page >= totalPages} onClick={() => updateQuery({ page: page + 1 })}>Next</button>
-                  </div>
+              <section className="public-sidebar-card public-provider-card classified-provider-card">
+                <h2>Top Classified Ads</h2>
+                {topClassifiedAds.length ? (
+                  topClassifiedAds.map((listing) => (
+                    <Link to={`/classifieds/ads-details?id=${listing.id}`} className="public-provider-row classified-provider-row" key={listing.id}>
+                      <img src={getListingImages(listing)[0]} alt="" loading="lazy" onError={setFallbackListingImage} />
+                      <span>
+                        <strong>{listing.title}</strong>
+                        <small>{buildLocationText(listing) || listing.subCategory || "Classifieds"}</small>
+                      </span>
+                      <b>Ad</b>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="classified-provider-empty">No classified ads yet.</div>
                 )}
+              </section>
+
+              <section className="public-sidebar-card classified-sidebar-filters">
+                <h2><i className="material-icons">tune</i>Filters</h2>
+                <form onSubmit={(event) => event.preventDefault()}>
+                  <label>
+                    <span>Search</span>
+                    <input value={search} onChange={(event) => updateQuery({ search: event.target.value, page: 1 })} placeholder="Search ads in your city..." />
+                  </label>
+                  <label>
+                    <span>City</span>
+                    <select value={city} onChange={(event) => updateQuery({ city: event.target.value, page: 1 })}>
+                      <option value="">All City</option>
+                      {cityOptions.map((option) => (
+                        <option value={option} key={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Category</span>
+                    <select value={category} onChange={(event) => updateQuery({ category: event.target.value, detailCategory: null, page: 1 })}>
+                      <option value="">All Category</option>
+                      {categoryOptions.map((option) => (
+                        <option value={option} key={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Subcategory</span>
+                    <select value={detailCategory} onChange={(event) => updateQuery({ detailCategory: event.target.value, page: 1 })} disabled={!category}>
+                      <option value="">All Subcategory</option>
+                      {detailOptions.map((option) => (
+                        <option value={option} key={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                </form>
+              </section>
+
+              <ClassifiedListingBanner banners={leftBanners} className="public-side-ad classified-side-ad" index={leftBannerIndex} />
+            </aside>
+
+            <div className="public-listing-results classified-listing-results-panel">
+              <ClassifiedListingBanner banners={topBanners} className="public-wide-ad classified-wide-ad" index={topBannerIndex} />
+
+              <div className="public-listing-toolbar classified-listing-toolbar">
+                <div>
+                  Total of <strong>{totalCount}</strong> ads found.
+                </div>
+                <div className="public-filter-tags">
+                  {category ? <span>{category} <button type="button" onClick={() => updateQuery({ category: null, detailCategory: null, page: 1 })}>x</button></span> : null}
+                  {detailCategory ? <span>{detailCategory} <button type="button" onClick={() => updateQuery({ detailCategory: null, page: 1 })}>x</button></span> : null}
+                  {city ? <span>{city} <button type="button" onClick={() => updateQuery({ city: null, page: 1 })}>x</button></span> : null}
+                  {search ? <span>{search} <button type="button" onClick={() => updateQuery({ search: null, page: 1 })}>x</button></span> : null}
+                </div>
+              </div>
+
+              {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
+              {isLoading ? <div className="alert alert-info">Loading ads...</div> : null}
+              {!isLoading && !items.length ? <div className="classified-empty">No classified ads found.</div> : null}
+
+              <ul id="intseres" className="events-wrapper classified-list-results">
+                {items.map((listing) => (
+                  <li key={listing.id}>
+                    <ClassifiedAdCard listing={listing} />
+                  </li>
+                ))}
+              </ul>
+
+              <div className="classified-pagination">
+                <button type="button" disabled={page <= 1} onClick={() => updateQuery({ page: page - 1 })}>Previous</button>
+                <strong>{page} / {totalPages}</strong>
+                <button type="button" disabled={page >= totalPages} onClick={() => updateQuery({ page: page + 1 })}>Next</button>
               </div>
             </div>
           </div>
@@ -654,6 +816,88 @@ function ClassifiedDetail({ listing, relatedListings }: { listing: ListingSummar
   const address = buildLocationText(listing);
   const sellerName = listing.sellerName || getRecordString(listing.sellerInformation, "name") || "Seller";
   const postedDate = formatDate(listing.createdAt);
+  const contactRows = buildClassifiedContactRows(listing, sellerName);
+  const phoneRow = contactRows.find((row) => row.label === "Phone");
+  const emailRow = contactRows.find((row) => row.label === "Email");
+  const locationRows = buildClassifiedLocationRows(listing);
+  const overviewRows = buildClassifiedOverviewRows(listing, postedDate);
+  const pricingRows = buildRecordRows(listing.priceDetails, ["price"]);
+  const sellerRows = buildRecordRows(listing.sellerInformation, ["name", "email", "phone", "phoneNumber", "mobile", "mobileNumber", "contactNumber", "whatsappNumber"]);
+  const settingRows = buildRecordRows(listing.settings, ["metaTitle", "metaDescription"]);
+  const amenityRows = Object.entries(listing.amenities || {})
+    .filter(([, value]) => value)
+    .map(([key]) => ({ label: toTitleLabel(key), value: "Available" }));
+  const mediaRows = buildClassifiedMediaRows(listing);
+  const detailTabs = useMemo(() => [
+    { id: "contact", title: "Contact", icon: "contact_phone", rows: contactRows },
+    { id: "location", title: "Location", icon: "location_on", rows: locationRows },
+    { id: "overview", title: "Overview", icon: "assignment", rows: overviewRows },
+    { id: "price", title: "Price", icon: "payments", rows: pricingRows },
+    { id: "details", title: "Details", icon: "fact_check", rows },
+    { id: "seller", title: "Seller", icon: "person", rows: sellerRows },
+    { id: "amenities", title: "Amenities", icon: "check_circle", rows: amenityRows },
+    { id: "media", title: "Media", icon: "perm_media", rows: mediaRows },
+    { id: "settings", title: "Settings", icon: "settings", rows: settingRows },
+  ].filter((tab) => tab.rows.length), [amenityRows, contactRows, locationRows, mediaRows, overviewRows, pricingRows, rows, sellerRows, settingRows]);
+  const companyRows: ClassifiedDetailRow[] = [
+    phoneRow,
+    emailRow,
+    { label: "Seller", value: sellerName, icon: "person" },
+    address ? { label: "Location", value: address, icon: "location_on" } : null,
+    listing.city ? { label: "City", value: listing.city, icon: "location_city" } : null,
+    listing.subCategory ? { label: "Category", value: listing.subCategory, icon: "category" } : null,
+  ].filter((row): row is ClassifiedDetailRow => Boolean(row?.value));
+  const whatsappNumber = normalizePhoneNumber(
+    getFirstRecordString(listing.sellerInformation, ["whatsappNumber", "phoneNumber", "phone", "mobileNumber", "mobile", "contactNumber"]) || phoneRow?.value || "",
+  );
+  const whatsappHref = whatsappNumber ? `https://wa.me/${whatsappNumber}` : "";
+  const enquiryFormId = `classified-enquiry-${listing.id}`;
+  const [isLiked, setIsLiked] = useState(false);
+  const [shareStatus, setShareStatus] = useState("");
+  const [enquiryStatus, setEnquiryStatus] = useState("");
+  const [activeDetailTabId, setActiveDetailTabId] = useState("contact");
+  const [enquiryForm, setEnquiryForm] = useState({
+    name: "",
+    email: "",
+    mobileNumber: "",
+    message: "",
+  });
+  const activeDetailTab = detailTabs.find((tab) => tab.id === activeDetailTabId) || detailTabs[0];
+
+  async function handleShare() {
+    const shareUrl = window.location.href;
+    const shareData = {
+      title: listing.title,
+      text: `${listing.title} - ${formatListingPrice(listing)}`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareStatus("Shared");
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareStatus("Link copied");
+      }
+    } catch {
+      setShareStatus("");
+      return;
+    }
+
+    window.setTimeout(() => setShareStatus(""), 2200);
+  }
+
+  function submitEnquiry(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!enquiryForm.name.trim() || !enquiryForm.email.trim() || !enquiryForm.mobileNumber.trim()) {
+      setEnquiryStatus("Please enter name, email, and mobile number.");
+      return;
+    }
+
+    setEnquiryStatus("Enquiry submitted. The seller can follow up with you.");
+  }
 
   return (
     <>
@@ -689,22 +933,24 @@ function ClassifiedDetail({ listing, relatedListings }: { listing: ListingSummar
                 </div>
                 <div className="as-details">
                   <div className="desc">{listing.description}</div>
-                  {rows.length ? (
-                    <div className="list">
-                      <ul>
-                        {rows.map((row) => (
-                          <li key={row.label}>{row.label}: {row.value}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
+                  <ClassifiedTabbedDetails
+                    activeTabId={activeDetailTab?.id || ""}
+                    activeTab={activeDetailTab}
+                    tabs={detailTabs}
+                    onTabChange={setActiveDetailTabId}
+                  />
                   <div className="tags">
                     <span>{listing.title} sale in {listing.city || listing.subCategory || "your city"}</span>
                     {address ? <span>{listing.title} sale in {address}</span> : null}
                   </div>
                 </div>
-                <div className="list-sh">
-                  <button type="button" className="share-new"><i className="material-icons">share</i> Share now</button>
+                <div className="list-sh classified-detail-actions">
+                  <button type="button" className="share-new" onClick={handleShare}><i className="material-icons">share</i> Share now</button>
+                  <button type="button" className={`classified-save-action${isLiked ? " is-active" : ""}`} onClick={() => setIsLiked((current) => !current)}>
+                    <i className="material-icons">{isLiked ? "thumb_up" : "thumb_up_off_alt"}</i>
+                    {isLiked ? "Saved" : "Save"}
+                  </button>
+                  {shareStatus ? <span className="classified-action-status">{shareStatus}</span> : null}
                 </div>
                 <div className="sec-3">
                   <div className="pro-bad-sml">
@@ -722,27 +968,80 @@ function ClassifiedDetail({ listing, relatedListings }: { listing: ListingSummar
             <div className="apost-bio">
               <h2 className="a_price">{formatListingPrice(listing)}</h2>
               <div className="share">
-                <span className="share-ic"><i className="material-icons">share</i></span>
-                <span className="share-ic"><i className="material-icons">thumb_up</i></span>
+                <button type="button" className="share-ic" onClick={handleShare} aria-label="Share classified ad"><i className="material-icons">share</i></button>
+                <button type="button" className={`share-ic${isLiked ? " is-active" : ""}`} onClick={() => setIsLiked((current) => !current)} aria-label="Save classified ad">
+                  <i className="material-icons">{isLiked ? "thumb_up" : "thumb_up_off_alt"}</i>
+                </button>
               </div>
               <p>{listing.title}</p>
             </div>
             <div className="adost-bio-2">
               <p className="addr a_addr">{address || "Location not provided"}</p>
-              <p className="addr a_loca">{listing.city || getRecordString(listing.locationDetails, "city")}</p>
+              <div className="classified-detail-side-actions">
+                {phoneRow?.href ? (
+                  <a href={phoneRow.href} className="classified-detail-action-button"><i className="material-icons">phone</i> Call Now</a>
+                ) : (
+                  <span className="classified-detail-action-button is-disabled"><i className="material-icons">phone</i> Call Now</span>
+                )}
+              </div>
             </div>
+            <div className="classified-detail-side-stats">
+              <span className="classified-detail-stat-action">
+                <i className="material-icons">visibility</i>
+                <b>{listing.views || 0} Views</b>
+              </span>
+              {whatsappHref ? (
+                <a className="classified-detail-stat-action" href={whatsappHref} target="_blank" rel="noreferrer">
+                  <i className="material-icons">chat</i>
+                  <b>WhatsApp</b>
+                </a>
+              ) : (
+                <span className="classified-detail-stat-action is-disabled">
+                  <i className="material-icons">chat</i>
+                  <b>WhatsApp</b>
+                </span>
+              )}
+              <button type="button" className="classified-detail-stat-action" onClick={handleShare}>
+                <i className="material-icons">share</i>
+                <b>Share</b>
+              </button>
+            </div>
+            <section className="classified-company-info">
+              <h3><span>Company</span> Info</h3>
+              <div className="classified-company-info-list">
+                {companyRows.map((row) => {
+                  const content = (
+                    <>
+                      <span>{row.label}</span>
+                      <strong>{row.value}</strong>
+                    </>
+                  );
+
+                  return row.href ? (
+                    <a href={row.href} key={`${row.label}-${row.value}`}>
+                      {content}
+                    </a>
+                  ) : (
+                    <div key={`${row.label}-${row.value}`}>
+                      {content}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
             <div className="list-rhs-form pglist-bg pglist-p-com">
-              <div className="quote-pop">
+              <div className="quote-pop" id={enquiryFormId}>
                 <h3>Send enquiry</h3>
-                <form>
+                <form onSubmit={submitEnquiry}>
                   <fieldset disabled={!isCustomerAuthenticated()}>
-                    <div className="form-group ic-user"><i className="material-icons">person</i><input className="form-control" placeholder="Enter name*" /></div>
-                    <div className="form-group ic-eml"><i className="material-icons">email</i><input className="form-control" placeholder="Enter email*" /></div>
-                    <div className="form-group ic-pho"><i className="material-icons">phone</i><input className="form-control" placeholder="Enter mobile number *" /></div>
-                    <div className="form-group"><textarea className="form-control" rows={3} placeholder="Enter your query or message"></textarea></div>
+                    <div className="form-group ic-user"><i className="material-icons">person</i><input className="form-control" placeholder="Enter name*" value={enquiryForm.name} onChange={(event) => setEnquiryForm((current) => ({ ...current, name: event.target.value }))} /></div>
+                    <div className="form-group ic-eml"><i className="material-icons">email</i><input className="form-control" type="email" placeholder="Enter email*" value={enquiryForm.email} onChange={(event) => setEnquiryForm((current) => ({ ...current, email: event.target.value }))} /></div>
+                    <div className="form-group ic-pho"><i className="material-icons">phone</i><input className="form-control" type="tel" placeholder="Enter mobile number *" value={enquiryForm.mobileNumber} onChange={(event) => setEnquiryForm((current) => ({ ...current, mobileNumber: event.target.value }))} /></div>
+                    <div className="form-group"><textarea className="form-control" rows={3} placeholder="Enter your query or message" value={enquiryForm.message} onChange={(event) => setEnquiryForm((current) => ({ ...current, message: event.target.value }))}></textarea></div>
                   </fieldset>
+                  {enquiryStatus ? <p className="classified-enquiry-status">{enquiryStatus}</p> : null}
                   {isCustomerAuthenticated() ? (
-                    <button type="button" className="btn btn-primary">Submit</button>
+                    <button type="submit" className="btn btn-primary">Submit</button>
                   ) : (
                     <Link to={`/login?returnUrl=/classifieds/ads-details?id=${listing.id}`} className="btn btn-primary">Login &amp; Enjoy Our Services</Link>
                   )}
@@ -767,6 +1066,73 @@ function ClassifiedDetail({ listing, relatedListings }: { listing: ListingSummar
         </div>
       ) : null}
     </>
+  );
+}
+
+type ClassifiedDetailRow = {
+  label: string;
+  value: string;
+  href?: string;
+  icon?: string;
+};
+
+type ClassifiedDetailTab = {
+  id: string;
+  title: string;
+  icon: string;
+  rows: ClassifiedDetailRow[];
+};
+
+function ClassifiedTabbedDetails({
+  tabs,
+  activeTab,
+  activeTabId,
+  onTabChange,
+}: {
+  tabs: ClassifiedDetailTab[];
+  activeTab?: ClassifiedDetailTab;
+  activeTabId: string;
+  onTabChange: (tabId: string) => void;
+}) {
+  if (!tabs.length || !activeTab) {
+    return null;
+  }
+
+  return (
+    <section className="classified-tabbed-details">
+      <div className="classified-tab-list" role="tablist" aria-label="Classified details">
+        {tabs.map((tab) => (
+          <button
+            type="button"
+            className={tab.id === activeTabId ? "is-active" : ""}
+            key={tab.id}
+            role="tab"
+            aria-selected={tab.id === activeTabId}
+            onClick={() => onTabChange(tab.id)}
+          >
+            <i className="material-icons">{tab.icon}</i>
+            <span>{tab.title}</span>
+          </button>
+        ))}
+      </div>
+      <div className="classified-tab-panel" role="tabpanel">
+        <div className="classified-tab-panel-head">
+          <i className="material-icons">{activeTab.icon}</i>
+          <div>
+            <span>Classified information</span>
+            <h2>{activeTab.title}</h2>
+          </div>
+        </div>
+        <dl>
+          {activeTab.rows.map((row) => (
+            <div key={`${activeTab.id}-${row.label}-${row.value}`}>
+              <dt>{row.label}</dt>
+              <dd>{row.href ? <a href={row.href}>{row.value}</a> : row.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
   );
 }
 
@@ -814,30 +1180,6 @@ function getClassifiedCategoryImage(categoryName: string, category?: ListingCate
   return classifiedCategoryImages[categoryName] || "/template-17/classifieds/images/4.jpeg";
 }
 
-function getClassifiedSubcategoryImage(
-  categoryName: string,
-  subcategoryName: string,
-  category?: ListingCategoryOption,
-) {
-  const subCategory = category?.subCategories.find((item) => item.name === subcategoryName);
-  if (subCategory?.iconUrl) {
-    return resolveListingImageUrl(subCategory.iconUrl);
-  }
-
-  const text = `${categoryName} ${subcategoryName}`.toLowerCase();
-  if (text.includes("restaurant") || text.includes("food") || text.includes("chef") || text.includes("cafe") || text.includes("catering")) return "/template-17/images/services/resto-1.jpg";
-  if (text.includes("vehicle") || text.includes("car") || text.includes("truck") || text.includes("rental")) return "/template-17/images/home/usedcar-bg.jpg";
-  if (text.includes("bike") || text.includes("scooter") || text.includes("motorcycle")) return "/template-17/classifieds/images/1.jpg";
-  if (text.includes("room") || text.includes("rent") || text.includes("house") || text.includes("apartment") || text.includes("pg") || text.includes("student")) return "/template-17/images/chao-home-room-listings/2.jpeg";
-  if (text.includes("job") || text.includes("career") || text.includes("intern") || text.includes("hiring")) return "/template-17/images/all-job-bg.jpg";
-  if (text.includes("event") || text.includes("ticket") || text.includes("concert") || text.includes("festival")) return "/template-17/images/events/4.jpg";
-  if (text.includes("care") || text.includes("nurse") || text.includes("health") || text.includes("senior") || text.includes("baby")) return "/template-17/images/listing-ban/14944pexels-gustavo-fring-3985159.jpg";
-  if (text.includes("phone") || text.includes("laptop") || text.includes("computer") || text.includes("tv") || text.includes("electronic")) return "/template-17/images/products/8.jpeg";
-  if (text.includes("pet") || text.includes("dog") || text.includes("cat") || text.includes("bird") || text.includes("fish")) return "/template-17/images/services/pets-1.jpg";
-  if (text.includes("sale") || text.includes("villa") || text.includes("condo") || text.includes("land") || text.includes("plot")) return "/template-17/images/services/villa-1.jpg";
-  return getClassifiedCategoryImage(categoryName, category);
-}
-
 function buildClassifiedCategoryHref(categoryName: string, city: string) {
   const params = new URLSearchParams({ category: categoryName });
   if (city) {
@@ -847,29 +1189,9 @@ function buildClassifiedCategoryHref(categoryName: string, city: string) {
   return `/classifieds/ads-all?${params.toString()}`;
 }
 
-function buildClassifiedSubcategoryHref(categoryName: string, detailCategory: string, city: string, search: string) {
-  const params = new URLSearchParams({ category: categoryName, detailCategory });
-  if (city) {
-    params.set("city", city);
-  }
-  if (search) {
-    params.set("search", search);
-  }
-
-  return `/classifieds/ads-all?${params.toString()}`;
-}
-
 function getBannersForSlot(banners: PageBanner[], slot: string) {
-  const matchingBanners = banners
-    .filter((banner) => banner.slot.trim().toLowerCase() === slot)
-    .sort((left, right) => left.displayOrder - right.displayOrder || left.id - right.id);
-
-  if (matchingBanners.length) {
-    return matchingBanners;
-  }
-
   return banners
-    .filter((banner) => banner.isActive)
+    .filter((banner) => banner.isActive && banner.slot.trim().toLowerCase() === slot)
     .sort((left, right) => left.displayOrder - right.displayOrder || left.id - right.id);
 }
 
@@ -886,10 +1208,6 @@ function buildClassifiedDetailOptions(category: ListingCategoryOption | undefine
   return uniqueValues([...fromTree, ...fromListings]);
 }
 
-function countListingsByDetailCategory(listings: ListingSummary[], detailCategory: string) {
-  return listings.filter((listing) => getClassifiedSubcategory(listing) === detailCategory).length;
-}
-
 function getClassifiedSubcategory(listing: ListingSummary) {
   const parsedOther = parseOtherInformation(listing.propertyDetails?.otherInformation);
   return getRecordString(parsedOther, "classifiedSubCategory") || listing.detailCategory || "";
@@ -897,6 +1215,18 @@ function getClassifiedSubcategory(listing: ListingSummary) {
 
 function formatCount(count: number) {
   return count > 99 ? "99+" : String(count).padStart(2, "0");
+}
+
+function formatCategoryCount(count: number | undefined, isLoading: boolean) {
+  if (count === undefined && isLoading) {
+    return "...";
+  }
+
+  return formatCount(count || 0);
+}
+
+function normalizePhoneNumber(value: string) {
+  return value.replace(/[^\d]/g, "");
 }
 
 function getListingImages(listing: ListingSummary) {
@@ -930,6 +1260,112 @@ function getClassifiedDetailRows(listing: ListingSummary) {
       label: toTitleLabel(key),
       value: String(value),
     }));
+}
+
+function buildClassifiedContactRows(listing: ListingSummary, sellerName: string): ClassifiedDetailRow[] {
+  const sellerInfo = listing.sellerInformation || {};
+  const email = getFirstRecordString(sellerInfo, ["email", "sellerEmail", "contactEmail", "emailAddress"]);
+  const phone = getFirstRecordString(sellerInfo, ["phoneNumber", "phone", "mobileNumber", "mobile", "contactNumber", "whatsappNumber"]);
+  const phoneCode = getFirstRecordString(sellerInfo, ["phoneCountryCode", "countryCode", "dialCode"]);
+  const rows: ClassifiedDetailRow[] = [{ label: "Seller", value: sellerName, icon: "person" }];
+
+  if (email) {
+    rows.push({ label: "Email", value: email, href: `mailto:${email}`, icon: "email" });
+  }
+
+  if (phone || phoneCode) {
+    const phoneValue = uniqueValues([phoneCode, phone]).join(" ");
+    rows.push({ label: "Phone", value: phoneValue, href: phone ? `tel:${phoneValue.replace(/\s+/g, "")}` : undefined, icon: "phone" });
+  }
+
+  return rows;
+}
+
+function buildClassifiedLocationRows(listing: ListingSummary): ClassifiedDetailRow[] {
+  const location = listing.locationDetails || {};
+  const rows = [
+    { label: "Locality", value: getRecordString(location, "locality") || listing.locality || "" },
+    { label: "City", value: getRecordString(location, "city") || listing.city || "" },
+    { label: "State", value: getRecordString(location, "state") },
+    { label: "Country", value: getRecordString(location, "country") },
+    { label: "Pincode", value: getRecordString(location, "pincode") },
+    { label: "Landmark", value: getRecordString(location, "landmark") },
+    { label: "Latitude", value: getRecordString(location, "latitude") },
+    { label: "Longitude", value: getRecordString(location, "longitude") },
+  ];
+
+  return rows.filter((row) => row.value.trim());
+}
+
+function buildClassifiedOverviewRows(listing: ListingSummary, postedDate: string): ClassifiedDetailRow[] {
+  return [
+    { label: "Category", value: listing.categoryName },
+    { label: "Subcategory", value: listing.subCategory },
+    { label: "Detail Category", value: listing.detailCategory },
+    { label: "Status", value: listing.status },
+    { label: "Price", value: formatListingPrice(listing) },
+    { label: "Views", value: String(listing.views || 0) },
+    { label: "Rating", value: listing.averageRating || listing.rating ? String(listing.averageRating || listing.rating) : "" },
+    { label: "Reviews", value: listing.totalReviews ? String(listing.totalReviews) : "" },
+    { label: "Posted", value: postedDate },
+    { label: "Updated", value: formatDate(listing.updatedAt) },
+    { label: "Plan", value: listing.userPlanName || listing.userPlanCode || "" },
+    { label: "Plan Expiry", value: formatDate(listing.userPlanExpiryDate) },
+  ].filter((row) => row.value.trim());
+}
+
+function buildClassifiedMediaRows(listing: ListingSummary): ClassifiedDetailRow[] {
+  return [
+    { label: "Video", value: listing.videoUrl || "", href: listing.videoUrl || undefined },
+    { label: "Virtual Tour", value: listing.virtualTourUrl || "", href: listing.virtualTourUrl || undefined },
+    { label: "Logo", value: listing.logoUrl || "", href: listing.logoUrl ? resolveListingImageUrl(listing.logoUrl) : undefined },
+    { label: "Cover Banner", value: listing.coverBannerUrl || "", href: listing.coverBannerUrl ? resolveListingImageUrl(listing.coverBannerUrl) : undefined },
+  ].filter((row) => row.value.trim());
+}
+
+function buildRecordRows(
+  record: Record<string, unknown> | undefined,
+  excludeKeys: string[] = [],
+): ClassifiedDetailRow[] {
+  if (!record) {
+    return [];
+  }
+
+  const excluded = new Set(excludeKeys.map((key) => key.toLowerCase()));
+
+  return Object.entries(record)
+    .filter(([key, value]) => !excluded.has(key.toLowerCase()) && hasDisplayValue(value))
+    .map(([key, value]) => ({
+      label: toTitleLabel(key),
+      value: formatDetailValue(value),
+    }));
+}
+
+function hasDisplayValue(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === "string") return value.trim() !== "";
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "object") return Object.keys(value as Record<string, unknown>).length > 0;
+  return true;
+}
+
+function formatDetailValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    return value.map(formatDetailValue).filter(Boolean).join(", ");
+  }
+
+  if (typeof value === "boolean") {
+    return value ? "Yes" : "No";
+  }
+
+  if (value && typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([, childValue]) => hasDisplayValue(childValue))
+      .map(([key, childValue]) => `${toTitleLabel(key)}: ${formatDetailValue(childValue)}`)
+      .join(", ");
+  }
+
+  return String(value ?? "").trim();
 }
 
 function parseOtherInformation(value: unknown) {
@@ -966,6 +1402,17 @@ function getRecordString(record: Record<string, unknown> | undefined, key: strin
   return value === null || value === undefined ? "" : String(value);
 }
 
+function getFirstRecordString(record: Record<string, unknown> | undefined, keys: string[]) {
+  for (const key of keys) {
+    const value = getRecordString(record, key).trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
 function uniqueValues(values: string[]) {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean)));
 }
@@ -998,6 +1445,16 @@ function formatAge(value?: string | null) {
   if (days === 0) return "Today";
   if (days === 1) return "1 day old";
   return `${days} days old`;
+}
+
+function getListingTime(listing: ListingSummary) {
+  const value = listing.updatedAt || listing.createdAt;
+  if (!value) {
+    return 0;
+  }
+
+  const time = new Date(value).getTime();
+  return Number.isNaN(time) ? 0 : time;
 }
 
 function toTitleLabel(value: string) {

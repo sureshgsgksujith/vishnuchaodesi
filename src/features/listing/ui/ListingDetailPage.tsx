@@ -57,6 +57,9 @@ type ListingInteractionProps = {
 };
 
 const nearbyServiceCategories = ["Schools", "Groceries", "Hospitals", "Beauty Salons", "Restaurants", "Lawyers"];
+const allowedResumeExtensions = [".pdf", ".doc", ".docx"];
+const resumeAcceptTypes = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const maxResumeFileBytes = 10 * 1024 * 1024;
 
 export default function ListingDetailPage() {
   const { listingId } = useParams();
@@ -302,6 +305,10 @@ function ListingDetail({
 
   async function handleReviewSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isReviewSubmitting) {
+      return;
+    }
+
     setReviewSuccess("");
     setReviewError("");
 
@@ -393,6 +400,10 @@ function ListingDetail({
 
   async function submitQuoteForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isQuoteSubmitting) {
+      return;
+    }
+
     setQuoteStatus("");
     setIsQuoteSubmitting(true);
 
@@ -463,6 +474,10 @@ function ListingDetail({
 
   async function submitJobApplicationForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isJobApplicationSubmitting) {
+      return;
+    }
+
     setJobApplicationStatus("");
 
     if (!jobResumeFile) {
@@ -470,14 +485,9 @@ function ListingDetail({
       return;
     }
 
-    const extension = `.${jobResumeFile.name.split(".").pop() || ""}`.toLowerCase();
-    if (![".pdf", ".doc", ".docx"].includes(extension)) {
-      setJobApplicationStatus("Resume must be a PDF, DOC, or DOCX file.");
-      return;
-    }
-
-    if (jobResumeFile.size > 10 * 1024 * 1024) {
-      setJobApplicationStatus("Resume file size must be 10 MB or less.");
+    const resumeError = getResumeFileError(jobResumeFile);
+    if (resumeError) {
+      setJobApplicationStatus(resumeError);
       return;
     }
 
@@ -504,6 +514,25 @@ function ListingDetail({
     } finally {
       setIsJobApplicationSubmitting(false);
     }
+  }
+
+  function handleJobResumeChange(file: File | null) {
+    setJobApplicationStatus("");
+
+    if (!file) {
+      setJobResumeFile(null);
+      return true;
+    }
+
+    const resumeError = getResumeFileError(file);
+    if (resumeError) {
+      setJobResumeFile(null);
+      setJobApplicationStatus(resumeError);
+      return false;
+    }
+
+    setJobResumeFile(file);
+    return true;
   }
 
   if (isRoommatesRentalListing) {
@@ -774,12 +803,14 @@ function ListingDetail({
                         </div>
                         {reviewSuccess ? <div className="alert alert-success">{reviewSuccess}</div> : null}
                         {reviewError ? <div className="alert alert-danger">{reviewError}</div> : null}
-                        <input
-                          type="submit"
-                          className="btn btn-primary"
-                          value={isReviewSubmitting ? "Submitting..." : "Submit Review"}
-                          disabled={isReviewSubmitting}
-                        />
+                        <button type="submit" className="btn btn-primary app-loading-button" disabled={isReviewSubmitting} aria-busy={isReviewSubmitting}>
+                          {isReviewSubmitting ? (
+                            <>
+                              <span className="app-button-spinner" aria-hidden="true"></span>
+                              Submitting...
+                            </>
+                          ) : "Submit Review"}
+                        </button>
                       </form>
                     </div>
                   </div>
@@ -893,7 +924,7 @@ function ListingDetail({
                     status={jobApplicationStatus}
                     onChange={(updates) => setJobApplicationForm((current) => ({ ...current, ...updates }))}
                     onClose={() => setIsJobApplicationModalOpen(false)}
-                    onResumeChange={setJobResumeFile}
+                    onResumeChange={handleJobResumeChange}
                     onSubmit={submitJobApplicationForm}
                   />
                 ) : null}
@@ -1254,8 +1285,13 @@ function LocalServiceDetail({
                   />
                   {reviewSuccess ? <div className="alert alert-success">{reviewSuccess}</div> : null}
                   {reviewError ? <div className="alert alert-danger">{reviewError}</div> : null}
-                  <button type="submit" disabled={isReviewSubmitting}>
-                    {isReviewSubmitting ? "Submitting..." : "Submit Review"}
+                  <button type="submit" className="app-loading-button" disabled={isReviewSubmitting} aria-busy={isReviewSubmitting}>
+                    {isReviewSubmitting ? (
+                      <>
+                        <span className="app-button-spinner" aria-hidden="true"></span>
+                        Submitting...
+                      </>
+                    ) : "Submit Review"}
                   </button>
                 </form>
                 {reviews.length ? (
@@ -1569,8 +1605,13 @@ function RoommatesRentalDetail({
                   />
                   {reviewSuccess ? <div className="alert alert-success">{reviewSuccess}</div> : null}
                   {reviewError ? <div className="alert alert-danger">{reviewError}</div> : null}
-                  <button type="submit" className="public-room-btn public-room-btn-primary" disabled={isReviewSubmitting}>
-                    {isReviewSubmitting ? "Submitting..." : "Submit Review"}
+                  <button type="submit" className="public-room-btn public-room-btn-primary app-loading-button" disabled={isReviewSubmitting} aria-busy={isReviewSubmitting}>
+                    {isReviewSubmitting ? (
+                      <>
+                        <span className="app-button-spinner" aria-hidden="true"></span>
+                        Submitting...
+                      </>
+                    ) : "Submit Review"}
                   </button>
                 </form>
                 {reviews.length ? (
@@ -1856,8 +1897,13 @@ function ListingQuoteModal({
           onChange={(event) => onChange({ message: event.target.value })}
         />
         {status ? <div className="public-quote-status">{status}</div> : null}
-        <button type="submit" disabled={isProfileLoading || isSubmitting || !form.email}>
-          {isProfileLoading ? "Loading..." : isSubmitting ? "Submitting..." : "Submit Enquiry"}
+        <button type="submit" className="app-loading-button" disabled={isProfileLoading || isSubmitting || !form.email} aria-busy={isProfileLoading || isSubmitting}>
+          {isProfileLoading || isSubmitting ? (
+            <>
+              <span className="app-button-spinner" aria-hidden="true"></span>
+              {isProfileLoading ? "Loading..." : "Submitting..."}
+            </>
+          ) : "Submit Enquiry"}
         </button>
       </form>
     </div>
@@ -1884,7 +1930,7 @@ function JobApplicationModal({
   status: string;
   onChange: (updates: Partial<{ name: string; email: string; mobileNumber: string; message: string }>) => void;
   onClose: () => void;
-  onResumeChange: (file: File | null) => void;
+  onResumeChange: (file: File | null) => boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
@@ -1919,9 +1965,14 @@ function JobApplicationModal({
           <span>Resume*</span>
           <input
             type="file"
-            accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            accept={resumeAcceptTypes}
             required
-            onChange={(event) => onResumeChange(event.target.files?.[0] || null)}
+            onChange={(event) => {
+              const isAccepted = onResumeChange(event.target.files?.[0] || null);
+              if (!isAccepted) {
+                event.currentTarget.value = "";
+              }
+            }}
           />
         </label>
         <div className="public-job-resume-note">
@@ -1933,8 +1984,13 @@ function JobApplicationModal({
           onChange={(event) => onChange({ message: event.target.value })}
         />
         {status ? <div className="public-quote-status">{status}</div> : null}
-        <button type="submit" disabled={isProfileLoading || isSubmitting || !form.email}>
-          {isProfileLoading ? "Loading..." : isSubmitting ? "Submitting..." : "Submit Application"}
+        <button type="submit" className="app-loading-button" disabled={isProfileLoading || isSubmitting || !form.email} aria-busy={isProfileLoading || isSubmitting}>
+          {isProfileLoading || isSubmitting ? (
+            <>
+              <span className="app-button-spinner" aria-hidden="true"></span>
+              {isProfileLoading ? "Loading..." : "Submitting..."}
+            </>
+          ) : "Submit Application"}
         </button>
       </form>
     </div>
@@ -3311,6 +3367,20 @@ function normalizeWebsite(value: string) {
 
 function numbersOnly(value: string) {
   return value.replace(/[^\d]/g, "");
+}
+
+function getResumeFileError(file: File) {
+  const extension = `.${file.name.split(".").pop() || ""}`.toLowerCase();
+
+  if (!allowedResumeExtensions.includes(extension)) {
+    return "Resume must be a PDF, DOC, or DOCX file.";
+  }
+
+  if (file.size > maxResumeFileBytes) {
+    return "Resume file size must be 10 MB or less.";
+  }
+
+  return "";
 }
 
 function formatMonthYear(value: string) {

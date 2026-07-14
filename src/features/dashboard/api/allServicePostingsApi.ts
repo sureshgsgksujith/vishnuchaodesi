@@ -1,10 +1,26 @@
 import { apiClient } from "../../../shared/api/client";
 
+export type AllServicePostingLocation = {
+  label?: string;
+  formattedAddress: string;
+  streetAddress?: string;
+  suite?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  latitude?: string;
+  longitude?: string;
+  isPrimary?: boolean;
+};
+
 export type AllServicePostingPayload = {
   providerType: string;
   businessName: string;
   tagline?: string;
+  businessImageUrl?: string;
   primaryServiceLocation: string;
+  serviceLocations?: AllServicePostingLocation[];
   allServiceCategoryId: number;
   serviceName: string;
   selectedDetailedCategoryIds: number[];

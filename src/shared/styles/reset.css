@@ -28,3 +28,32 @@ img {
   max-width: 100%;
   display: block;
 }
+
+.app-loading-button {
+  align-items: center;
+  display: inline-flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.app-loading-button[disabled],
+.app-loading-button[aria-busy="true"] {
+  cursor: not-allowed;
+}
+
+.app-button-spinner {
+  animation: app-button-spin 0.75s linear infinite;
+  border: 2px solid rgba(255, 255, 255, 0.48);
+  border-left-color: currentColor;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 16px;
+  width: 16px;
+}
+
+@keyframes app-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

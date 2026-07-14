@@ -4711,6 +4711,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }
 
   async function saveListing(draft = getListingDraft()) {
+    if (isSaving) {
+      return false;
+    }
+
     if (editLockedMessage) {
       setErrorMessage(editLockedMessage);
       return false;
@@ -4807,6 +4811,10 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }
 
   async function handleFinish() {
+    if (isSaving) {
+      return;
+    }
+
     if (!validateStep(0, currentStep === 0)) {
       pendingValidationScrollRef.current = true;
       setCurrentStep(0);
@@ -6089,7 +6097,14 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                           <button type="button" className="btn btn-primary" onClick={handlePrevious}>Previous</button>
                         </div>
                         <div className="col-md-6">
-                          <button type="button" className="btn btn-primary" onClick={handleFinish} disabled={isSaving || Boolean(editLockedMessage)}>{isSaving ? "Saving..." : isEditMode ? "Save" : "Finish"}</button>
+                          <button type="button" className="btn btn-primary app-loading-button" onClick={handleFinish} disabled={isSaving || Boolean(editLockedMessage)} aria-busy={isSaving}>
+                            {isSaving ? (
+                              <>
+                                <span className="app-button-spinner" aria-hidden="true"></span>
+                                Saving...
+                              </>
+                            ) : isEditMode ? "Save" : "Finish"}
+                          </button>
                         </div>
                       </div>
                       <Progress value={90} />

@@ -9,6 +9,9 @@ export type RequirementPayload = {
   message?: string;
   categoryName?: string;
   pageUrl?: string;
+  city?: string;
+  desiredServices?: string[];
+  matchingProviderIds?: number[];
 };
 
 export type RequirementEnquiry = {
@@ -34,6 +37,22 @@ export type RequirementEnquiry = {
 
 export async function submitRequirement(payload: RequirementPayload) {
   await apiClient.post("/Requirements", payload);
+}
+
+export type ProviderInterestPayload = {
+  providerId: number;
+  name: string;
+  email: string;
+  mobileNumber: string;
+  message?: string;
+  categoryName?: string;
+  pageUrl?: string;
+  city?: string;
+  desiredServices?: string[];
+};
+
+export async function submitProviderInterest(payload: ProviderInterestPayload) {
+  await apiClient.post("/Requirements/provider-interest", payload);
 }
 
 export type JobApplicationPayload = {

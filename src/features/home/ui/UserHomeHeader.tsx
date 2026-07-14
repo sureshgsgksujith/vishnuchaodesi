@@ -38,7 +38,11 @@ const profileMenuItems: MenuItem[] = [
   },
 ];
 
-export default function UserHomeHeader() {
+type UserHomeHeaderProps = {
+  hideAddAction?: boolean;
+};
+
+export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const logoTarget = useLogoNavigationTarget();
@@ -288,12 +292,14 @@ export default function UserHomeHeader() {
                           {" "}Advertise with us
                         </Link>
                       </li>
-                      <li>
-                        <Link to={addActionHref}>
-                          <i className="material-icons">store</i>
-                          {" "}{isServicePage ? "Add your service" : "Add your business"}
-                        </Link>
-                      </li>
+                      {!hideAddAction ? (
+                        <li>
+                          <Link to={addActionHref}>
+                            <i className="material-icons">store</i>
+                            {" "}{isServicePage ? "Add your service" : "Add your business"}
+                          </Link>
+                        </li>
+                      ) : null}
                     </ul>
                   </div>
                 </div>
@@ -354,11 +360,13 @@ export default function UserHomeHeader() {
             </div>
 
             <div className="chaodesi-header-actions">
-              <ul className="bl">
-                <li>
-                  <Link to={addActionHref}>{addActionLabel}</Link>
-                </li>
-              </ul>
+              {!hideAddAction ? (
+                <ul className="bl">
+                  <li>
+                    <Link to={addActionHref}>{addActionLabel}</Link>
+                  </li>
+                </ul>
+              ) : null}
 
               <div className="top-noti">
                 <span

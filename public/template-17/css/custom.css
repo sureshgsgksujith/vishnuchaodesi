@@ -2514,3 +2514,428 @@
         padding-bottom: 2px;
     }
 }
+
+
+
+
+/* ===== Homepage & custom sections — mobile responsive ===== */
+
+@media screen and (max-width: 991px) {
+    .home-artist .plac-det-tit-inn h2 span,
+    .home-roommates .roommates-header h2,
+    .events-header h2,
+    .home-services-combined h2,
+    .home-care-section .care-header h2,
+    .chao-jobs .jobs-header h2,
+    .chao-astro .astro-title h2,
+    .chao-tech .tech-title h2,
+    .chao-law .law-title h2,
+    .chao-buysell h2,
+    .chao-areas h2 {
+        font-size: 26px;
+    }
+
+    .home-rental-cta .left-box {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+        margin-bottom: 16px;
+        padding-bottom: 20px;
+    }
+
+    .chao-jobs .stat-box {
+        border-right: none;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 8px;
+    }
+
+    .chao-tech .tech-list {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .category-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .service-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 6px;
+    }
+
+    .service-tabs button {
+        flex-shrink: 0;
+    }
+
+    .service-card {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .service-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .home-roommates .room-btn {
+        float: none;
+        display: inline-block;
+    }
+
+    .chao-law .law-tab-content ul {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .chao-travel-car .travel-card,
+    .chao-travel-car .car-card {
+        margin-bottom: 20px;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .home-artist .plac-deta-sec {
+        padding: 50px 0;
+    }
+
+    .home-artist .service-card {
+        border-radius: 16px;
+        padding: 12px 14px;
+    }
+
+    .home-roommates,
+    .home-events,
+    .home-care-section,
+    .chao-jobs,
+    .chao-astro,
+    .chao-tech,
+    .chao-law,
+    .chao-travel-car,
+    .chao-buysell,
+    .chao-areas {
+        padding: 40px 0;
+    }
+
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chao-jobs .jobs-tags span,
+    .chao-jobs .tab-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+
+    .chao-astro .astro-buttons a,
+    .chao-tech .btn-outline,
+    .chao-law .btn-outline {
+        display: block;
+        text-align: center;
+        margin: 6px 0;
+    }
+
+    .chao-buysell .tags {
+        gap: 6px;
+    }
+
+    .care-steps {
+        padding: 30px 16px;
+        margin: 30px 12px;
+    }
+}
+
+@media screen and (max-width: 575px) {
+    .home-artist .plac-det-tit-inn h2 span,
+    .events-header h2,
+    .chao-jobs .jobs-header h2 {
+        font-size: 22px;
+    }
+
+    .event-right h4 {
+        min-height: auto;
+    }
+
+    .home-room-listings .room-img {
+        float: none;
+        margin: 0 0 10px;
+    }
+
+    .home-room-listings .room-img img {
+        width: 100%;
+        height: 120px;
+    }
+}
+.spa-biz-page .spaw-location-compact {
+  margin-bottom: 0;
+}
+
+.spa-biz-page .spaw-branch-search {
+  min-width: 0;
+}
+
+.spa-biz-page .spaw-location-block {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.spa-biz-page .spaw-location-block .spaw-branch-search,
+.spa-biz-page .spaw-location-block .spaw-branch-search input {
+  width: 100%;
+}
+
+.spa-biz-page .spaw-location-block input {
+  background: #fff;
+  border: 1px solid var(--spaw-line);
+  border-radius: 7px;
+  color: var(--spaw-ink);
+  font-size: 15px;
+  height: 54px;
+  outline: none;
+  padding: 0 16px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.spa-biz-page .spaw-location-block input:focus {
+  border-color: var(--spaw-accent);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, .12);
+}
+
+.spa-biz-page .spaw-location-row {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.spa-biz-page .spaw-location-row input {
+  width: 100%;
+}
+
+.spa-biz-page .spaw-input-error .spaw-input,
+.spa-biz-page .spaw-input-error input,
+.spa-biz-page .spaw-input-error textarea,
+.spa-biz-page .spaw-input.is-invalid,
+.spa-biz-page .spaw-location-compact input.is-invalid {
+  background: #fff7f7;
+  border-color: #dc2626 !important;
+}
+
+.spa-biz-page .spaw-field-error {
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-top: 8px;
+}
+
+.spa-biz-page .spaw-selected-head {
+  align-items: center;
+}
+
+.spa-biz-page .spaw-change-link {
+  background: transparent;
+  border: 0;
+  color: #ff6b00;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  margin-left: auto;
+  padding: 6px 0 6px 16px;
+}
+
+.spa-biz-page .spaw-subcategory-groups {
+  display: grid;
+  gap: 18px;
+}
+
+.spa-biz-page .spaw-subcategory-group {
+  border: 1px solid #dfe7f2;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.spa-biz-page .spaw-subcategory-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.spa-biz-page .spaw-subcategory-head h4 {
+  color: #071b3a;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.spa-biz-page .spaw-subcategory-head span {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.spa-biz-page .spaw-tag-input {
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid var(--spaw-line);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 104px;
+  padding: 14px 16px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.spa-biz-page .spaw-tag-input:focus-within {
+  border-color: var(--spaw-accent);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, .12);
+}
+
+.spa-biz-page .spaw-tag-chips {
+  display: contents;
+}
+
+.spa-biz-page .spaw-chip {
+  align-items: center;
+  background: #fff1e6;
+  border-radius: 999px;
+  color: #b45309;
+  display: inline-flex;
+  font-size: 16px;
+  font-weight: 700;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
+}
+
+.spa-biz-page .spaw-chip i {
+  color: #c2410c;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.spa-biz-page .spaw-tag-input input {
+  border: 0;
+  box-shadow: none;
+  color: var(--spaw-ink);
+  flex: 1 1 260px;
+  font-size: 18px;
+  min-height: 42px;
+  min-width: 220px;
+  outline: none;
+  padding: 0 2px;
+}
+
+.spa-biz-page .spaw-tag-input input::placeholder {
+  color: #6b7280;
+}
+
+.spa-biz-page .spaw-phone-verify {
+  display: grid;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.spa-biz-page .spaw-verify-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.spa-biz-page .spaw-verify-methods label {
+  align-items: center;
+  border: 1px solid #dfe7f2;
+  border-radius: 999px;
+  color: #071b3a;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: 700;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.spa-biz-page .spaw-verify-methods input {
+  accent-color: var(--spaw-accent);
+}
+
+.spa-biz-page .spaw-otp-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.spa-biz-page .spaw-demo-otp {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 7px;
+  color: #9a3412;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+.spa-biz-page .spaw-otp-btn {
+  background: var(--spaw-accent);
+  border: 0;
+  border-radius: 7px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 800;
+  min-height: 48px;
+  padding: 0 22px;
+}
+
+.spa-biz-page .spaw-otp-btn:disabled {
+  background: #16a34a;
+  cursor: default;
+}
+
+.spa-biz-page .spaw-verify-success {
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media screen and (max-width: 575px) {
+  .spa-biz-page .spaw-otp-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.spa-biz-page .spaw-location-branch-block .spaw-location-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+}
+
+.spa-biz-page .spaw-location-branch-block {
+  margin-bottom: 16px;
+}
+
+.spa-biz-page .spaw-location-branch-block .spaw-branch-remove {
+  height: 42px;
+  width: 42px;
+}
+
+.spa-biz-page .spaw-branch-search .spaw-suggest-list {
+  top: calc(100% + 6px);
+}
+
+@media (max-width: 640px) {
+  .spa-biz-page .spaw-location-row,
+  .spa-biz-page .spaw-location-branch-block .spaw-location-row {
+    grid-template-columns: 1fr;
+  }
+
+  .spa-biz-page .spaw-location-branch-block .spaw-branch-remove {
+    width: 100%;
+  }
+}

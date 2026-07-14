@@ -8,6 +8,15 @@ import {
 } from "../api/allServiceDirectoryApi";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
+import { getCityFromLocationLabel, useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
+import {
+  getLocationCities,
+  getLocationCountries,
+  getLocationStates,
+  type CityOption,
+  type CountryOption,
+  type StateOption,
+} from "../../../shared/api/locationMastersApi";
 import "../styles/allServices.css";
 
 type ServiceGroup = {
@@ -88,13 +97,60 @@ const preferredFilterSlugs = [
   "travel-accommodation",
 ];
 
+const fallbackCityOptions = [
+  "Novi",
+  "New York City",
+  "Chicago",
+  "Houston",
+  "Dallas",
+  "San Francisco",
+  "Toronto",
+  "Vancouver",
+];
+
 export default function AllServicesPage() {
   const navigate = useNavigate();
+  const {
+    activeCity,
+    activeLocationLabel,
+    currentCity,
+    currentLocation,
+    selectedCity,
+    selectedLocation,
+    setHomeSelectedLocation,
+  } = useHomeSelectedLocation();
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [serviceSections, setServiceSections] = useState<ServiceSection[]>(fallbackServiceSections);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [categoryLoadError, setCategoryLoadError] = useState("");
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [states, setStates] = useState<StateOption[]>([]);
+  const [cities, setCities] = useState<CityOption[]>([]);
+  const [draftCountryId, setDraftCountryId] = useState("");
+  const [draftStateId, setDraftStateId] = useState("");
+  const [draftCityName, setDraftCityName] = useState("");
+  const [pendingStateName, setPendingStateName] = useState("");
+  const [pendingCityName, setPendingCityName] = useState("");
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
+  const [isLoadingStates, setIsLoadingStates] = useState(false);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const locationButtonText =
+    currentLocation.status === "loading" && !activeLocationLabel
+      ? "Detecting location"
+      : activeLocationLabel || "Use current location";
+  const modalCityOptions = useMemo(
+    () => uniqueSorted([
+      ...cities.map((city) => city.name),
+      ...fallbackCityOptions,
+      currentCity,
+      activeCity,
+      draftCityName,
+      pendingCityName,
+    ]),
+    [activeCity, cities, currentCity, draftCityName, pendingCityName],
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -127,6 +183,174 @@ export default function AllServicesPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let isActive = true;
+
+    setIsLoadingCountries(true);
+    getLocationCountries()
+      .then((items) => {
+        if (isActive) {
+          setCountries(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setCountries([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingCountries(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isLocationModalOpen) {
+      return;
+    }
+
+    const nextCity = selectedLocation.cityName || activeCity || currentCity || getCityFromLocationLabel(currentLocation.label);
+    const nextState = selectedLocation.stateName || currentLocation.state || "";
+    const nextCountry = selectedLocation.countryName || currentLocation.country || "";
+    const matchedCountry = findCountryByName(countries, nextCountry);
+
+    setDraftCountryId(matchedCountry ? String(matchedCountry.id) : "");
+    setDraftStateId("");
+    setDraftCityName(nextCity);
+    setPendingStateName(nextState);
+    setPendingCityName(nextCity);
+  }, [
+    activeCity,
+    countries,
+    currentCity,
+    currentLocation.country,
+    currentLocation.label,
+    currentLocation.state,
+    isLocationModalOpen,
+    selectedLocation.cityName,
+    selectedLocation.countryName,
+    selectedLocation.stateName,
+  ]);
+
+  useEffect(() => {
+    let isActive = true;
+    const countryId = Number(draftCountryId);
+
+    if (!countryId) {
+      setStates([]);
+      setDraftStateId("");
+      setCities([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsLoadingStates(true);
+    getLocationStates(countryId)
+      .then((items) => {
+        if (isActive) {
+          setStates(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setStates([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingStates(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [draftCountryId]);
+
+  useEffect(() => {
+    if (!pendingStateName || !states.length || draftStateId) {
+      return;
+    }
+
+    const matchedState = states.find((state) => namesMatch(state.name, pendingStateName) || namesMatch(state.code, pendingStateName));
+
+    if (matchedState) {
+      setDraftStateId(String(matchedState.id));
+      setPendingStateName("");
+    }
+  }, [draftStateId, pendingStateName, states]);
+
+  useEffect(() => {
+    let isActive = true;
+    const stateId = Number(draftStateId);
+
+    if (!stateId) {
+      setCities([]);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsLoadingCities(true);
+    getLocationCities(stateId)
+      .then((items) => {
+        if (isActive) {
+          setCities(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setCities([]);
+        }
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingCities(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [draftStateId]);
+
+  useEffect(() => {
+    if (!pendingCityName || !cities.length) {
+      return;
+    }
+
+    const matchedCity = cities.find((city) => namesMatch(city.name, pendingCityName));
+
+    if (matchedCity) {
+      setDraftCityName(matchedCity.name);
+      setPendingCityName("");
+    }
+  }, [cities, pendingCityName]);
+
+  useEffect(() => {
+    if (!isLocationModalOpen) {
+      return undefined;
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsLocationModalOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isLocationModalOpen]);
+
   const filters = useMemo(() => {
     const preferredSections = preferredFilterSlugs
       .map((slug) => serviceSections.find((section) => section.id === slug))
@@ -142,6 +366,15 @@ export default function AllServicesPage() {
         icon: getCategoryIcon(section.name, section.id),
       })),
     ];
+  }, [serviceSections]);
+
+  const heroShortcutSections = useMemo(() => {
+    const preferredSections = preferredFilterSlugs
+      .map((slug) => serviceSections.find((section) => section.id === slug))
+      .filter((section): section is ServiceSection => Boolean(section));
+    const otherSections = serviceSections.filter((section) => !preferredFilterSlugs.includes(section.id));
+
+    return [...preferredSections, ...otherSections].slice(0, 8);
   }, [serviceSections]);
 
   const visibleSections = useMemo(() => {
@@ -173,41 +406,229 @@ export default function AllServicesPage() {
     }
   }
 
+  function applyLocationSelection() {
+    const country = countries.find((item) => String(item.id) === draftCountryId);
+    const state = states.find((item) => String(item.id) === draftStateId);
+    const nextCity = draftCityName.trim() || currentCity || getCityFromLocationLabel(currentLocation.label);
+
+    setHomeSelectedLocation({
+      countryName: country?.name || "",
+      stateName: state?.name || "",
+      cityName: nextCity,
+    });
+    setIsLocationModalOpen(false);
+  }
+
+  function useDetectedLocation() {
+    const detectedCity = currentCity || getCityFromLocationLabel(currentLocation.label);
+    const matchedCountry = findCountryByName(countries, currentLocation.country);
+
+    setDraftCountryId(matchedCountry ? String(matchedCountry.id) : "");
+    setDraftStateId("");
+    setDraftCityName(detectedCity);
+    setPendingStateName(currentLocation.state || "");
+    setPendingCityName(detectedCity);
+  }
+
+  function handleCountryChange(countryId: string) {
+    setDraftCountryId(countryId);
+    setDraftStateId("");
+    setDraftCityName("");
+    setPendingStateName("");
+    setPendingCityName("");
+    setCities([]);
+  }
+
+  function handleStateChange(stateId: string) {
+    setDraftStateId(stateId);
+    setDraftCityName("");
+    setPendingCityName("");
+  }
+
   return (
     <>
       <CustomerHeader />
       <main className="all-services-page">
         <section className="all-services-hero">
-          <div className="all-services-container">
-            <nav className="all-services-crumb" aria-label="breadcrumb">
-              <Link to="/home">Home</Link>
-              <span>/</span>
-              <Link to="/local-services">Local Services</Link>
-              <span>/</span>
-              <b>All Services</b>
-            </nav>
-            <h1>Local Services & Indian Businesses in the USA & Canada</h1>
-            <div className="all-services-meta">
-              <span><i className="material-icons">storefront</i> All Categories</span>
-              <span><i className="material-icons">location_on</i> Ashburn, VA</span>
-              <span><i className="material-icons">star</i> Trusted providers</span>
-              <span><i className="material-icons">verified_user</i> Verified service listings</span>
-            </div>
-            <div className="all-services-actions">
-              <a href="#all-services-directory">View all services</a>
-              <Link to="/dashboard/services/new"><i className="material-icons">add_business</i> Add your service</Link>
-            </div>
-            <form className="all-services-search" onSubmit={submitSearch}>
-              <i className="material-icons">search</i>
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search services like Realtor, Catering, Dance Classes, DJ, Tax Consultant"
-              />
-              <button type="submit">Search</button>
+          <video className="all-services-video" autoPlay muted loop playsInline>
+            <source src="/template-17/videos/bg-video.mp4" type="video/mp4" />
+          </video>
+          <div className="all-services-overlay" />
+          <div className="all-services-hero-inner">
+            <p className="all-services-kicker">Local service directory</p>
+            <h1>
+              Find trusted <span>Service Professionals</span>
+            </h1>
+            <p className="all-services-copy">
+              Browse local businesses, service providers, experts, events, and more near you.
+            </p>
+
+            <form className="all-services-local-search" onSubmit={submitSearch}>
+              <button
+                type="button"
+                className="all-services-local-location"
+                onClick={() => setIsLocationModalOpen(true)}
+                aria-haspopup="dialog"
+                aria-expanded={isLocationModalOpen}
+              >
+                <i className="material-icons" aria-hidden="true">place</i>
+                <span>{locationButtonText}</span>
+                <i className="material-icons" aria-hidden="true">expand_more</i>
+              </button>
+              <label>
+                <span className="material-icons">business_center</span>
+                <select
+                  value={activeFilter === "all" ? "" : activeFilter}
+                  onChange={(event) => setActiveFilter(event.target.value || "all")}
+                  aria-label="Select service"
+                >
+                  <option value="">What service are you looking for?</option>
+                  {serviceSections.map((section) => (
+                    <option value={section.id} key={section.id}>{section.name}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                <span className="material-icons">search</span>
+                <input
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search service, business, or keyword"
+                />
+              </label>
+              <button type="submit">Get Quotes</button>
             </form>
+
+            <div className="all-services-shortcuts">
+              <button
+                type="button"
+                className={activeFilter === "all" ? "all-services-shortcut-featured" : ""}
+                onClick={() => setActiveFilter("all")}
+              >
+                <img src="/template-17/images/icon/shop.png" alt="" />
+                <span>All Services</span>
+              </button>
+              {heroShortcutSections.map((section) => (
+                <button
+                  type="button"
+                  className={activeFilter === section.id ? "all-services-shortcut-featured" : ""}
+                  onClick={() => setActiveFilter(section.id)}
+                  key={section.id}
+                >
+                  <i className="material-icons" aria-hidden="true">{getCategoryIcon(section.name, section.id)}</i>
+                  <span>{buildFilterLabel(section.name)}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </section>
+
+        {isLocationModalOpen ? (
+          <div
+            className="all-services-location-modal-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) {
+                setIsLocationModalOpen(false);
+              }
+            }}
+          >
+            <div className="all-services-location-modal" role="dialog" aria-modal="true" aria-labelledby="all-services-location-title">
+              <button
+                type="button"
+                className="all-services-location-modal-close"
+                onClick={() => setIsLocationModalOpen(false)}
+                aria-label="Close location popup"
+              >
+                <i className="material-icons" aria-hidden="true">close</i>
+              </button>
+
+              <div className="all-services-location-modal-head">
+                <i className="material-icons" aria-hidden="true">location_on</i>
+                <div>
+                  <h3 id="all-services-location-title">Location</h3>
+                  <p>{currentLocation.label || selectedCity || "Current location unavailable"}</p>
+                </div>
+              </div>
+
+              <div className="all-services-location-select-grid">
+                <label htmlFor="all-services-location-country">
+                  Country
+                  <select
+                    id="all-services-location-country"
+                    value={draftCountryId}
+                    onChange={(event) => handleCountryChange(event.target.value)}
+                    disabled={isLoadingCountries}
+                    autoFocus
+                  >
+                    <option value="">{isLoadingCountries ? "Loading countries" : "Select Country"}</option>
+                    {countries.map((country) => (
+                      <option value={country.id} key={country.id}>{country.name}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label htmlFor="all-services-location-state">
+                  State
+                  <select
+                    id="all-services-location-state"
+                    value={draftStateId}
+                    onChange={(event) => handleStateChange(event.target.value)}
+                    disabled={!draftCountryId || isLoadingStates}
+                  >
+                    <option value="">{isLoadingStates ? "Loading states" : "Select State"}</option>
+                    {states.map((state) => (
+                      <option value={state.id} key={state.id}>{state.name}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label htmlFor="all-services-location-city">
+                  City
+                  <select
+                    id="all-services-location-city"
+                    value={draftCityName}
+                    onChange={(event) => setDraftCityName(event.target.value)}
+                    disabled={!draftStateId || isLoadingCities}
+                  >
+                    <option value="">{isLoadingCities ? "Loading cities" : "Select City"}</option>
+                    {modalCityOptions.map((city) => (
+                      <option value={city} key={city}>{city}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {isLoadingCountries || isLoadingStates || isLoadingCities ? (
+                <div className="all-services-location-loading">
+                  <span className="all-services-location-spinner" aria-hidden="true"></span>
+                  {isLoadingCountries ? "Loading countries" : isLoadingStates ? "Loading states" : "Loading cities"}
+                </div>
+              ) : null}
+
+              <div className="all-services-location-modal-actions">
+                <button
+                  type="button"
+                  className="all-services-location-secondary"
+                  onClick={useDetectedLocation}
+                  disabled={!currentCity && !currentLocation.label}
+                >
+                  <i className="material-icons" aria-hidden="true">my_location</i>
+                  Use current
+                </button>
+                <button
+                  type="button"
+                  className="all-services-location-primary"
+                  onClick={applyLocationSelection}
+                  disabled={!draftCityName.trim()}
+                >
+                  <i className="material-icons" aria-hidden="true">refresh</i>
+                  Reload
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         <section className="all-services-directory" id="all-services-directory">
           <div className="all-services-container">
@@ -445,6 +866,23 @@ function buildFilterLabel(name: string) {
   }
 
   return name;
+}
+
+function uniqueSorted(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))))
+    .sort((left, right) => left.localeCompare(right));
+}
+
+function findCountryByName(countries: CountryOption[], name?: string | null) {
+  if (!name) {
+    return undefined;
+  }
+
+  return countries.find((country) => namesMatch(country.name, name) || namesMatch(country.code, name));
+}
+
+function namesMatch(left?: string | null, right?: string | null) {
+  return Boolean(left && right && left.trim().toLowerCase() === right.trim().toLowerCase());
 }
 
 function getCategoryIcon(name: string, slug: string) {

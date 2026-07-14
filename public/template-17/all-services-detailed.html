@@ -3,40 +3,27 @@
 
 <head>
     <title>Service Quote Request - Chao Desi</title>
-    <!--== META TAGS ==-->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <meta name="theme-color" content="#76cef1">
     <meta property="og:image" content="images/home/logo-white.png">
     <meta name="description" content="Submit your local service requirement and get matched with trusted Chao Desi service providers near you.">
-    <meta name="keyword" content="local service quote, Chao Desi service request, service providers">
-    <!--== FAV ICON(BROWSER TAB ICON) ==-->
     <link rel="shortcut icon" href="images/fav.png" type="image/x-icon">
-    <!--== GOOGLE FONTS ==-->
     <link href="https://fonts.googleapis.com/css?family=Oswald:700|Source+Sans+Pro:300,400,600,700&display=swap" rel="stylesheet">
-    <!--== WEB ICON FONTS ==-->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!--== CSS FILES ==-->
     <link rel="stylesheet" href="css/jquery-ui.css">
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="css/theme-color.css">
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <link rel="stylesheet" href="css/fonts.css">
     <link rel="stylesheet" type="text/css" href="css/custom.css">
-   
-    <!--[if lt IE 9]>
-        <script src="js/html5shiv.js"></script>
-        <script src="js/respond.min.js"></script>
-    <![endif]-->
 </head>
 
-<body class="service-quote-page">
-    <div id="preloader">
-        <div id="status">&nbsp;</div>
-    </div>
+<body class="service-quote-page" id="sqPage" data-theme="default">
+    <div id="preloader"><div id="status">&nbsp;</div></div>
 
-    <!-- ===== HEADER / NAV ===== -->
+    <!-- HEADER -->
     <section>
         <div class="str ind2-home">
             <div>
@@ -47,16 +34,8 @@
                                 <a href="index.html" class="top-log">
                                     <img src="images/home/logo-white.png" alt="" loading="eager" class="ic-logo">
                                 </a>
-                                <div class="menu">
-                                    <h4>Explore</h4>
-                                </div>
-                                <div class="pop-menu">
-                                    <div class="container">
-                                        <div class="row">
-                                            <div class="top-exp-menu"></div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <div class="menu"><h4>Explore</h4></div>
+                                <div class="pop-menu"><div class="container"><div class="row"><div class="top-exp-menu"></div></div></div></div>
                                 <div class="top-ser">
                                     <form name="filter_form" id="filter_form" class="filter_form">
                                         <ul>
@@ -65,45 +44,27 @@
                                                 <ul id="tser-res1" class="tser-res tser-res2"></ul>
                                             </li>
                                             <li class="sbtn">
-                                                <button type="button" class="btn btn-success" id="top_filter_submit">
-                                                    <i class="material-icons">&nbsp;</i>
-                                                </button>
+                                                <button type="button" class="btn btn-success" id="top_filter_submit"><i class="material-icons">&nbsp;</i></button>
                                             </li>
                                         </ul>
                                     </form>
                                 </div>
                                 <ul class="bl">
-                                    <li><a href="login.html">Add business</a></li>
+                                    <li><a href="service-partner-advertising_business-details.html">Post your business</a></li>
                                     <li><a href="login.html">Sign in</a></li>
                                     <li><a href="login.html?login=register">Create an account</a></li>
                                 </ul>
                                 <div class="mob-menu">
-                                    <div class="mob-me-ic">
-                                        <i class="material-icons">menu</i>
-                                    </div>
+                                    <div class="mob-me-ic"><i class="material-icons">menu</i></div>
                                     <div class="mob-me-all">
-                                        <div class="mob-me-clo">
-                                            <i class="material-icons">close</i>
-                                        </div>
-                                        <div class="mv-bus">
-                                            <h4></h4>
-                                            <ul>
-                                                <li><a href="login.html">Add business</a></li>
-                                                <li><a href="login.html">Sign in</a></li>
-                                                <li><a href="login.html?login=register">Create an account</a></li>
-                                            </ul>
-                                        </div>
-                                        <div class="mv-cate">
-                                            <h4>Local Services</h4>
-                                            <ul>
-                                                <li><a href="all-services.html">All Services</a></li>
-                                                <li><a href="local-services.html">Financial &amp; Taxation Services</a></li>
-                                                <li><a href="local-services.html">Real Estate Services</a></li>
-                                                <li><a href="local-services.html">Wedding &amp; Events</a></li>
-                                                <li><a href="local-services.html">Food &amp; Catering</a></li>
-                                                <li><a href="local-services.html">Health &amp; Wellness</a></li>
-                                            </ul>
-                                        </div>
+                                        <div class="mob-me-clo"><i class="material-icons">close</i></div>
+                                        <div class="mv-bus"><h4></h4><ul>
+                                            <li><a href="service-partner-advertising_business-details.html">Post your business</a></li>
+                                            <li><a href="login.html">Sign in</a></li>
+                                        </ul></div>
+                                        <div class="mv-cate"><h4>Local Services</h4><ul>
+                                            <li><a href="all-services.html">All Services</a></li>
+                                        </ul></div>
                                     </div>
                                 </div>
                             </div>
@@ -114,95 +75,115 @@
         </div>
     </section>
 
-    <section class="quote-hero">
+    <!-- CATEGORY SUB-NAV (Sulekha-style) -->
+    <nav class="sq-subnav" aria-label="Related services">
         <div class="container">
-            <nav class="quote-crumb" aria-label="breadcrumb">
-                <a href="index.html">Home</a>
-                <span>/</span>
-                <a href="all-services.html">All Services</a>
-                <span>/</span>
-                <span id="quote-crumb-service">Metal Fabricators</span>
-            </nav>
-            <div class="quote-hero-grid">
-                <div>
-                    <span class="quote-eyebrow"><i class="material-icons">verified_user</i> Trusted local experts</span>
-                    <h1><span id="quote-title-service">Metal Fabricators</span> Services</h1>
-                    <p>Tell us more about your requirement so Chao Desi can connect you to the right <span id="quote-copy-service">Metal Fabricators</span> near you. Compare responses, choose a trusted provider and move forward with confidence.</p>
-                    <div class="quote-illustration" aria-hidden="true">
-                        <div class="bubble b1"><i class="material-icons">search</i></div>
-                        <div class="bubble b2"><i class="material-icons">place</i></div>
-                        <div class="bubble b3"><i class="material-icons">store</i></div>
-                        <div class="bubble b4"><i class="material-icons">shopping_bag</i></div>
-                        <div class="person"></div>
-                        <div class="laptop"></div>
-                    </div>
-                    <div class="quote-steps">
-                        <div class="quote-step">
-                            <strong>1</strong>
-                            <h4>Submit your requirement</h4>
-                            <p>Pick the service and share basic contact details.</p>
-                        </div>
-                        <div class="quote-step">
-                            <strong>2</strong>
-                            <h4>Get quotes from experts</h4>
-                            <p>Receive responses from matching local providers.</p>
-                        </div>
-                        <div class="quote-step">
-                            <strong>3</strong>
-                            <h4>Choose your provider</h4>
-                            <p>Compare, talk, and hire the right expert.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <aside class="quote-card">
-                    <h3>What <span id="quote-card-service">Metal Fabricators</span> are you looking for?</h3>
-                    <div class="quote-service-search">
-                        <i class="material-icons">search</i>
-                        <input type="text" id="quote-service-input" value="Metal Fabricators">
-                    </div>
-                    <div class="quote-check-list">
-                        <label><input type="checkbox" checked> <span id="quote-check-service">Metal Fabricators</span></label>
-                        <label><input type="checkbox"> Residential service</label>
-                        <label><input type="checkbox"> Commercial service</label>
-                        <label><input type="checkbox"> Urgent requirement</label>
-                    </div>
-                    <button type="button" class="quote-btn" data-bs-toggle="modal" data-bs-target="#quoteRequestModal">Get Started</button>
-                </aside>
+            <div class="sq-subnav-inner">
+                <a href="all-services.html" class="sq-subnav-home" title="All Services">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/></svg>
+                </a>
+                <div class="sq-subnav-links" id="sqSubNav"></div>
+                <a href="service-partner-advertising_business-details.html" class="sq-list-biz-btn">List Your Business</a>
             </div>
         </div>
-    </section>
+    </nav>
 
-    <section class="quote-content">
+    <!-- HERO: left content + right form (Sulekha get-quotes layout) -->
+    <section class="sq-hero">
         <div class="container">
-            <div class="quote-info-grid">
-                <div class="quote-info-box">
-                    <h2>Find The Right <span id="quote-about-service">Metal Fabricators</span></h2>
-                    <p>Chao Desi helps you submit one requirement and connect with service providers who understand your local needs. This page keeps the request flow simple, clean and aligned with your existing Chao Desi template.</p>
-                    <ul class="quote-feature-list">
-                        <li><i class="material-icons">check_circle</i> Share your need once and get matched with relevant local providers.</li>
-                        <li><i class="material-icons">check_circle</i> Use the enquiry form to collect name, city, email and phone details.</li>
-                        <li><i class="material-icons">check_circle</i> Works for every service selected from the All Services page.</li>
-                    </ul>
+            <div class="sq-hero-grid">
+                <div class="sq-hero-left">
+                    <div class="sq-dots-deco sq-dots-deco--hero" aria-hidden="true"></div>
+                    <h1><span id="sqTitleService">Service</span> Services</h1>
+                    <p>Tell us more about your requirement so that we can connect you to the right <strong id="sqCopyService">Service</strong> in <strong id="sqCityLabel">Ashburn, VA</strong></p>
+                    <div class="sq-hero-providers" id="sqHeroProviders"></div>
                 </div>
-                <div class="quote-info-box">
-                    <h3>Popular Service Needs</h3>
-                    <ul class="quote-feature-list">
-                        <li><i class="material-icons">build</i> New installation or project work</li>
-                        <li><i class="material-icons">schedule</i> Quick estimate or consultation</li>
-                        <li><i class="material-icons">business</i> Residential and commercial requests</li>
-                        <li><i class="material-icons">near_me</i> Local providers near your city</li>
-                    </ul>
+
+                <div class="sq-hero-right">
+                    <div class="sq-dots-deco sq-dots-deco--tl" aria-hidden="true"></div>
+                    <div class="sq-dots-deco sq-dots-deco--br" aria-hidden="true"></div>
+                    <div class="sq-quote-card">
+                        <h2>What <span id="sqFormCategory">Service</span> are you looking for?</h2>
+                        <div class="sq-search-box">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                            <input type="text" id="sqServiceSearch" placeholder="Search service type">
+                        </div>
+                        <div class="sq-check-list" id="sqServiceChecks"></div>
+                        <button type="button" class="sq-btn-get-started" id="sqGetStarted">Get Started</button>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- ===== FOOTER ===== -->
+    <!-- CONTACT MODAL -->
+    <div class="modal fade sq-modal" id="sqContactModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Get Quote From <span id="sqModalService">Service</span></h5>
+                    <button type="button" class="sq-modal-close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <p class="sq-modal-sub">Quickly compare &amp; find the best local deals</p>
+                    <form id="sqQuoteForm" novalidate>
+                        <div class="sq-field">
+                            <label>Name <span class="sq-req">*</span></label>
+                            <input type="text" name="name" class="sq-input" placeholder="Your full name" required>
+                        </div>
+                        <div class="sq-field">
+                            <label>City <span class="sq-req">*</span></label>
+                            <input type="text" name="city" id="sqCityInput" class="sq-input" value="Ashburn, VA" required>
+                        </div>
+                        <div class="sq-field">
+                            <label>Email <span class="sq-req">*</span></label>
+                            <input type="email" name="email" class="sq-input" placeholder="Email address" required>
+                        </div>
+                        <div class="sq-field">
+                            <label>Contact Number <span class="sq-req">*</span></label>
+                            <div class="sq-phone-row">
+                                <select class="sq-phone-code" name="phone_code">
+                                    <option value="+1">+1 US</option>
+                                    <option value="+1">+1 CA</option>
+                                    <option value="+91">+91 IN</option>
+                                </select>
+                                <input type="tel" name="phone" class="sq-input" placeholder="Contact number" required>
+                            </div>
+                        </div>
+                        <div class="sq-field">
+                            <label>Description</label>
+                            <textarea name="description" class="sq-input sq-textarea" rows="3" placeholder="Tell us more about your requirement..."></textarea>
+                        </div>
+                        <label class="sq-check"><input type="checkbox" name="other_providers"><span>I also wish to get quotes from other service providers.</span></label>
+                        <label class="sq-check"><input type="checkbox" name="consent" required><span>I agree to be contacted by Chao Desi via call, SMS, or WhatsApp. By submitting this enquiry, I consent to receive service responses.</span></label>
+                        <button type="submit" class="sq-btn-get-started sq-btn-block">Submit Your Requirement</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal fade sq-modal" id="sqSuccessModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content sq-success-modal">
+                <div class="modal-body text-center">
+                    <div class="sq-success-icon">
+                        <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                    <h4>Thank you for your interest!</h4>
+                    <p>We will connect you with matching providers in your area shortly.</p>
+                    <button type="button" class="sq-btn-get-started sq-btn-block" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
     <section class=" wed-hom-footer">
         <div class="container">
             <div class="row foot-supp">
-                <h2><span>Free support:</span> +1 248 430 4014 &nbsp;&nbsp;|&nbsp;&nbsp; <span>Email:</span> info@chaodesi.com</h2>
+                <h2><span>Free support:</span> +01 5426 24400 &nbsp;&nbsp;|&nbsp;&nbsp; <span>Email:</span> info@chaodesi.com</h2>
             </div>
             <div class="row wed-foot-link">
                 <div class="col-md-4 foot-tc-mar-t-o">
@@ -211,12 +192,6 @@
                         <li><a href="all-services.html">All Services</a></li>
                         <li><a href="local-services.html">Financial &amp; Taxation Services</a></li>
                         <li><a href="local-services.html">Real Estate Services</a></li>
-                        <li><a href="local-services.html">Wedding &amp; Events</a></li>
-                        <li><a href="local-services.html">Lessons/Tuitions</a></li>
-                        <li><a href="local-services.html">Food &amp; Catering</a></li>
-                        <li><a href="local-services.html">Home &amp; Business Needs</a></li>
-                        <li><a href="local-services.html">Travel &amp; Accommodation</a></li>
-                        <li><a href="local-services.html">Health &amp; Wellness</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4">
@@ -224,10 +199,7 @@
                     <ul>
                         <li><a href="all-listing.html">All Listings</a></li>
                         <li><a href="service-experts/index.html">Service Experts</a></li>
-                        <li><a href="jobs/index.html">Jobs</a></li>
                         <li><a href="events.html">Events</a></li>
-                        <li><a href="products.html">Products</a></li>
-                        <li><a href="coupons.html">Coupons</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4">
@@ -235,83 +207,17 @@
                     <ul>
                         <li><a href="about.html">About us</a></li>
                         <li><a href="faq.html">FAQ</a></li>
-                        <li><a href="feedback.html">Feedback</a></li>
                         <li><a href="contact-us.html">Contact us</a></li>
-                        <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                        <li><a href="terms-of-use.html">Terms of Use</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="row wed-foot-link-1">
-                <div class="col-md-4">
-                    <h4>Get In Touch</h4>
-                    <p>Address: 39555 Orchard Hill Place, Suite 203, Novi, MI 48375.</p>
-                    <p>Phone: <a href="tel:+12484304014">+1 248 430 4014</a></p>
-                    <p>Email: <a href="mailto:info@chaodesi.com">info@chaodesi.com</a></p>
-                </div>
-                <div class="col-md-4 fot-app">
-                    <h4>DOWNLOAD OUR FREE MOBILE APPS</h4>
-                    <ul>
-                        <li><a href=""><img src="images/gstore.png" alt="" loading="lazy"></a></li>
-                        <li><a href=""><img src="images/astore.png" alt="" loading="lazy"></a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4 fot-soc">
-                    <h4>SOCIAL MEDIA</h4>
-                    <ul>
-                        <li><a target="_blank" href="https://www.linkedin.com/company/chaodesi/"><img src="images/social/1.png" alt="" loading="lazy"></a></li>
-                        <li><a target="_blank" href="https://twitter.com/"><img src="images/social/2.png" alt="" loading="lazy"></a></li>
-                        <li><a target="_blank" href="https://www.facebook.com/"><img src="images/social/3.png" alt="" loading="lazy"></a></li>
                     </ul>
                 </div>
             </div>
         </div>
     </section>
-    <section>
-        <div class="cr">
-            <div class="container">
-                <div class="row">
-                    <p>Copyright © 2025
-                        <a href="https://chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by
-                        <a href="https://chaodesi.com/" target="_blank">Symplore</a>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <section><div class="cr"><div class="container"><div class="row">
+        <p>Copyright © 2025 <a href="https://chaodesi.com/" target="_blank">ChaoDesi</a>. Proudly powered by <a href="https://chaodesi.com/" target="_blank">Symplore</a></p>
+    </div></div></div></section>
 
-    <div class="modal fade quote-modal" id="quoteRequestModal">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h4 class="modal-title">Get Matched with the Right Expert for Your Needs</h4>
-                    <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form>
-                        <input type="text" class="form-control" placeholder="Name *">
-                        <input type="text" class="form-control" value="New York, NY" placeholder="City *">
-                        <input type="email" class="form-control" placeholder="Email *">
-                        <div class="row">
-                            <div class="col-4">
-                                <input type="text" class="form-control" value="+1 US">
-                            </div>
-                            <div class="col-8">
-                                <input type="text" class="form-control" placeholder="Contact Number *">
-                            </div>
-                        </div>
-                        <button type="button" class="quote-btn">Send Enquiry</button>
-                        <label class="quote-consent">
-                            <input type="checkbox">
-                            <span>I agree to be contacted by Chao Desi via call, SMS, or WhatsApp. By submitting this enquiry, I consent to receive service responses and notifications.</span>
-                        </label>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-   
+    <div class="fqui-menu"></div>
 
     <script src="js/jquery.min.js"></script>
     <script src="js/popper.min.js"></script>
@@ -321,19 +227,212 @@
     <script src="js/blazy.min.js"></script>
     <script src="js/slick.js"></script>
     <script src="js/custom.js"></script>
-    <script src="js/jquery.validate.min.js"></script>
-    <script src="js/custom_validation.js"></script>
     <script>
         (function () {
             var params = new URLSearchParams(window.location.search);
-            var service = params.get('service') || 'Metal Fabricators';
-            service = service.replace(/\+/g, ' ').trim() || 'Metal Fabricators';
+            var service = (params.get('service') || 'Tax Consultants').replace(/\+/g, ' ').trim();
+            var city = 'Ashburn, VA';
 
-            $('#quote-title-service, #quote-copy-service, #quote-card-service, #quote-check-service, #quote-about-service, #quote-crumb-service').text(service);
-            $('#quote-service-input').val(service);
-            document.title = service + ' Services - Chao Desi';
+            var categoryConfig = {
+                'real-estate': {
+                    label: 'Real Estate Services', theme: 'real-estate', formLabel: 'Real Estate',
+                    subNav: ['Buying/Selling Agents', 'Rental Agents', 'Property Management', 'Home Inspection', 'Mortgage Services', 'Real Estate Lawyer'],
+                    services: ['Buying/Selling Agents', 'Commercial Agents', 'Rental Agents', 'Residential Agents', 'Buyers Agents', 'Sellers Agents', 'Condos Realtor', 'Apartments Realtor', 'Property Management Agency', 'Tenant Screening', 'Property Inspections', 'Pest Inspection', 'Mold Inspection', 'New Home Construction Sales'],
+                    related: ['Home Inspection', 'Mortgage Services', 'Real Estate Lawyer']
+                },
+                'health-wellness': {
+                    label: 'Health & Wellness', theme: 'health', formLabel: 'Health & Wellness',
+                    subNav: ['Dentist', 'Dermatologists', 'Pediatricians', 'Yoga Classes', 'Massage Centers', 'Home Health Care'],
+                    services: ['Dentist', 'Dermatologists', 'Pediatricians', 'Physicians & Surgeons', 'Home Health Care Services', 'Telemedicine', 'Yoga Classes', 'Massage Centers', 'Ayurvedic Spas', 'Marriage Counselling', 'Career Counselling', 'Reiki Healing'],
+                    related: ['Nutritionist', 'Physical Therapy', 'Mental Health Counselling']
+                },
+                'wedding-events': {
+                    label: 'Wedding & Events', theme: 'wedding', formLabel: 'Wedding & Event',
+                    subNav: ['Wedding Photographers', 'DJ Services', 'Event Planners', 'Wedding Catering', 'Bridal Makeup', 'Wedding Halls'],
+                    services: ['DJ Services', 'Punjabi DJs', 'Wedding Photographers', 'Videographers', 'Event Planners', 'Wedding Decorators', 'Wedding Halls', 'Bridal Makeup Artists', 'Mehndi Services', 'Wedding Catering', 'Flower Decorators', 'Priest Services'],
+                    related: ['Wedding Cakes', 'Invitation Cards', 'Limousine Service']
+                },
+                'food-catering': {
+                    label: 'Food & Catering', theme: 'food', formLabel: 'Food & Catering',
+                    subNav: ['Indian Tiffin Service', 'Event Catering', 'Restaurants', 'Bakeries', 'Sweet Shops', 'Personal Chef'],
+                    services: ['Homemade Indian Food', 'Indian Tiffin Service', 'Lunch Services', 'Dinner Delivery', 'Snacks Services', 'Event & Party Catering', 'Wedding Catering Services', 'Vegetarian Catering', 'Bakeries', 'Sweet Shops', 'Restaurants'],
+                    related: ['Personal Chef', 'Meal Prep Service', 'Cake Decorating']
+                },
+                'financial-legal': {
+                    label: 'Financial & Legal Services', theme: 'finance', formLabel: 'Financial & Legal',
+                    subNav: ['Tax Consultants', 'Accountant Services', 'Immigration Services', 'Indian Lawyers', 'Bookkeeping', 'Investment Management'],
+                    services: ['Accountant Services', 'Tax Consultants', 'Tax Preparation Services', 'Bookkeeping', 'Payroll Processing', 'Investment Management', 'Immigration Services', 'Visa Service', 'Legal Attorney Services', 'Indian Lawyers', 'Tax Lawyer', 'Real Estate Lawyer'],
+                    related: ['Financial Planning', 'Insurance Agents', 'Notary Services']
+                },
+                'lessons-tuitions': {
+                    label: 'Lessons / Tuitions', theme: 'education', formLabel: 'Lessons & Tuition',
+                    subNav: ['Algebra Tutor', 'SAT Prep', 'Dance Classes', 'Music Classes', 'Coding Classes', 'Language Classes'],
+                    services: ['Algebra Tutor', 'Calculus Tutor', 'Biology Tutor', 'Chemistry Tutor', 'ACT Tutor', 'Basic Computer Classes', 'Bharatanatyam Dance Classes', 'Kathak Dance Classes', 'Hip Hop Dance Classes', 'Vocal Music Classes', 'Instrument Classes'],
+                    related: ['SAT Prep', 'Language Classes', 'Coding Classes']
+                },
+                'travel-accommodation': {
+                    label: 'Travel & Accommodation', theme: 'travel', formLabel: 'Travel',
+                    subNav: ['Travel Agents', 'Flight Tickets', 'Hotel Booking', 'Tour Packages', 'Car Rentals', 'Visa Travel Help'],
+                    services: ['Flight Tickets', 'Travel Agents', 'Tour Packages', 'Honeymoon Trips', 'Corporate Travel', 'Visa Travel Help', 'Hotel Booking', 'Vacation Rentals', 'Car Rentals', 'Airport Pickup', 'Cab Services'],
+                    related: ['Travel Insurance', 'Currency Exchange', 'Passport Services']
+                },
+                'home-business': {
+                    label: 'Home & Business Needs', theme: 'home', formLabel: 'Home & Business',
+                    subNav: ['Home Cleaning', 'Pest Control', 'Movers & Packers', 'Appliance Repair', 'Handyman', 'Interior Design'],
+                    services: ['Home Cleaning Services', 'Pest Control', 'Movers & Packers', 'Appliance Repair', 'Cooking Services', 'Housekeeping', 'Data Recovery Services', 'Laptop Repair Services', 'Software Installation', 'Office Network Services'],
+                    related: ['Handyman Services', 'Landscaping', 'Interior Design']
+                },
+                'educational-institutes': {
+                    label: 'Educational Institutes', theme: 'education', formLabel: 'Educational',
+                    subNav: ['Public Schools', 'Private High Schools', 'Preschools', 'Medical College', 'College Counseling', 'STEM Classes'],
+                    services: ['Public Schools', 'Private High Schools', 'Preschools', 'Kindergarten', 'Medical College', 'Private Colleges', 'College Counseling Services', 'Indian Universities', 'American Universities'],
+                    related: ['Day Care', 'After School Programs', 'STEM Classes']
+                },
+                'religious-community': {
+                    label: 'Religious & Community Services', theme: 'religious', formLabel: 'Religious & Community',
+                    subNav: ['Hindu Priest', 'Hindu Temples', 'Astrologer', 'Puja Services', 'Bhajan Singers', 'Charity Organizations'],
+                    services: ['Palm Reading', 'Tarot Card Reading', 'Hindu Wedding Officiant', 'Hindu Priest', 'Bhajan Singers', 'Hindu Temples', 'Charity Organization Services', 'Community Organization Services', 'Cultural Organization'],
+                    related: ['Astrologer', 'Vastu Consultant', 'Puja Services']
+                }
+            };
+
+            var heroProviders = [
+                { name: 'Infinitefs LLC', phone: '201-555-0142', avatar: 'I' },
+                { name: 'Hiren Patel Wealth Management Advisor', phone: '703-555-0198', avatar: 'H' },
+                { name: 'Desi Experts LLC', phone: '571-555-0133', avatar: 'D' }
+            ];
+
+            function sqModal(el, action) {
+                if (typeof bootstrap === 'undefined' || !el) return null;
+                if (action === 'show') {
+                    return bootstrap.Modal.getOrCreateInstance(el).show();
+                }
+                if (action === 'hide') {
+                    var inst = bootstrap.Modal.getInstance(el);
+                    if (inst) inst.hide();
+                }
+                return null;
+            }
+
+            function detectCategory(svc) {
+                var lower = svc.toLowerCase();
+                var keys = Object.keys(categoryConfig);
+                for (var i = 0; i < keys.length; i++) {
+                    var cfg = categoryConfig[keys[i]];
+                    for (var j = 0; j < cfg.services.length; j++) {
+                        if (cfg.services[j].toLowerCase() === lower || lower.indexOf(cfg.services[j].toLowerCase()) !== -1 || cfg.services[j].toLowerCase().indexOf(lower) !== -1) {
+                            return keys[i];
+                        }
+                    }
+                }
+                if (/realtor|real estate|property|rental|condo|apartment|inspection|agent/i.test(svc)) return 'real-estate';
+                if (/doctor|dentist|health|yoga|massage|spa|wellness|counsel/i.test(svc)) return 'health-wellness';
+                if (/wedding|dj|photo|event|mehndi|bridal|decor|hall/i.test(svc)) return 'wedding-events';
+                if (/food|cater|tiffin|restaurant|bakery|sweet|lunch|dinner/i.test(svc)) return 'food-catering';
+                if (/tax|account|legal|lawyer|immigration|visa|finance|bookkeep/i.test(svc)) return 'financial-legal';
+                if (/tutor|class|lesson|dance|music|school|college|university/i.test(svc)) return 'lessons-tuitions';
+                if (/travel|flight|hotel|car rental|tour|cab|airport/i.test(svc)) return 'travel-accommodation';
+                if (/clean|pest|mover|repair|pack/i.test(svc)) return 'home-business';
+                if (/priest|temple|palm|tarot|bhajan|charity|community|astrolog/i.test(svc)) return 'religious-community';
+                return 'financial-legal';
+            }
+
+            var catKey = detectCategory(service);
+            var config = categoryConfig[catKey];
+            var selectedServices = [service];
+
+            function renderSubNav() {
+                var html = '';
+                config.subNav.forEach(function (s) {
+                    var active = s.toLowerCase() === service.toLowerCase() ? ' class="active"' : '';
+                    html += '<a href="all-services-detailed.html?service=' + encodeURIComponent(s) + '"' + active + '>' + s + '</a>';
+                });
+                $('#sqSubNav').html(html);
+            }
+
+            function renderHeroProviders() {
+                var html = '';
+                heroProviders.forEach(function (p, i) {
+                    var animClass = i % 2 === 0 ? ' sq-card-drift-r' : ' sq-card-drift-l';
+                    html += '<article class="sq-hero-provider-card' + animClass + '">' +
+                        '<div class="sq-hero-provider-avatar">' + p.avatar + '</div>' +
+                        '<div class="sq-hero-provider-body">' +
+                        '<h4>' + p.name + '</h4>' +
+                        '<div class="sq-hero-provider-meta">' +
+                        '<span><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ' + city + '</span>' +
+                        '<span><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg> ' + p.phone + '</span>' +
+                        '</div>' +
+                        '<p class="sq-hero-provider-svc">Service: <strong>' + service + '</strong> + ' + (config.services.length - 1) + ' More</p>' +
+                        '</div></article>';
+                });
+                $('#sqHeroProviders').html(html);
+            }
+
+            function renderChecks() {
+                var list = config.services.slice();
+                if (list.indexOf(service) === -1) list.unshift(service);
+                var html = '';
+                list.forEach(function (s) {
+                    var checked = selectedServices.indexOf(s) !== -1 ? ' checked' : '';
+                    html += '<label class="sq-check-item' + (checked ? ' is-checked' : '') + '">' +
+                        '<input type="checkbox" value="' + s + '"' + checked + '>' +
+                        '<span class="sq-check-box"></span>' +
+                        '<span class="sq-check-label">' + s + '</span></label>';
+                });
+                $('#sqServiceChecks').html(html);
+            }
+
+            function initPage() {
+                document.title = service + ' Services - Get Quotes | Chao Desi';
+                $('#sqPage').attr('data-theme', config.theme);
+                $('#sqTitleService, #sqCopyService, #sqModalService').text(service);
+                $('#sqFormCategory').text(config.formLabel);
+                $('#sqServiceSearch').attr('placeholder', service);
+                renderSubNav();
+                renderHeroProviders();
+                renderChecks();
+            }
+
+            $(document).on('change', '#sqServiceChecks input', function () {
+                $(this).closest('.sq-check-item').toggleClass('is-checked', this.checked);
+                selectedServices = getSelected();
+            });
+
+            $('#sqServiceSearch').on('input', function () {
+                var q = $(this).val().toLowerCase();
+                $('.sq-check-item').each(function () {
+                    var val = $(this).find('input').val().toLowerCase();
+                    $(this).toggle(val.indexOf(q) !== -1 || q === '');
+                });
+            });
+
+            $('#sqGetStarted').on('click', function () {
+                if (!getSelected().length) { alert('Please select at least one service type.'); return; }
+                sqModal(document.getElementById('sqContactModal'), 'show');
+            });
+
+            $('#sqQuoteForm').on('submit', function (e) {
+                e.preventDefault();
+                if (!this.checkValidity()) { this.reportValidity(); return; }
+                sqModal(document.getElementById('sqContactModal'), 'hide');
+                setTimeout(function () {
+                    sqModal(document.getElementById('sqSuccessModal'), 'show');
+                }, 400);
+            });
+
+            $(document).on('click', '.sq-modal-close', function () {
+                var modalEl = $(this).closest('.modal')[0];
+                sqModal(modalEl, 'hide');
+            });
+
+            function getSelected() {
+                var sel = [];
+                $('#sqServiceChecks input:checked').each(function () { sel.push($(this).val()); });
+                return sel;
+            }
+
+            initPage();
         })();
     </script>
 </body>
-
 </html>

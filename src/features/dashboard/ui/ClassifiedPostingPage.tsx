@@ -492,6 +492,10 @@ export default function ClassifiedPostingPage() {
   }
 
   async function handleSubmit() {
+    if (isSubmitting) {
+      return;
+    }
+
     const isStep1Valid = validateStep1();
     const isStep2Valid = validateStep2();
     if (!isStep1Valid || !isStep2Valid) {
@@ -807,8 +811,13 @@ export default function ClassifiedPostingPage() {
                           <Link to={getClassifiedStepPath(1, editListingId)} className="btn btn-primary">Previous</Link>
                         </div>
                         <div className="col-md-6">
-                          <button className="btn btn-primary" type="button" disabled={isSubmitting} onClick={handleSubmit}>
-                            {isSubmitting ? "Saving..." : isEditMode ? "Save" : "Finish"}
+                          <button className="btn btn-primary app-loading-button" type="button" disabled={isSubmitting} onClick={handleSubmit} aria-busy={isSubmitting}>
+                            {isSubmitting ? (
+                              <>
+                                <span className="app-button-spinner" aria-hidden="true"></span>
+                                Saving...
+                              </>
+                            ) : isEditMode ? "Save" : "Finish"}
                           </button>
                         </div>
                       </div>
