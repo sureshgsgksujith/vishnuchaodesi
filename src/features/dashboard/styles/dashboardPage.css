@@ -291,6 +291,197 @@
   background: linear-gradient(135deg, #e3fbff 0%, #ffffff 44%, #a7f1ff 100%);
 }
 
+.customer-notifications-page {
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(31, 44, 69, 0.1);
+  padding: 24px;
+}
+
+.customer-notifications-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e6edf7;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+}
+
+.customer-notifications-head h2 {
+  margin: 0;
+}
+
+.customer-notifications-head p {
+  color: #63718a;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 6px 0 0;
+}
+
+.customer-notifications-head button,
+.customer-notifications-pagination button {
+  border: 1px solid #d7e0ee;
+  border-radius: 8px;
+  background: #fff;
+  color: #126df5;
+  font-size: 13px;
+  font-weight: 900;
+  min-height: 38px;
+  padding: 0 14px;
+}
+
+.customer-notifications-alert {
+  border: 1px solid #ffd0d0;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #b91c1c;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 14px;
+  padding: 12px;
+}
+
+.customer-notifications-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.customer-notifications-tabs button {
+  border: 1px solid #d7e0ee;
+  border-radius: 999px;
+  background: #fff;
+  color: #42516b;
+  font-size: 13px;
+  font-weight: 900;
+  min-height: 36px;
+  padding: 0 16px;
+}
+
+.customer-notifications-tabs button.active {
+  border-color: #126df5;
+  background: #126df5;
+  color: #fff;
+}
+
+.customer-notifications-list {
+  display: grid;
+  gap: 10px;
+}
+
+.customer-notification-item {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 14px;
+  align-items: flex-start;
+  border: 1px solid #e1e8f2;
+  border-radius: 10px;
+  background: #fff;
+  color: inherit;
+  padding: 14px;
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.customer-notification-item:hover {
+  border-color: #9cc5ff;
+  box-shadow: 0 14px 24px rgba(31, 44, 69, 0.12);
+  transform: translateY(-2px);
+}
+
+.customer-notification-item > span {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #edf5ff;
+  color: #126df5;
+}
+
+.customer-notification-item.is-unread {
+  border-color: #a9ccff;
+  background: #f5f9ff;
+}
+
+.customer-notification-item.is-unread > span {
+  background: #126df5;
+  color: #fff;
+}
+
+.customer-notification-item strong,
+.customer-notification-item p,
+.customer-notification-item small {
+  display: block;
+  margin: 0;
+}
+
+.customer-notification-item strong {
+  color: #17233c;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.customer-notification-item p {
+  color: #56657f;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+.customer-notification-item small {
+  color: #8897ad;
+  font-size: 12px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.customer-notifications-empty {
+  border: 1px dashed #cfd9e8;
+  border-radius: 10px;
+  color: #62718a;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 26px;
+  text-align: center;
+}
+
+.customer-notifications-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #e6edf7;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.customer-notifications-pagination span {
+  color: #63718a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.customer-notifications-pagination div {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.customer-notifications-pagination button:disabled {
+  color: #9aa8bd;
+}
+
+.customer-notifications-pagination strong {
+  color: #17233c;
+  font-size: 13px;
+  font-weight: 900;
+}
+
 @media (max-width: 1200px) {
   .customer-dashboard-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -315,6 +506,25 @@
   .customer-dashboard-card {
     min-height: 124px;
     padding: 18px;
+  }
+
+  .customer-notifications-page {
+    padding: 18px;
+  }
+
+  .customer-notifications-head,
+  .customer-notifications-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .customer-notification-item {
+    grid-template-columns: 38px minmax(0, 1fr);
+  }
+
+  .customer-notification-item > span {
+    width: 36px;
+    height: 36px;
   }
 
   .customer-dashboard-card .bnum {

@@ -12,6 +12,7 @@ import DashboardFooter from "../components/DashboardFooter";
 import { getMyPlanUsage, getPricingPlans, selectPricingPlan, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
 import { resolveListingImageUrl } from "../utils/listingImages";
 import { formatCurrencyAmount, labelWithCountryCurrency } from "../../../shared/utils/currency";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import { fallbackListingCategoryTree, supportedListingCategoryNames } from "../config/listingCategoryTree";
 import { getVehicleBrandOptions, getVehicleModelOptions, vehicleBrandOptions, vehicleSubCategoryOptions } from "../config/vehicleBrandModelData";
 import "../styles/listings.css";
@@ -6212,6 +6213,16 @@ function cleanOptionalText(value: string) {
     .trim();
 }
 
+function isPhoneFieldLabel(value: string) {
+  const normalized = cleanOptionalText(value).toLowerCase();
+
+  if (normalized.includes("mobile locations")) {
+    return false;
+  }
+
+  return /\b(phone|mobile number|contact number|whatsapp)\b/.test(normalized);
+}
+
 function normalizePostalCodeSearchQuery(value: string, country?: string) {
   const trimmedValue = value.trim();
   const countryHint = country?.trim().toLowerCase() || "";
@@ -6734,12 +6745,25 @@ type NominatimAddressResult = {
 
 function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password", step, min }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string; step?: string; min?: string }) {
   const inputId = useId();
+  const isPhone = isPhoneFieldLabel(placeholder);
 
   return (
     <div className={width}>
       <div className="form-group">
         <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
-          <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} min={min} onChange={(event) => onChange(event.target.value)} />
+          {isPhone ? (
+            <PhoneNumberInput
+              value={value}
+              onChange={onChange}
+              placeholder={cleanOptionalText(placeholder)}
+              readOnly={readOnly}
+              disabled={disabled}
+              inputClassName={`form-control${error ? " is-invalid" : ""}`}
+              name={`listing-field-${inputId}`}
+            />
+          ) : (
+            <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} min={min} onChange={(event) => onChange(event.target.value)} />
+          )}
         <FieldError message={error} />
       </div>
     </div>
@@ -6755,12 +6779,17 @@ function LabeledInputColumn({
   width = "col-md-6",
 }: FieldProps & { label: string; type?: string; width?: string }) {
   const inputId = useId();
+  const isPhone = isPhoneFieldLabel(`${label} ${placeholder}`);
 
   return (
     <div className={width}>
       <div className="form-group">
         <label>{fieldLabelFromPlaceholder(label)}</label>
-        <input className="form-control" type={type} name={`listing-contact-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} autoComplete="new-password" onChange={(event) => onChange(event.target.value)} />
+        {isPhone ? (
+          <PhoneNumberInput value={value} onChange={onChange} placeholder={cleanOptionalText(placeholder || label)} name={`listing-contact-${inputId}`} />
+        ) : (
+          <input className="form-control" type={type} name={`listing-contact-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} autoComplete="new-password" onChange={(event) => onChange(event.target.value)} />
+        )}
       </div>
     </div>
   );

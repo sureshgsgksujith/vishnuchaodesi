@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import AuthLayout from "./AuthLayout";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 
 export default function RegisterPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
 
   return (
     <AuthLayout>
@@ -67,14 +69,7 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="form-group">
-                  <div className="row g-0">
-                    <div className="col-3">
-                      <input type="text" value="IN +91" readOnly className="form-control" />
-                    </div>
-                    <div className="col-9">
-                      <input type="text" placeholder="Phone" className="form-control" />
-                    </div>
-                  </div>
+                  <PhoneNumberInput value={mobileNumber} onChange={setMobileNumber} placeholder="Phone" />
                 </div>
 
                 <button type="submit" className="login-btn">Register Now</button>

@@ -14,6 +14,12 @@ export type AllServicePostingLocation = {
   isPrimary?: boolean;
 };
 
+export type AllServicePricingPackage = {
+  serviceName: string;
+  priceText: string;
+  description?: string;
+};
+
 export type AllServicePostingPayload = {
   providerType: string;
   businessName: string;
@@ -29,6 +35,7 @@ export type AllServicePostingPayload = {
   description: string;
   workingMode: string;
   openDays: string[];
+  pricingPackages?: AllServicePricingPackage[];
   contactName: string;
   email: string;
   phoneCountryCode: string;

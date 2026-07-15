@@ -59,11 +59,12 @@ const initialQuoteForm: QuoteFormState = {
 export default function AllServicesDetailedPage() {
   const [searchParams] = useSearchParams();
   const { activeCity, activeLocationLabel } = useHomeSelectedLocation();
-  const requestedService = cleanServiceName(searchParams.get("service")) || "Tax Consultants";
   const requestedDetailSlug = cleanServiceName(searchParams.get("detail"));
   const requestedCategory = cleanServiceName(searchParams.get("category"));
   const requestedSubCategory = cleanServiceName(searchParams.get("subCategory"));
   const requestedCategoryId = Number(searchParams.get("categoryId") || 0);
+  const hasCategoryRequest = Boolean(requestedCategory || requestedCategoryId);
+  const requestedService = cleanServiceName(searchParams.get("service")) || (hasCategoryRequest ? "" : "Tax Consultants");
   const cityLabel = activeLocationLabel || "Ashburn, VA";
 
   const [categories, setCategories] = useState<AllServiceCategoryOption[]>([]);

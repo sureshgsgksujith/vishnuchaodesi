@@ -1,184 +1,267 @@
-const categoryCards = [
-  { title: "Real Estate", image: "/template-17/images/services/8.jpg" },
-  { title: "Vehicles", image: "/template-17/images/icon/vehicles.png" },
-  { title: "Furniture & Home", image: "/template-17/images/icon/home.png" },
-  { title: "Financial", image: "/template-17/images/services/7.jpg" },
-  { title: "Legal", image: "/template-17/images/services/1.jpg" },
-  { title: "Education", image: "/template-17/images/services/4.jpg" },
-  { title: "Beautician", image: "/template-17/images/services/6.jpeg" },
-  { title: "DJ Services", image: "/template-17/images/services/2.jpeg" },
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  getAllServiceDirectoryTree,
+  type AllServiceCategoryOption,
+  type AllServiceSubCategoryOption,
+} from "../../allServices/api/allServiceDirectoryApi";
+import {
+  getPublicAllServicePostings,
+  type PublicAllServicePosting,
+} from "../../allServices/api/allServicePostingsApi";
+import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
+
+const fallbackCategories: AllServiceCategoryOption[] = [
+  fallbackCategory(-1, "Educational Institutes", "educational-institutes", ["Schools", "College & Universities", "Tutoring"]),
+  fallbackCategory(-2, "Religious & Community Services", "religious-community-services", ["Religious Services", "Community & Charity", "Cultural"]),
+  fallbackCategory(-3, "Real Estate Services", "real-estate-services", ["Real Estate Agents", "Management & Inspection", "Mortgage"]),
+  fallbackCategory(-4, "Health & Wellness", "health-wellness", ["Doctors & Care", "Wellness & Counselling", "Fitness"]),
+  fallbackCategory(-5, "Food & Catering", "food-catering", ["Food Services", "Catering & Bakeries", "Restaurants"]),
+  fallbackCategory(-6, "Wedding & Events", "wedding-events", ["Event Professionals", "Wedding Needs", "Photography"]),
+  fallbackCategory(-7, "Lessons / Tuitions", "lessons-tuitions", ["Academic Lessons", "Arts & Culture", "Music"]),
+  fallbackCategory(-8, "Home & Business Needs", "home-business-needs", ["Home Services", "Business & Technical", "Repairs"]),
+  fallbackCategory(-9, "Financial & Legal Services", "financial-legal-services", ["Finance & Tax", "Legal & Immigration", "Insurance"]),
+  fallbackCategory(-10, "Travel & Accommodation", "travel-accommodation", ["Travel Services", "Accommodation & Transport", "Visa Help"]),
 ];
 
-const lessonServices = [
-  {
-    title: "A1 Passport & Visa Services",
-    location: "362 Fifth Avenue, New York, NY",
-    category: "Visa Services, Immigration +2 More",
-  },
-  {
-    title: "Sathish Notary Passport OCI Services LLC",
-    location: "Irving, TX, USA",
-    category: "Notary, Passport, OCI +1 More",
-  },
-  {
-    title: "Travelopod",
-    location: "Dover, DE, USA",
-    category: "Flight Tickets, Travel Agents +2 More",
-  },
-  {
-    title: "CWT US LLC Travel",
-    location: "Minnetonka, MN",
-    category: "Travel Planning, Corporate Travel",
-  },
-  {
-    title: "Universal Relocations",
-    location: "Parsippany, NJ",
-    category: "Storage, Packing, Moving +5 More",
-  },
-];
+const categoryImagesBySlug: Record<string, string> = {
+  "educational-institutes": "/template-17/images/home/student.jpg",
+  "religious-community-services": "/template-17/service-experts/images/services/1.jpg",
+  "real-estate-services": "/template-17/images/services/8.jpg",
+  "health-wellness": "/template-17/images/services/4.jpg",
+  "food-catering": "/template-17/images/services/resto-1.jpg",
+  "wedding-events": "/template-17/service-experts/images/services/3.jpeg",
+  "lessons-tuitions": "/template-17/service-experts/images/services/4.jpeg",
+  "home-business-needs": "/template-17/images/home2-work.jpg",
+  "financial-legal-services": "/template-17/images/services/7.jpg",
+  "travel-accommodation": "/template-17/images/home/travel-bg.jpg",
+};
 
-const weddingServices = [
-  {
-    title: "Royal Wedding Planners",
-    location: "Edison, NJ",
-    category: "Wedding Planning, Decor, Catering +3 More",
-  },
-  {
-    title: "Dream Moments Photography",
-    location: "New York, NY",
-    category: "Wedding Photography, Videography",
-  },
-  {
-    title: "Elegant Bridal Makeup Studio",
-    location: "Jersey City, NJ",
-    category: "Bridal Makeup, Hair Styling +2 More",
-  },
-  {
-    title: "Grand Palace Banquets",
-    location: "Long Island, NY",
-    category: "Wedding Halls, Catering Services",
-  },
-  {
-    title: "DJ Beats Entertainment",
-    location: "Brooklyn, NY",
-    category: "DJ Services, Live Music +1 More",
-  },
+const fallbackCategoryImages = [
+  "/template-17/service-experts/images/services/1.jpg",
+  "/template-17/service-experts/images/services/2.jpg",
+  "/template-17/service-experts/images/services/3.jpeg",
+  "/template-17/service-experts/images/services/4.jpeg",
+  "/template-17/service-experts/images/services/5.jpg",
+  "/template-17/service-experts/images/services/6.jpg",
+  "/template-17/service-experts/images/services/7.jpg",
+  "/template-17/service-experts/images/services/8.jpg",
+  "/template-17/service-experts/images/services/9.jpg",
+  "/template-17/service-experts/images/services/10.jpg",
 ];
-
-const travelServices = [
-  {
-    title: "Travelopod",
-    location: "Dover, DE",
-    category: "Flight Tickets, Travel Agents +2 More",
-  },
-  {
-    title: "Skyline Travel Agency",
-    location: "New York, NY",
-    category: "Flight Booking, Holiday Packages",
-  },
-  {
-    title: "Global Visa Experts",
-    location: "Chicago, IL",
-    category: "Visa Services, Immigration +3 More",
-  },
-  {
-    title: "Luxury Holidays USA",
-    location: "Los Angeles, CA",
-    category: "Tour Packages, Honeymoon Trips",
-  },
-  {
-    title: "Quick Cab & Rentals",
-    location: "Dallas, TX",
-    category: "Car Rentals, Airport Pickup",
-  },
-];
-
-function ServiceList({ items }: { items: { title: string; location: string; category: string }[] }) {
-  return (
-    <>
-      {items.map((service) => (
-        <div className="service-card" key={service.title}>
-          <div className="service-info">
-            <h6>{service.title}</h6>
-            <p>
-              <i className="material-icons">location_on</i>
-              {service.location}
-            </p>
-            <p>
-              <i className="material-icons">business</i>
-              {service.category}
-            </p>
-          </div>
-          <div className="service-actions">
-            <a href="#" className="call-btn">
-              <i className="material-icons">call</i>
-            </a>
-            <a href="#" className="view-btn">
-              View More
-            </a>
-          </div>
-        </div>
-      ))}
-    </>
-  );
-}
 
 export default function HomePopularServicesSection() {
+  const { activeCity } = useHomeSelectedLocation();
+  const [categories, setCategories] = useState<AllServiceCategoryOption[]>(fallbackCategories);
+  const [activeCategoryId, setActiveCategoryId] = useState<number>(fallbackCategories[0].id);
+  const [activeSubCategorySlug, setActiveSubCategorySlug] = useState(fallbackCategories[0].subCategories[0]?.slug || "");
+  const [providers, setProviders] = useState<PublicAllServicePosting[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingProviders, setIsLoadingProviders] = useState(true);
+  const [providerMessage, setProviderMessage] = useState("");
+
+  useEffect(() => {
+    let isActive = true;
+    setIsLoadingCategories(true);
+
+    getAllServiceDirectoryTree()
+      .then((items) => {
+        if (!isActive) return;
+
+        const nextCategories = items.filter((category) => category.subCategories.length).slice(0, 10);
+        if (!nextCategories.length) {
+          setCategories(fallbackCategories);
+          setActiveCategoryId(fallbackCategories[0].id);
+          setActiveSubCategorySlug(fallbackCategories[0].subCategories[0]?.slug || "");
+          return;
+        }
+
+        setCategories(nextCategories);
+        setActiveCategoryId((current) => {
+          const exists = nextCategories.some((category) => category.id === current);
+          return exists ? current : nextCategories[0].id;
+        });
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setCategories(fallbackCategories);
+        setActiveCategoryId(fallbackCategories[0].id);
+        setActiveSubCategorySlug(fallbackCategories[0].subCategories[0]?.slug || "");
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingCategories(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const activeCategory = useMemo(
+    () => categories.find((category) => category.id === activeCategoryId) || categories[0] || fallbackCategories[0],
+    [activeCategoryId, categories],
+  );
+  const activeTabs = useMemo(() => buildTabs(activeCategory), [activeCategory]);
+  const activeTab = useMemo(
+    () => activeTabs.find((tab) => tab.slug === activeSubCategorySlug) || activeTabs[0],
+    [activeSubCategorySlug, activeTabs],
+  );
+
+  useEffect(() => {
+    if (!activeCategory) return;
+
+    const firstTab = buildTabs(activeCategory)[0];
+    if (firstTab && !buildTabs(activeCategory).some((tab) => tab.slug === activeSubCategorySlug)) {
+      setActiveSubCategorySlug(firstTab.slug);
+    }
+  }, [activeCategory, activeSubCategorySlug]);
+
+  useEffect(() => {
+    if (!activeCategory || isLoadingCategories) {
+      setIsLoadingProviders(true);
+      return;
+    }
+
+    let isActive = true;
+    setIsLoadingProviders(true);
+    setProviderMessage("");
+
+    const baseQuery = {
+      categoryId: activeCategory.id > 0 ? activeCategory.id : undefined,
+      category: activeCategory.id > 0 ? undefined : activeCategory.name,
+      page: 1,
+      pageSize: 5,
+    };
+    const subCategory = activeTab?.slug || activeTab?.name;
+
+    (async () => {
+      let result = await getPublicAllServicePostings({
+        ...baseQuery,
+        subCategory,
+        city: activeCity || undefined,
+      });
+      let message = "";
+
+      if (result.totalCount === 0 && activeCity) {
+        result = await getPublicAllServicePostings({ ...baseQuery, subCategory });
+        if (result.totalCount > 0) {
+          message = `No ${activeTab?.name || activeCategory.name} providers are posted in ${activeCity} yet. Showing matching providers from other service areas.`;
+        }
+      }
+
+      if (result.totalCount === 0 && subCategory) {
+        result = await getPublicAllServicePostings({
+          ...baseQuery,
+          city: activeCity || undefined,
+        });
+      }
+
+      return { result, message };
+    })()
+      .then(({ result, message }) => {
+        if (!isActive) return;
+        setProviders(result.items);
+        setProviderMessage(message);
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setProviders([]);
+        setProviderMessage("Unable to load providers right now.");
+      })
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingProviders(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [activeCategory, activeCity, activeTab, isLoadingCategories]);
+
+  const onSelectCategory = (category: AllServiceCategoryOption) => {
+    setActiveCategoryId(category.id);
+    setActiveSubCategorySlug(buildTabs(category)[0]?.slug || "");
+  };
+
   return (
-    <section className="home-services-combined py-5">
+    <section className="home-services-combined popular-services-section py-5">
       <div className="container">
-        <div className="text-center mb-4">
+        <div className="popular-services-heading text-center">
           <h2>
             <span>Popular Services</span> near you
           </h2>
           <p>Fulfill your local service needs with trusted providers</p>
         </div>
 
-        <div className="row">
-          <div className="col-lg-4">
-            <div className="category-grid">
-              {categoryCards.map((card) => (
-                <div className="cat-card" key={card.title}>
-                  <img src={card.image} alt={card.title} />
-                  <h6>{card.title}</h6>
-                </div>
+        <div className="popular-services-layout">
+          <aside className="popular-services-categories" aria-label="Popular service categories">
+            <div className="popular-services-category-grid">
+              {categories.slice(0, 10).map((category, index) => (
+                <button
+                  type="button"
+                  className={`popular-services-category ${category.id === activeCategory.id ? "active" : ""}`}
+                  key={category.id}
+                  onClick={() => onSelectCategory(category)}
+                >
+                  <img src={getCategoryImage(category, index)} alt="" loading="lazy" />
+                  <span>{cleanCategoryName(category.name)}</span>
+                </button>
               ))}
             </div>
 
-            <a href="/all-services" className="view-all">
+            <Link to="/all-services" className="popular-services-view-all">
               View all services
-            </a>
-          </div>
+            </Link>
+          </aside>
 
-          <div className="col-lg-8">
-            <div className="services-wrapper">
-              <ul className="nav service-tabs mb-3">
-                <li>
-                  <button className="active" type="button">
-                    Lessons
-                  </button>
-                </li>
-                <li>
-                  <button type="button">Wedding</button>
-                </li>
-                <li>
-                  <button type="button">Travel</button>
-                </li>
-              </ul>
-
-              <div className="tab-content">
-                <div className="tab-pane fade show active">
-                  <ServiceList items={lessonServices} />
-                </div>
-
-                <div className="tab-pane fade" style={{ display: "none" }}>
-                  <ServiceList items={weddingServices} />
-                </div>
-
-                <div className="tab-pane fade" style={{ display: "none" }}>
-                  <ServiceList items={travelServices} />
-                </div>
+          <div className="popular-services-panel">
+            <div className="popular-services-panel-head">
+              <div>
+                <span>{activeCity ? `Near ${activeCity}` : "Popular now"}</span>
+                <h3>{activeCategory?.name || "Local Services"}</h3>
               </div>
+              <Link to={buildCategoryHref(activeCategory, activeTab)} className="popular-services-panel-link">
+                Explore category
+              </Link>
+            </div>
+
+            <div className="popular-services-tabs" role="tablist" aria-label={`${activeCategory?.name || "Service"} tabs`}>
+              {activeTabs.map((tab) => (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={tab.slug === activeTab?.slug}
+                  className={tab.slug === activeTab?.slug ? "active" : ""}
+                  key={tab.slug}
+                  onClick={() => setActiveSubCategorySlug(tab.slug)}
+                >
+                  {tab.name}
+                </button>
+              ))}
+            </div>
+
+            {providerMessage ? <p className="popular-services-note">{providerMessage}</p> : null}
+
+            <div className="popular-services-list">
+              {isLoadingProviders || isLoadingCategories ? (
+                Array.from({ length: 5 }).map((_, index) => (
+                  <div className="popular-services-provider skeleton" key={index}>
+                    <span />
+                    <div />
+                  </div>
+                ))
+              ) : providers.length ? (
+                providers.map((provider) => <ProviderRow provider={provider} key={provider.id} fallbackServiceName={activeTab?.name || activeCategory.name} />)
+              ) : (
+                <div className="popular-services-empty">
+                  <i className="material-icons">storefront</i>
+                  <p>No providers posted in this category yet.</p>
+                  <Link to="/dashboard/services/new">Post your service</Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -208,7 +291,7 @@ export default function HomePopularServicesSection() {
                       <li><span>5</span> Easily manage leads, quotes, and bookings.</li>
                     </ul>
 
-                    <a href="/post-your-ads" className="cta-btn">Create Your Business Profile</a>
+                    <Link to="/post-your-ads" className="cta-btn">Create Your Business Profile</Link>
                   </div>
                 </div>
 
@@ -233,14 +316,137 @@ export default function HomePopularServicesSection() {
                       <li><span>5</span> Find services tailored to your needs.</li>
                     </ul>
 
-                    <a href="/local-services" className="cta-btn">Find a Professional</a>
+                    <Link to="/local-services" className="cta-btn">Find a Professional</Link>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>  
+      </div>
     </section>
   );
+}
+
+function ProviderRow({ provider, fallbackServiceName }: { provider: PublicAllServicePosting; fallbackServiceName: string }) {
+  const primaryService = getProviderServiceNames(provider)[0] || provider.serviceName || fallbackServiceName;
+  const extraCount = Math.max(getProviderServiceNames(provider).length - 1, 0);
+  const phone = formatPhone(provider);
+  const telHref = phone ? `tel:${phone.replace(/[^\d+]/g, "")}` : "";
+
+  return (
+    <article className="popular-services-provider">
+      <div className="popular-services-provider-info">
+        <h4>{provider.businessName}</h4>
+        <p>
+          <i className="material-icons">location_on</i>
+          {getProviderLocation(provider)}
+        </p>
+        <p>
+          <i className="material-icons">business</i>
+          {primaryService}{extraCount ? ` +${extraCount} More` : ""}
+        </p>
+      </div>
+      <div className="popular-services-actions">
+        {telHref ? (
+          <a href={telHref} className="popular-services-call" aria-label={`Call ${provider.businessName}`}>
+            <i className="material-icons">call</i>
+          </a>
+        ) : (
+          <span className="popular-services-call disabled" aria-hidden="true">
+            <i className="material-icons">call</i>
+          </span>
+        )}
+        <Link to={`/local-service-details/${provider.id}?service=${encodeURIComponent(primaryService)}`} className="popular-services-view">
+          View More
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+function buildTabs(category?: AllServiceCategoryOption): AllServiceSubCategoryOption[] {
+  if (!category?.subCategories.length) {
+    return category ? [fallbackSubCategory(category.id * 1000, category.name, category.slug)] : [];
+  }
+
+  return category.subCategories.slice(0, 3);
+}
+
+function fallbackCategory(id: number, name: string, slug: string, subCategories: string[]): AllServiceCategoryOption {
+  return {
+    id,
+    name,
+    slug,
+    code: null,
+    subCategories: subCategories.map((subCategory, index) => fallbackSubCategory(id * 100 + index, subCategory, slugify(subCategory))),
+  };
+}
+
+function fallbackSubCategory(id: number, name: string, slug: string): AllServiceSubCategoryOption {
+  return {
+    id,
+    name,
+    slug,
+    detailedCategories: [],
+  };
+}
+
+function getCategoryImage(category: AllServiceCategoryOption, index: number) {
+  return categoryImagesBySlug[category.slug] || fallbackCategoryImages[index % fallbackCategoryImages.length];
+}
+
+function cleanCategoryName(name: string) {
+  return name.replace(/\s+Services$/i, "").replace(/\s*\/\s*/g, " / ");
+}
+
+function buildCategoryHref(category?: AllServiceCategoryOption, subCategory?: AllServiceSubCategoryOption) {
+  if (!category) {
+    return "/all-services";
+  }
+
+  const detail = subCategory?.detailedCategories[0];
+  const params = new URLSearchParams({
+    category: category.name,
+    categoryId: String(category.id),
+  });
+
+  if (subCategory) {
+    params.set("subCategory", subCategory.name);
+  }
+
+  if (detail) {
+    params.set("service", detail.name);
+    params.set("detail", detail.slug);
+  } else if (subCategory) {
+    params.set("service", subCategory.name);
+    params.set("detail", subCategory.slug);
+  }
+
+  return `/all-services-detailed?${params.toString()}`;
+}
+
+function getProviderServiceNames(provider: PublicAllServicePosting) {
+  const names = provider.selectedServices
+    .map((service) => service.detailedCategoryName || service.subCategoryName)
+    .filter(Boolean);
+
+  return Array.from(new Set(names));
+}
+
+function getProviderLocation(provider: PublicAllServicePosting) {
+  return provider.primaryServiceLocation || provider.serviceLocations.find((location) => location.formattedAddress)?.formattedAddress || "Service area available";
+}
+
+function formatPhone(provider: PublicAllServicePosting) {
+  const value = `${provider.phoneCountryCode || ""} ${provider.phoneNumber || ""}`.trim();
+  return value || "";
+}
+
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }

@@ -21,6 +21,7 @@ import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import { getQuoteActionLabel, shouldShowQuoteAction } from "../utils/quoteVisibility";
 import { submitJobApplication, submitRequirement } from "../api/requirementsApi";
 import { getMyProfile } from "../../dashboard/api/profileApi";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import "../styles/publicListings.css";
 
 type LooseValue = string | number | boolean | string[] | null | undefined;
@@ -1884,13 +1885,7 @@ function ListingQuoteModal({
           required
           value={form.email}
         />
-        <input
-          type="tel"
-          placeholder="Phone number*"
-          required
-          value={form.mobileNumber}
-          onChange={(event) => onChange({ mobileNumber: event.target.value })}
-        />
+        <PhoneNumberInput value={form.mobileNumber} onChange={(mobileNumber) => onChange({ mobileNumber })} placeholder="Phone number*" required />
         <textarea
           placeholder="Enter your query or message"
           value={form.message}
@@ -1954,13 +1949,7 @@ function JobApplicationModal({
           required
           value={form.email}
         />
-        <input
-          type="tel"
-          placeholder="Phone number*"
-          required
-          value={form.mobileNumber}
-          onChange={(event) => onChange({ mobileNumber: event.target.value })}
-        />
+        <PhoneNumberInput value={form.mobileNumber} onChange={(mobileNumber) => onChange({ mobileNumber })} placeholder="Phone number*" required />
         <label className="public-job-resume-field">
           <span>Resume*</span>
           <input

@@ -1,0 +1,243 @@
+.artist-tour-page {
+  background: #f4f7fb;
+  color: #101a32;
+  min-height: 70vh;
+  padding: 34px clamp(16px, 4vw, 56px);
+}
+
+.artist-tour-post-hero,
+.artist-tour-detail-hero {
+  display: grid;
+  gap: 24px;
+  align-items: center;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #07135f 0%, #0e49b7 56%, #f89a16 100%);
+  color: #fff;
+  margin: 0 auto 24px;
+  max-width: 1180px;
+  padding: clamp(24px, 4vw, 42px);
+}
+
+.artist-tour-post-hero {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.artist-tour-post-hero span,
+.artist-tour-detail-hero span {
+  display: block;
+  color: #ffd38a;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.artist-tour-post-hero h1,
+.artist-tour-detail-hero h1 {
+  color: #fff;
+  font-size: clamp(30px, 4vw, 48px);
+  line-height: 1.05;
+  margin: 0;
+}
+
+.artist-tour-post-hero p,
+.artist-tour-detail-hero p {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 16px;
+  line-height: 1.55;
+  margin: 12px 0 0;
+  max-width: 740px;
+}
+
+.artist-tour-post-hero a,
+.artist-tour-form-actions a,
+.artist-tour-form-actions button,
+.artist-tour-detail-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 900;
+  min-height: 44px;
+  padding: 0 18px;
+  text-decoration: none;
+}
+
+.artist-tour-post-hero a,
+.artist-tour-detail-actions a:first-child,
+.artist-tour-form-actions button {
+  border: 0;
+  background: #126df5;
+  color: #fff;
+}
+
+.artist-tour-form,
+.artist-tour-detail-layout {
+  display: grid;
+  gap: 18px;
+  margin: 0 auto;
+  max-width: 1180px;
+}
+
+.artist-tour-form-card,
+.artist-tour-detail-layout article,
+.artist-tour-detail-layout aside {
+  border: 1px solid #dbe4f2;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(31, 44, 69, 0.08);
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.artist-tour-form-card h2,
+.artist-tour-detail-layout h2 {
+  color: #101a32;
+  font-size: 22px;
+  line-height: 1.2;
+  margin: 0 0 18px;
+}
+
+.artist-tour-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.artist-tour-grid label {
+  display: grid;
+  gap: 8px;
+  color: #23304b;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.artist-tour-grid label.is-wide {
+  grid-column: 1 / -1;
+}
+
+.artist-tour-grid input,
+.artist-tour-grid textarea {
+  width: 100%;
+  border: 1px solid #d7e0ee;
+  border-radius: 8px;
+  color: #101a32;
+  font-size: 15px;
+  outline: none;
+  padding: 12px 14px;
+}
+
+.artist-tour-grid textarea {
+  resize: vertical;
+}
+
+.artist-tour-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.artist-tour-form-actions a,
+.artist-tour-detail-actions a:nth-child(2) {
+  border: 1px solid #d7e0ee;
+  background: #fff;
+  color: #126df5;
+}
+
+.artist-tour-alert,
+.artist-tour-status {
+  border-radius: 8px;
+  margin: 0 auto 18px;
+  max-width: 1180px;
+  padding: 14px 16px;
+}
+
+.artist-tour-alert.is-error,
+.artist-tour-status.is-error {
+  border: 1px solid #ffcaca;
+  background: #fff3f3;
+  color: #b42318;
+}
+
+.artist-tour-alert.is-success {
+  border: 1px solid #b8ebca;
+  background: #eefbf3;
+  color: #087a38;
+}
+
+.artist-tour-detail-hero {
+  grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
+}
+
+.artist-tour-detail-hero img {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 6px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.artist-tour-detail-meta,
+.artist-tour-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.artist-tour-detail-meta strong {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 999px;
+  color: #fff;
+  padding: 8px 12px;
+}
+
+.artist-tour-detail-layout {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.artist-tour-detail-layout article p {
+  color: #56657f;
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.artist-tour-detail-layout dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.artist-tour-detail-layout dt {
+  color: #6a7890;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.artist-tour-detail-layout dd {
+  color: #14213c;
+  font-size: 14px;
+  font-weight: 800;
+  margin: 4px 0 0;
+}
+
+@media (max-width: 760px) {
+  .artist-tour-post-hero,
+  .artist-tour-detail-hero,
+  .artist-tour-detail-layout,
+  .artist-tour-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .artist-tour-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .artist-tour-form-actions a,
+  .artist-tour-form-actions button {
+    width: 100%;
+  }
+}

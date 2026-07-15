@@ -17,7 +17,9 @@ import {
   resolveListingImageUrl,
 } from "../../dashboard/utils/listingImages";
 import { submitRequirement } from "../api/requirementsApi";
+import { filterActiveEventListings } from "../utils/eventListings";
 import { getQuoteActionLabel, shouldShowQuoteAction } from "../utils/quoteVisibility";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import "../styles/publicListings.css";
 
 const PAGE_SIZE = 12;
@@ -95,6 +97,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
 
   const categoryName = searchParams.get("categoryName") || "";
   const category = lockedCategory || getCategory(searchParams.get("category")) || categorySlugFromLabel(categoryName) || undefined;
+  const isEventsTicketsCategory = category === "events-tickets" || categorySlugFromLabel(categoryName) === "events-tickets";
   const isChaoTvCategory = category === "chao-tv" || categoryName.trim().toLowerCase() === "chao tv";
   const subCategory = searchParams.get("subCategory") || "";
   const detailCategory = searchParams.get("detailCategory") || "";
@@ -229,13 +232,13 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
           search,
           excludeCategoryName: "Chao TV",
           page,
-          pageSize: PAGE_SIZE,
+          pageSize: isEventsTicketsCategory ? PAGE_SIZE * 3 : PAGE_SIZE,
           forceRefresh: locationRevision > 0,
         });
 
         if (!isActive) return;
 
-        setItems(result.items || []);
+        setItems(isEventsTicketsCategory ? filterActiveEventListings(result.items || []).slice(0, PAGE_SIZE) : result.items || []);
         setTotalCount(result.totalCount || 0);
       } catch (error) {
         if (isActive) {
@@ -253,7 +256,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
     return () => {
       isActive = false;
     };
-  }, [activeCountry, category, categoryName, city, detailCategory, includeAllCountries, isChaoTvCategory, isWaitingForCountry, locationRevision, page, search, state, subCategory]);
+  }, [activeCountry, category, categoryName, city, detailCategory, includeAllCountries, isChaoTvCategory, isEventsTicketsCategory, isWaitingForCountry, locationRevision, page, search, state, subCategory]);
 
   useEffect(() => {
     let isActive = true;
@@ -284,7 +287,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
     })
       .then((result) => {
         if (isActive) {
-          setFacetItems(result.items || []);
+          setFacetItems(filterActiveEventListings(result.items || []));
         }
       })
       .catch(() => {
@@ -551,12 +554,11 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
                   value={requirementForm.email}
                   onChange={(event) => setRequirementForm((current) => ({ ...current, email: event.target.value }))}
                 />
-                <input
-                  type="tel"
+                <PhoneNumberInput
+                  value={requirementForm.mobileNumber}
+                  onChange={(mobileNumber) => setRequirementForm((current) => ({ ...current, mobileNumber }))}
                   placeholder="Enter mobile number*"
                   required
-                  value={requirementForm.mobileNumber}
-                  onChange={(event) => setRequirementForm((current) => ({ ...current, mobileNumber: event.target.value }))}
                 />
                 <textarea
                   placeholder="Enter your query or message"
@@ -884,13 +886,7 @@ function QuoteModal({
           required
           value={form.email}
         />
-        <input
-          type="tel"
-          placeholder="Phone number*"
-          required
-          value={form.mobileNumber}
-          onChange={(event) => onChange({ mobileNumber: event.target.value })}
-        />
+        <PhoneNumberInput value={form.mobileNumber} onChange={(mobileNumber) => onChange({ mobileNumber })} placeholder="Phone number*" required />
         <textarea
           placeholder="Enter your query or message"
           value={form.message}

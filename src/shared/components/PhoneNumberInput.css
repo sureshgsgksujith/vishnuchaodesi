@@ -1,0 +1,33 @@
+.phone-number-input {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.phone-number-input__code,
+.phone-number-input > select {
+  flex: 0 0 118px;
+  min-width: 104px;
+}
+
+.phone-number-input__number,
+.phone-number-input > input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.phone-number-input select,
+.phone-number-input input {
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .phone-number-input {
+    flex-direction: column;
+  }
+
+  .phone-number-input__code {
+    flex-basis: auto;
+    width: 100%;
+  }
+}

@@ -27,6 +27,12 @@ export type PublicAllServicePostingLocation = {
   isPrimary?: boolean;
 };
 
+export type PublicAllServicePricingPackage = {
+  serviceName: string;
+  priceText: string;
+  description?: string | null;
+};
+
 export type PublicAllServicePosting = {
   id: number;
   userId: number;
@@ -44,6 +50,7 @@ export type PublicAllServicePosting = {
   description: string;
   workingMode: string;
   openDays?: string[];
+  pricingPackages?: PublicAllServicePricingPackage[];
   contactName: string;
   email: string;
   phoneCountryCode: string;

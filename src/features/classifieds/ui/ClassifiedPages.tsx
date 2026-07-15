@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import {
   getListing,
   getListingApiErrorMessage,
@@ -1036,7 +1037,7 @@ function ClassifiedDetail({ listing, relatedListings }: { listing: ListingSummar
                   <fieldset disabled={!isCustomerAuthenticated()}>
                     <div className="form-group ic-user"><i className="material-icons">person</i><input className="form-control" placeholder="Enter name*" value={enquiryForm.name} onChange={(event) => setEnquiryForm((current) => ({ ...current, name: event.target.value }))} /></div>
                     <div className="form-group ic-eml"><i className="material-icons">email</i><input className="form-control" type="email" placeholder="Enter email*" value={enquiryForm.email} onChange={(event) => setEnquiryForm((current) => ({ ...current, email: event.target.value }))} /></div>
-                    <div className="form-group ic-pho"><i className="material-icons">phone</i><input className="form-control" type="tel" placeholder="Enter mobile number *" value={enquiryForm.mobileNumber} onChange={(event) => setEnquiryForm((current) => ({ ...current, mobileNumber: event.target.value }))} /></div>
+                    <div className="form-group ic-pho"><i className="material-icons">phone</i><PhoneNumberInput value={enquiryForm.mobileNumber} onChange={(mobileNumber) => setEnquiryForm((current) => ({ ...current, mobileNumber }))} placeholder="Enter mobile number *" required /></div>
                     <div className="form-group"><textarea className="form-control" rows={3} placeholder="Enter your query or message" value={enquiryForm.message} onChange={(event) => setEnquiryForm((current) => ({ ...current, message: event.target.value }))}></textarea></div>
                   </fieldset>
                   {enquiryStatus ? <p className="classified-enquiry-status">{enquiryStatus}</p> : null}

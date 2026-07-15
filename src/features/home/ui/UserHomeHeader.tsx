@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   dashboardPrimaryNavItem as dashboardItem,
@@ -8,16 +8,20 @@ import {
   getStoredDashboardIdentity,
   PROFILE_UPDATED_EVENT,
 } from "../../dashboard/utils/profileStorage";
-import { clearCustomerSession } from "../../auth/utils/customerSession";
+import {
+  clearCustomerSession,
+  getCustomerToken,
+  isCustomerTokenExpired,
+} from "../../auth/utils/customerSession";
+import {
+  getMyNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  type UserNotification,
+} from "../../dashboard/api/notificationsApi";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 import { categoryLinks, useExploreCategories, type ExploreMenuLink } from "./exploreMenuData";
 import "../styles/customerHeader.css";
-
-const notifications = [
-  "Welcome back to Chao Desi",
-  "Your profile is active",
-  "New events available near you",
-];
 
 const profileMenuItems: MenuItem[] = [
   {
@@ -62,10 +66,43 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [notifications, setNotifications] = useState<UserNotification[]>([]);
+  const [notificationTotal, setNotificationTotal] = useState(0);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const exploreCategories = useExploreCategories();
 
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
   const { fullName, joinDate, profileImageUrl } = identity;
+
+  const loadNotifications = useCallback(() => {
+    const token = getCustomerToken();
+
+    if (!token || isCustomerTokenExpired(token)) {
+      setNotifications([]);
+      setNotificationTotal(0);
+      setUnreadNotificationCount(0);
+      setIsLoadingNotifications(false);
+      return Promise.resolve();
+    }
+
+    setIsLoadingNotifications(true);
+
+    return getMyNotifications(1, 5, false)
+      .then((result) => {
+        setNotifications(result.items || []);
+        setNotificationTotal(result.totalCount || 0);
+        setUnreadNotificationCount(result.unreadCount || 0);
+      })
+      .catch(() => {
+        setNotifications([]);
+        setNotificationTotal(0);
+        setUnreadNotificationCount(0);
+      })
+      .finally(() => {
+        setIsLoadingNotifications(false);
+      });
+  }, []);
 
   useEffect(() => {
     const handleOpenMobileMenu = () => setShowMobileMenu(true);
@@ -85,6 +122,29 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
     return () =>
       window.removeEventListener(PROFILE_UPDATED_EVENT, syncIdentity);
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    loadNotifications().finally(() => {
+      if (!isActive) {
+        return;
+      }
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [loadNotifications, location.pathname]);
+
+  useEffect(() => {
+    function handleWindowFocus() {
+      loadNotifications();
+    }
+
+    window.addEventListener("focus", handleWindowFocus);
+    return () => window.removeEventListener("focus", handleWindowFocus);
+  }, [loadNotifications]);
 
   const filteredCategories = useMemo<ExploreMenuLink[]>(() => {
     if (!searchText.trim()) return [];
@@ -119,6 +179,46 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
     navigate("/home");
     window.location.reload();
   };
+
+  async function handleNotificationClick(notification: UserNotification) {
+    if (!notification.isRead) {
+      setNotifications((currentItems) => currentItems.filter((item) => item.id !== notification.id));
+      setNotificationTotal((currentCount) => Math.max(0, currentCount - 1));
+      setUnreadNotificationCount((currentCount) => Math.max(0, currentCount - 1));
+
+      try {
+        await markNotificationRead(notification.id);
+      } catch {
+        getMyNotifications(1, 5, false)
+          .then((result) => {
+            setNotifications(result.items || []);
+            setNotificationTotal(result.totalCount || 0);
+            setUnreadNotificationCount(result.unreadCount || 0);
+          })
+          .catch(() => undefined);
+      }
+    }
+
+    setShowNotifications(false);
+  }
+
+  async function handleMarkAllNotificationsRead() {
+    setNotifications([]);
+    setNotificationTotal(0);
+    setUnreadNotificationCount(0);
+
+    try {
+      await markAllNotificationsRead();
+    } catch {
+      getMyNotifications(1, 5, false)
+        .then((result) => {
+          setNotifications(result.items || []);
+          setNotificationTotal(result.totalCount || 0);
+          setUnreadNotificationCount(result.unreadCount || 0);
+        })
+        .catch(() => undefined);
+    }
+  }
 
   const isActive = (href?: string) => {
     if (!href) return false;
@@ -372,43 +472,90 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
                 <span
                   className="material-icons db-menu-noti"
                   onClick={() => {
-                    setShowNotifications((prev) => !prev);
+                    setShowNotifications((prev) => {
+                      const nextValue = !prev;
+                      if (nextValue) {
+                        loadNotifications();
+                      }
+                      return nextValue;
+                    });
                     setShowExplore(false);
                     setShowProfileMenu(false);
                   }}
                   style={{ cursor: "pointer" }}
                 >
-                  <i id="noti-count">
-                    {String(notifications.length).padStart(2, "0")}
-                  </i>
+                  {unreadNotificationCount > 0 ? (
+                    <i id="noti-count">{String(unreadNotificationCount).padStart(2, "0")}</i>
+                  ) : null}
                   notifications
                 </span>
 
                 <div
-                  className="db-noti top-noti-win"
+                  className="chaodesi-notification-dropdown"
                   style={{
                     display: showNotifications ? "block" : "none",
                     position: "absolute",
                     right: 0,
-                    top: "100%",
+                    top: "calc(100% + 12px)",
                     zIndex: 99999,
                   }}
                 >
                   <span
-                    className="material-icons db-menu-clo"
+                    className="material-icons chaodesi-notification-close"
                     onClick={() => setShowNotifications(false)}
                     style={{ cursor: "pointer" }}
                   >
                     close
                   </span>
-                  <h4>Notifications</h4>
+                  <div className="chaodesi-notification-head">
+                    <h4>Notifications</h4>
+                    {unreadNotificationCount > 0 ? (
+                      <button type="button" onClick={handleMarkAllNotificationsRead}>
+                        Mark all read
+                      </button>
+                    ) : null}
+                  </div>
                   <ul id="all-notif-ul">
-                    {notifications.map((item, index) => (
-                      <li key={index}>
-                        <div>{item}</div>
+                    {isLoadingNotifications ? (
+                      <li>
+                        <div>Loading notifications...</div>
                       </li>
-                    ))}
+                    ) : notifications.length === 0 ? (
+                      <li>
+                        <div>No unread notifications.</div>
+                      </li>
+                    ) : (
+                      notifications.map((item) => (
+                      <li key={item.id} className={item.isRead ? "is-read" : "is-unread"}>
+                        <div>
+                          <Link
+                            to={item.ctaLink || "/dashboard/notifications"}
+                            onClick={() => handleNotificationClick(item)}
+                          ></Link>
+                          <strong>{item.title}</strong>
+                          <span>{item.message}</span>
+                          <small>{formatNotificationTime(item.createdAt)}</small>
+                        </div>
+                      </li>
+                      ))
+                    )}
                   </ul>
+                  {notificationTotal > notifications.length ? (
+                    <Link
+                      to="/dashboard/notifications?status=unread"
+                      className="chaodesi-notification-all"
+                      onClick={() => setShowNotifications(false)}
+                    >
+                      View all unread
+                    </Link>
+                  ) : null}
+                  <Link
+                    to="/dashboard/notifications?status=read"
+                    className="chaodesi-notification-all"
+                    onClick={() => setShowNotifications(false)}
+                  >
+                    View read notifications
+                  </Link>
                 </div>
               </div>
 
@@ -563,4 +710,16 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
       </div>
     </div>
   );
+}
+
+function formatNotificationTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }

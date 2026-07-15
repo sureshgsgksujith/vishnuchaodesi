@@ -5,9 +5,10 @@ import {
 } from "../../allServices/api/allServiceDirectoryApi";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
-import { createAllServicePosting, type AllServicePostingLocation } from "../api/allServicePostingsApi";
+import { createAllServicePosting, type AllServicePostingLocation, type AllServicePricingPackage } from "../api/allServicePostingsApi";
 import { getAllServicePricingPlans, type AllServicePricingPlan } from "../api/allServicePricingPlansApi";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 
 type LocationForm = {
   label: string;
@@ -62,6 +63,8 @@ type PostingForm = {
   instagram: string;
   plan: string;
 };
+
+type ServicePackageForm = AllServicePricingPackage;
 
 type FieldErrors = Record<string, string>;
 
@@ -187,6 +190,12 @@ const initialForm: PostingForm = {
   plan: "",
 };
 
+const initialServicePackages: ServicePackageForm[] = [
+  { serviceName: "", priceText: "", description: "" },
+  { serviceName: "", priceText: "", description: "" },
+  { serviceName: "", priceText: "", description: "" },
+];
+
 function blankLocation(label: string, country = "United States"): LocationForm {
   return {
     label,
@@ -246,6 +255,31 @@ function yearsToNumber(value: string) {
   if (value.includes("3 - 5")) return 3;
   if (value.includes("1 - 3")) return 1;
   return 0;
+}
+
+function normalizeServicePackages(packages: ServicePackageForm[]) {
+  return packages
+    .map((item) => ({
+      serviceName: item.serviceName.trim(),
+      priceText: item.priceText.trim(),
+      description: item.description?.trim() || "",
+    }))
+    .filter((item) => item.serviceName || item.priceText || item.description)
+    .slice(0, 6);
+}
+
+function getServicePackageError(packages: ServicePackageForm[]) {
+  const startedRows = packages.filter((item) => item.serviceName.trim() || item.priceText.trim() || item.description?.trim());
+
+  if (!startedRows.length) {
+    return "";
+  }
+
+  if (startedRows.some((item) => !item.serviceName.trim() || !item.priceText.trim())) {
+    return "Enter both service name and price for each package row.";
+  }
+
+  return "";
 }
 
 function getErrorMessage(error: unknown) {
@@ -309,6 +343,7 @@ export default function ServicePartnerPostingPage() {
   const [areaInput, setAreaInput] = useState("");
   const [openDays, setOpenDays] = useState(["Mon", "Tue", "Wed", "Thu", "Fri"]);
   const [payments, setPayments] = useState(["Cash"]);
+  const [servicePackages, setServicePackages] = useState<ServicePackageForm[]>(initialServicePackages);
   const [showSecondaryEmail, setShowSecondaryEmail] = useState(false);
   const [showSecondaryPhone, setShowSecondaryPhone] = useState(false);
   const [showWhatsapp, setShowWhatsapp] = useState(false);
@@ -615,6 +650,27 @@ export default function ServicePartnerPostingPage() {
     setter(current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
   }
 
+  function updateServicePackage(index: number, key: keyof ServicePackageForm, value: string) {
+    setServicePackages((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index ? { ...item, [key]: value } : item
+      )
+    );
+  }
+
+  function addServicePackage() {
+    setServicePackages((current) =>
+      current.length >= 6 ? current : [...current, { serviceName: "", priceText: "", description: "" }]
+    );
+  }
+
+  function removeServicePackage(index: number) {
+    setServicePackages((current) => {
+      const next = current.filter((_, itemIndex) => itemIndex !== index);
+      return next.length ? next : [{ serviceName: "", priceText: "", description: "" }];
+    });
+  }
+
   function addArea() {
     const nextAreas = mergeServiceAreas(areas, areaInput);
     if (nextAreas.length !== areas.length) {
@@ -752,12 +808,22 @@ export default function ServicePartnerPostingPage() {
       }
     }
 
-    if (step === 3 && form.description.trim().length < 20) {
-      errors.description = "Add a business description with at least 20 characters.";
-      setFieldErrors(errors);
-      setNotice("Please fix the highlighted fields.");
-      scrollToFirstFieldError();
-      return false;
+    if (step === 3) {
+      if (form.description.trim().length < 20) {
+        errors.description = "Add a business description with at least 20 characters.";
+      }
+
+      const packageError = getServicePackageError(servicePackages);
+      if (packageError) {
+        errors.pricingPackages = packageError;
+      }
+
+      if (Object.keys(errors).length) {
+        setFieldErrors(errors);
+        setNotice("Please fix the highlighted fields.");
+        scrollToFirstFieldError();
+        return false;
+      }
     }
 
     setFieldErrors({});
@@ -817,6 +883,7 @@ export default function ServicePartnerPostingPage() {
         description: form.description.trim(),
         workingMode: form.delivery,
         openDays,
+        pricingPackages: normalizeServicePackages(servicePackages),
         contactName: form.contactName.trim(),
         email: form.email.trim(),
         phoneCountryCode: form.phoneCode,
@@ -920,10 +987,14 @@ export default function ServicePartnerPostingPage() {
                     form={form}
                     openDays={openDays}
                     payments={payments}
+                    servicePackages={servicePackages}
                     errors={fieldErrors}
                     onField={updateField}
                     onToggleDay={(day) => toggleValue(day, openDays, setOpenDays)}
                     onTogglePayment={(payment) => toggleValue(payment, payments, setPayments)}
+                    onServicePackage={updateServicePackage}
+                    onAddServicePackage={addServicePackage}
+                    onRemoveServicePackage={removeServicePackage}
                   />
                 ) : null}
 
@@ -938,6 +1009,7 @@ export default function ServicePartnerPostingPage() {
                     areas={serviceAreas}
                     openDays={openDays}
                     payments={payments}
+                    servicePackages={servicePackages}
                     acceptedTerms={acceptedTerms}
                     isPaymentGatewayOpen={isPaymentGatewayOpen}
                     isPaymentPaid={isSelectedPlanPaid}
@@ -1175,7 +1247,11 @@ function StepBasic({
         </div>
       </div>
       <Toggle label="Would you like to add a secondary phone number?" value={showSecondaryPhone} onChange={onToggleSecondaryPhone} />
-      {showSecondaryPhone ? <TextField value={form.secondaryPhone} onChange={(value) => onField("secondaryPhone", value)} placeholder="Secondary phone number" /> : null}
+      {showSecondaryPhone ? (
+        <div className="spaw-field-block">
+          <PhoneNumberInput value={form.secondaryPhone} onChange={(value) => onField("secondaryPhone", value)} placeholder="Secondary phone number" inputClassName="spaw-input" selectClassName="spaw-phone-code" />
+        </div>
+      ) : null}
       <Toggle label="Would you like to add a WhatsApp number?" value={showWhatsapp} onChange={onToggleWhatsapp} />
       {showWhatsapp ? <TextField value={form.whatsapp} onChange={(value) => onField("whatsapp", value)} placeholder="WhatsApp number" /> : null}
       <Toggle label="Would you like to add a landline number?" value={showLandline} onChange={onToggleLandline} />
@@ -1562,7 +1638,31 @@ function StepService({
   );
 }
 
-function StepProfile({ form, openDays, payments, errors, onField, onToggleDay, onTogglePayment }: { form: PostingForm; openDays: string[]; payments: string[]; errors: FieldErrors; onField: <K extends keyof PostingForm>(key: K, value: PostingForm[K]) => void; onToggleDay: (day: string) => void; onTogglePayment: (payment: string) => void }) {
+function StepProfile({
+  form,
+  openDays,
+  payments,
+  servicePackages,
+  errors,
+  onField,
+  onToggleDay,
+  onTogglePayment,
+  onServicePackage,
+  onAddServicePackage,
+  onRemoveServicePackage,
+}: {
+  form: PostingForm;
+  openDays: string[];
+  payments: string[];
+  servicePackages: ServicePackageForm[];
+  errors: FieldErrors;
+  onField: <K extends keyof PostingForm>(key: K, value: PostingForm[K]) => void;
+  onToggleDay: (day: string) => void;
+  onTogglePayment: (payment: string) => void;
+  onServicePackage: (index: number, key: keyof ServicePackageForm, value: string) => void;
+  onAddServicePackage: () => void;
+  onRemoveServicePackage: (index: number) => void;
+}) {
   return (
     <div className="spaw-panel active">
       <div className={`spaw-field-block${errors.description ? " spaw-input-error" : ""}`}>
@@ -1578,6 +1678,29 @@ function StepProfile({ form, openDays, payments, errors, onField, onToggleDay, o
       <div className="spaw-field-block"><label className="spaw-label">Working days &amp; hours</label><div className="spaw-days-grid">{days.map((day) => <label className="spaw-day-chip" key={day}><input type="checkbox" checked={openDays.includes(day)} onChange={() => onToggleDay(day)} /><span>{day}</span></label>)}</div></div>
       <div className="spaw-field-block spaw-row-2"><TextField label="Opening time" type="time" value={form.openTime} onChange={(value) => onField("openTime", value)} /><TextField label="Closing time" type="time" value={form.closeTime} onChange={(value) => onField("closeTime", value)} /></div>
       <div className="spaw-field-block"><label className="spaw-label">Payment modes accepted</label><div className="spaw-check-grid spaw-pay-grid">{paymentModes.map((mode) => <label className="spaw-check-pill" key={mode}><input type="checkbox" checked={payments.includes(mode)} onChange={() => onTogglePayment(mode)} /><span>{mode}</span></label>)}</div></div>
+      <div className={`spaw-field-block${errors.pricingPackages ? " spaw-input-error" : ""}`}>
+        <label className="spaw-label">
+          Service pricing packages
+          <small>Add the service names and prices customers should see on your detail page.</small>
+        </label>
+        <div className="spaw-service-package-list">
+          {servicePackages.map((item, index) => (
+            <div className="spaw-service-package-row" key={index}>
+              <TextField label="Service name" value={item.serviceName} onChange={(value) => onServicePackage(index, "serviceName", value.slice(0, 120))} placeholder="e.g., Buying consultation" />
+              <TextField label="Price" value={item.priceText} onChange={(value) => onServicePackage(index, "priceText", value.slice(0, 60))} placeholder="e.g., $49+ or Quote based" />
+              <TextField label="Short description" value={item.description || ""} onChange={(value) => onServicePackage(index, "description", value.slice(0, 220))} placeholder="What is included?" />
+              <button type="button" className="spaw-package-remove" onClick={() => onRemoveServicePackage(index)} aria-label="Remove service package">
+                <i className="material-icons">delete</i>
+              </button>
+            </div>
+          ))}
+        </div>
+        <button type="button" className="spaw-add-package" onClick={onAddServicePackage} disabled={servicePackages.length >= 6}>
+          <i className="material-icons">add</i>
+          Add another service
+        </button>
+        <FieldError message={errors.pricingPackages} />
+      </div>
       <TextField label="Website" small="(optional)" type="url" value={form.website} onChange={(value) => onField("website", value)} placeholder="https://www.yourbusiness.com" />
       <div className="spaw-field-block spaw-row-2"><TextField label="Facebook" type="url" value={form.facebook} onChange={(value) => onField("facebook", value)} placeholder="Facebook page URL" /><TextField label="Instagram" type="url" value={form.instagram} onChange={(value) => onField("instagram", value)} placeholder="Instagram profile URL" /></div>
     </div>
@@ -1594,6 +1717,7 @@ function StepReview({
   areas,
   openDays,
   payments,
+  servicePackages,
   acceptedTerms,
   isPaymentGatewayOpen,
   isPaymentPaid,
@@ -1615,6 +1739,7 @@ function StepReview({
   areas: string[];
   openDays: string[];
   payments: string[];
+  servicePackages: ServicePackageForm[];
   acceptedTerms: boolean;
   isPaymentGatewayOpen: boolean;
   isPaymentPaid: boolean;
@@ -1628,6 +1753,7 @@ function StepReview({
   onTerms: (value: boolean) => void;
 }) {
   const selectedPlan = servicePlans.find((plan) => plan.code === form.plan);
+  const visiblePackages = normalizeServicePackages(servicePackages);
 
   return (
     <div className="spaw-panel active">
@@ -1635,6 +1761,9 @@ function StepReview({
       <ReviewCard title="Basic information" step={1} onGoto={onGoto} rows={[["Profession type", form.providerType], ["Business name", form.businessName], ["Tagline", form.tagline], ["Business image", form.businessImageName || "Not uploaded"], ["Location", [formatLocation(primaryLocation), ...branches.map(formatLocation)].filter(Boolean).join(" | ")], ["Contact name", form.contactName], ["Email", form.email], ["Phone", `${form.phoneCode} ${form.phone}`]]} />
       <ReviewCard title="Service & category" step={2} onGoto={onGoto} rows={[["Primary service", selectedCategory?.name || ""], ["Services selected", String(selectedDetailedIds.length)], ["Areas served", areas.join(", ")], ["Service delivery", form.delivery], ["Years in business", form.experience]]} />
       <ReviewCard title="Business profile" step={3} onGoto={onGoto} rows={[["Description", form.description], ["Year established", form.yearEstablished], ["Team size", form.teamSize], ["Working days", openDays.join(", ")], ["Working hours", `${form.openTime} - ${form.closeTime}`], ["Payment modes", payments.join(", ")], ["Website", form.website]]} />
+      {visiblePackages.length ? (
+        <ReviewCard title="Service pricing" step={3} onGoto={onGoto} rows={visiblePackages.map((item) => [item.serviceName, `${item.priceText}${item.description ? ` - ${item.description}` : ""}`])} />
+      ) : null}
       <div className={`spaw-field-block${errors.plan ? " spaw-input-error" : ""}`}>
         <label className="spaw-label">Choose your service plan <span className="spaw-req">*</span><small>Select one paid Add Service plan to continue.</small></label>
         <div className="spaw-plan-grid">

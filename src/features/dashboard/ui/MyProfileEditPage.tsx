@@ -11,6 +11,7 @@ import {
 } from "../api/profileApi";
 import { formatJoinDate } from "../utils/profileStorage";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import "../styles/profileEdit.css";
 
 type FileField = keyof UserProfileUploadFiles;
@@ -329,13 +330,7 @@ export default function MyProfileEditPage() {
                   <td>Mobile Number</td>
                   <td>
                     <div className="form-group">
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="mobileNumber"
-                        value={formValues.mobileNumber}
-                        onChange={handleValueChange("mobileNumber")}
-                      />
+                      <PhoneNumberInput value={formValues.mobileNumber} onChange={(mobileNumber) => setFormValues((current) => current ? { ...current, mobileNumber } : current)} />
                     </div>
                   </td>
                 </tr>

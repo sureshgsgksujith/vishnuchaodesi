@@ -1,5 +1,6 @@
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { dashboardSupportCategories } from "../config/dashboardData";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 
 type DashboardSupportWidgetProps = {
   isOpen: boolean;
@@ -14,6 +15,8 @@ export default function DashboardSupportWidget({
   onClose,
   onSubmit,
 }: DashboardSupportWidgetProps) {
+  const [mobileNumber, setMobileNumber] = useState("");
+
   return (
     <>
       <button
@@ -61,13 +64,7 @@ export default function DashboardSupportWidget({
               />
             </div>
             <div className="form-group">
-              <input
-                type="text"
-                className="form-control"
-                name="enquiry_mobile"
-                placeholder="Enter mobile number *"
-                required
-              />
+              <PhoneNumberInput name="enquiry_mobile" value={mobileNumber} onChange={setMobileNumber} placeholder="Enter mobile number *" required />
             </div>
             <div className="form-group">
               <select

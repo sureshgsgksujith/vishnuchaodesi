@@ -9,6 +9,7 @@ import {
 } from "../../dashboard/utils/listingImages";
 import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
 import { replaceDollarCurrency } from "../../../shared/utils/currency";
+import { filterActiveEventListings, getEventDateLabel } from "../../listing/utils/eventListings";
 import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 
 function getDetailValue(
@@ -46,13 +47,7 @@ function getEventLocation(listing: ListingSummary) {
 }
 
 function getEventSchedule(listing: ListingSummary) {
-  return getDetailValue(listing, ["propertyDetails", "settings"], [
-    "eventDateTime",
-    "eventDate",
-    "startDate",
-    "date",
-    "schedule",
-  ]) || "Schedule available on details";
+  return getEventDateLabel(listing) || "Schedule available on details";
 }
 
 function getEventPrice(listing: ListingSummary, country: string) {
@@ -94,13 +89,13 @@ export default function HomeEventsSection() {
       category: "events-tickets",
       city: activeCity || undefined,
       page: 1,
-      pageSize: 10,
+      pageSize: 30,
       forceRefresh: locationRevision > 0,
     })
       .then((result) => {
         if (isActive) {
           setEvents(
-            [...(result.items || [])]
+            filterActiveEventListings(result.items || [])
               .sort(
                 (first, second) =>
                   new Date(second.createdAt || 0).getTime() - new Date(first.createdAt || 0).getTime()

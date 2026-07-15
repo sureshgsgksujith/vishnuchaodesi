@@ -10,6 +10,7 @@ import {
 import { getMyProfile, type UserProfileFormValues } from "../api/profileApi";
 import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import "../styles/eventBookings.css";
 
 type PaymentGateway = {
@@ -505,15 +506,7 @@ export default function PaymentPage() {
                                 <div className="row">
                                   <div className="col-md-6">
                                     <div className="form-group">
-                                      <input
-                                        type="text"
-                                        className="form-control"
-                                        name="contactMobile"
-                                        value={billingForm.contactMobile}
-                                        placeholder="Contact phone number"
-                                        inputMode="numeric"
-                                        onChange={handleBillingChange}
-                                      />
+                                      <PhoneNumberInput value={billingForm.contactMobile} onChange={(contactMobile) => setBillingForm((current) => ({ ...current, contactMobile }))} placeholder="Contact phone number" />
                                     </div>
                                   </div>
                                   <div className="col-md-6">

@@ -720,11 +720,11 @@ export default function LoginPage() {
                               value={countryCode}
                               onChange={(e) => setCountryCode(e.target.value)}
                             >
-                              <option value="+1">US +1</option>
-                              <option value="+44">GB +44</option>
-                              <option value="+91">IN +91</option>
-                              <option value="+61">AU +61</option>
-                              <option value="+971">AE +971</option>
+                              <option value="+1">+1 US</option>
+                              <option value="+44">+44 UK</option>
+                              <option value="+91">+91 IN</option>
+                              <option value="+61">+61 AU</option>
+                              <option value="+971">+971 AE</option>
                             </select>
 
                             <input

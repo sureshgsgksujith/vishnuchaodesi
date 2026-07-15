@@ -188,7 +188,7 @@ const initialForm: ServicePostingForm = {
   workingMode: "business",
   contactName: "",
   email: "",
-  phoneCountryCode: "US (+1)",
+  phoneCountryCode: "+1",
   phoneNumber: "",
   verificationMethod: "sms",
   packageCode: "SERVICE_STARTER",
@@ -1318,9 +1318,11 @@ function ContactStep({
           <span>Phone</span>
           <div className="service-onboarding-phone-field">
             <select value={form.phoneCountryCode} onChange={(event) => onFieldChange("phoneCountryCode", event.target.value)}>
-              <option>US (+1)</option>
-              <option>CA (+1)</option>
-              <option>IN (+91)</option>
+              <option value="+1">+1 US</option>
+              <option value="+91">+91 IN</option>
+              <option value="+44">+44 UK</option>
+              <option value="+61">+61 AU</option>
+              <option value="+971">+971 AE</option>
             </select>
             <input type="tel" value={form.phoneNumber} onChange={(event) => onFieldChange("phoneNumber", event.target.value)} />
           </div>

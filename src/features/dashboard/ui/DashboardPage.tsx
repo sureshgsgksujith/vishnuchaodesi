@@ -15,10 +15,10 @@ import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import {
   dashboardBlogPosts,
   dashboardCoupons,
-  dashboardNotifications,
   followingUsers,
   sentReviews,
 } from "../mock/dashboardMockData";
+import { getUnreadNotificationCount } from "../api/notificationsApi";
 import "../styles/dashboardPage.css";
 
 export default function DashboardPage() {
@@ -30,8 +30,10 @@ export default function DashboardPage() {
   const [isLoadingListings, setIsLoadingListings] = useState(true);
   const [isLoadingEventBookings, setIsLoadingEventBookings] = useState(true);
   const [isLoadingEnquiries, setIsLoadingEnquiries] = useState(true);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
   const fullName = identity.fullName;
-  const isDashboardLoading = isLoadingListings || isLoadingEventBookings || isLoadingEnquiries;
+  const isDashboardLoading = isLoadingListings || isLoadingEventBookings || isLoadingEnquiries || isLoadingNotifications;
 
   useEffect(() => {
     const syncIdentity = () => setIdentity(getStoredDashboardIdentity());
@@ -64,6 +66,26 @@ export default function DashboardPage() {
         if (isActive) {
           setIsLoadingListings(false);
         }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    setIsLoadingNotifications(true);
+    getUnreadNotificationCount()
+      .then((count) => {
+        if (isActive) setNotificationCount(count || 0);
+      })
+      .catch(() => {
+        if (isActive) setNotificationCount(0);
+      })
+      .finally(() => {
+        if (isActive) setIsLoadingNotifications(false);
       });
 
     return () => {
@@ -239,7 +261,7 @@ export default function DashboardPage() {
       {
         eyebrow: "Updates",
         title: "Notifications",
-        count: formatDashboardCount(dashboardNotifications.length),
+        count: formatDashboardCount(notificationCount),
         description: "Read account notifications",
         href: "/dashboard/notifications",
         icon: "/template-17/images/icon/dbl19.png",
@@ -255,7 +277,7 @@ export default function DashboardPage() {
         tone: "orange",
       },
     ],
-    [activeFollowings, enquiries.length, eventBookings.length, listingMetrics, listingTotalCount, paidTicketBookingCount, reviewCount, totalTicketPayments]
+    [activeFollowings, enquiries.length, eventBookings.length, listingMetrics, listingTotalCount, notificationCount, paidTicketBookingCount, reviewCount, totalTicketPayments]
   );
 
   return (

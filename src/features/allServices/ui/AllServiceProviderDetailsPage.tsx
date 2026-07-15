@@ -4,6 +4,7 @@ import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import { submitRequirement } from "../../listing/api/requirementsApi";
 import { getPublicAllServicePosting, type PublicAllServicePosting } from "../api/allServicePostingsApi";
+import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import "../styles/allServices.css";
 
 type EnquiryForm = {
@@ -71,6 +72,7 @@ export default function AllServiceProviderDetailsPage() {
   const primaryLocation = useMemo(() => getPrimaryLocation(posting), [posting]);
   const rating = useMemo(() => getRating(posting?.id || 0), [posting?.id]);
   const reviewCount = useMemo(() => 48 + ((posting?.id || 0) % 85), [posting?.id]);
+  const pricingPackages = useMemo(() => getPricingPackages(posting), [posting]);
 
   async function submitEnquiry(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -220,16 +222,12 @@ export default function AllServiceProviderDetailsPage() {
 
             <ServicePanel id="pricing" eyebrow="Pricing" title="Packages">
               <div className="service-profile-pricing">
-                {[
-                  ["Basic Enquiry", "Quote based", "Share your requirement and receive provider response."],
-                  ["Priority Consultation", "$49+", "Faster scheduling for time-sensitive requests."],
-                  ["Complete Service", "$119+", "Detailed assistance based on selected service needs."],
-                ].map(([name, price, text], index) => (
-                  <div className={index === 1 ? "popular" : ""} key={name}>
+                {pricingPackages.map((item, index) => (
+                  <div className={index === 1 ? "popular" : ""} key={`${item.serviceName}-${index}`}>
                     {index === 1 ? <span>Popular</span> : null}
-                    <h4>{name}</h4>
-                    <b>{price}</b>
-                    <p>{text}</p>
+                    <h4>{item.serviceName}</h4>
+                    <b>{item.priceText}</b>
+                    <p>{item.description || "Available through this provider."}</p>
                     <a href="#contact">Choose plan</a>
                   </div>
                 ))}
@@ -299,7 +297,7 @@ export default function AllServiceProviderDetailsPage() {
               <form onSubmit={submitEnquiry}>
                 <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Enter name *" />
                 <input value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="Email address *" />
-                <input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder="Mobile number *" />
+                <PhoneNumberInput value={form.phone} onChange={(phone) => setForm((current) => ({ ...current, phone }))} placeholder="Mobile number *" required />
                 <textarea value={form.message} onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))} placeholder="Tell us what you need" rows={4} />
                 {formMessage ? <p className="service-profile-form-message">{formMessage}</p> : null}
                 <button type="submit" disabled={isSubmitting}>{isSubmitting ? "Sending..." : "Send enquiry"}</button>
@@ -326,6 +324,26 @@ function getServiceNames(posting: PublicAllServicePosting | null, requestedServi
   if (!posting) return [];
   const names = posting.selectedServices?.map((service) => service.detailedCategoryName).filter(Boolean) || [];
   return Array.from(new Set([requestedServiceName, posting.serviceName, ...names])).filter(Boolean);
+}
+
+function getPricingPackages(posting: PublicAllServicePosting | null) {
+  const customPackages = (posting?.pricingPackages || [])
+    .map((item) => ({
+      serviceName: item.serviceName?.trim() || "",
+      priceText: item.priceText?.trim() || "",
+      description: item.description?.trim() || "",
+    }))
+    .filter((item) => item.serviceName && item.priceText);
+
+  if (customPackages.length) {
+    return customPackages;
+  }
+
+  return [
+    { serviceName: "Basic Enquiry", priceText: "Quote based", description: "Share your requirement and receive provider response." },
+    { serviceName: "Priority Consultation", priceText: "$49+", description: "Faster scheduling for time-sensitive requests." },
+    { serviceName: "Complete Service", priceText: "$119+", description: "Detailed assistance based on selected service needs." },
+  ];
 }
 
 function getPrimaryLocation(posting: PublicAllServicePosting | null) {
