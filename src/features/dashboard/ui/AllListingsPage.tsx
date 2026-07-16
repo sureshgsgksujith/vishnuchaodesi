@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
@@ -8,13 +8,28 @@ import {
   type ListingSummary,
 } from "../api/listingsApi";
 import {
+  getListingCategoryTree,
+  type ListingCategoryOption,
+  type ListingSubCategoryOption,
+} from "../api/listingCategoriesApi";
+import {
+  getAllServiceDirectoryTree,
+  type AllServiceCategoryOption,
+  type AllServiceSubCategoryOption,
+} from "../../allServices/api/allServiceDirectoryApi";
+import {
+  getMyAllServicePostings,
+  type PublicAllServicePosting,
+} from "../../allServices/api/allServicePostingsApi";
+import {
   resolveListingImageUrl,
   setFallbackListingImage,
 } from "../utils/listingImages";
 import "../styles/listings.css";
 
 const PAGE_SIZE = 10;
-type ListingModuleFilter = "" | "classified" | "jobs" | "products";
+type ListingModuleFilter = "" | "yellowPages" | "classified" | "localService" | "jobs" | "products";
+type DashboardListingRow = ListingSummary & { dashboardModule?: "localService" };
 type AllListingsPageProps = {
   defaultModule?: ListingModuleFilter;
   lockedModule?: boolean;
@@ -23,10 +38,18 @@ type AllListingsPageProps = {
 
 const moduleFilterOptions: Array<{ value: ListingModuleFilter; label: string }> = [
   { value: "", label: "All Modules" },
-  { value: "classified", label: "Ads Posts" },
-  { value: "jobs", label: "Jobs" },
-  { value: "products", label: "Products" },
+  { value: "yellowPages", label: "Yellow Pages" },
+  { value: "classified", label: "Classifieds" },
+  { value: "localService", label: "Local Service" },
 ];
+
+const lockedModuleLabels: Record<Exclude<ListingModuleFilter, "">, string> = {
+  yellowPages: "Yellow Pages",
+  classified: "Classifieds",
+  localService: "Local Service",
+  jobs: "Jobs",
+  products: "Products",
+};
 
 export default function AllListingsPage({
   defaultModule = "",
@@ -34,56 +57,75 @@ export default function AllListingsPage({
   title = "Listing Details",
 }: AllListingsPageProps) {
   const [searchParams] = useSearchParams();
-  const [items, setItems] = useState<ListingSummary[]>([]);
+  const [items, setItems] = useState<DashboardListingRow[]>([]);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedModule, setSelectedModule] = useState<ListingModuleFilter>(defaultModule);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
+  const [listingCategories, setListingCategories] = useState<ListingCategoryOption[]>([]);
+  const [serviceCategories, setServiceCategories] = useState<AllServiceCategoryOption[]>([]);
   const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const loadRequestId = useRef(0);
+
+  const visibleModuleOptions = useMemo(
+    () =>
+      lockedModule
+        ? [
+            {
+              value: selectedModule,
+              label: selectedModule ? lockedModuleLabels[selectedModule] : title,
+            },
+          ]
+        : moduleFilterOptions,
+    [lockedModule, selectedModule, title],
+  );
 
   const categoryOptions = useMemo(
-    () =>
-      getUniqueOptions(
-        items
-          .filter((item) => matchesModuleFilter(item, selectedModule))
-          .map((item) => item.categoryName),
-      ),
-    [items, selectedModule],
+    () => getCategoryOptions(selectedModule, listingCategories, serviceCategories, selectedCategory),
+    [listingCategories, selectedCategory, selectedModule, serviceCategories],
   );
   const subCategoryOptions = useMemo(
-    () => {
-      if (!selectedCategory) {
-        return [];
-      }
-
-      return getUniqueOptions(
-        items
-          .filter((item) => matchesModuleFilter(item, selectedModule))
-          .filter((item) => item.categoryName === selectedCategory)
-          .map((item) => item.subCategory),
-      );
-    },
-    [items, selectedCategory, selectedModule],
+    () => getSubCategoryOptions(selectedModule, listingCategories, serviceCategories, selectedCategory, selectedSubCategory),
+    [listingCategories, selectedCategory, selectedModule, selectedSubCategory, serviceCategories],
   );
-  const filteredItems = useMemo(
-    () => filterListings(items, search, selectedModule, selectedCategory, selectedSubCategory),
-    [items, search, selectedModule, selectedCategory, selectedSubCategory],
-  );
+  const subCategoryLabel = selectedModule === "classified" ? "Detailed Category" : "Sub Category";
   const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE)),
-    [filteredItems.length],
-  );
-  const pagedItems = useMemo(
-    () => filteredItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filteredItems, page],
+    () => Math.max(1, Math.ceil(totalCount / PAGE_SIZE)),
+    [totalCount],
   );
 
   useEffect(() => {
-    loadListings();
+    let isMounted = true;
+
+    Promise.all([
+      getListingCategoryTree().catch(() => [] as ListingCategoryOption[]),
+      getAllServiceDirectoryTree().catch(() => [] as AllServiceCategoryOption[]),
+    ]).then(([nextListingCategories, nextServiceCategories]) => {
+      if (!isMounted) {
+        return;
+      }
+
+      setListingCategories(nextListingCategories || []);
+      setServiceCategories(nextServiceCategories || []);
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 350);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [search]);
 
   useEffect(() => {
     const nextModule = lockedModule
@@ -101,19 +143,57 @@ export default function AllListingsPage({
 
   useEffect(() => {
     setPage(1);
-  }, [search, selectedModule, selectedCategory, selectedSubCategory]);
+  }, [debouncedSearch, selectedModule, selectedCategory, selectedSubCategory]);
+
+  useEffect(() => {
+    loadListings();
+  }, [page, debouncedSearch, selectedModule, selectedCategory, selectedSubCategory]);
 
   async function loadListings() {
+    const requestId = loadRequestId.current + 1;
+    loadRequestId.current = requestId;
+
     try {
       setIsLoading(true);
       setErrorMessage("");
 
-      const result = await getMyListings("", 1, 1000);
+      const result = selectedModule === "localService"
+        ? await getMyAllServicePostings({
+            search: debouncedSearch,
+            page,
+            pageSize: PAGE_SIZE,
+            category: selectedCategory,
+            subCategory: selectedSubCategory,
+          }).then((response) => ({
+            ...response,
+            items: (response.items || []).map(mapServicePostingToListingRow),
+          }))
+        : await getMyListings({
+            search: debouncedSearch,
+            page,
+            pageSize: PAGE_SIZE,
+            categoryName: getServerCategoryFilter(selectedModule, selectedCategory),
+            subCategory: getServerSubCategoryFilter(selectedModule, selectedCategory, selectedSubCategory),
+            detailCategory: getServerDetailCategoryFilter(selectedModule, selectedSubCategory),
+            listingModule: getServerModuleFilter(selectedModule),
+          });
+
+      if (requestId !== loadRequestId.current) {
+        return;
+      }
+
       setItems(result.items || []);
+      setTotalCount(result.totalCount || 0);
     } catch (error) {
+      if (requestId !== loadRequestId.current) {
+        return;
+      }
+
       setErrorMessage(getListingApiErrorMessage(error));
     } finally {
-      setIsLoading(false);
+      if (requestId === loadRequestId.current) {
+        setIsLoading(false);
+      }
     }
   }
 
@@ -155,6 +235,7 @@ export default function AllListingsPage({
       setItems((currentItems) =>
         currentItems.filter((item) => item.id !== listingId)
       );
+      setTotalCount((currentCount) => Math.max(0, currentCount - 1));
     } catch (error) {
       setErrorMessage(getListingApiErrorMessage(error));
     } finally {
@@ -189,7 +270,7 @@ export default function AllListingsPage({
           <div className="dashboard-listings-toolbar">
             <div className="dashboard-listings-title-block">
               <h2>{title}</h2>
-              <span>{filteredItems.length} matching listings</span>
+              <span>{totalCount} matching listings</span>
             </div>
 
             <div className="dashboard-listings-filters">
@@ -200,7 +281,7 @@ export default function AllListingsPage({
                   onChange={(event) => handleModuleChange(event.target.value)}
                   disabled={lockedModule}
                 >
-                  {moduleFilterOptions.map((option) => (
+                  {visibleModuleOptions.map((option) => (
                     <option key={option.value || "all"} value={option.value}>
                       {option.label}
                     </option>
@@ -214,7 +295,9 @@ export default function AllListingsPage({
                   value={selectedCategory}
                   onChange={(event) => handleCategoryChange(event.target.value)}
                 >
-                  <option value="">All Categories</option>
+                  <option value="">
+                    {selectedModule ? "All Categories" : "Select module for categories"}
+                  </option>
                   {categoryOptions.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -225,12 +308,12 @@ export default function AllListingsPage({
 
               {selectedCategory ? (
                 <label>
-                  <span>Sub Category</span>
+                  <span>{subCategoryLabel}</span>
                   <select
                     value={selectedSubCategory}
                     onChange={(event) => setSelectedSubCategory(event.target.value)}
                   >
-                    <option value="">All Sub Categories</option>
+                    <option value="">All {subCategoryLabel}s</option>
                     {subCategoryOptions.map((subCategory) => (
                       <option key={subCategory} value={subCategory}>
                         {subCategory}
@@ -278,8 +361,8 @@ export default function AllListingsPage({
                   <tr>
                     <td colSpan={10}>Loading listings...</td>
                   </tr>
-                ) : pagedItems.length > 0 ? (
-                  pagedItems.map((item, index) => (
+                ) : items.length > 0 ? (
+                  items.map((item, index) => (
                     <tr key={item.id}>
                       <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
 
@@ -350,7 +433,7 @@ export default function AllListingsPage({
                           </span>
                         ) : (
                           <Link
-                            to={isClassifiedListing(item) ? `/dashboard/classifieds/${item.id}/edit/step-1` : `/dashboard/listings/${item.id}/edit`}
+                            to={getEditUrl(item)}
                             className="db-list-edit"
                           >
                             Edit
@@ -363,15 +446,16 @@ export default function AllListingsPage({
                           type="button"
                           className="db-list-edit db-list-edit-button"
                           onClick={() => handleDelete(item.id)}
-                          disabled={deletingId === item.id}
+                          disabled={deletingId === item.id || isLocalServiceListing(item)}
+                          title={isLocalServiceListing(item) ? "Local service delete is not available here yet." : undefined}
                         >
-                          {deletingId === item.id ? "Deleting..." : "Delete"}
+                          {isLocalServiceListing(item) ? "Locked" : deletingId === item.id ? "Deleting..." : "Delete"}
                         </button>
                       </td>
 
                       <td>
                         <Link
-                          to={`/dashboard/listings/${item.id}/preview`}
+                          to={getPreviewUrl(item)}
                           className="db-list-edit"
                           target="_blank"
                           rel="noreferrer"
@@ -391,7 +475,7 @@ export default function AllListingsPage({
           </div>
 
           <div className="dashboard-listings-pagination">
-            <span>{filteredItems.length} listings</span>
+            <span>{totalCount} listings</span>
             <div>
               <button type="button" onClick={() => setPage(page - 1)} disabled={page <= 1}>
                 Previous
@@ -426,68 +510,225 @@ function getUniqueOptions(values: Array<string | null | undefined>) {
   ).sort((first, second) => first.localeCompare(second));
 }
 
-function filterListings(
-  items: ListingSummary[],
-  search: string,
-  selectedModule: ListingModuleFilter,
-  selectedCategory: string,
-  selectedSubCategory: string,
-) {
-  const normalizedSearch = search.trim().toLowerCase();
-
-  return items.filter((item) => {
-    if (!matchesModuleFilter(item, selectedModule)) {
-      return false;
-    }
-
-    if (selectedCategory && item.categoryName !== selectedCategory) {
-      return false;
-    }
-
-    if (selectedSubCategory && item.subCategory !== selectedSubCategory) {
-      return false;
-    }
-
-    if (!normalizedSearch) {
-      return true;
-    }
-
-    return [
-      item.title,
-      item.categoryName,
-      item.subCategory,
-      item.detailCategory,
-      item.status,
-      getListingModuleLabel(item),
-      getPlanName(item),
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase()
-      .includes(normalizedSearch);
-  });
-}
-
 function getModuleFilter(value: string | null): ListingModuleFilter {
-  return value === "classified" || value === "jobs" || value === "products"
+  return value === "yellowPages" ||
+    value === "classified" ||
+    value === "localService" ||
+    value === "jobs" ||
+    value === "products"
     ? value
     : "";
 }
 
-function matchesModuleFilter(item: ListingSummary, selectedModule: ListingModuleFilter) {
-  if (!selectedModule) {
-    return true;
+function getServerModuleFilter(selectedModule: ListingModuleFilter) {
+  if (selectedModule === "yellowPages") {
+    return "YellowPages";
   }
 
   if (selectedModule === "classified") {
-    return isClassifiedListing(item);
+    return "Classifieds";
+  }
+
+  if (selectedModule === "products") {
+    return "Products";
+  }
+
+  return undefined;
+}
+
+function getServerCategoryFilter(selectedModule: ListingModuleFilter, selectedCategory: string) {
+  if (selectedModule === "classified") {
+    return "Classifieds";
   }
 
   if (selectedModule === "jobs") {
-    return isJobsListing(item);
+    return "Jobs";
   }
 
-  return isProductListing(item);
+  if (selectedCategory) {
+    return selectedCategory;
+  }
+
+  return undefined;
+}
+
+function getServerSubCategoryFilter(
+  selectedModule: ListingModuleFilter,
+  selectedCategory: string,
+  selectedSubCategory: string,
+) {
+  if (selectedModule === "classified") {
+    return selectedCategory || undefined;
+  }
+
+  return selectedSubCategory || undefined;
+}
+
+function getServerDetailCategoryFilter(selectedModule: ListingModuleFilter, selectedSubCategory: string) {
+  if (selectedModule === "classified") {
+    return selectedSubCategory || undefined;
+  }
+
+  return undefined;
+}
+
+function getCategoryOptions(
+  selectedModule: ListingModuleFilter,
+  listingCategories: ListingCategoryOption[],
+  serviceCategories: AllServiceCategoryOption[],
+  selectedCategory: string,
+) {
+  if (selectedModule === "localService") {
+    return getUniqueOptions([
+      ...serviceCategories.map((category) => category.name),
+      selectedCategory,
+    ]);
+  }
+
+  if (selectedModule === "classified") {
+    const classifiedCategory = getClassifiedRootCategory(listingCategories);
+
+    return getUniqueOptions([
+      ...(classifiedCategory?.subCategories || []).map((subCategory) => subCategory.name),
+      selectedCategory,
+    ]);
+  }
+
+  if (selectedModule === "jobs") {
+    return getUniqueOptions(["Jobs", selectedCategory]);
+  }
+
+  if (selectedModule === "products") {
+    return getUniqueOptions([
+      ...listingCategories
+        .filter(isProductCategoryOption)
+        .map((category) => category.name),
+      selectedCategory,
+    ]);
+  }
+
+  if (selectedModule === "yellowPages") {
+    return getUniqueOptions([
+      ...listingCategories
+        .filter((category) => !isClassifiedCategoryOption(category))
+        .map((category) => category.name),
+      selectedCategory,
+    ]);
+  }
+
+  return selectedCategory ? [selectedCategory] : [];
+}
+
+function getSubCategoryOptions(
+  selectedModule: ListingModuleFilter,
+  listingCategories: ListingCategoryOption[],
+  serviceCategories: AllServiceCategoryOption[],
+  selectedCategory: string,
+  selectedSubCategory: string,
+) {
+  if (!selectedCategory) {
+    return [];
+  }
+
+  if (selectedModule === "localService") {
+    const serviceCategory = findByName(serviceCategories, selectedCategory);
+
+    return getUniqueOptions([
+      ...(serviceCategory?.subCategories || []).map((subCategory) => subCategory.name),
+      selectedSubCategory,
+    ]);
+  }
+
+  if (selectedModule === "classified") {
+    const classifiedCategory = getClassifiedRootCategory(listingCategories);
+    const classifiedSubCategory = findByName(classifiedCategory?.subCategories || [], selectedCategory);
+
+    return getUniqueOptions([
+      ...(classifiedSubCategory?.detailedCategories || []).map((detail) => detail.name),
+      selectedSubCategory,
+    ]);
+  }
+
+  const listingCategory = findByName(listingCategories, selectedCategory);
+
+  return getUniqueOptions([
+    ...(listingCategory?.subCategories || []).map((subCategory) => subCategory.name),
+    selectedSubCategory,
+  ]);
+}
+
+function getClassifiedRootCategory(listingCategories: ListingCategoryOption[]) {
+  return listingCategories.find(isClassifiedCategoryOption);
+}
+
+function isClassifiedCategoryOption(category: ListingCategoryOption) {
+  return category.name.trim().toLowerCase() === "classifieds" ||
+    category.slug.trim().toLowerCase() === "classifieds";
+}
+
+function isProductCategoryOption(category: ListingCategoryOption) {
+  const text = `${category.name} ${category.slug}`.toLowerCase();
+
+  return [
+    "product",
+    "electronics",
+    "appliance",
+    "furniture",
+    "fashion",
+    "books",
+    "sports",
+    "hobbies",
+    "vehicles",
+  ].some((needle) => text.includes(needle));
+}
+
+function findByName<T extends ListingCategoryOption | ListingSubCategoryOption | AllServiceCategoryOption | AllServiceSubCategoryOption>(
+  values: T[],
+  name: string,
+) {
+  const normalizedName = name.trim().toLowerCase();
+
+  return values.find(
+    (item) =>
+      item.name.trim().toLowerCase() === normalizedName ||
+      item.slug.trim().toLowerCase() === normalizedName,
+  );
+}
+
+function mapServicePostingToListingRow(posting: PublicAllServicePosting): DashboardListingRow {
+  const firstService = posting.selectedServices?.[0];
+  const createdAt = posting.createdAt || new Date().toISOString();
+  const imageUrls = posting.businessImageUrl ? [posting.businessImageUrl] : [];
+
+  return {
+    id: posting.id,
+    userId: posting.userId,
+    title: posting.businessName || posting.serviceName || "Local service",
+    slug: "",
+    description: posting.description || "",
+    categoryName: posting.allServiceCategoryName || "Local Service",
+    subCategory: firstService?.subCategoryName || posting.serviceName || "",
+    detailCategory: firstService?.detailedCategoryName || "",
+    status: posting.status || "Pending",
+    views: 0,
+    rating: 0,
+    rejectionCount: 0,
+    rejectionReason: posting.rejectionReason,
+    canEdit: true,
+    createdAt,
+    updatedAt: posting.updatedAt,
+    sellerName: posting.contactName,
+    userPlanName: posting.packageCode || "Local Service",
+    userPlanCode: posting.packageCode,
+    userPlanExpiryDate: null,
+    city: getServicePostingCity(posting),
+    locality: posting.primaryServiceLocation,
+    price: null,
+    primaryImageUrl: posting.businessImageUrl,
+    propertyDetails: { listingKind: "LocalService" },
+    imageUrls,
+    dashboardModule: "localService",
+  };
 }
 
 function formatDate(value?: string | null) {
@@ -508,56 +749,75 @@ function formatDate(value?: string | null) {
   }).format(date);
 }
 
-function getLatestListingDate(item: ListingSummary) {
+function getServicePostingCity(posting: PublicAllServicePosting) {
+  const primaryLocation = posting.serviceLocations?.find((location) => location.isPrimary) ||
+    posting.serviceLocations?.[0];
+
+  return primaryLocation?.city || posting.primaryServiceLocation || null;
+}
+
+function getLatestListingDate(item: DashboardListingRow) {
   return item.updatedAt || item.createdAt;
 }
 
-function isClassifiedListing(item: ListingSummary) {
+function isLocalServiceListing(item: DashboardListingRow) {
+  return item.dashboardModule === "localService" ||
+    getRecordText(item.propertyDetails, "listingKind").toLowerCase() === "localservice";
+}
+
+function isClassifiedListing(item: DashboardListingRow) {
   const categoryName = item.categoryName?.trim().toLowerCase();
 
   return categoryName === "classifieds";
 }
 
-function isJobsListing(item: ListingSummary) {
-  return item.categoryName?.trim().toLowerCase() === "jobs";
+function getListingModuleLabel(item: DashboardListingRow) {
+  if (isLocalServiceListing(item)) {
+    return "Local Service";
+  }
+
+  return isClassifiedListing(item) ? "Classifieds" : "Yellow Pages";
 }
 
-function isProductListing(item: ListingSummary) {
-  return matchesListingText(item, [
-    "product",
-    "products",
-    "electronics",
-    "appliance",
-    "furniture",
-    "fashion",
-    "books",
-    "sports",
-    "hobbies",
-    "vehicles",
-  ]);
-}
+function getListingModuleClass(item: DashboardListingRow) {
+  if (isLocalServiceListing(item)) {
+    return "is-local-service";
+  }
 
-function getListingModuleLabel(item: ListingSummary) {
-  return isClassifiedListing(item) ? "Classified" : "Yellow Pages";
-}
-
-function getListingModuleClass(item: ListingSummary) {
   return isClassifiedListing(item) ? "is-classified" : "is-yellow-pages";
 }
 
-function getListingCategoryPath(item: ListingSummary) {
-  const parts = isClassifiedListing(item)
-    ? [item.subCategory]
+function getListingCategoryPath(item: DashboardListingRow) {
+  const parts = isClassifiedListing(item) || isLocalServiceListing(item)
+    ? [item.categoryName, item.subCategory, item.detailCategory]
     : [item.categoryName, item.subCategory, item.detailCategory];
 
   return parts.map((part) => part?.trim()).filter(Boolean).join(" / ") || "-";
 }
 
-function getPlanName(item: ListingSummary) {
+function getEditUrl(item: DashboardListingRow) {
+  if (isLocalServiceListing(item)) {
+    return "/dashboard/services/new";
+  }
+
+  return isClassifiedListing(item)
+    ? `/dashboard/classifieds/${item.id}/edit/step-1`
+    : `/dashboard/listings/${item.id}/edit`;
+}
+
+function getPreviewUrl(item: DashboardListingRow) {
+  if (isLocalServiceListing(item)) {
+    return `/local-service-details/${item.id}`;
+  }
+
+  return `/dashboard/listings/${item.id}/preview`;
+}
+
+function getPlanName(item: DashboardListingRow) {
   return item.userPlanName?.trim() || "Free";
 }
 
-function getPlanExpiryText(item: ListingSummary) {
+function getPlanExpiryText(item: DashboardListingRow) {
   const formattedDate = formatDate(item.userPlanExpiryDate);
   return formattedDate === "-" ? "No expiry date" : formattedDate;
 }
@@ -574,20 +834,6 @@ function getStatusClass(status: string) {
   }
 
   return "db-list-ststus dashboard-listing-waiting";
-}
-
-function matchesListingText(item: ListingSummary, needles: string[]) {
-  const haystack = [
-    item.categoryName,
-    item.subCategory,
-    item.detailCategory,
-    getRecordText(item.propertyDetails, "listingKind"),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  return needles.some((needle) => haystack.includes(needle));
 }
 
 function getRecordText(record: Record<string, string | number | boolean | null> | undefined, key: string) {

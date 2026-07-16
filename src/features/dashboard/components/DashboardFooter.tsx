@@ -184,15 +184,15 @@ export default function DashboardFooter({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  ChaoDesi
+                  ChaoDesi 
                 </a>
-                . Proudly powered by{" "}
+                . Product of   {"   "}
                 <a
-                  href="https://dev.chaodesi.com/"
+                  href="https://symploreus.com"
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Symplore
+                     Symplore INC
                 </a>
               </p>
             </div>

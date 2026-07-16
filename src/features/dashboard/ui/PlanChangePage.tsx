@@ -3,7 +3,6 @@ import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
-import DashboardSupportWidget from "../components/DashboardSupportWidget";
 import { useCurrentCountry } from "../../../shared/hooks/useCurrentCountry";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
 
@@ -12,18 +11,12 @@ export default function PlanChangePage() {
     localStorage.getItem("fullName") ||
     localStorage.getItem("customer_name") ||
     "Rn53";
-  const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("");
   const currentCountry = useCurrentCountry();
   const premiumPlusPrice = formatCurrencyAmount(20, currentCountry);
 
   const handlePlanSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-  };
-
-  const handleSupportSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSupportOpen(false);
   };
 
   return (
@@ -84,15 +77,8 @@ export default function PlanChangePage() {
         </div>
       </section>
 
-      <DashboardSupportWidget
-        isOpen={isSupportOpen}
-        onOpen={() => setIsSupportOpen(true)}
-        onClose={() => setIsSupportOpen(false)}
-        onSubmit={handleSupportSubmit}
-      />
-
       <DashboardFooter
-        onOpenSupport={() => setIsSupportOpen(true)}
+        onOpenSupport={() => undefined}
         onOpenMobileMenu={() =>
           window.dispatchEvent(new Event("chaodesi:open-mobile-menu"))
         }

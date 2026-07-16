@@ -57,6 +57,9 @@ export type PublicAllServicePosting = {
   phoneNumber: string;
   packageCode?: string;
   status: string;
+  rejectionReason?: string | null;
+  createdAt?: string;
+  updatedAt?: string | null;
   selectedServices: PublicAllServicePostingSelectedService[];
 };
 
@@ -77,6 +80,8 @@ export type PublicAllServicePostingQuery = {
   city?: string;
   page?: number;
   pageSize?: number;
+  search?: string;
+  status?: string;
 };
 
 export async function getPublicAllServicePostings(query: PublicAllServicePostingQuery) {
@@ -101,6 +106,22 @@ export async function getPublicAllServicePostings(query: PublicAllServicePosting
 export async function getPublicAllServicePosting(postingId: number) {
   const response = await apiClient.get<PublicAllServicePosting>(`/AllServicePostings/${postingId}`, {
     timeout: 10000,
+  });
+
+  return response.data;
+}
+
+export async function getMyAllServicePostings(query: PublicAllServicePostingQuery) {
+  const response = await apiClient.get<PublicAllServicePostingList>("/AllServicePostings/mine", {
+    params: {
+      category: query.category || undefined,
+      subCategory: query.subCategory || undefined,
+      search: query.search || undefined,
+      status: query.status || undefined,
+      page: query.page || 1,
+      pageSize: query.pageSize || 10,
+    },
+    timeout: 15000,
   });
 
   return response.data;

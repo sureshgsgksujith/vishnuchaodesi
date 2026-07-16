@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { createListing, getListing, getListingApiErrorMessage, isListingUpgradeRequired, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
 import { getClassifiedSpecificationFields, getListingCategoryFields, getListingCategoryTree, type ListingCategoryFieldDefinition, type ListingCategoryOption } from "../api/listingCategoriesApi";
 import { getMyProfile } from "../api/profileApi";
+import { generateListingAiImages, getListingAiImageErrorMessage, getListingAiSuggestions, type ListingAiGeneratedImage, type ListingAiSuggestionResponse } from "../api/listingAiApi";
 import { ensureLocationMaster, getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 import { getAddressPlaceDetail, searchAddressPredictions } from "../../../shared/api/addressAutocompleteApi";
@@ -123,6 +124,15 @@ type GalleryUploadFile = { file: File; marker: string };
 type InlineUploadFile = { file: File; marker: string };
 type NearbyServices = Record<string, string[]>;
 type ListingFormMode = "listing" | "classified";
+type AiTextTargetKind = "text" | "textarea";
+type AiTextTarget = {
+  label: string;
+  value: string;
+  kind: AiTextTargetKind;
+  onApply: (value: string) => void;
+};
+
+const AiTextGeneratorContext = createContext<((target: AiTextTarget) => void) | null>(null);
 
 type ListingDraft = {
   businessHours: BusinessHour[];
@@ -2339,6 +2349,22 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const [plansModalMessage, setPlansModalMessage] = useState("");
   const [currentStep, setCurrentStep] = useState(0);
   const [savedListingId, setSavedListingId] = useState<number | null>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<ListingAiSuggestionResponse | null>(null);
+  const [isAiSuggesting, setIsAiSuggesting] = useState(false);
+  const [isAiSuggestionApplied, setIsAiSuggestionApplied] = useState(false);
+  const [aiSuggestionMessage, setAiSuggestionMessage] = useState("");
+  const [aiSuggestionError, setAiSuggestionError] = useState("");
+  const [aiImageTargets, setAiImageTargets] = useState({ profile: true, cover: true });
+  const [aiGeneratedImages, setAiGeneratedImages] = useState<ListingAiGeneratedImage[]>([]);
+  const [isAiImageGenerating, setIsAiImageGenerating] = useState(false);
+  const [aiImageMessage, setAiImageMessage] = useState("");
+  const [aiImageError, setAiImageError] = useState("");
+  const [aiTextTarget, setAiTextTarget] = useState<AiTextTarget | null>(null);
+  const [aiTextPrompt, setAiTextPrompt] = useState("");
+  const [aiTextCharacterLimit, setAiTextCharacterLimit] = useState("180");
+  const [aiTextResult, setAiTextResult] = useState("");
+  const [isAiTextGenerating, setIsAiTextGenerating] = useState(false);
+  const [aiTextError, setAiTextError] = useState("");
   const pricingSaveStartedRef = useRef(false);
   const planSelectionTouchedRef = useRef(false);
   const pendingValidationScrollRef = useRef(false);
@@ -3185,54 +3211,50 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     };
   }, [cities, countries, form.categoryName, form.country, form.pincode, states]);
 
-  const handleAddressPlaceSelect = useCallback((addressDetails: ListingAddressDetails) => {
-    void (async () => {
-      const resolvedPincode = addressDetails.pincode || await lookupPostalCodeByCoordinates(addressDetails.latitude, addressDetails.longitude);
+  const handleAddressPlaceSelect = useCallback(async (addressDetails: ListingAddressDetails) => {
+    const resolvedPincode = addressDetails.pincode || await lookupPostalCodeByCoordinates(addressDetails.latitude, addressDetails.longitude);
 
-      await ensureAndApplyResolvedLocation({
-        countryName: addressDetails.country,
-        stateName: addressDetails.state,
-        cityName: addressDetails.city,
-        address: addressDetails.address,
-        pincode: resolvedPincode,
-        latitude: addressDetails.latitude,
-        longitude: addressDetails.longitude,
-      });
-    })();
+    await ensureAndApplyResolvedLocation({
+      countryName: addressDetails.country,
+      stateName: addressDetails.state,
+      cityName: addressDetails.city,
+      address: addressDetails.address,
+      pincode: resolvedPincode,
+      latitude: addressDetails.latitude,
+      longitude: addressDetails.longitude,
+    });
   }, [cities, countries, form.country, states]);
 
-  const handleRestaurantAddressPlaceSelect = useCallback((addressDetails: ListingAddressDetails) => {
-    void (async () => {
-      const countryName = addressDetails.country || form.country || "United States";
-      const resolvedPincode = addressDetails.pincode || await lookupPostalCodeByCoordinates(addressDetails.latitude, addressDetails.longitude);
+  const handleRestaurantAddressPlaceSelect = useCallback(async (addressDetails: ListingAddressDetails) => {
+    const countryName = addressDetails.country || form.country || "United States";
+    const resolvedPincode = addressDetails.pincode || await lookupPostalCodeByCoordinates(addressDetails.latitude, addressDetails.longitude);
 
-      setContactInfo((currentContactInfo) => ({
-        ...currentContactInfo,
-        streetAddress: addressDetails.address || currentContactInfo.streetAddress,
-        zipcode: resolvedPincode || currentContactInfo.zipcode,
-        city: addressDetails.city || currentContactInfo.city,
-        state: addressDetails.state || currentContactInfo.state,
-      }));
+    setContactInfo((currentContactInfo) => ({
+      ...currentContactInfo,
+      streetAddress: addressDetails.address || currentContactInfo.streetAddress,
+      zipcode: resolvedPincode || currentContactInfo.zipcode,
+      city: addressDetails.city || currentContactInfo.city,
+      state: addressDetails.state || currentContactInfo.state,
+    }));
 
-      await ensureAndApplyResolvedLocation({
-        countryName,
-        stateName: addressDetails.state,
-        cityName: addressDetails.city,
-        address: addressDetails.address,
-        pincode: resolvedPincode,
-        latitude: addressDetails.latitude,
-        longitude: addressDetails.longitude,
-      });
+    await ensureAndApplyResolvedLocation({
+      countryName,
+      stateName: addressDetails.state,
+      cityName: addressDetails.city,
+      address: addressDetails.address,
+      pincode: resolvedPincode,
+      latitude: addressDetails.latitude,
+      longitude: addressDetails.longitude,
+    });
 
-      setFieldErrors((currentErrors) => {
-        const nextErrors = { ...currentErrors };
-        delete nextErrors.restaurantStreetAddress;
-        delete nextErrors.restaurantZipcode;
-        delete nextErrors.restaurantCity;
-        delete nextErrors.restaurantState;
-        return nextErrors;
-      });
-    })();
+    setFieldErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors };
+      delete nextErrors.restaurantStreetAddress;
+      delete nextErrors.restaurantZipcode;
+      delete nextErrors.restaurantCity;
+      delete nextErrors.restaurantState;
+      return nextErrors;
+    });
   }, [cities, countries, form.country, states]);
 
   function handleNext(skipValidation = false) {
@@ -4075,6 +4097,449 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     ));
 
     return field?.key || null;
+  }
+
+  function collectAiAttributes() {
+    return Object.fromEntries(
+      Object.entries(categoryAttributes)
+        .filter(([, value]) => String(value || "").trim())
+        .slice(0, 40),
+    );
+  }
+
+  function collectAiFieldContexts() {
+    return effectiveDynamicCategoryFields
+      .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .filter((field) => !isUploadCategoryField(field))
+      .slice(0, 80)
+      .map((field) => ({
+        key: field.key,
+        label: field.label,
+        type: field.type || (field.options?.length ? "select" : "text"),
+        required: isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form),
+        options: field.options || [],
+        value: String(categoryAttributes[field.key] || ""),
+      }));
+  }
+
+  const openAiTextGenerator = useCallback((target: AiTextTarget) => {
+    setAiTextTarget(target);
+    setAiTextPrompt("");
+    setAiTextCharacterLimit(target.kind === "textarea" ? "350" : "120");
+    setAiTextResult("");
+    setAiTextError("");
+  }, []);
+
+  function closeAiTextGenerator() {
+    setAiTextTarget(null);
+    setAiTextPrompt("");
+    setAiTextResult("");
+    setAiTextError("");
+    setIsAiTextGenerating(false);
+  }
+
+  async function handleGenerateAiText() {
+    if (!aiTextTarget) {
+      return;
+    }
+
+    if (!form.categoryName.trim()) {
+      setAiTextError("Select a category first.");
+      return;
+    }
+
+    const characterLimit = getAiTextCharacterLimit(aiTextCharacterLimit, aiTextTarget.kind);
+    setIsAiTextGenerating(true);
+    setAiTextError("");
+
+    try {
+      const targetKey = "__targetText";
+      const suggestion = await getListingAiSuggestions({
+        mode,
+        categoryName: form.categoryName,
+        subCategory: form.subCategory,
+        detailCategory: form.detailCategory,
+        sellerName,
+        title: form.title,
+        description: form.description,
+        businessDescription: form.businessDescription || restaurantInfo.description,
+        city: form.city || contactInfo.city,
+        state: form.state || contactInfo.state,
+        country: form.country,
+        price: form.price,
+        attributes: collectAiAttributes(),
+        fields: [{
+          key: targetKey,
+          label: aiTextTarget.label,
+          type: aiTextTarget.kind,
+          required: false,
+          options: [],
+          value: aiTextTarget.value,
+        }],
+        targetFieldLabel: aiTextTarget.label,
+        prompt: aiTextPrompt,
+        characterLimit,
+        source: "customer",
+      });
+
+      const generatedText = suggestion.fieldValues?.[targetKey] ||
+        suggestion.description ||
+        suggestion.shortTagline ||
+        suggestion.title;
+      const limitedText = limitGeneratedText(generatedText.trim(), characterLimit);
+      if (!limitedText) {
+        setAiTextResult("");
+        setAiTextError("No text was generated. Add a short instruction and try again.");
+        return;
+      }
+
+      setAiTextResult(limitedText);
+    } catch {
+      setAiTextError("AI text generation is not available right now.");
+    } finally {
+      setIsAiTextGenerating(false);
+    }
+  }
+
+  function handleApplyAiText() {
+    if (!aiTextTarget || !aiTextResult.trim()) {
+      return;
+    }
+
+    aiTextTarget.onApply(aiTextResult.trim());
+    closeAiTextGenerator();
+  }
+
+  function updateAiTextResult(value: string) {
+    setAiTextResult(limitGeneratedText(value, getAiTextCharacterLimit(aiTextCharacterLimit, aiTextTarget?.kind || "text")));
+  }
+
+  async function handleGenerateAiSuggestion() {
+    if (!form.categoryName.trim()) {
+      setAiSuggestion(null);
+      setAiSuggestionError("Select a category first.");
+      setAiSuggestionMessage("");
+      return;
+    }
+
+    setIsAiSuggesting(true);
+    setIsAiSuggestionApplied(false);
+    setAiSuggestionError("");
+    setAiSuggestionMessage("");
+
+    try {
+      const suggestion = await getListingAiSuggestions({
+        mode,
+        categoryName: form.categoryName,
+        subCategory: form.subCategory,
+        detailCategory: form.detailCategory,
+        sellerName,
+        title: form.title,
+        description: form.description,
+        businessDescription: form.businessDescription || restaurantInfo.description,
+        city: form.city || contactInfo.city,
+        state: form.state || contactInfo.state,
+        country: form.country,
+        price: form.price,
+        attributes: collectAiAttributes(),
+        fields: collectAiFieldContexts(),
+        source: "customer",
+      });
+
+      setAiSuggestion(suggestion);
+      setAiSuggestionMessage("Suggestion ready.");
+    } catch {
+      setAiSuggestion(null);
+      setAiSuggestionError("AI suggestions are not available right now.");
+    } finally {
+      setIsAiSuggesting(false);
+    }
+  }
+
+  function handleApplyAiSuggestion() {
+    if (!aiSuggestion) {
+      return;
+    }
+
+    const title = aiSuggestion.title.trim();
+    const shortTagline = aiSuggestion.shortTagline.trim();
+    const description = aiSuggestion.description.trim();
+    const metaTitle = aiSuggestion.metaTitle.trim();
+    const metaDescription = aiSuggestion.metaDescription.trim();
+
+    setForm((currentForm) => ({
+      ...currentForm,
+      title: title || currentForm.title,
+      description: shortTagline || currentForm.description,
+      businessDescription: description || currentForm.businessDescription,
+      metaTitle: metaTitle || currentForm.metaTitle,
+      metaDescription: metaDescription || currentForm.metaDescription,
+    }));
+
+    if (isRestaurantListing) {
+      setRestaurantInfo((currentInfo) => ({
+        ...currentInfo,
+        restaurantName: title || currentInfo.restaurantName,
+        tagline: shortTagline || currentInfo.tagline,
+        description: description || currentInfo.description,
+      }));
+    }
+
+    setCategoryAttributes((currentAttributes) => {
+      const nextAttributes = { ...currentAttributes };
+      const visibleKeys = new Set(collectAiFieldContexts().map((field) => field.key));
+      const setSuggestionValue = (keys: string[], value: string) => {
+        if (!value) {
+          return;
+        }
+
+        const visibleKey = getVisibleCategoryFieldKey(...keys);
+        const existingKey = keys.find((key) => currentAttributes[key] !== undefined);
+        const targetKey = visibleKey || existingKey;
+        if (targetKey) {
+          nextAttributes[targetKey] = value;
+        }
+      };
+
+      setSuggestionValue(["listing_title", "listingTitle", "service_title", "serviceTitle", "event_title", "eventTitle", "job_title", "jobTitle", "group_name", "groupName", "product_name", "productName", "restaurant_name", "restaurantName"], title);
+      setSuggestionValue(["description", "service_description", "serviceDescription", "event_description", "eventDescription", "job_description", "jobDescription"], description);
+      setSuggestionValue(["tagline", "short_tagline", "shortTagline"], shortTagline);
+
+      Object.entries(aiSuggestion.fieldValues || {}).forEach(([key, value]) => {
+        const trimmedValue = String(value || "").trim();
+        if (visibleKeys.has(key) && trimmedValue) {
+          nextAttributes[key] = trimmedValue;
+        }
+      });
+
+      return nextAttributes;
+    });
+
+    setFieldErrors((currentErrors) => {
+      const nextErrors = { ...currentErrors };
+      ["title", "description", "businessDescription", "metaTitle", "metaDescription"].forEach((key) => {
+        delete nextErrors[key];
+      });
+      Object.keys(categoryAttributes).forEach((key) => {
+        delete nextErrors[categoryFieldErrorKey(key)];
+      });
+      return nextErrors;
+    });
+    setIsAiSuggestionApplied(true);
+    setAiSuggestionMessage("Applied. Review the fields below before continuing.");
+    setAiSuggestionError("");
+  }
+
+  function handleClearAiSuggestion() {
+    setAiSuggestion(null);
+    setIsAiSuggestionApplied(false);
+    setAiSuggestionMessage("");
+    setAiSuggestionError("");
+  }
+
+  function renderListingAiHelper() {
+    return (
+      <div className={`listing-ai-helper${isAiSuggestionApplied ? " is-applied" : ""}`}>
+        <div className="listing-ai-helper__header">
+          <div className="listing-ai-helper__title">
+            <i className="material-icons" aria-hidden="true">auto_awesome</i>
+            <span>AI Listing Helper</span>
+          </div>
+          <div className="listing-ai-helper__actions">
+            {aiSuggestion ? (
+              <button type="button" className="listing-ai-helper__clear" onClick={handleClearAiSuggestion}>
+                Clear
+              </button>
+            ) : null}
+            <button type="button" className="listing-ai-helper__generate" onClick={handleGenerateAiSuggestion} disabled={isAiSuggesting || Boolean(editLockedMessage)}>
+              {isAiSuggesting ? "Generating..." : aiSuggestion ? "Regenerate" : "Generate"}
+            </button>
+          </div>
+        </div>
+
+        {aiSuggestionError ? <div className="listing-ai-helper__error">{aiSuggestionError}</div> : null}
+        {aiSuggestionMessage ? <div className="listing-ai-helper__status">{aiSuggestionMessage}</div> : null}
+
+        {aiSuggestion ? (
+          <div className="listing-ai-helper__preview">
+            {aiSuggestion.title ? <strong>{aiSuggestion.title}</strong> : null}
+            {aiSuggestion.shortTagline ? <p>{aiSuggestion.shortTagline}</p> : null}
+            {aiSuggestion.description ? <p>{aiSuggestion.description}</p> : null}
+            {aiSuggestion.highlights.length ? (
+              <ul>
+                {aiSuggestion.highlights.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : null}
+            {Object.keys(aiSuggestion.fieldValues || {}).length ? (
+              <div className="listing-ai-helper__fields">
+                <span>Fields to fill</span>
+                <dl>
+                  {Object.entries(aiSuggestion.fieldValues).map(([key, value]) => {
+                    const field = collectAiFieldContexts().find((item) => item.key === key);
+                    return field && value ? (
+                      <div key={key}>
+                        <dt>{field.label}</dt>
+                        <dd>{value}</dd>
+                      </div>
+                    ) : null;
+                  })}
+                </dl>
+              </div>
+            ) : null}
+            {aiSuggestion.missingFields.length ? (
+              <div className="listing-ai-helper__missing">
+                <span>Missing details</span>
+                <ul>
+                  {aiSuggestion.missingFields.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <button type="button" className="listing-ai-helper__apply" onClick={handleApplyAiSuggestion} disabled={Boolean(editLockedMessage) || isAiSuggestionApplied}>
+              {isAiSuggestionApplied ? "Applied" : "Apply"}
+            </button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  async function handleGenerateAiImages() {
+    if (!form.categoryName.trim()) {
+      setAiGeneratedImages([]);
+      setAiImageError("Select category, sub category, and detailed category first.");
+      setAiImageMessage("");
+      return;
+    }
+
+    if (!aiImageTargets.profile && !aiImageTargets.cover) {
+      setAiImageError("Select Profile image, Cover image, or both.");
+      setAiImageMessage("");
+      return;
+    }
+
+    setIsAiImageGenerating(true);
+    setAiImageError("");
+    setAiImageMessage("");
+
+    try {
+      const response = await generateListingAiImages({
+        mode,
+        categoryName: form.categoryName,
+        subCategory: form.subCategory,
+        detailCategory: form.detailCategory,
+        sellerName,
+        city: form.city || contactInfo.city,
+        state: form.state || contactInfo.state,
+        country: form.country,
+        attributes: collectAiAttributes(),
+        generateProfile: aiImageTargets.profile,
+        generateCover: aiImageTargets.cover,
+        source: "customer",
+      });
+
+      setAiGeneratedImages(response.images);
+      setAiImageMessage(response.images.length ? "Image preview ready." : response.errors[0] || "No image was generated.");
+      setAiImageError(response.errors.length && !response.images.length ? response.errors[0] : "");
+    } catch (error) {
+      setAiGeneratedImages([]);
+      setAiImageError(getListingAiImageErrorMessage(error));
+    } finally {
+      setIsAiImageGenerating(false);
+    }
+  }
+
+  function applyGeneratedImage(image: ListingAiGeneratedImage) {
+    const file = base64ToFile(image.base64, image.fileName, image.mimeType);
+
+    if (image.type === "profile") {
+      setProfileImageFile(file);
+      updateField("profileImageName", profileImageUploadMarker);
+      setAiImageMessage("Profile image applied.");
+    } else {
+      setCoverImageFile(file);
+      updateField("coverImageName", coverImageUploadMarker);
+      setAiImageMessage("Cover image applied.");
+    }
+
+    setAiImageError("");
+  }
+
+  function clearGeneratedImages() {
+    setAiGeneratedImages([]);
+    setAiImageMessage("");
+    setAiImageError("");
+  }
+
+  function renderAiImageGenerator() {
+    return (
+      <div className={`listing-ai-image-generator${isAiImageGenerating ? " is-loading" : ""}`}>
+        <div className="listing-ai-image-generator__header">
+          <div className="listing-ai-image-generator__title">
+            <i className="material-icons" aria-hidden="true">image</i>
+            <span>AI Image Generator</span>
+          </div>
+          <div className="listing-ai-image-generator__actions">
+            {aiGeneratedImages.length ? (
+              <button type="button" className="listing-ai-image-generator__clear" onClick={clearGeneratedImages} disabled={isAiImageGenerating}>
+                Clear
+              </button>
+            ) : null}
+            <button type="button" className="listing-ai-image-generator__generate" onClick={handleGenerateAiImages} disabled={isAiImageGenerating || Boolean(editLockedMessage)}>
+              {isAiImageGenerating ? "Generating..." : aiGeneratedImages.length ? "Regenerate" : "Generate"}
+            </button>
+          </div>
+        </div>
+
+        <div className="listing-ai-image-generator__checks">
+          <label>
+            <input
+              type="checkbox"
+              checked={aiImageTargets.profile}
+              disabled={isAiImageGenerating}
+              onChange={(event) => setAiImageTargets((current) => ({ ...current, profile: event.target.checked }))}
+            />
+            Profile image
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={aiImageTargets.cover}
+              disabled={isAiImageGenerating}
+              onChange={(event) => setAiImageTargets((current) => ({ ...current, cover: event.target.checked }))}
+            />
+            Cover image
+          </label>
+        </div>
+
+        {aiImageError ? <div className="listing-ai-image-generator__error">{aiImageError}</div> : null}
+        {aiImageMessage ? <div className="listing-ai-image-generator__status">{aiImageMessage}</div> : null}
+
+        {aiGeneratedImages.length ? (
+          <div className="listing-ai-image-generator__grid">
+            {aiGeneratedImages.map((image) => (
+              <div className="listing-ai-image-generator__card" key={image.type}>
+                <span>{image.type === "profile" ? "Profile image" : "Cover image"}</span>
+                <img src={`data:${image.mimeType};base64,${image.base64}`} alt={`${image.type} generated preview`} />
+                <button type="button" onClick={() => applyGeneratedImage(image)} disabled={Boolean(editLockedMessage) || isAiImageGenerating}>
+                  Apply {image.type === "profile" ? "Profile" : "Cover"}
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        {isAiImageGenerating ? (
+          <div className="listing-ai-image-generator__overlay" aria-live="polite" aria-busy="true">
+            <div className="listing-ai-image-generator__loader" aria-hidden="true" />
+            <strong>Generating images...</strong>
+            <span>Please wait. This can take a few seconds.</span>
+          </div>
+        ) : null}
+      </div>
+    );
   }
 
   function validateInlineCategoryRules(rules: Array<{ keys: string[]; message: string; formKey?: string }>) {
@@ -5768,7 +6233,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const fieldErrorMessages = Array.from(new Set(Object.values(fieldErrors)));
 
   return (
-    <>
+    <AiTextGeneratorContext.Provider value={openAiTextGenerator}>
       <UserHomeHeader />
       <section className="login-reg">
         <div className="container">
@@ -5834,6 +6299,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                         />
                       ) : null}
                       <h4>Images</h4>
+                      {renderAiImageGenerator()}
                       <div className="row">
                         <TemplateImageColumn
                           label="Choose profile image*"
@@ -5875,6 +6341,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                   <div className="login">
                     <h4>{isClassifiedMode ? "Classified Details" : isRealEstateListing ? "Property Details" : isRestaurantListing ? "Restaurant Details" : form.categoryName === "Vehicles" ? "Vehicle Details" : form.categoryName === "Care Services" ? "Care Service Details" : form.categoryName === "Events & Tickets" || form.categoryName === "Tickets & Events" ? "Event Details" : isRoommatesRentalListing ? "Roommate & Rental Details" : form.categoryName === "Jobs" ? "Job Details" : isElectronicsListing ? "Electronics Details" : isPetsListing ? "Pet Details" : isGroupsListing ? "Groups & Communities Details" : isFashionListing ? "Fashion & Lifestyle Details" : isBeautyListing ? "Beauty Services Details" : isBooksSportsListing ? "Books, Sports & Hobbies Details" : isFurnitureListing ? "Furniture & Home Details" : "Category Details"}</h4>
                     <form className="listing_form_2" noValidate autoComplete="off">
+                      {false ? renderListingAiHelper() : null}
                       {isRealEstateListing ? renderRealEstatePostingSections(0) : renderCategoryDynamicFields()}
                       <StepNavigation onPrevious={handlePrevious} onNext={() => handleNext()} progress={40} />
                     </form>
@@ -6164,7 +6631,49 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         />
       ) : null}
       <DashboardFooter onOpenSupport={() => undefined} onOpenMobileMenu={() => undefined} />
-    </>
+      {aiTextTarget ? (
+        <div className="listing-ai-text-modal-backdrop" role="presentation" onMouseDown={closeAiTextGenerator}>
+          <div className="listing-ai-text-modal" role="dialog" aria-modal="true" aria-labelledby="listing-ai-text-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="listing-ai-text-modal__head">
+              <div>
+                <h3 id="listing-ai-text-title">Generate {aiTextTarget.label}</h3>
+                <p>{[form.categoryName, form.subCategory, form.detailCategory].filter(Boolean).join(" / ") || "Listing context"}</p>
+              </div>
+              <button type="button" className="listing-ai-text-modal__close" onClick={closeAiTextGenerator} aria-label="Close AI text generator">
+                <i className="material-icons" aria-hidden="true">close</i>
+              </button>
+            </div>
+            <label className="listing-ai-text-modal__label">
+              Instructions
+              <textarea value={aiTextPrompt} rows={3} placeholder="Example: make it friendly and mention key details" onChange={(event) => setAiTextPrompt(event.target.value)} />
+            </label>
+            <label className="listing-ai-text-modal__label">
+              Character limit
+              <input type="number" min="1" max="1000" value={aiTextCharacterLimit} onChange={(event) => setAiTextCharacterLimit(event.target.value)} />
+            </label>
+            <div className="listing-ai-text-modal__actions">
+              <button type="button" className="listing-ai-text-modal__secondary" onClick={closeAiTextGenerator}>Cancel</button>
+              <button type="button" className="listing-ai-text-modal__primary" onClick={handleGenerateAiText} disabled={isAiTextGenerating}>
+                {isAiTextGenerating ? "Generating..." : aiTextResult ? "Regenerate" : "Generate"}
+              </button>
+            </div>
+            {aiTextError ? <div className="listing-ai-text-modal__error">{aiTextError}</div> : null}
+            {aiTextResult ? (
+              <>
+                <label className="listing-ai-text-modal__label">
+                  Preview
+                  <textarea value={aiTextResult} rows={aiTextTarget.kind === "textarea" ? 6 : 3} maxLength={getAiTextCharacterLimit(aiTextCharacterLimit, aiTextTarget.kind)} onChange={(event) => updateAiTextResult(event.target.value)} />
+                </label>
+                <div className="listing-ai-text-modal__footer">
+                  <span>{aiTextResult.length} characters</span>
+                  <button type="button" className="listing-ai-text-modal__apply" onClick={handleApplyAiText}>Apply to field</button>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+    </AiTextGeneratorContext.Provider>
   );
 }
 
@@ -6221,6 +6730,46 @@ function isPhoneFieldLabel(value: string) {
   }
 
   return /\b(phone|mobile number|contact number|whatsapp)\b/.test(normalized);
+}
+
+function shouldOfferAiTextGeneration(label: string) {
+  const normalized = normalizeFieldKey(label);
+  const blockedTerms = [
+    "address",
+    "city",
+    "country",
+    "email",
+    "facebook",
+    "instagram",
+    "latitude",
+    "longitude",
+    "map",
+    "phone",
+    "pincode",
+    "state",
+    "twitter",
+    "website",
+    "whatsapp",
+    "youtube",
+    "zipcode",
+    "zip",
+  ];
+
+  return !blockedTerms.some((term) => normalized.includes(term));
+}
+
+function getAiTextCharacterLimit(value: string, kind: AiTextTargetKind) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return kind === "textarea" ? 350 : 120;
+  }
+
+  return Math.min(Math.max(Math.floor(parsed), 1), 1000);
+}
+
+function limitGeneratedText(value: string, characterLimit: number) {
+  const trimmed = value.trim();
+  return trimmed.length > characterLimit ? trimmed.slice(0, characterLimit).trimEnd() : trimmed;
 }
 
 function normalizePostalCodeSearchQuery(value: string, country?: string) {
@@ -6318,7 +6867,7 @@ function AddressAutocompleteInput({
   city,
   postalCode,
   onChange,
-  onPostalCodeDetected,
+  onPostalCodeDetected: _onPostalCodeDetected,
   onPlaceSelect,
 }: FieldProps & {
   country: string;
@@ -6326,7 +6875,7 @@ function AddressAutocompleteInput({
   city: string;
   postalCode?: string;
   onPostalCodeDetected?: (postalCode: string) => void;
-  onPlaceSelect: (addressDetails: ListingAddressDetails) => void;
+  onPlaceSelect: (addressDetails: ListingAddressDetails) => void | Promise<void>;
 }) {
   const addressSearchMinLength = 5;
   const addressSearchDebounceMs = 650;
@@ -6334,6 +6883,7 @@ function AddressAutocompleteInput({
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResolvingSelection, setIsResolvingSelection] = useState(false);
   const [suppressSuggestionsUntilClear, setSuppressSuggestionsUntilClear] = useState(false);
   const [suppressedSuggestionValue, setSuppressedSuggestionValue] = useState("");
   const isSelectingSuggestionRef = useRef(false);
@@ -6415,6 +6965,7 @@ function AddressAutocompleteInput({
     setSuggestions([]);
     setIsOpen(false);
     setIsLoading(true);
+    setIsResolvingSelection(true);
 
     try {
       const details = suggestion.placeId
@@ -6422,7 +6973,7 @@ function AddressAutocompleteInput({
         : null;
 
       const selectedAddress = details?.formattedAddress || suggestion.address;
-      onPlaceSelect({
+      await onPlaceSelect({
         address: selectedAddress,
         pincode: details?.postalCode || suggestion.pincode,
         latitude: details?.latitude != null ? String(details.latitude) : suggestion.latitude,
@@ -6434,7 +6985,7 @@ function AddressAutocompleteInput({
       setSuppressSuggestionsUntilClear(true);
       setSuppressedSuggestionValue(selectedAddress.trim());
     } catch {
-      onPlaceSelect({
+      await onPlaceSelect({
         address: suggestion.address,
         pincode: suggestion.pincode,
         latitude: suggestion.latitude,
@@ -6447,15 +6998,18 @@ function AddressAutocompleteInput({
       setSuppressedSuggestionValue(suggestion.address.trim());
     } finally {
       setIsLoading(false);
+      setIsResolvingSelection(false);
       setSuggestions([]);
       setIsOpen(false);
       isSelectingSuggestionRef.current = false;
     }
   };
 
-  const helperText = isLoading
-      ? "Searching..."
-      : "";
+  const helperText = isResolvingSelection
+      ? "Filling location details..."
+      : isLoading
+        ? "Searching..."
+        : "";
 
   return (
     <div className="row">
@@ -6479,10 +7033,6 @@ function AddressAutocompleteInput({
                 setSuppressSuggestionsUntilClear(false);
                 setSuppressedSuggestionValue("");
               }
-              const postalCode = normalizePostalCodeSearchQuery(normalizedValue, country);
-              if (onPostalCodeDetected && postalCode) {
-                onPostalCodeDetected(postalCode);
-              }
               onChange(nextValue);
             }}
             onFocus={() => {
@@ -6493,7 +7043,12 @@ function AddressAutocompleteInput({
             }}
           />
           <FieldError message={error} />
-          {helperText ? <div className="listing-address-helper">{helperText}</div> : null}
+          {helperText ? (
+            <div className="listing-address-helper is-loading">
+              <span aria-hidden="true" />
+              {helperText}
+            </div>
+          ) : null}
           {isOpen ? (
             <ul className="listing-address-suggestions">
               {suggestions.map((suggestion) => (
@@ -6746,11 +7301,27 @@ type NominatimAddressResult = {
 function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password", step, min }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string; step?: string; min?: string }) {
   const inputId = useId();
   const isPhone = isPhoneFieldLabel(placeholder);
+  const openAiTextGenerator = useContext(AiTextGeneratorContext);
+  const label = fieldLabelFromPlaceholder(placeholder);
+  const canGenerateText = Boolean(openAiTextGenerator) && type === "text" && !isPhone && !readOnly && !disabled && shouldOfferAiTextGeneration(label);
 
   return (
     <div className={width}>
       <div className="form-group">
-        <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
+        <div className="listing-field-label-row">
+          <label className="listing-field-label">{label}</label>
+          {canGenerateText ? (
+            <button
+              type="button"
+              className="listing-ai-field-button"
+              title={`Generate ${label}`}
+              aria-label={`Generate ${label}`}
+              onClick={() => openAiTextGenerator?.({ label, value, kind: "text", onApply: onChange })}
+            >
+              <span aria-hidden="true">AI</span>
+            </button>
+          ) : null}
+        </div>
           {isPhone ? (
             <PhoneNumberInput
               value={value}
@@ -6829,11 +7400,28 @@ function CheckboxField({ label, checked, onChange, error }: { label: string; che
 }
 
 function Textarea({ placeholder, value, onChange, error }: FieldProps) {
+  const openAiTextGenerator = useContext(AiTextGeneratorContext);
+  const label = fieldLabelFromPlaceholder(placeholder);
+  const canGenerateText = Boolean(openAiTextGenerator) && shouldOfferAiTextGeneration(label);
+
   return (
     <div className="row">
       <div className="col-md-12">
         <div className="form-group">
-          <label className="listing-field-label">{fieldLabelFromPlaceholder(placeholder)}</label>
+          <div className="listing-field-label-row">
+            <label className="listing-field-label">{label}</label>
+            {canGenerateText ? (
+              <button
+                type="button"
+                className="listing-ai-field-button"
+                title={`Generate ${label}`}
+                aria-label={`Generate ${label}`}
+                onClick={() => openAiTextGenerator?.({ label, value, kind: "textarea", onApply: onChange })}
+              >
+                <span aria-hidden="true">AI</span>
+              </button>
+            ) : null}
+          </div>
           <textarea className={`form-control${error ? " is-invalid" : ""}`} value={value} rows={4} placeholder={cleanOptionalText(placeholder)} onChange={(event) => onChange(event.target.value)} />
           <FieldError message={error} />
         </div>
@@ -6905,6 +7493,7 @@ function CategoryAttributesFields({
   onChange: (value: CategoryAttributes) => void;
   onUploadFilesChange: (files: GalleryUploadFile[]) => void;
 }) {
+  const openAiTextGenerator = useContext(AiTextGeneratorContext);
   const baseFields = dynamicFields.length
     ? dynamicFields
     : getCategoryAttributeFields(categoryName, subCategory, detailCategory);
@@ -7074,7 +7663,25 @@ function CategoryAttributesFields({
     ) : field.type === "textarea" ? (
       <div className="col-md-12" key={field.key}>
         <div className="form-group">
-          <label className="listing-field-label">{fieldLabelFromPlaceholder(displayLabel)}</label>
+          <div className="listing-field-label-row">
+            <label className="listing-field-label">{fieldLabelFromPlaceholder(displayLabel)}</label>
+            {openAiTextGenerator && shouldOfferAiTextGeneration(fieldLabelFromPlaceholder(displayLabel)) ? (
+              <button
+                type="button"
+                className="listing-ai-field-button"
+                title={`Generate ${fieldLabelFromPlaceholder(displayLabel)}`}
+                aria-label={`Generate ${fieldLabelFromPlaceholder(displayLabel)}`}
+                onClick={() => openAiTextGenerator({
+                  label: fieldLabelFromPlaceholder(displayLabel),
+                  value: values[field.key] || "",
+                  kind: "textarea",
+                  onApply: (nextValue) => updateAttribute(field.key, nextValue),
+                })}
+              >
+                <span aria-hidden="true">AI</span>
+              </button>
+            ) : null}
+          </div>
           <textarea
             className={`form-control${error ? " is-invalid" : ""}`}
             placeholder={cleanOptionalText(displayLabel)}
@@ -10913,6 +11520,16 @@ function boolAttribute(values: CategoryAttributes, ...keys: string[]) {
   if (value === "true" || value === "Yes") return true;
   if (value === "false" || value === "No") return false;
   return null;
+}
+
+function base64ToFile(base64: string, fileName: string, mimeType: string) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return new File([bytes], fileName, { type: mimeType });
 }
 
 function splitAttributeList(values: CategoryAttributes, ...keys: string[]) {

@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "./DashboardFooter";
 import DashboardSidebar from "./DashboardSidebar";
-import DashboardSupportWidget from "./DashboardSupportWidget";
 import {
   getStoredDashboardIdentity,
   PROFILE_UPDATED_EVENT,
@@ -27,7 +26,6 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
-  const [isSupportOpen, setIsSupportOpen] = useState(false);
 
   useEffect(() => {
     const syncIdentity = () => setIdentity(getStoredDashboardIdentity());
@@ -40,11 +38,6 @@ export default function DashboardLayout({
     clearCustomerSession();
     navigate("/login");
     window.location.reload();
-  };
-
-  const handleSupportSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSupportOpen(false);
   };
 
   const openMobileMenu = () => {
@@ -73,15 +66,8 @@ export default function DashboardLayout({
         </div>
       </section>
 
-      <DashboardSupportWidget
-        isOpen={isSupportOpen}
-        onOpen={() => setIsSupportOpen(true)}
-        onClose={() => setIsSupportOpen(false)}
-        onSubmit={handleSupportSubmit}
-      />
-
       <DashboardFooter
-        onOpenSupport={() => setIsSupportOpen(true)}
+        onOpenSupport={() => undefined}
         onOpenMobileMenu={openMobileMenu}
       />
     </>

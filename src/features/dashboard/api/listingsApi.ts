@@ -81,6 +81,18 @@ export type ListingListResponse = {
   pageSize: number;
 };
 
+export type MyListingsQuery = {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  excludeCategoryName?: string;
+  categoryName?: string;
+  subCategory?: string;
+  detailCategory?: string;
+  listingModule?: string;
+  status?: string;
+};
+
 export type UpsertListingPayload = {
   title: string;
   slug?: string;
@@ -117,15 +129,34 @@ export type ListingUploadFiles = {
   offerFiles?: Array<{ file: File; marker: string }>;
 };
 
-export async function getMyListings(search = "", page = 1, pageSize = 10, excludeCategoryName = "Chao TV") {
+export async function getMyListings(
+  queryOrSearch: MyListingsQuery | string = "",
+  page = 1,
+  pageSize = 10,
+  excludeCategoryName = "Chao TV"
+) {
+  const query: MyListingsQuery = typeof queryOrSearch === "string"
+    ? { search: queryOrSearch, page, pageSize, excludeCategoryName }
+    : {
+        excludeCategoryName: "Chao TV",
+        page: 1,
+        pageSize: 10,
+        ...queryOrSearch,
+      };
+
   const response = await apiClient.get<ListingListResponse>("/Listings/mine", {
     params: {
-      page,
-      pageSize,
-      search: search || undefined,
-      excludeCategoryName: excludeCategoryName || undefined,
+      page: query.page || 1,
+      pageSize: query.pageSize || 10,
+      search: query.search || undefined,
+      categoryName: query.categoryName || undefined,
+      subCategory: query.subCategory || undefined,
+      detailCategory: query.detailCategory || undefined,
+      listingModule: query.listingModule || undefined,
+      status: query.status || undefined,
+      excludeCategoryName: query.excludeCategoryName || undefined,
     },
-    timeout: 8000,
+    timeout: 15000,
   });
 
   return response.data;
