@@ -1,15 +1,65 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { getAstrologyReports, type AstrologyReport } from "../../astrology/api/astrologyApi";
+
+type AstroLink = {
+  label: string;
+  to: string;
+};
+
+const astroBenefits = [
+  "Get clear next-step guidance",
+  "Review practical remedies",
+  "Choose a personal report or live session",
+];
+
+const astrologyActions: AstroLink[] = [
+  { label: "Talk to Astrologer", to: "/astrology/talk-to-astrologer" },
+  { label: "Order a Report", to: "/astrology/astrology-reports" },
+  { label: "Ask a Question", to: "/astrology/ask-a-question" },
+];
+
 export default function HomeAstrologySection() {
+  const [reports, setReports] = useState<AstrologyReport[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    let isActive = true;
+    getAstrologyReports()
+      .then((items) => {
+        if (!isActive) return;
+        setReports(items);
+        setLoadError("");
+      })
+      .catch(() => {
+        if (isActive) setLoadError("Astrology reports are temporarily unavailable.");
+      })
+      .finally(() => {
+        if (isActive) setIsLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  const astrologyCategories: AstroLink[] = [
+    { label: "Astrologers", to: "/astrology/astrologers" },
+    ...reports.slice(0, 5).map((report) => ({ label: report.category || report.title, to: `/astrology/${report.slug}` })),
+  ];
+
   return (
     <section className="chao-astro">
       <div className="container">
         <div className="astro-title text-center">
           <h2>Astrology</h2>
-          <p>Consult with Certified, Experienced and Trusted Astrology Professionals</p>
+          <p>Connect with experienced astrology professionals for personal guidance</p>
         </div>
 
         <p className="astro-desc text-center">
-          Join over 100,000 satisfied users who have found answers through our online astrology consultations.
-          Connect with expert astrologers and get personalized insights, remedies, and live readings.
+          Explore live consultations, focused reports, and question-based guidance for career, wealth,
+          relationships, marriage, and name insights.
         </p>
 
         <div className="row align-items-center astro-content">
@@ -23,27 +73,31 @@ export default function HomeAstrologySection() {
             <div className="astro-features">
               <h4>Make the most out of Astro</h4>
               <ul>
-                <li>Immediate online prediction</li>
-                <li>Simple remedies</li>
-                <li>Personalized solutions</li>
+                {astroBenefits.map((benefit) => (
+                  <li key={benefit}>{benefit}</li>
+                ))}
               </ul>
             </div>
 
             <div className="astro-tags">
               <h5>Most Popular Astrology Categories</h5>
               <div className="tags">
-                <span>Career</span>
-                <span>Money</span>
-                <span>Love</span>
-                <span>Marriage</span>
-                <span>Numerology</span>
+                {isLoading ? <span>Loading live reports...</span> : null}
+                {loadError ? <span>{loadError}</span> : null}
+                {astrologyCategories.map((category) => (
+                  <Link to={category.to} key={category.to}>
+                    {category.label}
+                  </Link>
+                ))}
               </div>
             </div>
 
             <div className="astro-buttons">
-              <a href="#" className="btn-outline">Talk to Astrologer</a>
-              <a href="#" className="btn-outline">Order a Report</a>
-              <a href="#" className="btn-outline">Ask a Question</a>
+              {astrologyActions.map((action) => (
+                <Link className="btn-outline" to={action.to} key={action.to}>
+                  {action.label}
+                </Link>
+              ))}
             </div>
           </div>
         </div>

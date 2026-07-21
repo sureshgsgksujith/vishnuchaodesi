@@ -1,4 +1,4 @@
-import { clearStoredProfileSnapshot } from "../../dashboard/utils/profileStorage";
+import { clearStoredProfileSnapshot, readStoredProfileSnapshot } from "../../dashboard/utils/profileStorage";
 import { clearHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 
 const CUSTOMER_AUTH_KEYS = [
@@ -83,6 +83,24 @@ export function getCurrentCustomerUserId() {
 
   const userId = Number(localStorage.getItem("userId"));
   return Number.isFinite(userId) && userId > 0 ? userId : null;
+}
+
+export function getCustomerContactDefaults() {
+  if (typeof window === "undefined") {
+    return { fullName: "", email: "", mobileNumber: "" };
+  }
+
+  const snapshot = readStoredProfileSnapshot();
+
+  return {
+    fullName:
+      snapshot?.fullName ||
+      localStorage.getItem("fullName") ||
+      localStorage.getItem("customer_name") ||
+      "",
+    email: snapshot?.email || localStorage.getItem("email") || "",
+    mobileNumber: snapshot?.mobileNumber || localStorage.getItem("mobileNumber") || "",
+  };
 }
 
 export function clearCustomerSession() {

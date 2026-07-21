@@ -53,6 +53,7 @@ export type ListingAiImageRequest = {
   state: string;
   country: string;
   attributes: Record<string, string>;
+  prompt?: string;
   generateProfile: boolean;
   generateCover: boolean;
   source: "customer";

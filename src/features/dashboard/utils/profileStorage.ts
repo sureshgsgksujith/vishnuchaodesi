@@ -50,6 +50,14 @@ export function writeStoredProfileSnapshot(snapshot: StoredProfileSnapshot) {
     localStorage.setItem("fullName", snapshot.fullName);
   }
 
+  if (snapshot.email) {
+    localStorage.setItem("email", snapshot.email);
+  }
+
+  if (snapshot.mobileNumber) {
+    localStorage.setItem("mobileNumber", snapshot.mobileNumber);
+  }
+
   if (snapshot.profileImageUrl) {
     localStorage.setItem("profileImageUrl", snapshot.profileImageUrl);
   }

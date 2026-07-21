@@ -11,19 +11,6 @@ import {
 } from "../../allServices/api/allServicePostingsApi";
 import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 
-const fallbackCategories: AllServiceCategoryOption[] = [
-  fallbackCategory(-1, "Educational Institutes", "educational-institutes", ["Schools", "College & Universities", "Tutoring"]),
-  fallbackCategory(-2, "Religious & Community Services", "religious-community-services", ["Religious Services", "Community & Charity", "Cultural"]),
-  fallbackCategory(-3, "Real Estate Services", "real-estate-services", ["Real Estate Agents", "Management & Inspection", "Mortgage"]),
-  fallbackCategory(-4, "Health & Wellness", "health-wellness", ["Doctors & Care", "Wellness & Counselling", "Fitness"]),
-  fallbackCategory(-5, "Food & Catering", "food-catering", ["Food Services", "Catering & Bakeries", "Restaurants"]),
-  fallbackCategory(-6, "Wedding & Events", "wedding-events", ["Event Professionals", "Wedding Needs", "Photography"]),
-  fallbackCategory(-7, "Lessons / Tuitions", "lessons-tuitions", ["Academic Lessons", "Arts & Culture", "Music"]),
-  fallbackCategory(-8, "Home & Business Needs", "home-business-needs", ["Home Services", "Business & Technical", "Repairs"]),
-  fallbackCategory(-9, "Financial & Legal Services", "financial-legal-services", ["Finance & Tax", "Legal & Immigration", "Insurance"]),
-  fallbackCategory(-10, "Travel & Accommodation", "travel-accommodation", ["Travel Services", "Accommodation & Transport", "Visa Help"]),
-];
-
 const categoryImagesBySlug: Record<string, string> = {
   "educational-institutes": "/template-17/images/home/student.jpg",
   "religious-community-services": "/template-17/service-experts/images/services/1.jpg",
@@ -52,9 +39,9 @@ const fallbackCategoryImages = [
 
 export default function HomePopularServicesSection() {
   const { activeCity } = useHomeSelectedLocation();
-  const [categories, setCategories] = useState<AllServiceCategoryOption[]>(fallbackCategories);
-  const [activeCategoryId, setActiveCategoryId] = useState<number>(fallbackCategories[0].id);
-  const [activeSubCategorySlug, setActiveSubCategorySlug] = useState(fallbackCategories[0].subCategories[0]?.slug || "");
+  const [categories, setCategories] = useState<AllServiceCategoryOption[]>([]);
+  const [activeCategoryId, setActiveCategoryId] = useState(0);
+  const [activeSubCategorySlug, setActiveSubCategorySlug] = useState("");
   const [providers, setProviders] = useState<PublicAllServicePosting[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingProviders, setIsLoadingProviders] = useState(true);
@@ -70,9 +57,10 @@ export default function HomePopularServicesSection() {
 
         const nextCategories = items.filter((category) => category.subCategories.length).slice(0, 10);
         if (!nextCategories.length) {
-          setCategories(fallbackCategories);
-          setActiveCategoryId(fallbackCategories[0].id);
-          setActiveSubCategorySlug(fallbackCategories[0].subCategories[0]?.slug || "");
+          setCategories([]);
+          setActiveCategoryId(0);
+          setActiveSubCategorySlug("");
+          setProviderMessage("No service categories are currently available.");
           return;
         }
 
@@ -84,9 +72,10 @@ export default function HomePopularServicesSection() {
       })
       .catch(() => {
         if (!isActive) return;
-        setCategories(fallbackCategories);
-        setActiveCategoryId(fallbackCategories[0].id);
-        setActiveSubCategorySlug(fallbackCategories[0].subCategories[0]?.slug || "");
+        setCategories([]);
+        setActiveCategoryId(0);
+        setActiveSubCategorySlug("");
+        setProviderMessage("Unable to load service categories right now.");
       })
       .finally(() => {
         if (isActive) {
@@ -100,7 +89,7 @@ export default function HomePopularServicesSection() {
   }, []);
 
   const activeCategory = useMemo(
-    () => categories.find((category) => category.id === activeCategoryId) || categories[0] || fallbackCategories[0],
+    () => categories.find((category) => category.id === activeCategoryId) || categories[0],
     [activeCategoryId, categories],
   );
   const activeTabs = useMemo(() => buildTabs(activeCategory), [activeCategory]);
@@ -120,7 +109,8 @@ export default function HomePopularServicesSection() {
 
   useEffect(() => {
     if (!activeCategory || isLoadingCategories) {
-      setIsLoadingProviders(true);
+      setIsLoadingProviders(isLoadingCategories);
+      if (!isLoadingCategories) setProviders([]);
       return;
     }
 
@@ -202,7 +192,7 @@ export default function HomePopularServicesSection() {
               {categories.slice(0, 10).map((category, index) => (
                 <button
                   type="button"
-                  className={`popular-services-category ${category.id === activeCategory.id ? "active" : ""}`}
+                  className={`popular-services-category ${category.id === activeCategory?.id ? "active" : ""}`}
                   key={category.id}
                   onClick={() => onSelectCategory(category)}
                 >
@@ -254,7 +244,7 @@ export default function HomePopularServicesSection() {
                   </div>
                 ))
               ) : providers.length ? (
-                providers.map((provider) => <ProviderRow provider={provider} key={provider.id} fallbackServiceName={activeTab?.name || activeCategory.name} />)
+                providers.map((provider) => <ProviderRow provider={provider} key={provider.id} fallbackServiceName={activeTab?.name || activeCategory?.name || "Service"} />)
               ) : (
                 <div className="popular-services-empty">
                   <i className="material-icons">storefront</i>
@@ -373,16 +363,6 @@ function buildTabs(category?: AllServiceCategoryOption): AllServiceSubCategoryOp
   return category.subCategories.slice(0, 3);
 }
 
-function fallbackCategory(id: number, name: string, slug: string, subCategories: string[]): AllServiceCategoryOption {
-  return {
-    id,
-    name,
-    slug,
-    code: null,
-    subCategories: subCategories.map((subCategory, index) => fallbackSubCategory(id * 100 + index, subCategory, slugify(subCategory))),
-  };
-}
-
 function fallbackSubCategory(id: number, name: string, slug: string): AllServiceSubCategoryOption {
   return {
     id,
@@ -441,12 +421,4 @@ function getProviderLocation(provider: PublicAllServicePosting) {
 function formatPhone(provider: PublicAllServicePosting) {
   const value = `${provider.phoneCountryCode || ""} ${provider.phoneNumber || ""}`.trim();
   return value || "";
-}
-
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .replace(/&/g, "and")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 }

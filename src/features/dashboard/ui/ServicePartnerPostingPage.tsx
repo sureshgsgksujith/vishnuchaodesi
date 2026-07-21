@@ -6,9 +6,11 @@ import {
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import { createAllServicePosting, type AllServicePostingLocation, type AllServicePricingPackage } from "../api/allServicePostingsApi";
+import { generateListingAiImages, getListingAiImageErrorMessage, getListingAiSuggestions } from "../api/listingAiApi";
 import { getAllServicePricingPlans, type AllServicePricingPlan } from "../api/allServicePricingPlansApi";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
+import "../styles/serviceOnboarding.css";
 
 type LocationForm = {
   label: string;
@@ -357,6 +359,13 @@ export default function ServicePartnerPostingPage() {
   const [paidPlan, setPaidPlan] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
   const [successReference, setSuccessReference] = useState("");
+  const [isAiGeneratingProfile, setIsAiGeneratingProfile] = useState(false);
+  const [aiProfileMessage, setAiProfileMessage] = useState("");
+  const [aiProfileError, setAiProfileError] = useState("");
+  const [aiImagePrompt, setAiImagePrompt] = useState("");
+  const [isAiImageGenerating, setIsAiImageGenerating] = useState(false);
+  const [aiImageMessage, setAiImageMessage] = useState("");
+  const [aiImageError, setAiImageError] = useState("");
 
   const currentMeta = stepMeta[step - 1];
   const homeLocationDefaults = useMemo(() => ({
@@ -737,6 +746,160 @@ export default function ServicePartnerPostingPage() {
     setNotice("");
   }
 
+  function getSelectedServiceNames() {
+    if (!selectedCategory) {
+      return [];
+    }
+
+    return selectedCategory.subCategories.flatMap((subCategory) =>
+      subCategory.detailedCategories
+        .filter((detail) => selectedDetailedIds.includes(detail.id))
+        .map((detail) => detail.name)
+    );
+  }
+
+  async function generateAiServiceProfile() {
+    if (!selectedCategory) {
+      setAiProfileError("Select a service category first.");
+      setAiProfileMessage("");
+      return;
+    }
+
+    const selectedServices = getSelectedServiceNames();
+    setIsAiGeneratingProfile(true);
+    setAiProfileError("");
+    setAiProfileMessage("");
+
+    try {
+      const response = await getListingAiSuggestions({
+        mode: "listing",
+        categoryName: selectedCategory.name,
+        subCategory: selectedCategory.subCategories.map((subCategory) => subCategory.name).join(", "),
+        detailCategory: selectedServices.join(", "),
+        sellerName: form.businessName || form.contactName,
+        title: form.businessName,
+        description: form.description,
+        businessDescription: form.description,
+        city: primaryLocation.city,
+        state: primaryLocation.state,
+        country: primaryLocation.country,
+        price: normalizeServicePackages(servicePackages).map((item) => `${item.serviceName}: ${item.priceText}`).join("; "),
+        attributes: {
+          providerType: form.providerType,
+          tagline: form.tagline,
+          delivery: form.delivery,
+          serviceAreas: serviceAreas.join(", "),
+          experience: form.experience,
+          openDays: openDays.join(", "),
+          payments: payments.join(", "),
+          teamSize: form.teamSize,
+          yearEstablished: form.yearEstablished,
+        },
+        fields: [
+          { key: "businessTagline", label: "Business tagline", type: "text", required: false, options: [], value: form.tagline },
+          { key: "businessDescription", label: "Business description", type: "textarea", required: true, options: [], value: form.description },
+          { key: "package1Name", label: "Service package 1 name", type: "text", required: false, options: [], value: servicePackages[0]?.serviceName || "" },
+          { key: "package1Price", label: "Service package 1 price", type: "text", required: false, options: [], value: servicePackages[0]?.priceText || "" },
+          { key: "package1Description", label: "Service package 1 short description", type: "text", required: false, options: [], value: servicePackages[0]?.description || "" },
+          { key: "package2Name", label: "Service package 2 name", type: "text", required: false, options: [], value: servicePackages[1]?.serviceName || "" },
+          { key: "package2Price", label: "Service package 2 price", type: "text", required: false, options: [], value: servicePackages[1]?.priceText || "" },
+          { key: "package2Description", label: "Service package 2 short description", type: "text", required: false, options: [], value: servicePackages[1]?.description || "" },
+          { key: "package3Name", label: "Service package 3 name", type: "text", required: false, options: [], value: servicePackages[2]?.serviceName || "" },
+          { key: "package3Price", label: "Service package 3 price", type: "text", required: false, options: [], value: servicePackages[2]?.priceText || "" },
+          { key: "package3Description", label: "Service package 3 short description", type: "text", required: false, options: [], value: servicePackages[2]?.description || "" },
+        ],
+        prompt: "Generate clear customer-facing copy for a local service provider profile. Keep claims realistic and avoid guarantees that are not supported by the provided details.",
+        characterLimit: 500,
+        source: "customer",
+      });
+
+      const fieldValues = response.fieldValues || {};
+      const nextDescription = (fieldValues.businessDescription || response.description || "").trim().slice(0, 500);
+      const nextTagline = (fieldValues.businessTagline || response.shortTagline || "").trim().slice(0, 120);
+      const nextPackages = [0, 1, 2].map((_, index) => ({
+        serviceName: String(fieldValues[`package${index + 1}Name`] || servicePackages[index]?.serviceName || selectedServices[index] || selectedCategory.name).trim().slice(0, 120),
+        priceText: String(fieldValues[`package${index + 1}Price`] || servicePackages[index]?.priceText || "Quote based").trim().slice(0, 60),
+        description: String(fieldValues[`package${index + 1}Description`] || servicePackages[index]?.description || "").trim().slice(0, 220),
+      }));
+
+      if (nextDescription) {
+        updateField("description", nextDescription);
+      }
+
+      if (nextTagline && !form.tagline.trim()) {
+        updateField("tagline", nextTagline);
+      }
+
+      setServicePackages((current) => {
+        const existingExtraRows = current.slice(3);
+        return [...nextPackages, ...existingExtraRows].slice(0, 6);
+      });
+      setAiProfileMessage("AI profile copy added. Review before submitting.");
+    } catch {
+      setAiProfileError("OpenAI generation is not available right now.");
+    } finally {
+      setIsAiGeneratingProfile(false);
+    }
+  }
+
+  async function generateAiBusinessImage() {
+    const businessName = form.businessName.trim();
+    const prompt = aiImagePrompt.trim();
+    if (!businessName && !prompt) {
+      setAiImageError("Enter a business name or image prompt first.");
+      setAiImageMessage("");
+      return;
+    }
+
+    setIsAiImageGenerating(true);
+    setAiImageError("");
+    setAiImageMessage("");
+
+    try {
+      const selectedServices = getSelectedServiceNames();
+      const response = await generateListingAiImages({
+        mode: "listing",
+        categoryName: selectedCategory?.name || form.providerType || "Local service business",
+        subCategory: selectedCategory?.subCategories.map((subCategory) => subCategory.name).join(", ") || "",
+        detailCategory: selectedServices.join(", "),
+        sellerName: businessName || form.contactName,
+        city: primaryLocation.city,
+        state: primaryLocation.state,
+        country: primaryLocation.country,
+        attributes: {
+          businessName,
+          providerType: form.providerType,
+          tagline: form.tagline,
+          prompt,
+          location: formatLocation(primaryLocation),
+          serviceAreas: serviceAreas.join(", "),
+        },
+        prompt: prompt || `Create a professional business image for ${businessName || "a local service provider"}.`,
+        generateProfile: true,
+        generateCover: false,
+        source: "customer",
+      });
+
+      const image = response.images.find((item) => item.type === "profile") || response.images[0];
+      if (!image) {
+        setAiImageError(response.errors[0] || "No image was generated.");
+        return;
+      }
+
+      setForm((current) => ({
+        ...current,
+        businessImageName: image.fileName || "ai-business-image.png",
+        businessImagePreview: `data:${image.mimeType};base64,${image.base64}`,
+      }));
+      clearBusinessImageError();
+      setAiImageMessage("AI image generated and added. Review before submitting.");
+    } catch (error) {
+      setAiImageError(getListingAiImageErrorMessage(error));
+    } finally {
+      setIsAiImageGenerating(false);
+    }
+  }
+
   function validateStep(nextStep: number) {
     const errors: FieldErrors = {};
 
@@ -956,6 +1119,12 @@ export default function ServicePartnerPostingPage() {
                     onRemoveBranch={(index) => setBranches((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                     onBusinessImageChange={handleBusinessImageChange}
                     onBusinessImageRemove={() => handleBusinessImageChange(null)}
+                    aiImagePrompt={aiImagePrompt}
+                    aiImageMessage={aiImageMessage}
+                    aiImageError={aiImageError}
+                    isAiImageGenerating={isAiImageGenerating}
+                    onAiImagePrompt={setAiImagePrompt}
+                    onGenerateAiImage={generateAiBusinessImage}
                     onValidatePhoneOtp={validatePhoneOtp}
                     onToggleSecondaryEmail={setShowSecondaryEmail}
                     onToggleSecondaryPhone={setShowSecondaryPhone}
@@ -989,6 +1158,10 @@ export default function ServicePartnerPostingPage() {
                     payments={payments}
                     servicePackages={servicePackages}
                     errors={fieldErrors}
+                    aiMessage={aiProfileMessage}
+                    aiError={aiProfileError}
+                    isAiGenerating={isAiGeneratingProfile}
+                    onGenerateAiProfile={generateAiServiceProfile}
                     onField={updateField}
                     onToggleDay={(day) => toggleValue(day, openDays, setOpenDays)}
                     onTogglePayment={(payment) => toggleValue(payment, payments, setPayments)}
@@ -1122,6 +1295,12 @@ function StepBasic({
   onRemoveBranch,
   onBusinessImageChange,
   onBusinessImageRemove,
+  aiImagePrompt,
+  aiImageMessage,
+  aiImageError,
+  isAiImageGenerating,
+  onAiImagePrompt,
+  onGenerateAiImage,
   onValidatePhoneOtp,
   onToggleSecondaryEmail,
   onToggleSecondaryPhone,
@@ -1142,6 +1321,12 @@ function StepBasic({
   onRemoveBranch: (index: number) => void;
   onBusinessImageChange: (file: File | null) => void;
   onBusinessImageRemove: () => void;
+  aiImagePrompt: string;
+  aiImageMessage: string;
+  aiImageError: string;
+  isAiImageGenerating: boolean;
+  onAiImagePrompt: (value: string) => void;
+  onGenerateAiImage: () => void;
   onValidatePhoneOtp: () => void;
   onToggleSecondaryEmail: (value: boolean) => void;
   onToggleSecondaryPhone: (value: boolean) => void;
@@ -1171,6 +1356,12 @@ function StepBasic({
         error={errors.businessImage}
         onChange={onBusinessImageChange}
         onRemove={onBusinessImageRemove}
+        aiPrompt={aiImagePrompt}
+        aiMessage={aiImageMessage}
+        aiError={aiImageError}
+        isAiGenerating={isAiImageGenerating}
+        onAiPrompt={onAiImagePrompt}
+        onGenerateAiImage={onGenerateAiImage}
       />
 
       <LocationFields title="Business Service Location?" location={primaryLocation} index={0} error={errors.primaryLocation} onChange={onLocation} />
@@ -1644,6 +1835,10 @@ function StepProfile({
   payments,
   servicePackages,
   errors,
+  aiMessage,
+  aiError,
+  isAiGenerating,
+  onGenerateAiProfile,
   onField,
   onToggleDay,
   onTogglePayment,
@@ -1656,6 +1851,10 @@ function StepProfile({
   payments: string[];
   servicePackages: ServicePackageForm[];
   errors: FieldErrors;
+  aiMessage: string;
+  aiError: string;
+  isAiGenerating: boolean;
+  onGenerateAiProfile: () => void;
   onField: <K extends keyof PostingForm>(key: K, value: PostingForm[K]) => void;
   onToggleDay: (day: string) => void;
   onTogglePayment: (payment: string) => void;
@@ -1665,6 +1864,18 @@ function StepProfile({
 }) {
   return (
     <div className="spaw-panel active">
+      <div className="spaw-ai-helper">
+        <div>
+          <span className="material-icons" aria-hidden="true">auto_awesome</span>
+          <strong>OpenAI service profile helper</strong>
+          <small>Generate description and service pricing ideas from your selected service details.</small>
+        </div>
+        <button type="button" onClick={onGenerateAiProfile} disabled={isAiGenerating}>
+          {isAiGenerating ? "Generating..." : "Generate with AI"}
+        </button>
+        {aiMessage ? <p className="spaw-ai-helper__message">{aiMessage}</p> : null}
+        {aiError ? <p className="spaw-ai-helper__error">{aiError}</p> : null}
+      </div>
       <div className={`spaw-field-block${errors.description ? " spaw-input-error" : ""}`}>
         <label className="spaw-label">Introduce Your Business <span className="spaw-req">*</span><small>Tell customers about your services, experience, specialties, and what sets you apart.</small></label>
         <textarea className={`spaw-input spaw-textarea${errors.description ? " is-invalid" : ""}`} rows={5} value={form.description} onChange={(event) => onField("description", event.target.value.slice(0, 500))} placeholder="Describe your experience, specialties, certifications, and service guarantees..." />
@@ -1845,12 +2056,24 @@ function BusinessImageUpload({
   error,
   onChange,
   onRemove,
+  aiPrompt,
+  aiMessage,
+  aiError,
+  isAiGenerating,
+  onAiPrompt,
+  onGenerateAiImage,
 }: {
   fileName: string;
   preview: string;
   error?: string;
   onChange: (file: File | null) => void;
   onRemove: () => void;
+  aiPrompt: string;
+  aiMessage: string;
+  aiError: string;
+  isAiGenerating: boolean;
+  onAiPrompt: (value: string) => void;
+  onGenerateAiImage: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -1898,6 +2121,27 @@ function BusinessImageUpload({
           )}
         </div>
         <div style={{ minWidth: 0, flex: "1 1 auto" }}>
+          <div className="spaw-image-ai">
+            <div className="spaw-image-ai__head">
+              <span className="material-icons" aria-hidden="true">auto_awesome</span>
+              <div>
+                <strong>Generate business image with OpenAI</strong>
+                <small>Use the business name or add a prompt for a specific style.</small>
+              </div>
+            </div>
+            <textarea
+              className="spaw-input spaw-image-ai__prompt"
+              rows={2}
+              value={aiPrompt}
+              onChange={(event) => onAiPrompt(event.target.value.slice(0, 300))}
+              placeholder="Optional prompt, e.g. modern beauty salon storefront, clean warm lighting"
+            />
+            <button type="button" className="spaw-image-ai__button" onClick={onGenerateAiImage} disabled={isAiGenerating}>
+              {isAiGenerating ? "Generating..." : preview ? "Regenerate AI Image" : "Generate AI Image"}
+            </button>
+            {aiMessage ? <p className="spaw-image-ai__message">{aiMessage}</p> : null}
+            {aiError ? <p className="spaw-image-ai__error">{aiError}</p> : null}
+          </div>
           <input
             ref={inputRef}
             type="file"

@@ -196,7 +196,7 @@ export default function LocalServicesPage() {
         }
 
         const nextCategories = categories.map(mapDirectoryCategoryToLocalCard).filter((category) => category.services.length);
-        setServiceCategories(nextCategories.length ? nextCategories : fallbackServiceCategories);
+        setServiceCategories(nextCategories.length ? mergeFallbackCategories(nextCategories) : fallbackServiceCategories);
       })
       .catch(() => {
         if (isActive) {
@@ -701,11 +701,12 @@ export default function LocalServicesPage() {
 function mapDirectoryCategoryToLocalCard(category: AllServiceCategoryOption, index: number): ServiceCategory {
   const assets = categoryAssets[index % categoryAssets.length];
   const services = category.subCategories.flatMap(mapDirectorySubCategoryToItems);
+  const isAstrology = /astro|horoscope|kundali/i.test(`${category.name} ${category.slug}`);
 
   return {
     title: category.name,
-    icon: assets.icon,
-    image: assets.image,
+    icon: isAstrology ? "/template-17/images/icon/expert-book.png" : assets.icon,
+    image: isAstrology ? "/template-17/images/home/astro.png" : assets.image,
     count: services.length,
     categoryId: category.id,
     categoryName: category.name,
@@ -742,6 +743,17 @@ function buildFallbackItems(subCategoryName: string, names: string[]) {
     slug: buildSlug(name),
     subCategoryName,
   }));
+}
+
+function mergeFallbackCategories(categories: ServiceCategory[]) {
+  const hasCategory = (fallback: ServiceCategory) =>
+    categories.some((category) =>
+      namesMatch(category.categoryName || category.title, fallback.categoryName || fallback.title) ||
+      buildSlug(category.categoryName || category.title) === buildSlug(fallback.categoryName || fallback.title),
+    );
+  const missingFallbackCategories = fallbackServiceCategories.filter((fallback) => !hasCategory(fallback));
+
+  return [...missingFallbackCategories, ...categories];
 }
 
 function findMatchingService(categories: ServiceCategory[], query: string) {

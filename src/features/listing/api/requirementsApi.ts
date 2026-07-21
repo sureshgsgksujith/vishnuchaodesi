@@ -4,7 +4,7 @@ export type RequirementPayload = {
   listingId?: number;
   listingTitle?: string;
   name: string;
-  email: string;
+  email?: string;
   mobileNumber: string;
   message?: string;
   categoryName?: string;
@@ -42,7 +42,7 @@ export async function submitRequirement(payload: RequirementPayload) {
 export type ProviderInterestPayload = {
   providerId: number;
   name: string;
-  email: string;
+  email?: string;
   mobileNumber: string;
   message?: string;
   categoryName?: string;

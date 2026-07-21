@@ -1883,12 +1883,99 @@
   text-decoration: underline;
 }
 
+.chao-home-page .chao-astro .astro-tags .tags a {
+  display: inline-block;
+  margin: 5px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background: #fff;
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.2;
+  padding: 6px 14px;
+  text-decoration: none;
+  transition: border-color 0.18s ease, color 0.18s ease;
+}
+
+.chao-home-page .chao-astro .astro-tags .tags a:hover {
+  border-color: #ff3b3b;
+  color: #ff3b3b;
+}
+
 .chao-home-page section.chao-law {
   padding-bottom: 40px;
 }
 
+.chao-home-page .chao-law .law-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin: 25px 0;
+}
+
+.chao-home-page .chao-law .law-tab {
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px 18px;
+}
+
+.chao-home-page .chao-law .law-tab.active {
+  border-color: #5f7d95;
+  background: #5f7d95;
+  color: #fff;
+}
+
+.chao-home-page .chao-law .law-content {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.chao-home-page .chao-law .law-tab-content {
+  display: none;
+}
+
+.chao-home-page .chao-law .law-tab-content.active {
+  display: block;
+}
+
+.chao-home-page .chao-law .law-tab-content ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 40px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chao-home-page .chao-law .law-tab-content li {
+  position: relative;
+  padding-left: 18px;
+  color: #444;
+}
+
+.chao-home-page .chao-law .law-tab-content li::before {
+  position: absolute;
+  left: 0;
+  color: #2ecc71;
+  content: "\2713";
+}
+
 .chao-home-page .chao-law .mt-50 {
   margin-bottom: 34px;
+  margin-top: 50px;
+}
+
+.chao-home-page .chao-law .btn-outline {
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  color: #333;
+  padding: 8px 18px;
+  text-decoration: none;
 }
 
 .chao-home-page section.chao-travel-car {
@@ -3259,6 +3346,10 @@ html {
 }
 
 @media (min-width: 769px) and (max-width: 991px) {
+  .chao-home-page .chao-law .law-tab-content ul {
+    gap: 24px;
+  }
+
   .chao-home-page .popular-services-layout {
     grid-template-columns: 1fr;
     max-width: 760px;
@@ -3319,6 +3410,17 @@ html {
   .chao-home-page .home-events-scroll {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 760px;
+  }
+}
+
+@media (max-width: 768px) {
+  .chao-home-page .chao-law .law-tabs {
+    justify-content: flex-start;
+  }
+
+  .chao-home-page .chao-law .law-tab-content ul {
+    gap: 12px;
+    text-align: left;
   }
 }
 

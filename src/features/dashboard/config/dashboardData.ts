@@ -136,6 +136,11 @@ export const dashboardNavSections: DashboardNavSection[] = [
         icon: "/template-17/images/icon/expert-book.png",
       },
       {
+        label: "Astrology Requests",
+        href: "/dashboard/astrology-requests",
+        icon: "/template-17/images/icon/expert-book.png",
+      },
+      {
         label: "Reviews",
         href: "/dashboard/review",
         icon: "/template-17/images/icon/dbl13.png",

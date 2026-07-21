@@ -16,6 +16,7 @@ const FollowingsPage = lazy(() => import("../../features/dashboard/ui/Followings
 const ReviewPage = lazy(() => import("../../features/dashboard/ui/ReviewPage"));
 const EnquiryPage = lazy(() => import("../../features/dashboard/ui/EnquiryPage"));
 const MyServiceBookingsPage = lazy(() => import("../../features/dashboard/ui/MyServiceBookingsPage"));
+const AstrologyRequestsPage = lazy(() => import("../../features/dashboard/ui/AstrologyRequestsPage"));
 const SettingsPage = lazy(() => import("../../features/dashboard/ui/SettingsPage"));
 const InvoicePage = lazy(() => import("../../features/dashboard/ui/InvoicePage"));
 const UserAppliedJobsPage = lazy(() => import("../../features/dashboard/ui/UserAppliedJobsPage"));
@@ -37,6 +38,7 @@ const AllServicesPage = lazy(() => import("../../features/allServices/ui/AllServ
 const AllServicesDetailedPage = lazy(() => import("../../features/allServices/ui/AllServicesDetailedPage"));
 const AllServiceProviderDetailsPage = lazy(() => import("../../features/allServices/ui/AllServiceProviderDetailsPage"));
 const ChaoTvPage = lazy(() => import("../../features/chaoTv/ChaoTvPage"));
+const AstrologyPage = lazy(() => import("../../features/astrology/ui/AstrologyPage"));
 const ClassifiedsHomePage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
 );
@@ -114,6 +116,7 @@ export function AppRouter() {
     "/dashboard/ad-posts",
     "/dashboard/products",
     "/dashboard/my-service-bookings",
+    "/dashboard/astrology-requests",
     "/dashboard/setting",
     "/dashboard/user-applied-jobs",
     "/dashboard/events",
@@ -152,6 +155,23 @@ export function AppRouter() {
     "/all-services.html",
     "/all-services-detailed",
     "/all-services-detailed.html",
+    "/astrology",
+    "/astrology/astrologers",
+    "/astrology/astrologers/:providerSlug",
+    "/:citySlug/astrologers/:providerSlug",
+    "/astrology/talk-to-astrologer",
+    "/astrology/astrology-reports",
+    "/astrology/ask-a-question",
+    "/astrologers",
+    "/astrologers/:providerSlug",
+    "/1-year-professional-career-report",
+    "/1-year-wealth-report",
+    "/love-report",
+    "/marriage-matching-report",
+    "/vedic-name-correction-report",
+    "/talk-to-astrologer",
+    "/astrology-reports",
+    "/ask-a-question",
     "/local-service-details",
     "/local-service-details.html",
     "/local-services",
@@ -172,6 +192,7 @@ export function AppRouter() {
     <ScrollToTop />
     <Routes>
       <Route path="/" element={<HomePage />} />
+      <Route path="/index.html" element={<Navigate to="/" replace />} />
       <Route path="/home" element={<HomePage />} />
 
       <Route path="/login" element={<LoginPage />} />
@@ -190,6 +211,7 @@ export function AppRouter() {
       <Route path="/dashboard/ad-posts" element={<ProtectedCustomerRoute><AllListingsPage defaultModule="classified" lockedModule title="Ads Posts" /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/products" element={<ProtectedCustomerRoute><AllListingsPage defaultModule="products" lockedModule title="Product Details" /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/my-service-bookings" element={<ProtectedCustomerRoute><MyServiceBookingsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/astrology-requests" element={<ProtectedCustomerRoute><AstrologyRequestsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/setting" element={<ProtectedCustomerRoute><SettingsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/user-applied-jobs" element={<ProtectedCustomerRoute><UserAppliedJobsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/events" element={<ProtectedCustomerRoute><EventsPage /></ProtectedCustomerRoute>} />
@@ -235,11 +257,29 @@ export function AppRouter() {
       <Route path="/local-services.html" element={<Navigate to="/local-services" replace />} />
       <Route path="/all-services" element={<AllServicesPage />} />
       <Route path="/all-services.html" element={<Navigate to="/all-services" replace />} />
-      <Route path="/all-services-detailed" element={<AllServicesDetailedPage />} />
-      <Route path="/all-services-detailed.html" element={<AllServicesDetailedPage />} />
-      <Route path="/local-service-details/:postingId" element={<AllServiceProviderDetailsPage />} />
-      <Route path="/local-service-details" element={<AllServiceProviderDetailsPage />} />
-      <Route path="/local-service-details.html" element={<AllServiceProviderDetailsPage />} />
+      <Route path="/all-services-detailed" element={<ProtectedCustomerRoute><AllServicesDetailedPage /></ProtectedCustomerRoute>} />
+      <Route path="/all-services-detailed.html" element={<ProtectedCustomerRoute><AllServicesDetailedPage /></ProtectedCustomerRoute>} />
+      <Route path="/astrology" element={<AstrologyPage />} />
+      <Route path="/astrology/astrologers" element={<AstrologyPage mode="astrologers" />} />
+      <Route path="/astrology/astrologers/:providerSlug" element={<ProtectedCustomerRoute><AstrologyPage mode="provider-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/:citySlug/astrologers/:providerSlug" element={<ProtectedCustomerRoute><AstrologyPage mode="provider-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/astrology/talk-to-astrologer" element={<AstrologyPage mode="talk" />} />
+      <Route path="/astrology/astrology-reports" element={<AstrologyPage mode="reports" />} />
+      <Route path="/astrology/ask-a-question" element={<AstrologyPage mode="ask" />} />
+      <Route path="/astrology/:reportSlug" element={<ProtectedCustomerRoute><AstrologyPage mode="report-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/astrologers" element={<AstrologyPage mode="astrologers" />} />
+      <Route path="/astrologers/:providerSlug" element={<ProtectedCustomerRoute><AstrologyPage mode="provider-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/talk-to-astrologer" element={<AstrologyPage mode="talk" />} />
+      <Route path="/astrology-reports" element={<AstrologyPage mode="reports" />} />
+      <Route path="/ask-a-question" element={<AstrologyPage mode="ask" />} />
+      <Route path="/1-year-professional-career-report" element={<ProtectedCustomerRoute><AstrologyPage mode="report-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/1-year-wealth-report" element={<ProtectedCustomerRoute><AstrologyPage mode="report-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/love-report" element={<ProtectedCustomerRoute><AstrologyPage mode="report-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/marriage-matching-report" element={<ProtectedCustomerRoute><AstrologyPage mode="report-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/vedic-name-correction-report" element={<ProtectedCustomerRoute><AstrologyPage mode="report-detail" /></ProtectedCustomerRoute>} />
+      <Route path="/local-service-details/:postingId" element={<ProtectedCustomerRoute><AllServiceProviderDetailsPage /></ProtectedCustomerRoute>} />
+      <Route path="/local-service-details" element={<ProtectedCustomerRoute><AllServiceProviderDetailsPage /></ProtectedCustomerRoute>} />
+      <Route path="/local-service-details.html" element={<ProtectedCustomerRoute><AllServiceProviderDetailsPage /></ProtectedCustomerRoute>} />
       <Route path="/all-listing" element={<AllListingPage />} />
       <Route path="/real-estate-listings" element={<AllListingPage lockedCategory="real-estate" includeAllCountries pageTitle="Real Estate" />} />
       <Route path="/chao-tv" element={<ChaoTvPage />} />

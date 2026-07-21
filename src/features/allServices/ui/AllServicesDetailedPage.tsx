@@ -9,7 +9,8 @@ import {
 } from "../api/allServiceDirectoryApi";
 import { getPublicAllServicePostings, type PublicAllServicePosting } from "../api/allServicePostingsApi";
 import { submitProviderInterest, submitRequirement } from "../../listing/api/requirementsApi";
-import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
+import { getCustomerContactDefaults, isCustomerAuthenticated } from "../../auth/utils/customerSession";
+import PhoneNumberInput, { splitPhoneValue } from "../../../shared/components/PhoneNumberInput";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
@@ -27,6 +28,12 @@ type MatchedService = {
   category: AllServiceCategoryOption | null;
   subCategory: AllServiceSubCategoryOption | null;
   detail: DetailOption;
+  options: DetailOption[];
+};
+
+type SubCategoryExplorerGroup = {
+  key: string;
+  name: string;
   options: DetailOption[];
 };
 
@@ -101,7 +108,7 @@ export default function AllServicesDetailedPage() {
       .catch(() => {
         if (!isActive) return;
         setCategories([]);
-        setLoadMessage("Unable to load live related services. Showing the selected service only.");
+        setLoadMessage("Unable to load the live service directory.");
       });
 
     return () => {
@@ -224,6 +231,16 @@ export default function AllServicesDetailedPage() {
       `${option.name} ${option.subCategoryName}`.toLowerCase().includes(query),
     );
   }, [matched.options, serviceSearch]);
+  const explorerGroups = useMemo(
+    () => matched.category?.subCategories.map(toSubCategoryExplorerGroup).filter((group) => group.options.length) || [],
+    [matched.category],
+  );
+  const currentExplorerGroupKey = matched.subCategory
+    ? buildSubCategoryKey(matched.subCategory)
+    : explorerGroups.find((group) => group.options.some((option) => option.key === matched.detail.key))?.key || explorerGroups[0]?.key || "";
+  const currentExplorerGroup = explorerGroups.find((group) => group.key === currentExplorerGroupKey) || explorerGroups[0];
+  const explorerOptions = currentExplorerGroup?.options.slice(0, 12) || matched.options.slice(0, 12);
+  const pageTitle = matched.category ? `${matched.category.name} Services` : `${matched.detail.name} Services`;
 
   const providerPageCount = Math.max(1, Math.ceil(providerTotalCount / providerPageSize));
 
@@ -285,6 +302,11 @@ export default function AllServicesDetailedPage() {
 
     if (!quoteForm.city.trim()) {
       setQuoteError("Enter your city.");
+      return false;
+    }
+
+    if (!quoteForm.email.trim()) {
+      setQuoteError("Email is required.");
       return false;
     }
 
@@ -397,7 +419,7 @@ export default function AllServicesDetailedPage() {
       setIsQuoteOpen(false);
       setQuoteStep("details");
     } catch (error) {
-      setInterestedError(getApiErrorMessage(error, "Unable to send interest email right now. Please try again."));
+      setInterestedError(getApiErrorMessage(error, "Unable to save your interest right now. Please try again."));
     } finally {
       setInterestedProviderId(null);
     }
@@ -438,12 +460,39 @@ export default function AllServicesDetailedPage() {
                   <span>/</span>
                   <b>{matched.detail.name}</b>
                 </nav>
-                <h1>{matched.detail.name} Services</h1>
+                <h1>{pageTitle}</h1>
                 <p>
-                  Tell us more about your requirement so that we can connect you to the right{" "}
-                  <strong>{matched.detail.name}</strong> in <strong>{cityLabel}</strong>.
+                  Choose the exact service you need and compare posted{" "}
+                  <strong>{matched.category?.name || matched.detail.name}</strong> providers in <strong>{cityLabel}</strong>.
                 </p>
                 {loadMessage ? <div className="sq-inline-note">{loadMessage}</div> : null}
+                {explorerGroups.length ? (
+                  <div className="sq-category-explorer-react">
+                    <div className="sq-category-tabs-react" role="tablist" aria-label={`${matched.category?.name || "Service"} groups`}>
+                      {explorerGroups.slice(0, 10).map((group) => (
+                        <Link
+                          className={group.key === currentExplorerGroupKey ? "active" : ""}
+                          to={buildDetailHref(group.options[0], matched.category)}
+                          key={group.key}
+                        >
+                          {group.name}
+                        </Link>
+                      ))}
+                    </div>
+                    <div className="sq-category-links-react">
+                      {explorerOptions.map((option) => (
+                        <Link
+                          className={option.key === matched.detail.key ? "active" : ""}
+                          to={buildDetailHref(option, matched.category)}
+                          key={option.key}
+                        >
+                          <i className="material-icons" aria-hidden="true">check</i>
+                          <span>{option.name}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 <div className="sq-hero-providers-react">
                   {isLoadingProviders ? (
                     <div className="sq-provider-status-react">
@@ -548,16 +597,20 @@ export default function AllServicesDetailedPage() {
               <p>Quickly compare and find the best local deals.</p>
               <label>Name <span>*</span><input type="text" name="name" value={quoteForm.name} onChange={(event) => updateQuoteForm({ name: event.target.value })} placeholder="Your full name" /></label>
               <label>City <span>*</span><input type="text" name="city" value={quoteForm.city} onChange={(event) => updateQuoteForm({ city: event.target.value })} /></label>
-              <label>Email <span>*</span><input type="email" name="email" value={quoteForm.email} onChange={(event) => updateQuoteForm({ email: event.target.value })} placeholder="Email address" /></label>
-              <label>Contact Number <span>*</span></label>
-              <div className="sq-phone-row-react">
-                <select name="phone_code" value={quoteForm.phoneCode} onChange={(event) => updateQuoteForm({ phoneCode: event.target.value })}>
-                  <option value="+1">+1 US</option>
-                  <option value="+1 CA">+1 CA</option>
-                  <option value="+91">+91 IN</option>
-                </select>
-                <input type="tel" name="phone" value={quoteForm.phone} onChange={(event) => updateQuoteForm({ phone: event.target.value })} placeholder="Contact number" />
-              </div>
+              <label>Email <span>*</span><input type="email" name="email" value={quoteForm.email} placeholder="Email address" required readOnly /></label>
+              <label>
+                Contact Number <span>*</span>
+                <PhoneNumberInput
+                  className="sq-phone-row-react"
+                  value={`${quoteForm.phoneCode} ${quoteForm.phone}`.trim()}
+                  onChange={(value) => {
+                    const phone = splitPhoneValue(value);
+                    updateQuoteForm({ phoneCode: phone.code, phone: phone.number });
+                  }}
+                  placeholder="Contact number"
+                  required
+                />
+              </label>
               <label>Description<textarea name="description" rows={3} value={quoteForm.description} onChange={(event) => updateQuoteForm({ description: event.target.value })} placeholder="Tell us more about your requirement..." /></label>
               <label className="sq-check-react"><input type="checkbox" checked={quoteForm.otherProviders} onChange={(event) => updateQuoteForm({ otherProviders: event.target.checked })} /><span>I also wish to get quotes from other service providers.</span></label>
               <label className="sq-check-react"><input type="checkbox" checked={quoteForm.consent} onChange={(event) => updateQuoteForm({ consent: event.target.checked })} /><span>I agree to be contacted by Chao Desi via call, SMS, or WhatsApp.</span></label>
@@ -775,16 +828,14 @@ function getStoredCustomerQuoteInfo() {
     return { name: "", email: "", phoneCode: "+1", phone: "" };
   }
 
-  const name = localStorage.getItem("fullName") || localStorage.getItem("customer_name") || "";
-  const email = localStorage.getItem("email") || "";
-  const storedMobile = localStorage.getItem("mobileNumber") || "";
-  const mobileMatch = storedMobile.trim().match(/^(\+\d{1,4})\s*(.*)$/);
+  const customer = getCustomerContactDefaults();
+  const phone = splitPhoneValue(customer.mobileNumber);
 
   return {
-    name,
-    email,
-    phoneCode: mobileMatch?.[1] || "+1",
-    phone: mobileMatch?.[2] || storedMobile,
+    name: customer.fullName,
+    email: customer.email,
+    phoneCode: phone.code,
+    phone: phone.number,
   };
 }
 
@@ -847,6 +898,20 @@ function flattenCategoryOptions(category: AllServiceCategoryOption) {
       ? subCategory.detailedCategories.map((detail) => toDetailOption(detail, subCategory.name))
       : [toDetailOption({ id: subCategory.id, name: subCategory.name, slug: subCategory.slug }, subCategory.name)],
   );
+}
+
+function toSubCategoryExplorerGroup(subCategory: AllServiceSubCategoryOption): SubCategoryExplorerGroup {
+  return {
+    key: buildSubCategoryKey(subCategory),
+    name: subCategory.name,
+    options: subCategory.detailedCategories.length
+      ? subCategory.detailedCategories.map((detail) => toDetailOption(detail, subCategory.name))
+      : [toDetailOption({ id: subCategory.id, name: subCategory.name, slug: subCategory.slug }, subCategory.name)],
+  };
+}
+
+function buildSubCategoryKey(subCategory: Pick<AllServiceSubCategoryOption, "id" | "name" | "slug">) {
+  return `${subCategory.id || 0}-${subCategory.slug || buildSlug(subCategory.name)}`;
 }
 
 function toDetailOption(detail: Pick<AllServiceDetailedCategoryOption, "id" | "name" | "slug">, subCategoryName: string): DetailOption {

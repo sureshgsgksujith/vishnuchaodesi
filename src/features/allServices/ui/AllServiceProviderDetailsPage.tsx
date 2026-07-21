@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import { submitRequirement } from "../../listing/api/requirementsApi";
+import { getCustomerContactDefaults } from "../../auth/utils/customerSession";
 import { getPublicAllServicePosting, type PublicAllServicePosting } from "../api/allServicePostingsApi";
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import "../styles/allServices.css";
@@ -14,12 +15,16 @@ type EnquiryForm = {
   message: string;
 };
 
-const initialForm: EnquiryForm = {
-  name: "",
-  email: "",
-  phone: "",
-  message: "",
-};
+function createInitialForm(): EnquiryForm {
+  const customer = getCustomerContactDefaults();
+
+  return {
+    name: customer.fullName,
+    email: customer.email,
+    phone: customer.mobileNumber,
+    message: "",
+  };
+}
 
 const reviewNames = ["Ravi Kumar", "Meena Shah", "Arun Patel"];
 
@@ -31,7 +36,7 @@ export default function AllServiceProviderDetailsPage() {
   const [posting, setPosting] = useState<PublicAllServicePosting | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(createInitialForm);
   const [formMessage, setFormMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -105,7 +110,7 @@ export default function AllServiceProviderDetailsPage() {
         pageUrl: window.location.href,
       });
       setFormMessage("Your enquiry has been sent. The provider will contact you shortly.");
-      setForm(initialForm);
+      setForm(createInitialForm());
     } catch {
       setFormMessage("Unable to send enquiry right now. Please try again.");
     } finally {
@@ -180,6 +185,14 @@ export default function AllServiceProviderDetailsPage() {
                 <a href={`tel:${posting.phoneCountryCode}${posting.phoneNumber}`} className="ghost"><i className="material-icons">call</i> Call now</a>
               </div>
             </div>
+            <aside className="service-profile-photo-card" aria-label={`${posting.businessName} service image`}>
+              {posting.businessImageUrl ? (
+                <img src={posting.businessImageUrl} alt={posting.businessName} />
+              ) : (
+                <div>{getProviderInitial(posting.businessName)}</div>
+              )}
+              <span>{displayServiceName}</span>
+            </aside>
           </div>
         </section>
 
@@ -211,11 +224,15 @@ export default function AllServiceProviderDetailsPage() {
             <ServicePanel id="features" eyebrow="Features" title="Amenities">
               <div className="service-profile-feature-grid">
                 {serviceNames.slice(0, 6).map((service) => (
-                  <div key={service}>
+                  <Link
+                    className="service-profile-feature-link"
+                    to={buildServiceDetailHref(service, posting.allServiceCategoryName)}
+                    key={service}
+                  >
                     <i className="material-icons">done_all</i>
                     <h4>{service}</h4>
                     <p>Available through this provider.</p>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </ServicePanel>
@@ -296,7 +313,7 @@ export default function AllServiceProviderDetailsPage() {
               </div>
               <form onSubmit={submitEnquiry}>
                 <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="Enter name *" />
-                <input value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} placeholder="Email address *" />
+                <input type="email" value={form.email} placeholder="Email address *" required readOnly />
                 <PhoneNumberInput value={form.phone} onChange={(phone) => setForm((current) => ({ ...current, phone }))} placeholder="Mobile number *" required />
                 <textarea value={form.message} onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))} placeholder="Tell us what you need" rows={4} />
                 {formMessage ? <p className="service-profile-form-message">{formMessage}</p> : null}
@@ -357,10 +374,33 @@ function formatShortLocation(location: ReturnType<typeof getPrimaryLocation>, fa
   return [city, state].filter(Boolean).join(", ") || fallback;
 }
 
+function buildServiceDetailHref(serviceName: string, categoryName: string) {
+  const params = new URLSearchParams({
+    service: serviceName,
+    detail: buildSlug(serviceName),
+    category: categoryName,
+  });
+
+  return `/all-services-detailed?${params.toString()}`;
+}
+
+function getProviderInitial(name: string) {
+  return name.trim().charAt(0).toUpperCase() || "S";
+}
+
 function getRating(id: number) {
   return (4.3 + ((id % 7) / 10)).toFixed(1);
 }
 
 function cleanQueryText(value: string | null) {
   return decodeURIComponent(value || "").replace(/\+/g, " ").trim();
+}
+
+function buildSlug(name: string) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
