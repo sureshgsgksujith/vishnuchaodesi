@@ -19,6 +19,13 @@ const queryClient = new QueryClient({
 });
 const rootElement = document.getElementById("root") ?? createRootElement();
 
+// Keep old bookmarked hash URLs working, but immediately replace them with
+// the clean history-router equivalent.
+if (window.location.hash.startsWith("#/")) {
+  const legacyRoute = window.location.hash.slice(1);
+  window.history.replaceState(null, "", legacyRoute);
+}
+
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <Provider store={store}>

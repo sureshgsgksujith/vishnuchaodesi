@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import {
+  buildCustomerPortalUrl,
   clearCustomerSession,
+  getCustomerRouteFromWindow,
   getCustomerLastActivityAt,
   getCustomerToken,
   isCustomerAuthenticated,
@@ -35,10 +37,12 @@ export function useCustomerIdleTimeout() {
       clearCustomerSession();
       window.alert("Your session has expired after 30 minutes of inactivity. Please sign in again.");
 
-      if (window.location.pathname === "/home" || window.location.pathname === "/") {
+      const currentPath = getCustomerRouteFromWindow().split(/[?#]/, 1)[0];
+
+      if (currentPath === "/home" || currentPath === "/") {
         window.location.reload();
       } else {
-        window.location.replace("/home");
+        window.location.replace(buildCustomerPortalUrl("/home"));
       }
     };
 

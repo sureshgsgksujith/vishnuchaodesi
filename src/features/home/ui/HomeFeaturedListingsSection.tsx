@@ -148,7 +148,7 @@ function useFeaturedListingGroups() {
         : "Discover popular restaurants, cafes, and fine dining experiences near you.",
       iconClass: "plac-hom-tit-ic-eve",
       wrapperClass: "plac-det-eve",
-      showDetails: false,
+      showDetails: true,
       items: restaurantItems,
     },
     {

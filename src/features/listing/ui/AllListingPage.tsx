@@ -4,7 +4,7 @@ import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
-import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/utils/customerSession";
+import { getCurrentCustomerUserId, getCustomerRouteFromWindow, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { getMyProfile } from "../../dashboard/api/profileApi";
 import {
   getListing,
@@ -342,7 +342,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
 
   async function openQuoteModal(listing: ListingSummary) {
     if (!isCustomerAuthenticated()) {
-      const returnUrl = `${window.location.pathname}${window.location.search}`;
+      const returnUrl = getCustomerRouteFromWindow();
       window.alert("Please login to send enquiry.");
       navigate(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
       return;

@@ -17,6 +17,23 @@ const CUSTOMER_LAST_ACTIVITY_KEY = "chaodesi.customer.lastActivityAt";
 
 export const CUSTOMER_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
+export function getCustomerRouteFromWindow() {
+  if (typeof window === "undefined") {
+    return "/";
+  }
+
+  return `${window.location.pathname}${window.location.search}${window.location.hash}`;
+}
+
+export function buildCustomerPortalUrl(route = "/home") {
+  if (typeof window === "undefined") {
+    return route;
+  }
+
+  const safeRoute = route.startsWith("/") && !route.startsWith("//") ? route : "/home";
+  return `${window.location.origin}${safeRoute}`;
+}
+
 export function getCustomerToken() {
   if (typeof window === "undefined") {
     return null;
@@ -130,8 +147,10 @@ export function redirectToCustomerHomeAfterSessionPopup() {
   isSessionPopupOpen = true;
   window.alert("Your session has expired. Please sign in again to continue.");
 
-  if (window.location.pathname !== "/home" && window.location.pathname !== "/") {
-    window.location.replace("/home");
+  const currentPath = getCustomerRouteFromWindow().split(/[?#]/, 1)[0];
+
+  if (currentPath !== "/home" && currentPath !== "/") {
+    window.location.replace(buildCustomerPortalUrl("/home"));
   }
 }
 

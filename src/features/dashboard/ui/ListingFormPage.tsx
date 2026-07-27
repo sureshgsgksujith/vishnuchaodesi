@@ -2376,7 +2376,18 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const duplicateListingId = numberOrNull(searchParams.get("duplicate") || undefined);
   const sourceListingId = editListingId || duplicateListingId;
   const isEditMode = Boolean(editListingId);
-  const forcedListingCategoryName = !isClassifiedMode && !isEditMode && searchParams.get("category") === "jobs" ? "Jobs" : "";
+  const requestedClassifiedCategoryName = searchParams.get("categoryName")?.trim() || "";
+  const forcedListingCategoryName = !isEditMode && isClassifiedMode && supportedListingCategoryNameSet.has(requestedClassifiedCategoryName)
+    ? requestedClassifiedCategoryName
+    : !isClassifiedMode && !isEditMode && searchParams.get("category") === "jobs"
+      ? "Jobs"
+      : "";
+  const forcedListingSubCategory = isClassifiedMode && forcedListingCategoryName
+    ? searchParams.get("subCategory")?.trim() || ""
+    : "";
+  const forcedListingDetailCategory = isClassifiedMode && forcedListingCategoryName
+    ? searchParams.get("detailCategory")?.trim() || ""
+    : "";
   const isRealEstateListing = !isClassifiedMode && isRealEstateCategory(form.categoryName);
   const isRestaurantListing = !isClassifiedMode && form.categoryName === "Restaurants & Food";
   const isRoommatesRentalListing = !isClassifiedMode && form.categoryName === "Roommates & Rentals";
@@ -2401,19 +2412,23 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     setForm((currentForm) => {
-      if (currentForm.categoryName === forcedListingCategoryName && !currentForm.subCategory && !currentForm.detailCategory) {
+      if (
+        currentForm.categoryName === forcedListingCategoryName &&
+        currentForm.subCategory === forcedListingSubCategory &&
+        currentForm.detailCategory === forcedListingDetailCategory
+      ) {
         return currentForm;
       }
 
       return {
         ...currentForm,
         categoryName: forcedListingCategoryName,
-        subCategory: "",
-        detailCategory: "",
+        subCategory: forcedListingSubCategory,
+        detailCategory: forcedListingDetailCategory,
       };
     });
     setCategoryAttributes({});
-  }, [forcedListingCategoryName]);
+  }, [forcedListingCategoryName, forcedListingDetailCategory, forcedListingSubCategory]);
 
   useEffect(() => {
     if (!pendingValidationScrollRef.current || !Object.keys(fieldErrors).length) {

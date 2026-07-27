@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { customerTemplateRoutes } from "./customerTemplateRoutes";
 import { clearCustomerSession, isCustomerAuthenticated } from "../../features/auth/utils/customerSession";
@@ -65,6 +65,65 @@ function ScrollToTop() {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   }, [location.pathname, location.search]);
+
+  return null;
+}
+
+function CustomerLinkBridge() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleClick = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      const target = event.target;
+      const anchor = target instanceof Element ? target.closest<HTMLAnchorElement>("a[href]") : null;
+
+      if (!anchor || anchor.hasAttribute("download")) {
+        return;
+      }
+
+      const rawHref = anchor.getAttribute("href")?.trim() || "";
+
+      if (!rawHref || rawHref === "#" || rawHref === "#!") {
+        event.preventDefault();
+        return;
+      }
+
+      if (rawHref.startsWith("#") && !rawHref.startsWith("#/")) {
+        event.preventDefault();
+        navigate({ hash: rawHref });
+        return;
+      }
+
+      if (/^(?:mailto:|tel:|sms:|javascript:|data:)/i.test(rawHref)) {
+        return;
+      }
+
+      const destination = new URL(rawHref, window.location.origin);
+
+      if (destination.origin !== window.location.origin || destination.pathname.startsWith("/template-17/")) {
+        return;
+      }
+
+      const route = `${destination.pathname}${destination.search}${destination.hash}`;
+      const targetName = anchor.getAttribute("target")?.toLowerCase();
+
+      event.preventDefault();
+
+      if (targetName === "_blank") {
+        window.open(`${window.location.origin}${route}`, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      navigate(route);
+    };
+
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [navigate]);
 
   return null;
 }
@@ -190,6 +249,7 @@ export function AppRouter() {
   return (
     <RouteSuspense>
     <ScrollToTop />
+    <CustomerLinkBridge />
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/index.html" element={<Navigate to="/" replace />} />

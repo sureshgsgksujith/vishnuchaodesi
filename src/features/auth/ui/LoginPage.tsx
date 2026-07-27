@@ -9,7 +9,7 @@ import {
   resetPasswordApi,
 } from "../api/authApi";
 import { getPageBanners, type PageBanner } from "../api/pageBannersApi";
-import { isCustomerAuthenticated, markCustomerSessionActivity } from "../utils/customerSession";
+import { buildCustomerPortalUrl, isCustomerAuthenticated, markCustomerSessionActivity } from "../utils/customerSession";
 import { reinitializeTemplate } from "../../../utils/reinitializeTemplate";
 import "../styles/authBanners.css";
 
@@ -367,7 +367,7 @@ export default function LoginPage() {
       if (result.userType) localStorage.setItem("userType", result.userType);
       markCustomerSessionActivity();
 
-      window.location.replace(returnUrl || "/home");
+      window.location.replace(buildCustomerPortalUrl(returnUrl || "/home"));
     } catch (error) {
       alert(error instanceof Error ? error.message : "Login failed");
     } finally {

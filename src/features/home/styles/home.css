@@ -91,26 +91,36 @@
 
 .chao-home-page .ban-search {
   display: block;
+  float: none;
   margin: 8px auto 0;
+  box-shadow: none;
 }
 
 .chao-home-page .ban-search.ban-sear-all {
+  position: relative;
+  inset: auto;
   left: auto;
   max-width: 1320px;
   right: auto;
   transform: none;
-  width: min(72vw, 1320px);
-  padding: 12px 14px;
+  width: min(calc(100% - 32px), 1320px);
+  margin: 8px auto 0;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .chao-home-page .ban-search.ban-sear-all form,
 .chao-home-page .ban-search.ban-sear-all ul {
   width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .chao-home-page .ban-search.ban-sear-all ul {
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) minmax(210px, 1.15fr) minmax(230px, 1.25fr) minmax(270px, 1.65fr) 180px;
+  grid-template-columns: minmax(170px, 1fr) minmax(210px, 1.15fr) minmax(230px, 1.25fr) minmax(270px, 1.65fr);
   gap: 0;
   align-items: stretch;
 }
@@ -136,7 +146,7 @@
   color: #252733;
   background-color: #fff;
   border: 0;
-  box-shadow: 0 7px 20px -5px rgba(150, 150, 150, 0.29);
+  box-shadow: none;
 }
 
 .chao-home-page .ban-search.ban-sear-all ul li input,
@@ -145,6 +155,7 @@
   line-height: 52px;
   font-size: 14px;
   width: 100%;
+  box-shadow: none;
 }
 
 .chao-home-page .ban-search.ban-sear-all li .chosen-container .chosen-single span {
@@ -173,7 +184,7 @@
   text-align: left;
   background: #fff;
   border: 0;
-  box-shadow: 0 7px 20px -5px rgba(150, 150, 150, 0.29);
+  box-shadow: none;
   cursor: pointer;
 }
 
@@ -1982,6 +1993,514 @@
   padding-top: 34px;
 }
 
+/* Travel + cars marketplace panel */
+.chao-home-page .chao-travel-car {
+  padding: 54px 0;
+  border-top: 1px solid #e6e8ec;
+  border-bottom: 1px solid #e6e8ec;
+  background: #fff;
+}
+
+.chao-home-page .travel-cars-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.chao-home-page .travel-card,
+.chao-home-page .travelcar-card {
+  position: relative;
+  display: flex;
+  min-height: 420px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 24px;
+  box-shadow: 0 16px 42px rgba(15, 23, 42, .14);
+  color: #fff;
+}
+
+.chao-home-page .travel-card {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 28px 20px;
+  background-image: linear-gradient(90deg, rgba(2, 24, 42, .92), rgba(3, 32, 53, .66)), url("/template-17/images/home/travel-bg.jpg");
+  background-position: center;
+  background-size: cover;
+}
+
+.chao-home-page .travel-card::after,
+.chao-home-page .travelcar-card::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+}
+
+.chao-home-page .travel-card-content,
+.chao-home-page .travelcar-card-content,
+.chao-home-page .home-car-posting-actions,
+.chao-home-page .travel-primary-action {
+  position: relative;
+  z-index: 1;
+}
+
+.chao-home-page .chao-travel-car h3 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(28px, 1.8vw, 34px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+
+.chao-home-page .travel-card-intro,
+.chao-home-page .travelcar-intro {
+  margin: 8px 0 14px;
+  color: rgba(255, 255, 255, .96);
+  font-size: clamp(15px, 1.05vw, 20px);
+  line-height: 1.42;
+}
+
+.chao-home-page .travel-block + .travel-block {
+  margin-top: 12px;
+}
+
+.chao-home-page .travel-block h4,
+.chao-home-page .travelcar-label {
+  margin: 0 0 7px;
+  color: #fff;
+  font-size: clamp(18px, 1.25vw, 22px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.chao-home-page .travel-block ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chao-home-page .travel-block li {
+  position: relative;
+  margin: 0;
+  padding-left: 27px;
+  color: #fff;
+  font-size: clamp(15px, 1vw, 18px);
+  line-height: 1.35;
+}
+
+.chao-home-page .travel-block li::before {
+  position: absolute;
+  top: -.06em;
+  left: 0;
+  color: #12d987;
+  content: "✓";
+  font-size: 1.25em;
+  font-weight: 900;
+}
+
+.chao-home-page .travel-primary-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  margin-top: 12px;
+  padding: 8px 23px;
+  border-radius: 999px;
+  background: #ff342f;
+  box-shadow: 0 10px 24px rgba(255, 52, 47, .28);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .2s ease, background-color .2s ease;
+}
+
+.chao-home-page .travel-primary-action:hover {
+  background: #e9201c;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.chao-home-page .travelcar-card {
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px 26px 16px;
+  background-color: #07111c;
+  background-image: linear-gradient(90deg, rgba(3, 12, 24, .94), rgba(3, 12, 24, .73)), url("/template-17/images/home/usedcar-bg.jpg");
+  background-position: center;
+  background-size: cover;
+  transition: background-image .25s ease;
+}
+
+.chao-home-page .travelcar-intro {
+  margin-bottom: 22px;
+}
+
+.chao-home-page .travelcar-label {
+  margin-bottom: 10px;
+  font-size: 20px;
+}
+
+.chao-home-page .travelcar-label.latest-label {
+  margin-top: 8px;
+}
+
+.chao-home-page .car-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.chao-home-page .car-tags a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 5px 10px;
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .94);
+  color: #102647;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform .2s ease, background-color .2s ease;
+}
+
+.chao-home-page .car-tags a:hover {
+  background: #fff;
+  color: #061936;
+  transform: translateY(-2px);
+}
+
+.chao-home-page .home-car-scope-note {
+  margin: -2px 0 8px;
+  color: #d8e1ec;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.chao-home-page .home-car-carousel {
+  position: relative;
+  min-height: 118px;
+  padding: 0 16px;
+}
+
+.chao-home-page .home-car-ad {
+  display: flex;
+  min-height: 118px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 14px 22px;
+  border: 1px solid rgba(255, 255, 255, .62);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .56);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .2);
+  backdrop-filter: blur(4px);
+}
+
+.chao-home-page .home-car-ad-copy {
+  min-width: 0;
+}
+
+.chao-home-page .home-car-ad h5 {
+  display: -webkit-box;
+  max-width: 520px;
+  overflow: hidden;
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: clamp(18px, 1.25vw, 22px);
+  font-weight: 800;
+  line-height: 1.2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.chao-home-page .home-car-ad p {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.chao-home-page .home-car-ad p .material-icons {
+  font-size: 17px;
+}
+
+.chao-home-page .home-car-ad strong {
+  display: block;
+  color: #16d1ad;
+  font-size: clamp(20px, 1.45vw, 26px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.chao-home-page .home-car-contact,
+.chao-home-page .home-car-post-primary,
+.chao-home-page .home-car-post-secondary {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform .2s ease, background-color .2s ease;
+}
+
+.chao-home-page .home-car-contact {
+  min-width: 110px;
+  min-height: 42px;
+  padding: 8px 20px;
+  background: #ff1818;
+  color: #fff;
+  font-size: 15px;
+}
+
+.chao-home-page .home-car-contact:hover,
+.chao-home-page .home-car-post-primary:hover {
+  background: #df0c0c;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.chao-home-page .home-car-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  width: 30px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: rgba(222, 235, 231, .68);
+  color: #fff;
+  cursor: pointer;
+  place-items: center;
+  transform: translateY(-50%);
+}
+
+.chao-home-page .home-car-arrow span {
+  font-size: 38px;
+  font-weight: 300;
+  line-height: .7;
+}
+
+.chao-home-page .home-car-arrow.previous {
+  left: 0;
+}
+
+.chao-home-page .home-car-arrow.next {
+  right: 0;
+}
+
+.chao-home-page .home-car-dots {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.chao-home-page .home-car-dots button {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .45);
+}
+
+.chao-home-page .home-car-dots button.active {
+  width: 22px;
+  border-radius: 999px;
+  background: #ff342f;
+}
+
+.chao-home-page .home-car-ad-skeleton {
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.chao-home-page .home-car-ad-skeleton span {
+  width: 65%;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .3), rgba(255, 255, 255, .12));
+  background-size: 200% 100%;
+  animation: home-car-loading 1.3s linear infinite;
+}
+
+.chao-home-page .home-car-ad-skeleton span:nth-child(2) {
+  width: 45%;
+}
+
+.chao-home-page .home-car-ad-skeleton span:nth-child(3) {
+  width: 28%;
+}
+
+.chao-home-page .home-car-empty {
+  justify-content: center;
+  text-align: center;
+}
+
+.chao-home-page .home-car-empty p {
+  justify-content: center;
+}
+
+.chao-home-page .home-car-posting-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.chao-home-page .home-car-posting-actions > span {
+  margin-right: auto;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.chao-home-page .home-car-post-primary,
+.chao-home-page .home-car-post-secondary {
+  min-height: 40px;
+  padding: 8px 16px;
+  font-size: 13px;
+}
+
+.chao-home-page .home-car-post-primary {
+  background: #ff1818;
+  color: #fff;
+}
+
+.chao-home-page .home-car-post-secondary {
+  border: 1px solid rgba(255, 255, 255, .72);
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+}
+
+.chao-home-page .home-car-post-secondary:hover {
+  background: #fff;
+  color: #07182f;
+  transform: translateY(-2px);
+}
+
+@keyframes home-car-loading {
+  to { background-position: -200% 0; }
+}
+
+@media (max-width: 1199px) {
+  .chao-home-page .travel-card,
+  .chao-home-page .travelcar-card {
+    min-height: 420px;
+  }
+
+  .chao-home-page .travel-card {
+    padding: 36px 30px 32px;
+  }
+
+  .chao-home-page .travelcar-card {
+    padding: 36px 28px 22px;
+  }
+
+  .chao-home-page .home-car-ad {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px 26px;
+  }
+}
+
+@media (max-width: 991px) {
+  .chao-home-page .travel-cars-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .chao-home-page .travel-card,
+  .chao-home-page .travelcar-card {
+    min-height: 420px;
+  }
+
+  .chao-home-page .home-car-ad {
+    align-items: center;
+    flex-direction: row;
+  }
+}
+
+@media (max-width: 575px) {
+  .chao-home-page .chao-travel-car {
+    padding: 34px 0;
+  }
+
+  .chao-home-page .travel-cars-layout {
+    gap: 20px;
+  }
+
+  .chao-home-page .travel-card,
+  .chao-home-page .travelcar-card {
+    min-height: auto;
+    border-radius: 18px;
+  }
+
+  .chao-home-page .travel-card,
+  .chao-home-page .travelcar-card {
+    padding: 28px 20px 24px;
+  }
+
+  .chao-home-page .travel-card-intro,
+  .chao-home-page .travelcar-intro {
+    margin-bottom: 22px;
+  }
+
+  .chao-home-page .travel-block + .travel-block {
+    margin-top: 24px;
+  }
+
+  .chao-home-page .car-tags {
+    gap: 7px;
+  }
+
+  .chao-home-page .car-tags a {
+    min-height: 36px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .chao-home-page .home-car-carousel {
+    min-height: 230px;
+    padding: 0 10px;
+  }
+
+  .chao-home-page .home-car-ad {
+    min-height: 230px;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px;
+  }
+
+  .chao-home-page .home-car-contact {
+    min-width: 120px;
+    min-height: 46px;
+  }
+
+  .chao-home-page .home-car-posting-actions > span {
+    width: 100%;
+  }
+}
+
 .chao-home-page .chao-jobs .home-jobs-listings {
   width: 100%;
   overflow: hidden;
@@ -2925,10 +3444,10 @@ html {
   .chao-home-page .ban-search.ban-sear-all {
     width: min(100%, 360px);
     max-width: calc(100vw - 28px);
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 14px;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.34);
+    margin: 8px auto 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .chao-home-page .ban-search.ban-sear-all ul {

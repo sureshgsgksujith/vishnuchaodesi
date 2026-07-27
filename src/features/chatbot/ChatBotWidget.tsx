@@ -43,7 +43,7 @@ export default function ChatBotWidget() {
       const response = await apiClient.post<{ reply: string }>("/ChatBot/message", {
         message,
         pageTitle: document.title,
-        pageUrl: `${window.location.pathname}${window.location.search}`,
+        pageUrl: `${window.location.pathname}${window.location.search}${window.location.hash}`,
         source: "customer",
       });
       setMessages((current) => [...current, { role: "assistant", text: response.data.reply }]);

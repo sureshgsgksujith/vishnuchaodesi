@@ -494,7 +494,7 @@ function buildLocation() {
 }
 
 function buildMedia(categoryName, profile = null) {
-  if (dataProfile === "sulekha-novi") {
+  if (dataProfile === "chaodesi-novi") {
     const imageUrls = noviImageUrlsFor(categoryName);
     const firstImage = imageUrls[0] || noviRealImagePool[0];
 
@@ -633,16 +633,16 @@ function buildRestaurantMenuItems(categoryName, profile = null) {
 }
 
 function listingProfileFor(testCase, index) {
-  if (dataProfile !== "sulekha-novi") {
+  if (dataProfile !== "chaodesi-novi") {
     return null;
   }
 
   const categoryId = Number(testCase.category.id);
-  const profiles = noviSulekhaProfiles[categoryId] || [];
+  const profiles = noviChaoDesiProfiles[categoryId] || [];
   return profiles[(index - 1 + profileOffset) % profiles.length] || null;
 }
 
-const noviSulekhaProfiles = {
+const noviChaoDesiProfiles = {
   2: [
     {
       title: "Novi Vegetarian Indian Kitchen",
@@ -653,7 +653,7 @@ const noviSulekhaProfiles = {
       averageCostForTwo: 35,
       offer: "Serving ZIP codes 48374, 48375, 48376 and 48377 with vegetarian dining options.",
       price: 12,
-      source: "https://us.sulekha.com/novi-mi/restaurants",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/services/1.jpg",
         "/template-17/images/services/2.jpeg",
@@ -674,7 +674,7 @@ const noviSulekhaProfiles = {
       averageCostForTwo: 30,
       offer: "Serving ZIP codes 48374, 48375, 48376 and 48377 with dine-in and takeaway support.",
       price: 9,
-      source: "https://us.sulekha.com/novi-mi/restaurants",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/services/4.jpg",
         "/template-17/images/services/5.jpeg",
@@ -695,7 +695,7 @@ const noviSulekhaProfiles = {
       averageCostForTwo: 32,
       offer: "Indian restaurant and bakery service for Novi area customers.",
       price: 14,
-      source: "https://us.sulekha.com/novi-mi/restaurants",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/services/8.jpg",
         "/template-17/images/services/9.jpeg",
@@ -715,7 +715,7 @@ const noviSulekhaProfiles = {
         "Electronics listing for Novi, Michigan. This smartphone deal highlights a clean display, 5G support, good battery health, charger support and local pickup availability.",
       price: 420,
       offer: "Local Novi pickup available. Same-day inspection before purchase.",
-      source: "https://us.sulekha.com/novi-mi/online-shopping",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/products/1.jpg",
         "/template-17/images/products/2.jpeg",
@@ -745,7 +745,7 @@ const noviSulekhaProfiles = {
         "Feature phone listing for Novi buyers looking for a simple secondary phone with long battery life, clear calling and easy local purchase.",
       price: 65,
       offer: "Budget phone with charger and basic warranty check.",
-      source: "https://us.sulekha.com/novi-mi/online-shopping",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/products/4.jpeg",
         "/template-17/images/products/5.jpeg",
@@ -775,7 +775,7 @@ const noviSulekhaProfiles = {
         "Tablet listing for Novi customers needing a portable device for school, work and entertainment. Includes keyboard case, WiFi support, clean screen and local inspection.",
       price: 280,
       offer: "Tablet bundle includes keyboard case and charger.",
-      source: "https://us.sulekha.com/novi-mi/online-shopping",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/products/7.jpeg",
         "/template-17/images/products/8.jpeg",
@@ -805,7 +805,7 @@ const noviSulekhaProfiles = {
         "iPad listing for Novi area shoppers looking for a lightweight Apple tablet for browsing, classes, video calls and media. Device includes charger and clean body condition.",
       price: 510,
       offer: "Apple iPad Air with charger and local Novi handover.",
-      source: "https://us.sulekha.com/novi-mi/online-shopping",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/products/10.jpg",
         "/template-17/images/products/11.jpg",
@@ -836,7 +836,7 @@ const noviSulekhaProfiles = {
         "Smart watch listing for Novi customers who want fitness tracking, notifications, heart-rate monitoring and daily wear support with local pickup.",
       price: 155,
       offer: "Includes extra strap and charging cable.",
-      source: "https://us.sulekha.com/novi-mi/online-shopping",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/services/tech-1.jpg",
         "/template-17/images/all-product-bg.jpg",
@@ -866,7 +866,7 @@ const noviSulekhaProfiles = {
         "Private room option in Novi, Michigan for working professionals looking for a clean place near shopping, restaurants and local commute routes.",
       price: 850,
       offer: "Utilities shared. Flexible move-in date.",
-      source: "https://us.sulekha.com/novi-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/chao-home-room-listings/1.png",
         "/template-17/images/chao-home-room-listings/2.jpeg",
@@ -879,7 +879,7 @@ const noviSulekhaProfiles = {
         "Shared apartment room in Novi, Michigan suitable for students or professionals. Kitchen access, parking and laundry are available.",
       price: 700,
       offer: "Month-to-month option available.",
-      source: "https://us.sulekha.com/novi-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/chao-home-room-listings/2.jpeg",
         "/template-17/images/chao-home-room-listings/3.png",
@@ -892,7 +892,7 @@ const noviSulekhaProfiles = {
         "Roommate wanted for a well-maintained Novi apartment close to grocery stores, restaurants and major roads. Vegetarian-friendly household preferred.",
       price: 750,
       offer: "WiFi and basic utilities included.",
-      source: "https://us.sulekha.com/novi-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/chao-home-room-listings/3.png",
         "/template-17/images/chao-home-room-listings/1.png",
@@ -905,7 +905,7 @@ const noviSulekhaProfiles = {
         "Short-term room rental in Novi, Michigan for guests needing temporary accommodation near local offices and shopping centers.",
       price: 950,
       offer: "Weekly and monthly stay options.",
-      source: "https://us.sulekha.com/novi-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/listings/1.jpeg",
         "/template-17/images/listings/2.jpg",
@@ -920,7 +920,7 @@ const noviSulekhaProfiles = {
         "Live Indian concert event listing for Novi, Michigan. The event focuses on Garba, community music, stage performance and ticketed entry.",
       price: 30,
       offer: "Advance event tickets available for community music and Garba night.",
-      source: "https://us.sulekha.com/michigan-center-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/1.jpg",
         "/template-17/images/events/2.jpg",
@@ -933,7 +933,7 @@ const noviSulekhaProfiles = {
         "Bollywood and Punjabi DJ night for Novi, Michigan. The event includes dance music, party lighting and ticketed entry.",
       price: 18,
       offer: "Early bird DJ night tickets available.",
-      source: "https://us.sulekha.com/novi-mi/event-djs",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/4.jpg",
         "/template-17/images/events/5.jpg",
@@ -946,7 +946,7 @@ const noviSulekhaProfiles = {
         "Community karaoke and music night in Novi, Michigan for local Indian music fans. The event includes open mic singing, Hindi tracks, light refreshments and family-friendly seating.",
       price: 12,
       offer: "General admission includes karaoke participation.",
-      source: "https://us.sulekha.com/novi-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/7.jpg",
         "/template-17/images/events/8.jpg",
@@ -959,7 +959,7 @@ const noviSulekhaProfiles = {
         "Live Bollywood and Pakistani music band event serving the Detroit and Novi community.",
       price: 35,
       offer: "Reserved seating available for live band performance.",
-      source: "https://us.sulekha.com/detroit-metro-area/dhol-players",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/10.jpg",
         "/template-17/images/events/3.jpg",
@@ -972,7 +972,7 @@ const noviSulekhaProfiles = {
         "Classical and semi-classical Indian music evening in Novi, Michigan, covering Hindi bhajans and North Indian classical music.",
       price: 25,
       offer: "Advance registration recommended for classical music seating.",
-      source: "https://us.sulekha.com/novi-mi/singing-lessons/north-indian-classical-music-lessons-918131",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/6.jpg",
         "/template-17/images/events/8.jpg",
@@ -985,7 +985,7 @@ const noviSulekhaProfiles = {
         "Garba and Dandiya ticket listing for Novi, Michigan, for Indian music tours and Navratri celebrations.",
       price: 32,
       offer: "Family and group ticket options available for Garba night.",
-      source: "https://us.sulekha.com/michigan-center-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/2.jpg",
         "/template-17/images/events/5.jpg",
@@ -998,7 +998,7 @@ const noviSulekhaProfiles = {
         "Live Bollywood concert ticket listing for Novi area music lovers, focused on Indian concert tours and local event discovery.",
       price: 40,
       offer: "Reserved and general admission tickets available.",
-      source: "https://us.sulekha.com/michigan-center-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/3.jpg",
         "/template-17/images/events/6.jpg",
@@ -1011,7 +1011,7 @@ const noviSulekhaProfiles = {
         "Indian wedding DJ showcase serving the Detroit and Novi community for weddings, anniversaries, birthdays, Navratri and corporate events.",
       price: 22,
       offer: "Showcase pass includes DJ demos and event consultation access.",
-      source: "https://us.sulekha.com/detroit-metro-area/dj-service",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/5.jpg",
         "/template-17/images/events/7.jpg",
@@ -1024,7 +1024,7 @@ const noviSulekhaProfiles = {
         "Community cultural festival ticket listing for Novi, Michigan with Indian music, food stalls, stage activities and family entertainment.",
       price: 16,
       offer: "Early community ticket pricing available.",
-      source: "https://us.sulekha.com/novi-mi",
+      source: "https://dev.chaodesi.com/",
       images: [
         "/template-17/images/events/8.jpg",
         "/template-17/images/events/1.jpg",
@@ -1262,7 +1262,7 @@ Common options:
   SMOKE_CATEGORY="Restaurants & Food"  Run one category
   SMOKE_CATEGORY_ID=2                  Run one category by ID
   SMOKE_CATEGORY_COUNTS="2=2;13=4"     Run exact counts by category ID/name
-  SMOKE_DATA_PROFILE="sulekha-novi"    Use the Novi production seed profile
+  SMOKE_DATA_PROFILE="chaodesi-novi"   Use the Chao Desi Novi production seed profile
   SMOKE_SUB_CATEGORY="Restaurants"     Run one subcategory
   SMOKE_ONE_PER_CATEGORY=false         Test every detail category
   SMOKE_TITLE_PREFIX="EMAIL TEST"      Use a non-smoke title to allow real posting emails

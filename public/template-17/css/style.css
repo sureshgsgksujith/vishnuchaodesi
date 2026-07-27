@@ -28057,7 +28057,7 @@ select.ls-input {
                 padding: 0 16px 12px;
             }
         }
-/* ===== Service Quote Page — Sulekha get-quotes layout ===== */
+/* ===== Service Quote Page — Chao Desi get-quotes layout ===== */
 .service-quote-page {
     --sq-accent: #e31e24;
     --sq-accent2: #ff4d4d;
@@ -28448,7 +28448,7 @@ select.ls-input {
 }
 .service-quote-page .sq-check-item.is-checked .sq-check-label { color: var(--sq-check); }
 
-/* CTA button — Sulekha red */
+/* CTA button — marketplace red */
 .service-quote-page .sq-btn-get-started {
     display: block;
     width: 100%;
@@ -29612,7 +29612,7 @@ select.ls-input {
     }
 }
 
-/* Sulekha-style service search & step 2-4 components */
+/* Chao Desi service search & step 2-4 components */
 .spa-biz-page .spaw-search-wrap {
     position: relative;
 }
