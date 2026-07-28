@@ -174,18 +174,18 @@ export default function AllServicesDetailedPage() {
       });
       let scopeMessage = "";
 
-      if (result.totalCount === 0 && activeCity) {
-        result = await getPublicAllServicePostings(serviceQuery);
-        if (result.totalCount > 0) {
-          scopeMessage = `No ${matched.detail.name} providers are posted in ${cityLabel} yet. Showing matching providers from other service areas.`;
-        }
-      }
-
       if (result.totalCount === 0 && !selectedDetailIds) {
-        result = await getPublicAllServicePostings(baseQuery);
+        result = await getPublicAllServicePostings({
+          ...baseQuery,
+          city: activeCity || undefined,
+        });
         if (result.totalCount > 0) {
           scopeMessage = `No exact ${matched.detail.name} providers are posted yet. Showing related ${matched.category?.name || "service"} providers.`;
         }
+      }
+
+      if (result.totalCount === 0 && activeCity) {
+        scopeMessage = `No ${matched.detail.name} providers are posted in ${cityLabel} yet.`;
       }
 
       return { result, scopeMessage };

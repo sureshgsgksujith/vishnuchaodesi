@@ -18,6 +18,7 @@ import {
 } from "../hooks/useHomeSelectedLocation";
 
 type HomeCategorySlug = NonNullable<PublicListingQuery["category"]>;
+type HomeSearchScope = "" | `yellow:${HomeCategorySlug | "all"}` | `classified:${string}`;
 
 const quickLinks = [
   { title: "All Services", image: "/template-17/images/icon/shop.png", href: "/local-services" },
@@ -55,6 +56,18 @@ const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> 
   { label: "Electronics & Appliances", value: "electronics-appliances" },
   { label: "Pets & Animals", value: "pets-animals" },
   { label: "Groups & Communities", value: "groups-communities" },
+];
+
+const classifiedCategoryOptions = [
+  "Real Estate",
+  "Restaurants & Food",
+  "Vehicles",
+  "Care Services",
+  "Events & Tickets",
+  "Roommates & Rentals",
+  "Jobs",
+  "Electronics & Appliances",
+  "Pets & Animals",
 ];
 
 const defaultCityOptions = [
@@ -181,7 +194,7 @@ export default function HomeHeroSection() {
     activeLocationLabel,
     setHomeSelectedLocation,
   } = useHomeSelectedLocation();
-  const [selectedCategory, setSelectedCategory] = useState<HomeCategorySlug | "">("");
+  const [selectedCategory, setSelectedCategory] = useState<HomeSearchScope>("");
   const [selectedKeyword, setSelectedKeyword] = useState("");
   const [searchText, setSearchText] = useState("");
   const [listingSummary, setListingSummary] = useState<HomeListingSummary>(emptySummary);
@@ -474,11 +487,29 @@ export default function HomeHeroSection() {
     const params = new URLSearchParams();
     const keyword = searchText.trim() || selectedKeyword.trim();
     const keywordCategory = getCategoryForSearchKeyword(keyword);
-    const category = selectedCategory || keywordCategory;
+    const selectedScope = selectedCategory.split(":")[0];
+    const selectedValue = selectedCategory.split(":").slice(1).join(":");
+    const category = selectedScope === "yellow"
+      ? (selectedValue === "all" ? "" : selectedValue as HomeCategorySlug)
+      : keywordCategory;
     const city = activeCity;
 
     if (category === "chao-tv") {
       navigate("/chao-tv");
+      return;
+    }
+
+    if (selectedScope === "classified") {
+      if (selectedValue && selectedValue !== "all") {
+        params.set("category", selectedValue);
+      }
+      if (city) {
+        params.set("city", city);
+      }
+      if (keyword) {
+        params.set("search", keyword);
+      }
+      navigate(`/classifieds/ads-all${params.toString() ? `?${params.toString()}` : ""}`);
       return;
     }
 
@@ -535,12 +566,21 @@ export default function HomeHeroSection() {
                     id="explor_select"
                     className="chosen-select"
                     value={selectedCategory}
-                    onChange={(event) => setSelectedCategory(event.target.value as HomeCategorySlug | "")}
+                    onChange={(event) => setSelectedCategory(event.target.value as HomeSearchScope)}
                   >
                     <option value="">All Listings</option>
-                    {listingCategoryOptions.map((category) => (
-                      <option value={category.value} key={category.value}>{category.label}</option>
-                    ))}
+                    <optgroup label="Yellow Pages">
+                      <option value="yellow:all">All Yellow Pages</option>
+                      {listingCategoryOptions.map((category) => (
+                        <option value={`yellow:${category.value}`} key={`yellow:${category.value}`}>{category.label}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Classifieds">
+                      <option value="classified:all">All Classifieds</option>
+                      {classifiedCategoryOptions.map((category) => (
+                        <option value={`classified:${category}`} key={`classified:${category}`}>{category}</option>
+                      ))}
+                    </optgroup>
                   </select>
                 </li>
 

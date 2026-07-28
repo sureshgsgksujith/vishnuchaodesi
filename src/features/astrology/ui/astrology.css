@@ -87,7 +87,8 @@
 .astrology-hero img {
   display: block;
   width: min(100%, 330px);
-  margin: 0 auto;
+  align-self: start;
+  margin: 24px auto 0;
   animation: astrologyRotate 24s linear infinite;
 }
 
@@ -105,6 +106,7 @@
 
 .astrology-hero--profile img {
   width: 160px;
+  margin-top: 0;
 }
 
 .astrology-hero--profile .astrology-hero-actions {

@@ -38,6 +38,8 @@ const AllServicesPage = lazy(() => import("../../features/allServices/ui/AllServ
 const AllServicesDetailedPage = lazy(() => import("../../features/allServices/ui/AllServicesDetailedPage"));
 const AllServiceProviderDetailsPage = lazy(() => import("../../features/allServices/ui/AllServiceProviderDetailsPage"));
 const ChaoTvPage = lazy(() => import("../../features/chaoTv/ChaoTvPage"));
+const GlobalSearchPage = lazy(() => import("../../features/search/ui/GlobalSearchPage"));
+const SupportPage = lazy(() => import("../../features/support/ui/SupportPage"));
 const AstrologyPage = lazy(() => import("../../features/astrology/ui/AstrologyPage"));
 const ClassifiedsHomePage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
@@ -244,6 +246,12 @@ export function AppRouter() {
     "/event-checkout",
     "/pricing-details",
     "/post-your-ads",
+    "/about",
+    "/contact-us",
+    "/terms-of-use",
+    "/privacy-policy",
+    "/advertise-with-us",
+    "/copyright-policy",
   ];
 
   return (
@@ -341,6 +349,13 @@ export function AppRouter() {
       <Route path="/local-service-details" element={<ProtectedCustomerRoute><AllServiceProviderDetailsPage /></ProtectedCustomerRoute>} />
       <Route path="/local-service-details.html" element={<ProtectedCustomerRoute><AllServiceProviderDetailsPage /></ProtectedCustomerRoute>} />
       <Route path="/all-listing" element={<AllListingPage />} />
+      <Route path="/search-results" element={<GlobalSearchPage />} />
+      <Route path="/about" element={<SupportPage kind="about" />} />
+      <Route path="/contact-us" element={<SupportPage kind="contact" />} />
+      <Route path="/terms-of-use" element={<SupportPage kind="terms" />} />
+      <Route path="/privacy-policy" element={<SupportPage kind="privacy" />} />
+      <Route path="/advertise-with-us" element={<SupportPage kind="advertise" />} />
+      <Route path="/copyright-policy" element={<SupportPage kind="copyright" />} />
       <Route path="/real-estate-listings" element={<AllListingPage lockedCategory="real-estate" includeAllCountries pageTitle="Real Estate" />} />
       <Route path="/chao-tv" element={<ChaoTvPage />} />
       <Route path="/listing-details" element={<ListingDetailPage />} />

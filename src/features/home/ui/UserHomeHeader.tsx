@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   dashboardPrimaryNavItem as dashboardItem,
@@ -20,7 +20,9 @@ import {
   type UserNotification,
 } from "../../dashboard/api/notificationsApi";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
-import { categoryLinks, useExploreCategories, type ExploreMenuLink } from "./exploreMenuData";
+import { categoryLinks, useExploreCategories } from "./exploreMenuData";
+import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
+import HeaderSearchSuggestions from "./HeaderSearchSuggestions";
 import "../styles/customerHeader.css";
 
 const profileMenuItems: MenuItem[] = [
@@ -57,6 +59,8 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
     "/all-services.html",
     "/all-services-detailed",
     "/all-services-detailed.html",
+    "/local-service-details",
+    "/local-service-details.html",
   ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
   const addActionLabel = isServicePage ? "Add Service" : "Add Business";
   const addActionHref = isServicePage ? "/dashboard/services/new" : "/dashboard/listings/start";
@@ -71,6 +75,7 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const exploreCategories = useExploreCategories();
+  const { activeCity } = useHomeSelectedLocation();
 
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
   const { fullName, joinDate, profileImageUrl } = identity;
@@ -146,13 +151,6 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
     return () => window.removeEventListener("focus", handleWindowFocus);
   }, [loadNotifications]);
 
-  const filteredCategories = useMemo<ExploreMenuLink[]>(() => {
-    if (!searchText.trim()) return [];
-    return categoryLinks.filter((item) =>
-      item.label.toLowerCase().includes(searchText.toLowerCase())
-    );
-  }, [searchText]);
-
   const closeAllPopups = () => {
     setShowExplore(false);
     setShowNotifications(false);
@@ -168,9 +166,12 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
     if (keyword) {
       params.set("search", keyword);
     }
+    if (activeCity) {
+      params.set("city", activeCity);
+    }
 
     closeAllPopups();
-    navigate(`/all-listing${params.toString() ? `?${params.toString()}` : ""}`);
+    navigate(`/search-results${params.toString() ? `?${params.toString()}` : ""}`);
   }
 
   const handleLogout = () => {
@@ -418,33 +419,14 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
                       value={searchText}
                       onChange={(e) => setSearchText(e.target.value)}
                     />
-                    <ul
-                      id="tser-res1"
-                      className="tser-res tser-res2"
-                      style={{ display: searchText.trim() ? "block" : "none" }}
-                    >
-                      {filteredCategories.length > 0 ? (
-                        filteredCategories.slice(0, 6).map((item) => (
-                          <li key={item.label}>
-                            <div>
-                              <h4>{item.label}</h4>
-                              <span>Browse category</span>
-                              <Link
-                                to={item.href}
-                                onClick={closeAllPopups}
-                              ></Link>
-                            </div>
-                          </li>
-                        ))
-                      ) : searchText.trim() ? (
-                        <li>
-                          <div>
-                            <h4>No results found</h4>
-                            <span>Try another keyword</span>
-                          </div>
-                        </li>
-                      ) : null}
-                    </ul>
+                    <HeaderSearchSuggestions
+                      searchText={searchText}
+                      city={activeCity}
+                      onSelect={() => {
+                        setSearchText("");
+                        closeAllPopups();
+                      }}
+                    />
                   </li>
                   <li className="sbtn">
                     <button

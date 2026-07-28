@@ -14,6 +14,7 @@ import {
 } from "../../allServices/api/allServicePostingsApi";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
+import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import {
   getAstrologyReports,
   submitAstrologyRequest,
@@ -28,6 +29,7 @@ const providerPageSize = 12;
 export default function AstrologyPage({ mode = "home" }: { mode?: AstrologyPageMode }) {
   const { reportSlug, providerSlug } = useParams();
   const location = useLocation();
+  const { activeCity, currentLocation, locationRevision, selectedCity } = useHomeSelectedLocation();
   const [reports, setReports] = useState<AstrologyReport[]>([]);
   const [providers, setProviders] = useState<PublicAllServicePosting[]>([]);
   const [providerPage, setProviderPage] = useState(1);
@@ -77,7 +79,16 @@ export default function AstrologyPage({ mode = "home" }: { mode?: AstrologyPageM
     setIsLoadingProviders(true);
     setProviderLoadError("");
 
-    getPublicAllServicePostings({ category: "astrology-services", page: providerPage, pageSize: providerPageSize })
+    if (!selectedCity && (currentLocation.status === "loading" || currentLocation.status === "idle")) {
+      return;
+    }
+
+    getPublicAllServicePostings({
+      category: "astrology-services",
+      city: activeCity || undefined,
+      page: providerPage,
+      pageSize: providerPageSize,
+    })
       .then((result) => {
         if (!isActive) return;
         setProviders(result.items || []);
@@ -96,7 +107,7 @@ export default function AstrologyPage({ mode = "home" }: { mode?: AstrologyPageM
     return () => {
       isActive = false;
     };
-  }, [providerPage]);
+  }, [activeCity, currentLocation.status, locationRevision, providerPage, selectedCity]);
 
   useEffect(() => {
     if (mode !== "provider-detail") {

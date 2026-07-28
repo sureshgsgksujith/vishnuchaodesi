@@ -1,4 +1,64 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  getAllServiceDirectoryTree,
+  type AllServiceCategoryOption,
+} from "../../allServices/api/allServiceDirectoryApi";
+import {
+  getListingCategoryTree,
+  type ListingCategoryOption,
+} from "../../dashboard/api/listingCategoriesApi";
+import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
+import { useExploreCategories } from "./exploreMenuData";
+import "../styles/homeFooter.css";
+
+const classifiedCategoryNames = new Set([
+  "Real Estate",
+  "Restaurants & Food",
+  "Vehicles",
+  "Care Services",
+  "Events & Tickets",
+  "Roommates & Rentals",
+  "Jobs",
+  "Electronics & Appliances",
+  "Pets & Animals",
+]);
+
 export default function HomeFooterSection() {
+  const yellowPageCategories = useExploreCategories();
+  const { activeCity } = useHomeSelectedLocation();
+  const [localServiceCategories, setLocalServiceCategories] = useState<AllServiceCategoryOption[]>([]);
+  const [classifiedCategories, setClassifiedCategories] = useState<ListingCategoryOption[]>([]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    Promise.allSettled([
+      getAllServiceDirectoryTree(),
+      getListingCategoryTree(),
+    ]).then(([serviceResult, listingResult]) => {
+      if (!isActive) return;
+
+      setLocalServiceCategories(
+        serviceResult.status === "fulfilled" ? serviceResult.value || [] : [],
+      );
+
+      const listingTree = listingResult.status === "fulfilled" ? listingResult.value || [] : [];
+      setClassifiedCategories(
+        listingTree.filter((category) => classifiedCategoryNames.has(category.name)),
+      );
+    }).catch(() => {
+      if (isActive) {
+        setLocalServiceCategories([]);
+        setClassifiedCategories([]);
+      }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <>
       <section className="wed-hom-footer">
@@ -13,42 +73,42 @@ export default function HomeFooterSection() {
 
           <div className="row wed-foot-link">
             <div className="col-md-4 foot-tc-mar-t-o">
-              <h4>Top Category</h4>
+              <h4>Yellow Pages Categories</h4>
               <ul>
-                <li><a href="#">Technology</a></li>
-                <li><a href="#">Spa and Facial</a></li>
-                <li><a href="#">Real Estate</a></li>
-                <li><a href="#">Sports</a></li>
-                <li><a href="#">Education</a></li>
-                <li><a href="#">Electricals</a></li>
-                <li><a href="#">Vehicles</a></li>
-                <li><a href="#">Transportation</a></li>
+                {yellowPageCategories.map((category) => (
+                  <li key={category.href}>
+                    <Link to={category.href}>{category.label}</Link>
+                  </li>
+                ))}
+                <li><Link className="footer-category-all-link" to="/all-listing">View all Yellow Pages</Link></li>
               </ul>
             </div>
 
             <div className="col-md-4">
-              <h4>Trending Category</h4>
+              <h4>Local Services Categories</h4>
               <ul>
-                <li><a href="#">Hospitals</a></li>
-                <li><a href="#"></a></li>
-                <li><a href="#">Vehicles</a></li>
-                <li><a href="#"></a></li>
-                <li><a href="#">Real Estate</a></li>
-                <li><a href="#">Sports</a></li>
-                <li><a href="#">Education</a></li>
-                <li><a href="#">Electricals</a></li>
+                {localServiceCategories.map((category) => (
+                  <li key={category.id}>
+                    <Link to={buildLocalServiceCategoryHref(category, activeCity)}>
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+                <li><Link className="footer-category-all-link" to="/all-services">View all Local Services</Link></li>
               </ul>
             </div>
 
             <div className="col-md-4">
-              <h4>HELP &amp; SUPPORT</h4>
+              <h4>Classified Categories</h4>
               <ul>
-                <li><a href="#">&gt;About us</a></li>
-                <li><a href="#">FAQ</a></li>
-                <li><a href="#">Feedback</a></li>
-                <li><a href="#">Contact us</a></li>
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Terms of Use</a></li>
+                {classifiedCategories.map((category) => (
+                  <li key={category.id}>
+                    <Link to={buildClassifiedCategoryHref(category, activeCity)}>
+                      {category.name}
+                    </Link>
+                  </li>
+                ))}
+                <li><Link className="footer-category-all-link" to="/classifieds/ads-all">View all Classifieds</Link></li>
               </ul>
             </div>
           </div>
@@ -114,6 +174,15 @@ export default function HomeFooterSection() {
               </ul>
             </div>
           </div>
+
+          <nav className="footer-policy-links" aria-label="Help, support, and policies">
+            <Link to="/about">About us</Link>
+            <Link to="/contact-us">Contact us</Link>
+            <Link to="/terms-of-use">Terms &amp; Conditions</Link>
+            <Link to="/privacy-policy">Privacy Policy</Link>
+            <Link to="/advertise-with-us">Advertise with us</Link>
+            <Link to="/copyright-policy">Copyright Policy</Link>
+          </nav>
 
           <div className="row foot-count">
             <ul>
@@ -224,4 +293,20 @@ export default function HomeFooterSection() {
       </div>
     </>
   );
+}
+
+function buildLocalServiceCategoryHref(category: AllServiceCategoryOption, city: string) {
+  const params = new URLSearchParams({
+    category: category.name,
+    categoryId: String(category.id),
+  });
+
+  if (city) params.set("city", city);
+  return `/all-services-detailed?${params.toString()}`;
+}
+
+function buildClassifiedCategoryHref(category: ListingCategoryOption, city: string) {
+  const params = new URLSearchParams({ category: category.name });
+  if (city) params.set("city", city);
+  return `/classifieds/ads-all?${params.toString()}`;
 }

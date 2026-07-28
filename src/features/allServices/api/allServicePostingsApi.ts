@@ -94,6 +94,7 @@ export async function getPublicAllServicePostings(query: PublicAllServicePosting
       detailIds: query.detailIds || undefined,
       subCategory: query.subCategory || undefined,
       city: query.city || undefined,
+      search: query.search || undefined,
       page: query.page || 1,
       pageSize: query.pageSize || 6,
     },

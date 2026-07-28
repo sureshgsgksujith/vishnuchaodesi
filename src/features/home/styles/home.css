@@ -2596,7 +2596,11 @@
   text-decoration: none;
 }
 
-.home-chao-tv,
+.home-chao-tv {
+  background: #fff;
+  padding: 90px 0 28px;
+}
+
 .chao-tv-page-body {
   background: #fff;
   padding: 34px 0 28px;
@@ -3826,7 +3830,10 @@ html {
     width: 100%;
   }
 
-  .home-chao-tv,
+  .home-chao-tv {
+    padding: 60px 0 24px;
+  }
+
   .chao-tv-page-body {
     padding: 24px 0;
   }

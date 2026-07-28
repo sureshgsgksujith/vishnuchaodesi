@@ -21,6 +21,7 @@ const HomeCareFeaturedListingsSection = lazy(() =>
 const HomePlansSection = lazy(() => import("./HomePlansSection"));
 const HomeFooterSection = lazy(() => import("./HomeFooterSection"));
 const HomeAdsSection = lazy(() => import("./HomeAdsSection"));
+const HomeAboutSymploreSection = lazy(() => import("./HomeAboutSymploreSection"));
 
 function ViewportDeferredSection({
   children,
@@ -129,6 +130,14 @@ export default function HomePage() {
       <ViewportDeferredSection minHeight={160}>
         <HomeAdsSection />
       </ViewportDeferredSection>
+      <ViewportDeferredSection minHeight={620}>
+        <HomeAboutSymploreSection />
+      </ViewportDeferredSection>
+      <div
+        aria-hidden="true"
+        className="home-about-chao-tv-spacer"
+        style={{ display: "block", width: "100%", height: 72, minHeight: 72, background: "#fff" }}
+      />
       <ViewportDeferredSection minHeight={360}>
         <HomeChaoTvSection />
       </ViewportDeferredSection>

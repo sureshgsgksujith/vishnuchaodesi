@@ -8,6 +8,7 @@ import {
 } from "../api/allServiceDirectoryApi";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
+import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import "../styles/allServices.css";
 
 type ServiceItem = {
@@ -35,6 +36,7 @@ type ServiceSection = {
 export default function AllServicesPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { activeCity, activeLocationLabel } = useHomeSelectedLocation();
   const [query, setQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [serviceSections, setServiceSections] = useState<ServiceSection[]>([]);
@@ -117,7 +119,7 @@ export default function AllServicesPage() {
     const firstService = visibleSections[0]?.groups[0]?.items[0];
 
     if (firstService && visibleSections[0]) {
-      navigate(buildDetailedHref(firstService, visibleSections[0]));
+      navigate(buildDetailedHref(firstService, visibleSections[0], activeCity));
       return;
     }
 
@@ -149,7 +151,7 @@ export default function AllServicesPage() {
                 onClick={() => document.getElementById("all-services-directory")?.scrollIntoView({ behavior: "smooth" })}
               >
                 <i className="material-icons" aria-hidden="true">place</i>
-                <span>Novi, Michigan</span>
+                <span>{activeLocationLabel || "Select location"}</span>
                 <i className="material-icons" aria-hidden="true">expand_more</i>
               </button>
               <label>
@@ -265,7 +267,7 @@ export default function AllServicesPage() {
                   <article className="all-services-section-card" id={section.id} key={section.id}>
                     <header>
                       <CategoryTitle name={section.name} />
-                      <Link to={buildCategoryHref(section)}>View more</Link>
+                      <Link to={buildCategoryHref(section, activeCity)}>View more</Link>
                     </header>
                     <div className="all-services-group-grid">
                       {section.groups.map((group, groupIndex) => (
@@ -273,7 +275,7 @@ export default function AllServicesPage() {
                           <h4>{group.title}</h4>
                           <div className="all-services-link-list">
                             {group.items.map((item, itemIndex) => (
-                              <Link to={buildDetailedHref(item, section)} key={buildItemKey(section, group, item, itemIndex)}>
+                              <Link to={buildDetailedHref(item, section, activeCity)} key={buildItemKey(section, group, item, itemIndex)}>
                                 {item.name}
                               </Link>
                             ))}
@@ -353,7 +355,7 @@ function mapDetailedCategoryToItem(detailCategory: AllServiceDetailedCategoryOpt
   };
 }
 
-function buildDetailedHref(service: ServiceItem, section: ServiceSection) {
+function buildDetailedHref(service: ServiceItem, section: ServiceSection, city = "") {
   const params = new URLSearchParams({
     service: service.name,
     detail: service.slug,
@@ -364,14 +366,20 @@ function buildDetailedHref(service: ServiceItem, section: ServiceSection) {
   if (section.categoryId > 0) {
     params.set("categoryId", String(section.categoryId));
   }
+  if (city) {
+    params.set("city", city);
+  }
 
   return `/all-services-detailed?${params.toString()}`;
 }
 
-function buildCategoryHref(section: ServiceSection) {
+function buildCategoryHref(section: ServiceSection, city = "") {
   const params = new URLSearchParams({ category: section.name });
   if (section.categoryId > 0) {
     params.set("categoryId", String(section.categoryId));
+  }
+  if (city) {
+    params.set("city", city);
   }
   return `/all-services-detailed?${params.toString()}`;
 }

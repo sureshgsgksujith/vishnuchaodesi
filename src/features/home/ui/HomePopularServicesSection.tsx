@@ -134,18 +134,15 @@ export default function HomePopularServicesSection() {
       });
       let message = "";
 
-      if (result.totalCount === 0 && activeCity) {
-        result = await getPublicAllServicePostings({ ...baseQuery, subCategory });
-        if (result.totalCount > 0) {
-          message = `No ${activeTab?.name || activeCategory.name} providers are posted in ${activeCity} yet. Showing matching providers from other service areas.`;
-        }
-      }
-
       if (result.totalCount === 0 && subCategory) {
         result = await getPublicAllServicePostings({
           ...baseQuery,
           city: activeCity || undefined,
         });
+      }
+
+      if (result.totalCount === 0 && activeCity) {
+        message = `No ${activeTab?.name || activeCategory.name} providers are posted in ${activeCity} yet.`;
       }
 
       return { result, message };

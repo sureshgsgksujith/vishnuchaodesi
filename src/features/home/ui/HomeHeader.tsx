@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 import { categoryLinks, useExploreCategories } from "./exploreMenuData";
+import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
+import HeaderSearchSuggestions from "./HeaderSearchSuggestions";
 import "../styles/customerHeader.css";
 
 export default function HomeHeader() {
@@ -12,6 +14,7 @@ export default function HomeHeader() {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [searchText, setSearchText] = useState("");
   const exploreCategories = useExploreCategories();
+  const { activeCity } = useHomeSelectedLocation();
 
   const closeExplore = () => setShowExplore(false);
   const closeMobileMenu = () => setShowMobileMenu(false);
@@ -26,6 +29,8 @@ export default function HomeHeader() {
     "/all-services.html",
     "/all-services-detailed",
     "/all-services-detailed.html",
+    "/local-service-details",
+    "/local-service-details.html",
   ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
   const addActionLabel = isServicePage ? "Add Service" : "Add business";
   const addActionHref = isServicePage ? "/login?returnUrl=/dashboard/services/new" : "/login";
@@ -38,9 +43,12 @@ export default function HomeHeader() {
     if (keyword) {
       params.set("search", keyword);
     }
+    if (activeCity) {
+      params.set("city", activeCity);
+    }
 
     closeAllPopups();
-    navigate(`/all-listing${params.toString() ? `?${params.toString()}` : ""}`);
+    navigate(`/search-results${params.toString() ? `?${params.toString()}` : ""}`);
   }
 
   return (
@@ -136,7 +144,11 @@ export default function HomeHeader() {
                       value={searchText}
                       onChange={(event) => setSearchText(event.target.value)}
                     />
-                    <ul id="tser-res1" className="tser-res tser-res2"></ul>
+                    <HeaderSearchSuggestions
+                      searchText={searchText}
+                      city={activeCity}
+                      onSelect={() => setSearchText("")}
+                    />
                   </li>
                   <li className="sbtn">
                     <button type="submit" className="btn btn-success" id="top_filter_submit">
