@@ -19,12 +19,7 @@ const queryClient = new QueryClient({
 });
 const rootElement = document.getElementById("root") ?? createRootElement();
 
-// Keep old bookmarked hash URLs working, but immediately replace them with
-// the clean history-router equivalent.
-if (window.location.hash.startsWith("#/")) {
-  const legacyRoute = window.location.hash.slice(1);
-  window.history.replaceState(null, "", legacyRoute);
-}
+normalizeLegacyBrowserUrl();
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
@@ -44,4 +39,33 @@ function createRootElement() {
   element.id = "root";
   document.body.appendChild(element);
   return element;
+}
+
+function normalizeLegacyBrowserUrl() {
+  const { pathname, search, hash } = window.location;
+  const searchParams = new URLSearchParams(search);
+  const recoveredSpaPath = searchParams.get("__spa");
+  const legacyRoute = hash.startsWith("#/") ? hash.slice(1) : "";
+
+  if (recoveredSpaPath) {
+    searchParams.delete("__spa");
+    const recoveredPath = `/${recoveredSpaPath.replace(/^\/+/, "")}`;
+    const recoveredSearch = searchParams.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${recoveredPath}${recoveredSearch ? `?${recoveredSearch}` : ""}${hash}`,
+    );
+    return;
+  }
+
+  if (legacyRoute) {
+    window.history.replaceState(null, "", `${legacyRoute}${search}`);
+    return;
+  }
+
+  if (/\/index\.html$/i.test(pathname)) {
+    const cleanPath = pathname.replace(/\/index\.html$/i, "") || "/";
+    window.history.replaceState(null, "", `${cleanPath}${search}${hash}`);
+  }
 }

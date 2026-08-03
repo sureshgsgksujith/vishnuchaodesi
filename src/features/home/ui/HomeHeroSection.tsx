@@ -32,7 +32,6 @@ const quickLinks = [
   { title: "Books, Sports & Hobbies", image: "/template-17/images/icon/news.png", category: "books-sports-hobbies" },
   { title: "Care Services", image: "/template-17/images/icon/public-service.png", category: "care-services" },
   { title: "Events & Tickets", image: "/template-17/images/icon/calendar.png", category: "events-tickets" },
-  { title: "Chao TV", image: "/template-17/images/icon/calendar.png", category: "chao-tv" },
   { title: "Roommates & Rentals", image: "/template-17/images/icon/home.png", category: "roommates-rentals" },
   { title: "Jobs", image: "/template-17/images/icon/employee.png", category: "jobs" },
   { title: "Electronics & Appliances", image: "/template-17/images/icon/electronics.png", category: "electronics-appliances" },

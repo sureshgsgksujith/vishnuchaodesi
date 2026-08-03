@@ -426,7 +426,7 @@ function buildSlug(name: string) {
 
 function getCategoryIcon(name: string, slug: string) {
   const text = `${name} ${slug}`.toLowerCase();
-  if (text.includes("astro") || text.includes("horoscope") || text.includes("kundali")) return "auto_awesome";
+  if (text.includes("astro") || text.includes("horoscope") || text.includes("kundali")) return "star";
   if (text.includes("law") || text.includes("immigration")) return "gavel";
   if (text.includes("education") || text.includes("school") || text.includes("college")) return "school";
   if (text.includes("estate")) return "home";

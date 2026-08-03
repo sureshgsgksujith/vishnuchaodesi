@@ -689,6 +689,25 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
             </div>
           </div>
         </div>
+        <form className="chaodesi-mobile-global-search" onSubmit={submitHeaderSearch}>
+          <div className="chaodesi-mobile-global-search-field">
+            <i className="material-icons" aria-hidden="true">search</i>
+            <input
+              type="search"
+              autoComplete="off"
+              placeholder="Search businesses, services and classifieds"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              aria-label="Global search"
+            />
+            <button type="submit">Search</button>
+            <HeaderSearchSuggestions
+              searchText={searchText}
+              city={activeCity}
+              onSelect={() => setSearchText("")}
+            />
+          </div>
+        </form>
       </div>
     </div>
   );

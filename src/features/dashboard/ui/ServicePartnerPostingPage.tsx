@@ -871,10 +871,16 @@ export default function ServicePartnerPostingPage() {
           providerType: form.providerType,
           tagline: form.tagline,
           prompt,
+          delivery: form.delivery,
           location: formatLocation(primaryLocation),
           serviceAreas: serviceAreas.join(", "),
         },
-        prompt: prompt || `Create a professional business image for ${businessName || "a local service provider"}.`,
+        prompt: prompt || [
+          `Create a professional business image for ${businessName || "a local service provider"}.`,
+          selectedServices.length ? `Show the business providing ${selectedServices.join(", ")}.` : "",
+          form.delivery ? `Service delivery: ${form.delivery}.` : "",
+          "Use a realistic, welcoming commercial style without text or logos.",
+        ].filter(Boolean).join(" "),
         generateProfile: true,
         generateCover: false,
         source: "customer",
@@ -1117,14 +1123,6 @@ export default function ServicePartnerPostingPage() {
                     onLocation={updateLocation}
                     onAddBranch={() => setBranches((current) => [...current, blankLocation(`Branch ${current.length + 1}`, homeLocationDefaults.country)])}
                     onRemoveBranch={(index) => setBranches((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                    onBusinessImageChange={handleBusinessImageChange}
-                    onBusinessImageRemove={() => handleBusinessImageChange(null)}
-                    aiImagePrompt={aiImagePrompt}
-                    aiImageMessage={aiImageMessage}
-                    aiImageError={aiImageError}
-                    isAiImageGenerating={isAiImageGenerating}
-                    onAiImagePrompt={setAiImagePrompt}
-                    onGenerateAiImage={generateAiBusinessImage}
                     onValidatePhoneOtp={validatePhoneOtp}
                     onToggleSecondaryEmail={setShowSecondaryEmail}
                     onToggleSecondaryPhone={setShowSecondaryPhone}
@@ -1148,6 +1146,14 @@ export default function ServicePartnerPostingPage() {
                     onChooseCategory={chooseCategory}
                     onField={updateField}
                     onToggleDetailed={toggleDetailed}
+                    onBusinessImageChange={handleBusinessImageChange}
+                    onBusinessImageRemove={() => handleBusinessImageChange(null)}
+                    aiImagePrompt={aiImagePrompt}
+                    aiImageMessage={aiImageMessage}
+                    aiImageError={aiImageError}
+                    isAiImageGenerating={isAiImageGenerating}
+                    onAiImagePrompt={setAiImagePrompt}
+                    onGenerateAiImage={generateAiBusinessImage}
                   />
                 ) : null}
 
@@ -1293,14 +1299,6 @@ function StepBasic({
   onLocation,
   onAddBranch,
   onRemoveBranch,
-  onBusinessImageChange,
-  onBusinessImageRemove,
-  aiImagePrompt,
-  aiImageMessage,
-  aiImageError,
-  isAiImageGenerating,
-  onAiImagePrompt,
-  onGenerateAiImage,
   onValidatePhoneOtp,
   onToggleSecondaryEmail,
   onToggleSecondaryPhone,
@@ -1319,14 +1317,6 @@ function StepBasic({
   onLocation: (index: number, value: Partial<LocationForm>) => void;
   onAddBranch: () => void;
   onRemoveBranch: (index: number) => void;
-  onBusinessImageChange: (file: File | null) => void;
-  onBusinessImageRemove: () => void;
-  aiImagePrompt: string;
-  aiImageMessage: string;
-  aiImageError: string;
-  isAiImageGenerating: boolean;
-  onAiImagePrompt: (value: string) => void;
-  onGenerateAiImage: () => void;
   onValidatePhoneOtp: () => void;
   onToggleSecondaryEmail: (value: boolean) => void;
   onToggleSecondaryPhone: (value: boolean) => void;
@@ -1350,20 +1340,6 @@ function StepBasic({
 
       <TextField label="Enter Your Business Name ?" required small="(Min. 3 characters)" value={form.businessName} error={errors.businessName} onChange={(value) => onField("businessName", value)} placeholder="Business name" />
       <TextField label="Your Business Motto?" value={form.tagline} onChange={(value) => onField("tagline", value)} placeholder="Business tagline" />
-      <BusinessImageUpload
-        fileName={form.businessImageName}
-        preview={form.businessImagePreview}
-        error={errors.businessImage}
-        onChange={onBusinessImageChange}
-        onRemove={onBusinessImageRemove}
-        aiPrompt={aiImagePrompt}
-        aiMessage={aiImageMessage}
-        aiError={aiImageError}
-        isAiGenerating={isAiImageGenerating}
-        onAiPrompt={onAiImagePrompt}
-        onGenerateAiImage={onGenerateAiImage}
-      />
-
       <LocationFields title="Business Service Location?" location={primaryLocation} index={0} error={errors.primaryLocation} onChange={onLocation} />
 
       <div className="spaw-check-row">
@@ -1683,6 +1659,14 @@ function StepService({
   onChooseCategory,
   onField,
   onToggleDetailed,
+  onBusinessImageChange,
+  onBusinessImageRemove,
+  aiImagePrompt,
+  aiImageMessage,
+  aiImageError,
+  isAiImageGenerating,
+  onAiImagePrompt,
+  onGenerateAiImage,
 }: {
   form: PostingForm;
   filteredCategories: AllServiceCategoryOption[];
@@ -1697,6 +1681,14 @@ function StepService({
   onChooseCategory: (category: AllServiceCategoryOption) => void;
   onField: <K extends keyof PostingForm>(key: K, value: PostingForm[K]) => void;
   onToggleDetailed: (id: number) => void;
+  onBusinessImageChange: (file: File | null) => void;
+  onBusinessImageRemove: () => void;
+  aiImagePrompt: string;
+  aiImageMessage: string;
+  aiImageError: string;
+  isAiImageGenerating: boolean;
+  onAiImagePrompt: (value: string) => void;
+  onGenerateAiImage: () => void;
 }) {
   const [isServiceOpen, setIsServiceOpen] = useState(false);
   const selectedServiceRef = useRef("");
@@ -1709,6 +1701,19 @@ function StepService({
 
   return (
     <div className="spaw-panel active">
+      <div className="spaw-field-block">
+        <label className="spaw-label">How do you deliver your service? <span className="spaw-req">*</span></label>
+        <div className="spaw-prof-grid spaw-delivery-grid">
+          {["At customer location", "At my business location", "Both"].map((value) => (
+            <label className={`spaw-prof-card ${form.delivery === value ? "active" : ""}`} key={value}>
+              <input type="radio" checked={form.delivery === value} onChange={() => onField("delivery", value)} />
+              <span className="spaw-prof-radio" />
+              <span className="spaw-prof-text"><strong>{value}</strong><em>{value === "Both" ? "I offer both options." : value === "At customer location" ? "I visit the customer's home or office." : "Customers visit my shop, salon or office."}</em></span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div className={`spaw-field-block${errors.serviceCategory ? " spaw-input-error" : ""}`}>
         <label className="spaw-label">Select the services your business provides. <span className="spaw-req">*</span><small>Enter a keyword and choose from the suggested results.</small></label>
         <div className="spaw-search-wrap">
@@ -1784,6 +1789,20 @@ function StepService({
         </>
       ) : null}
 
+      <BusinessImageUpload
+        fileName={form.businessImageName}
+        preview={form.businessImagePreview}
+        error={errors.businessImage}
+        onChange={onBusinessImageChange}
+        onRemove={onBusinessImageRemove}
+        aiPrompt={aiImagePrompt}
+        aiMessage={aiImageMessage}
+        aiError={aiImageError}
+        isAiGenerating={isAiImageGenerating}
+        onAiPrompt={onAiImagePrompt}
+        onGenerateAiImage={onGenerateAiImage}
+      />
+
       <div className={`spaw-field-block${errors.serviceAreas ? " spaw-input-error" : ""}`}>
         <label className="spaw-label">Which cities, towns, or neighborhoods do you serve? <span className="spaw-req">*</span></label>
         <div className="spaw-tag-input">
@@ -1804,19 +1823,6 @@ function StepService({
           />
         </div>
         <FieldError message={errors.serviceAreas} />
-      </div>
-
-      <div className="spaw-field-block">
-        <label className="spaw-label">How do you deliver your service? <span className="spaw-req">*</span></label>
-        <div className="spaw-prof-grid spaw-delivery-grid">
-          {["At customer location", "At my business location", "Both"].map((value) => (
-            <label className={`spaw-prof-card ${form.delivery === value ? "active" : ""}`} key={value}>
-              <input type="radio" checked={form.delivery === value} onChange={() => onField("delivery", value)} />
-              <span className="spaw-prof-radio" />
-              <span className="spaw-prof-text"><strong>{value}</strong><em>{value === "Both" ? "I offer both options." : value === "At customer location" ? "I visit the customer's home or office." : "Customers visit my shop, salon or office."}</em></span>
-            </label>
-          ))}
-        </div>
       </div>
 
       <div className="spaw-field-block">
@@ -1969,8 +1975,8 @@ function StepReview({
   return (
     <div className="spaw-panel active">
       <p className="spaw-review-intro">Verify your business details below. If any information needs to be changed, you can edit it before submitting your listing for review.</p>
-      <ReviewCard title="Basic information" step={1} onGoto={onGoto} rows={[["Profession type", form.providerType], ["Business name", form.businessName], ["Tagline", form.tagline], ["Business image", form.businessImageName || "Not uploaded"], ["Location", [formatLocation(primaryLocation), ...branches.map(formatLocation)].filter(Boolean).join(" | ")], ["Contact name", form.contactName], ["Email", form.email], ["Phone", `${form.phoneCode} ${form.phone}`]]} />
-      <ReviewCard title="Service & category" step={2} onGoto={onGoto} rows={[["Primary service", selectedCategory?.name || ""], ["Services selected", String(selectedDetailedIds.length)], ["Areas served", areas.join(", ")], ["Service delivery", form.delivery], ["Years in business", form.experience]]} />
+      <ReviewCard title="Basic information" step={1} onGoto={onGoto} rows={[["Profession type", form.providerType], ["Business name", form.businessName], ["Tagline", form.tagline], ["Location", [formatLocation(primaryLocation), ...branches.map(formatLocation)].filter(Boolean).join(" | ")], ["Contact name", form.contactName], ["Email", form.email], ["Phone", `${form.phoneCode} ${form.phone}`]]} />
+      <ReviewCard title="Service & category" step={2} onGoto={onGoto} rows={[["Primary service", selectedCategory?.name || ""], ["Services selected", String(selectedDetailedIds.length)], ["Business image", form.businessImageName || "Not uploaded"], ["Areas served", areas.join(", ")], ["Service delivery", form.delivery], ["Years in business", form.experience]]} />
       <ReviewCard title="Business profile" step={3} onGoto={onGoto} rows={[["Description", form.description], ["Year established", form.yearEstablished], ["Team size", form.teamSize], ["Working days", openDays.join(", ")], ["Working hours", `${form.openTime} - ${form.closeTime}`], ["Payment modes", payments.join(", ")], ["Website", form.website]]} />
       {visiblePackages.length ? (
         <ReviewCard title="Service pricing" step={3} onGoto={onGoto} rows={visiblePackages.map((item) => [item.serviceName, `${item.priceText}${item.description ? ` - ${item.description}` : ""}`])} />
@@ -2126,7 +2132,7 @@ function BusinessImageUpload({
               <span className="material-icons" aria-hidden="true">auto_awesome</span>
               <div>
                 <strong>Generate business image with OpenAI</strong>
-                <small>Use the business name or add a prompt for a specific style.</small>
+                <small>Uses your selected services and delivery method automatically, or follows your custom prompt.</small>
               </div>
             </div>
             <textarea
@@ -2134,7 +2140,7 @@ function BusinessImageUpload({
               rows={2}
               value={aiPrompt}
               onChange={(event) => onAiPrompt(event.target.value.slice(0, 300))}
-              placeholder="Optional prompt, e.g. modern beauty salon storefront, clean warm lighting"
+              placeholder="Optional custom prompt, e.g. modern storefront with clean warm lighting"
             />
             <button type="button" className="spaw-image-ai__button" onClick={onGenerateAiImage} disabled={isAiGenerating}>
               {isAiGenerating ? "Generating..." : preview ? "Regenerate AI Image" : "Generate AI Image"}

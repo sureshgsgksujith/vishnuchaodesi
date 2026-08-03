@@ -80,18 +80,18 @@
 }
 
 .local-services-search {
-  backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  backdrop-filter: none;
+  background: transparent;
+  border: 0;
   border-radius: 10px;
-  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.24);
+  box-shadow: none;
   display: grid;
   gap: 0;
   grid-template-columns: 190px 270px minmax(240px, 1fr) 170px;
   margin: 0 auto;
   max-width: 1040px;
   overflow: hidden;
-  padding: 14px;
+  padding: 0;
 }
 
 .local-services-search label,

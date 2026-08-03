@@ -677,7 +677,28 @@
   line-height: 1;
 }
 
+.chaodesi-mobile-global-search {
+  display: none;
+}
+
 @media (max-width: 992px) {
+  .chaodesi-customer-header .container,
+  .chaodesi-customer-header .row,
+  .chaodesi-customer-header .hom-nav.db-open {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .chaodesi-customer-header .container {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .chaodesi-customer-header .row {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
   .chaodesi-customer-header .hom-nav.db-open {
     display: flex;
     align-items: center;
@@ -704,7 +725,7 @@
   }
 
   .chaodesi-customer-header .menu {
-    margin-left: auto;
+    display: none;
   }
 
   .chaodesi-customer-header .menu h4 {
@@ -715,27 +736,92 @@
 
   .chaodesi-customer-header .mob-menu {
     display: block;
-    margin-left: 0;
+    margin-left: auto;
   }
 
   .chaodesi-customer-header .mob-me-ic {
     position: static;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    margin: 0;
+    border-radius: 50%;
+    flex: 0 0 42px;
   }
 
   .chaodesi-customer-header .mob-me-ic i {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     padding: 0;
+    font-size: 27px;
+    line-height: 1;
   }
 
   .chaodesi-customer-header .mob-me-all {
     width: min(340px, 92vw);
     max-width: 92vw;
     padding: 0 18px 80px;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-global-search {
+    display: block;
+    width: 100%;
+    padding: 0 0 12px;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-global-search-field {
+    position: relative;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    align-items: center;
+    min-height: 48px;
+    overflow: visible;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 9px;
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-global-search-field > i {
+    color: #7587a5;
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-global-search input {
+    width: 100%;
+    min-width: 0;
+    height: 46px;
+    padding: 0 8px 0 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #17233f;
+    font-size: 14px;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-global-search button {
+    align-self: stretch;
+    min-width: 76px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 0 8px 8px 0;
+    background: #0879d9;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-global-search .header-search-suggestions {
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
   }
 
   .chaodesi-customer-header .chaodesi-pop-menu {
@@ -775,16 +861,26 @@
   }
 
   .chaodesi-customer-header .hom-nav.db-open {
-    gap: 9px;
+    min-height: 52px;
+    gap: 12px;
   }
 
   .chaodesi-customer-header .top-log {
-    max-width: calc(100vw - 160px);
+    display: flex;
+    align-items: center;
+    width: auto;
+    max-width: min(72vw, 280px);
+    margin: 0;
+    text-align: left;
   }
 
   .chaodesi-customer-header .top-log img,
   .chaodesi-customer-header .top-log .ic-logo {
+    display: block;
+    width: auto;
+    max-width: 100%;
     max-height: 40px;
+    margin: 0;
   }
 
   .chaodesi-customer-header .menu h4 {

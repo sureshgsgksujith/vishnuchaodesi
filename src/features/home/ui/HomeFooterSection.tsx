@@ -162,11 +162,6 @@ export default function HomeFooterSection() {
                   </a>
                 </li>
                 <li>
-                  <a target="_blank" href="" rel="noreferrer">
-                    <img src="/template-17/images/social/4.png" alt="" loading="lazy" />
-                  </a>
-                </li>
-                <li>
                   <a target="_blank" href="https://www.youtube.com/@chaodesi860" rel="noreferrer">
                     <img src="/template-17/images/social/5.png" alt="" loading="lazy" />
                   </a>

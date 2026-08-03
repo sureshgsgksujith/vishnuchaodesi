@@ -138,15 +138,6 @@ export default function DashboardFooter({
                   </a>
                 </li>
                 <li>
-                  <a target="_blank" rel="noreferrer" href="#">
-                    <img
-                      src="/template-17/images/social/4.png"
-                      alt=""
-                      loading="lazy"
-                    />
-                  </a>
-                </li>
-                <li>
                   <a target="_blank" rel="noreferrer" href="https://www.youtube.com/@chaodesi860">
                     <img
                       src="/template-17/images/social/5.png"
