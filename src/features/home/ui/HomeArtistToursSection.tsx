@@ -8,7 +8,7 @@ import {
   resolveListingImageUrl,
   setFallbackListingImage,
 } from "../../dashboard/utils/listingImages";
-import { filterUpcomingDatedEventListings, getEventDateLabel, getEventStartDate } from "../../listing/utils/eventListings";
+import { filterActiveEventListings, getEventDateLabel, getEventStartDate } from "../../listing/utils/eventListings";
 import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 
 const fallbackImage = "/template-17/images/chao-home-artists/2.jpg";
@@ -52,7 +52,7 @@ export default function HomeArtistToursSection() {
       )
       .then((result) => {
         if (isActive) {
-          const listings = filterUpcomingDatedEventListings(result.result.items || []).sort(
+          const listings = filterActiveEventListings(result.result.items || []).sort(
             (first, second) =>
               getListingTime(second) - getListingTime(first) ||
               new Date(second.createdAt || 0).getTime() - new Date(first.createdAt || 0).getTime(),
@@ -80,8 +80,13 @@ export default function HomeArtistToursSection() {
     };
   }, [activeCity, currentLocation.status, locationRevision, selectedCity]);
 
-  const groups = useMemo(() => chunk(items, 2), [items]);
-  const scrollingSlides = groups.length ? [...groups, ...groups] : [];
+  const isSingleRow = items.length <= 3;
+  const isScrolling = items.length > 6;
+  const groups = useMemo(
+    () => isSingleRow ? items.map((item) => [item]) : chunk(isScrolling ? fillTwoRowItems(items) : items, 2),
+    [isScrolling, isSingleRow, items],
+  );
+  const visibleSlides = isScrolling ? [...groups, ...groups] : groups;
 
   return (
     <section className="home-artist">
@@ -106,10 +111,10 @@ export default function HomeArtistToursSection() {
             <div className="plac-hom-all-pla">
               {isLoading ? (
                 <div className="home-artist-empty">Loading Events & Tickets...</div>
-              ) : scrollingSlides.length ? (
-                <ul className="artist-sliser-auto">
-                  {scrollingSlides.map((group, index) => (
-                    <li key={`${index}-${group[0]?.id}`} aria-hidden={index >= groups.length}>
+              ) : visibleSlides.length ? (
+                <ul className={`artist-sliser-auto ${isScrolling ? "is-scrolling" : "is-static"} ${isSingleRow ? "is-single-row" : "is-two-row"}`}>
+                  {visibleSlides.map((group, index) => (
+                    <li key={`${index}-${group[0]?.id}`} aria-hidden={isScrolling && index >= groups.length}>
                       <div className="artist-slide-group">
                         {group.map((listing) => {
                           const detailHref = `/event-details?id=${encodeURIComponent(String(listing.id))}`;
@@ -159,6 +164,14 @@ function chunk(items: ListingSummary[], size: number) {
   }
 
   return groups;
+}
+
+function fillTwoRowItems(items: ListingSummary[]) {
+  if (items.length > 1 && items.length % 2 !== 0) {
+    return [...items, items[0]];
+  }
+
+  return items;
 }
 
 function isArtistEventListing(listing: ListingSummary) {

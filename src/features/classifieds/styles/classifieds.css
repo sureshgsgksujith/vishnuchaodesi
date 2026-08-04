@@ -460,7 +460,7 @@
 }
 
 .classified-list-page {
-  padding: 105px 0 100px;
+  padding: 58px 0 100px;
   margin-top: 0;
   background: #eef5ff;
   background-image: linear-gradient(358deg, #fff 0, #d7e0e7 100%);
@@ -477,7 +477,11 @@
 }
 
 .classified-list-page .public-filter-title {
-  min-height: 150px;
+  min-height: auto;
+}
+
+.classified-list-page .classified-filter-panel {
+  gap: 16px;
 }
 
 .classified-provider-card h2 {
@@ -541,7 +545,7 @@
 }
 
 .classified-wide-ad {
-  margin-bottom: 50px;
+  margin-bottom: 20px;
 }
 
 .classified-listing-results-panel {
@@ -550,6 +554,17 @@
 
 .classified-listing-toolbar strong {
   font-weight: 800;
+}
+
+.classified-listing-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.classified-listing-toolbar > div:first-child {
+  margin-bottom: 0;
 }
 
 .classified-filter-panel .classified-sidebar-filters {

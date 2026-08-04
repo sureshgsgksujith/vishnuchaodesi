@@ -2813,7 +2813,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const categoryOptions = useMemo(
     () => forcedListingCategoryName
       ? [forcedListingCategoryName]
-      : includeCurrentValue(listingCategories.map((category) => category.name), form.categoryName),
+      : includeCurrentValue(listingCategories.filter((category) => category.name !== "Chao TV").map((category) => category.name), form.categoryName),
     [forcedListingCategoryName, listingCategories, form.categoryName],
   );
 

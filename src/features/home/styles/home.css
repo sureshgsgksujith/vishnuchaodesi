@@ -904,9 +904,22 @@
   will-change: transform;
 }
 
-.chao-home-page .artist-sliser-auto,
+.chao-home-page .artist-sliser-auto.is-scrolling,
 .chao-home-page .home-featured-listings-slider.is-scrolling {
   animation: chao-home-slide-left 28s linear infinite;
+}
+
+.chao-home-page .artist-sliser-auto.is-static {
+  width: 100%;
+  justify-content: center;
+  animation: none;
+  will-change: auto;
+}
+
+.chao-home-page .artist-sliser-auto.is-single-row > li {
+  flex: 1 1 0;
+  width: auto;
+  max-width: 380px;
 }
 
 .chao-home-page .home-featured-listings-slider.is-scrolling {

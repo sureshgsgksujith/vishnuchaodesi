@@ -6,6 +6,7 @@ import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocatio
 import { getPageBanners, type PageBanner } from "../../auth/api/pageBannersApi";
 import { getCurrentCustomerUserId, getCustomerRouteFromWindow, isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { getMyProfile } from "../../dashboard/api/profileApi";
+import { getListingCategoryTree, type ListingCategoryOption } from "../../dashboard/api/listingCategoriesApi";
 import {
   getListing,
   getListingApiErrorMessage,
@@ -22,7 +23,7 @@ import { getQuoteActionLabel, shouldShowQuoteAction } from "../utils/quoteVisibi
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import "../styles/publicListings.css";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 15;
 const FEATURE_FILTERS = [
   "Trusted services provider",
   "Premium services",
@@ -69,6 +70,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
   const { currentLocation, selectedLocation, locationRevision } = useHomeSelectedLocation();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [facetItems, setFacetItems] = useState<ListingSummary[]>([]);
+  const [listingCategories, setListingCategories] = useState<ListingCategoryOption[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -118,7 +120,11 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
   const sortedItems = useMemo(() => sortListings(filterListings(items, feature, rating), sort), [feature, items, rating, sort]);
   const displayCount = feature || rating ? sortedItems.length : totalCount;
   const countryFacetItems = useMemo(() => filterListingsByCountry(facetItems, activeCountry), [activeCountry, facetItems]);
-  const dynamicCategories = useMemo(() => buildCategoryOptions(countryFacetItems, category), [countryFacetItems, category]);
+  const dynamicCategories = useMemo(
+    () => buildDynamicCategoryOptions(listingCategories),
+    [listingCategories],
+  );
+  const selectedCategoryValue = category || dynamicCategories.find((item) => item.label === categoryName)?.value || "";
   const activeCategoryName = pageTitle || (category ? categoryLabel(category, dynamicCategories) : categoryName);
   const categoryFacetItems = useMemo(() => getFacetItemsForCategory(countryFacetItems, category, categoryName), [countryFacetItems, category, categoryName]);
   const stateFacetItems = useMemo(() => filterListingsByState(categoryFacetItems, state), [categoryFacetItems, state]);
@@ -151,6 +157,26 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
   useEffect(() => {
     setSearchDraft(search);
   }, [search]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    getListingCategoryTree()
+      .then((items) => {
+        if (isActive) {
+          setListingCategories(items);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setListingCategories([]);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -412,7 +438,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
       <main className="public-listing-page public-template-page">
         <section className="public-listing-content">
           <div className="container public-listing-shell">
-            <aside className="public-filter-panel">
+            <aside className="public-filter-panel all-listing-filter-panel">
               <div className="public-filter-title">
                 <h1>{activeCategoryName || "All Listings"}</h1>
                 <nav>
@@ -487,7 +513,20 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
 
               {!lockedCategory && dynamicCategories.length ? (
                 <SidebarCard title="Categories" icon="apps">
-                  <select value={category || ""} onChange={(event) => updateQuery({ category: event.target.value, categoryName: null, subCategory: null, page: 1 })}>
+                  <select
+                    value={selectedCategoryValue}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      const supportedCategory = getCategory(value);
+                      const selectedOption = dynamicCategories.find((option) => option.value === value);
+                      updateQuery({
+                        category: supportedCategory || null,
+                        categoryName: supportedCategory ? null : selectedOption?.label || null,
+                        subCategory: null,
+                        page: 1,
+                      });
+                    }}
+                  >
                     <option value="">All Category</option>
                     {dynamicCategories.map((option) => (
                       <option value={option.value} key={option.label}>{option.label}</option>
@@ -591,7 +630,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
                 />
               ) : null}
 
-              <div className="public-listing-toolbar">
+              <div className="public-listing-toolbar all-listing-toolbar">
                 <div>
                   Total of <strong>{displayCount}</strong> business result(s) found.
                 </div>
@@ -1007,7 +1046,7 @@ function getLatestListingTime(listing: ListingSummary) {
   return Number.isNaN(time) ? 0 : time;
 }
 
-function categoryLabel(category: PublicCategory, options?: Array<{ value: PublicCategory; label: string }>) {
+function categoryLabel(category: PublicCategory, options?: Array<{ value: string; label: string }>) {
   const optionLabel = options?.find((option) => option.value === category)?.label;
   if (optionLabel) {
     return optionLabel;
@@ -1016,23 +1055,24 @@ function categoryLabel(category: PublicCategory, options?: Array<{ value: Public
   return buildCategoryLabel(category);
 }
 
-function buildCategoryOptions(items: ListingSummary[], currentCategory?: PublicCategory) {
-  const options: Array<{ value: PublicCategory; label: string }> = [];
+function buildDynamicCategoryOptions(items: ListingCategoryOption[]) {
+  const options = new Map<string, { value: string; label: string }>();
 
-  uniqueValues(items.map((item) => item.categoryName))
-    .map((label) => ({ label, value: categorySlugFromLabel(label) }))
-    .filter((item): item is { label: string; value: PublicCategory } => Boolean(item.value))
-    .forEach((item) => {
-      if (!options.some((option) => option.value === item.value)) {
-        options.push(item);
-      }
-    });
+  items.forEach((item) => {
+    if (item.name.trim().toLowerCase() === "chao tv") {
+      return;
+    }
 
-  if (currentCategory && !options.some((item) => item.value === currentCategory)) {
-    options.push({ value: currentCategory, label: buildCategoryLabel(currentCategory) });
-  }
+    const label = item.name.trim();
+    const value = categorySlugFromLabel(label) || item.slug.trim();
+    const key = label.toLowerCase();
 
-  return options;
+    if (label && value && !options.has(key)) {
+      options.set(key, { label, value });
+    }
+  });
+
+  return [...options.values()];
 }
 
 function getFacetItemsForCategory(items: ListingSummary[], category?: PublicCategory, categoryName?: string) {

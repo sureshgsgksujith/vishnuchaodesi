@@ -229,7 +229,7 @@ export default function ClassifiedPostingPage() {
 
   const categoryOptions = useMemo(
     () => listingCategories.length
-      ? listingCategories.map((category) => category.name)
+      ? listingCategories.filter((category) => category.name !== "Chao TV").map((category) => category.name)
       : Object.keys(classifiedSubCategories),
     [listingCategories],
   );

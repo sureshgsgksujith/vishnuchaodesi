@@ -36,6 +36,14 @@
   padding-top: 24px;
 }
 
+.all-listing-filter-panel {
+  gap: 16px;
+}
+
+.all-listing-filter-panel .public-filter-title {
+  min-height: auto;
+}
+
 .public-filter-title h1 {
   color: #202832;
   font-size: 24px;
@@ -390,6 +398,17 @@
   color: #0b1420;
   font-size: 20px;
   margin-bottom: 18px;
+}
+
+.all-listing-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.all-listing-toolbar > div:first-child {
+  margin-bottom: 0;
 }
 
 .public-filter-tags {
