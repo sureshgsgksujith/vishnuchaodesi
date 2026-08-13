@@ -38,6 +38,9 @@ const AllServicesPage = lazy(() => import("../../features/allServices/ui/AllServ
 const AllServicesDetailedPage = lazy(() => import("../../features/allServices/ui/AllServicesDetailedPage"));
 const AllServiceProviderDetailsPage = lazy(() => import("../../features/allServices/ui/AllServiceProviderDetailsPage"));
 const ChaoTvPage = lazy(() => import("../../features/chaoTv/ChaoTvPage"));
+const PublicBlogPostsPage = lazy(() => import("../../features/blog/ui/BlogPages").then((module) => ({ default: module.PublicBlogPostsPage })));
+const PublicBlogDetailPage = lazy(() => import("../../features/blog/ui/BlogPages").then((module) => ({ default: module.PublicBlogDetailPage })));
+const PublicCouponsPage = lazy(() => import("../../features/coupons/ui/PublicCouponsPage"));
 const GlobalSearchPage = lazy(() => import("../../features/search/ui/GlobalSearchPage"));
 const SupportPage = lazy(() => import("../../features/support/ui/SupportPage"));
 const AstrologyPage = lazy(() => import("../../features/astrology/ui/AstrologyPage"));
@@ -240,6 +243,10 @@ export function AppRouter() {
     "/all-listing",
     "/real-estate-listings",
     "/chao-tv",
+    "/blog-posts",
+    "/blog-details",
+    "/blog/:slug",
+    "/coupons",
     "/listing-details",
     "/listing/:listingId",
     "/event-details",
@@ -325,6 +332,10 @@ export function AppRouter() {
       <Route path="/local-services.html" element={<Navigate to="/local-services" replace />} />
       <Route path="/all-services" element={<AllServicesPage />} />
       <Route path="/all-services.html" element={<Navigate to="/all-services" replace />} />
+      <Route path="/blog-posts" element={<PublicBlogPostsPage />} />
+      <Route path="/blog/:slug" element={<PublicBlogDetailPage />} />
+      <Route path="/blog-details" element={<Navigate to="/blog-posts" replace />} />
+      <Route path="/coupons" element={<PublicCouponsPage />} />
       <Route path="/all-services-detailed" element={<ProtectedCustomerRoute><AllServicesDetailedPage /></ProtectedCustomerRoute>} />
       <Route path="/all-services-detailed.html" element={<ProtectedCustomerRoute><AllServicesDetailedPage /></ProtectedCustomerRoute>} />
       <Route path="/astrology" element={<AstrologyPage />} />

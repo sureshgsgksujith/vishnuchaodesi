@@ -1,10 +1,20 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import DashboardRightRail from "../components/DashboardRightRail";
 import DashboardSectionHeader from "../components/DashboardSectionHeader";
-import { dashboardBlogPosts } from "../mock/dashboardMockData";
+import { getBlogPosts, type BlogPost } from "../../blog/api/blogApi";
 
 export default function BlogPostsPage() {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getBlogPosts({ pageSize: 50 }).then((result) => active && setPosts(result.items)).catch(() => active && setPosts([])).finally(() => active && setLoading(false));
+    return () => { active = false; };
+  }, []);
+
   return (
     <DashboardLayout rightRail={<DashboardRightRail />}>
       <div className="ud-cen">
@@ -13,9 +23,7 @@ export default function BlogPostsPage() {
 
         <div className="ud-cen-s2">
           <DashboardSectionHeader
-            title="Blog Details"
-            actionLabel="Add new post"
-            actionTo="/create-new-blog-post"
+            title="Published ChaoDesi Articles"
           />
 
           <table className="responsive-table bordered">
@@ -30,37 +38,30 @@ export default function BlogPostsPage() {
               </tr>
             </thead>
             <tbody>
-              {dashboardBlogPosts.map((post) => (
+              {posts.map((post) => (
                 <tr key={post.id}>
                   <td>{post.id}</td>
                   <td>
-                    {post.name}
-                    <span>{post.createdAt}</span>
+                    {post.title}
+                    <span>{new Date(post.publishedAt || post.createdAt).toLocaleDateString()}</span>
                   </td>
                   <td>
-                    <span className="db-list-rat">{post.views}</span>
+                    <span className="db-list-rat">{post.viewCount}</span>
                   </td>
                   <td>
-                    <Link to={post.editPath} className="db-list-edit">
-                      Edit
-                    </Link>
+                    —
                   </td>
                   <td>
-                    <a
-                      href="#!"
-                      className="db-list-edit"
-                      onClick={(event) => event.preventDefault()}
-                    >
-                      Delete
-                    </a>
+                    —
                   </td>
                   <td>
-                    <Link to={post.previewPath} className="db-list-edit" target="_blank">
+                    <Link to={`/blog/${post.slug}`} className="db-list-edit" target="_blank">
                       Preview
                     </Link>
                   </td>
                 </tr>
               ))}
+              {!loading && !posts.length ? <tr><td colSpan={6}>No published blog posts yet.</td></tr> : null}
             </tbody>
           </table>
         </div>

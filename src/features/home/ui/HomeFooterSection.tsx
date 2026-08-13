@@ -8,8 +8,8 @@ import {
   getListingCategoryTree,
   type ListingCategoryOption,
 } from "../../dashboard/api/listingCategoriesApi";
+import { fallbackListingCategoryTree } from "../../dashboard/config/listingCategoryTree";
 import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
-import { useExploreCategories } from "./exploreMenuData";
 import "../styles/homeFooter.css";
 
 const classifiedCategoryNames = new Set([
@@ -24,35 +24,67 @@ const classifiedCategoryNames = new Set([
   "Pets & Animals",
 ]);
 
+const fallbackFooterCategories = fallbackListingCategoryTree.filter((category) =>
+  classifiedCategoryNames.has(category.name),
+);
+
+const yellowPageCategories = fallbackListingCategoryTree.map((category) => ({
+  label: category.name,
+  href: `/all-listing?category=${category.slug}`,
+}));
+
+let cachedLocalServiceCategories: AllServiceCategoryOption[] | null = null;
+let cachedClassifiedCategories: ListingCategoryOption[] | null = null;
+let localServiceCategoriesRequest: Promise<AllServiceCategoryOption[]> | null = null;
+let classifiedCategoriesRequest: Promise<ListingCategoryOption[]> | null = null;
+let localServiceCategoriesCachedAt = 0;
+let classifiedCategoriesCachedAt = 0;
+const FOOTER_CACHE_TTL_MS = 30 * 60 * 1000;
+
+function loadFooterLocalServiceCategories() {
+  if (cachedLocalServiceCategories && Date.now() - localServiceCategoriesCachedAt < FOOTER_CACHE_TTL_MS) {
+    return Promise.resolve(cachedLocalServiceCategories);
+  }
+  localServiceCategoriesRequest ??= getAllServiceDirectoryTree()
+    .then((items) => {
+      cachedLocalServiceCategories = items || [];
+      localServiceCategoriesCachedAt = Date.now();
+      return cachedLocalServiceCategories;
+    })
+    .catch(() => cachedLocalServiceCategories || [])
+    .finally(() => { localServiceCategoriesRequest = null; });
+  return localServiceCategoriesRequest;
+}
+
+function loadFooterClassifiedCategories() {
+  if (cachedClassifiedCategories && Date.now() - classifiedCategoriesCachedAt < FOOTER_CACHE_TTL_MS) {
+    return Promise.resolve(cachedClassifiedCategories);
+  }
+  classifiedCategoriesRequest ??= getListingCategoryTree()
+    .then((items) => {
+      cachedClassifiedCategories = (items || []).filter((category) => classifiedCategoryNames.has(category.name));
+      classifiedCategoriesCachedAt = Date.now();
+      return cachedClassifiedCategories;
+    })
+    .catch(() => cachedClassifiedCategories || fallbackFooterCategories)
+    .finally(() => { classifiedCategoriesRequest = null; });
+  return classifiedCategoriesRequest;
+}
+
 export default function HomeFooterSection() {
-  const yellowPageCategories = useExploreCategories();
   const { activeCity } = useHomeSelectedLocation();
-  const [localServiceCategories, setLocalServiceCategories] = useState<AllServiceCategoryOption[]>([]);
-  const [classifiedCategories, setClassifiedCategories] = useState<ListingCategoryOption[]>([]);
+  const [localServiceCategories, setLocalServiceCategories] = useState<AllServiceCategoryOption[]>(cachedLocalServiceCategories || []);
+  const [classifiedCategories, setClassifiedCategories] = useState<ListingCategoryOption[]>(cachedClassifiedCategories || fallbackFooterCategories);
 
   useEffect(() => {
     let isActive = true;
 
-    Promise.allSettled([
-      getAllServiceDirectoryTree(),
-      getListingCategoryTree(),
-    ]).then(([serviceResult, listingResult]) => {
-      if (!isActive) return;
-
-      setLocalServiceCategories(
-        serviceResult.status === "fulfilled" ? serviceResult.value || [] : [],
-      );
-
-      const listingTree = listingResult.status === "fulfilled" ? listingResult.value || [] : [];
-      setClassifiedCategories(
-        listingTree.filter((category) => classifiedCategoryNames.has(category.name)),
-      );
-    }).catch(() => {
-      if (isActive) {
-        setLocalServiceCategories([]);
-        setClassifiedCategories([]);
-      }
-      });
+    void loadFooterLocalServiceCategories().then((items) => {
+      if (isActive && items.length) setLocalServiceCategories(items);
+    });
+    void loadFooterClassifiedCategories().then((items) => {
+      if (isActive && items.length) setClassifiedCategories(items);
+    });
 
     return () => {
       isActive = false;

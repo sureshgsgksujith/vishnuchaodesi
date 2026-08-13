@@ -33,6 +33,16 @@ const profileMenuItems: MenuItem[] = [
   },
   dashboardItem,
   {
+    label: "Blogs",
+    href: "/blog-posts",
+    icon: "/template-17/images/icon/blog1.png",
+  },
+  {
+    label: "Coupons & Deals",
+    href: "/coupons",
+    icon: "/template-17/images/icon/coupons.png",
+  },
+  {
     label: "Settings",
     href: "/dashboard/setting",
     icon: "/template-17/images/icon/dbl210.png",

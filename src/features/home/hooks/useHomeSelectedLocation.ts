@@ -3,7 +3,9 @@ import { useCurrentLocationLabel } from "./useCurrentLocationLabel";
 
 const homeLocationStorageKey = "chaodesi.home.selectedCity";
 const homeLocationDetailsStorageKey = "chaodesi.home.selectedLocation";
+const homeLocationSelectedAtStorageKey = "chaodesi.home.selectedLocationAt";
 const homeLocationChangedEvent = "chaodesi:home-location-change";
+const homeLocationSelectionMaxAgeMs = 30 * 60 * 1000;
 
 export type HomeSelectedLocation = {
   countryName?: string;
@@ -35,6 +37,17 @@ function readStoredHomeLocation(): HomeSelectedLocation {
     return {};
   }
 
+  const selectedAt = Number(window.localStorage.getItem(homeLocationSelectedAtStorageKey));
+  const selectionIsCurrent =
+    Number.isFinite(selectedAt) && selectedAt > 0 && Date.now() - selectedAt < homeLocationSelectionMaxAgeMs;
+
+  if (!selectionIsCurrent) {
+    window.localStorage.removeItem(homeLocationDetailsStorageKey);
+    window.localStorage.removeItem(homeLocationStorageKey);
+    window.localStorage.removeItem(homeLocationSelectedAtStorageKey);
+    return {};
+  }
+
   const storedLocation = window.localStorage.getItem(homeLocationDetailsStorageKey);
 
   if (storedLocation) {
@@ -58,9 +71,11 @@ function writeStoredHomeLocation(location: HomeSelectedLocation) {
   if (cleanLocation.cityName || cleanLocation.stateName || cleanLocation.countryName) {
     window.localStorage.setItem(homeLocationDetailsStorageKey, JSON.stringify(cleanLocation));
     window.localStorage.setItem(homeLocationStorageKey, cleanLocation.cityName || "");
+    window.localStorage.setItem(homeLocationSelectedAtStorageKey, String(Date.now()));
   } else {
     window.localStorage.removeItem(homeLocationDetailsStorageKey);
     window.localStorage.removeItem(homeLocationStorageKey);
+    window.localStorage.removeItem(homeLocationSelectedAtStorageKey);
   }
 
   window.dispatchEvent(new CustomEvent(homeLocationChangedEvent, { detail: cleanLocation }));
