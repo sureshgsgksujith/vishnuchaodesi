@@ -1,6 +1,8 @@
 import axios from "axios";
 import { apiClient } from "../../../shared/api/client";
 
+const AI_IMAGE_GENERATION_TIMEOUT_MS = 180_000;
+
 export type ListingAiSuggestionRequest = {
   mode: "listing" | "classified";
   categoryName: string;
@@ -78,7 +80,9 @@ export async function getListingAiSuggestions(payload: ListingAiSuggestionReques
 }
 
 export async function generateListingAiImages(payload: ListingAiImageRequest) {
-  const response = await apiClient.post<ListingAiImageResponse>("/ChatBot/listing-images", payload);
+  const response = await apiClient.post<ListingAiImageResponse>("/ChatBot/listing-images", payload, {
+    timeout: AI_IMAGE_GENERATION_TIMEOUT_MS,
+  });
   return response.data;
 }
 
@@ -95,7 +99,7 @@ export function getListingAiImageErrorMessage(error: unknown) {
     }
 
     if (error.code === "ECONNABORTED") {
-      return "AI image generation is taking too long. Please try again.";
+      return "AI image generation did not finish within 3 minutes. Please try generating one image at a time.";
     }
   }
 

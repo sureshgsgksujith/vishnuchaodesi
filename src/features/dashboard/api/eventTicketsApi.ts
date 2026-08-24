@@ -22,6 +22,8 @@ export type EventTicketBooking = {
   subtotalAmount: number;
   feeAmount: number;
   taxAmount: number;
+  couponCode?: string | null;
+  discountAmount: number;
   totalAmount: number;
   currency: string;
   paymentProvider: string;

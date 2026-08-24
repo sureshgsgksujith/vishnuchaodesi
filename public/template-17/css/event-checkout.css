@@ -67,6 +67,24 @@
 .event-checkout-page .ck-tickets .ck-li span:last-child{font-weight:700;color:#1b9e5a;white-space:nowrap;}
 .event-checkout-page .ck-payable{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding:14px 16px;background:#fff7e9;border:1px solid #ffe2b8;border-radius:12px;font-weight:700;font-size:16px;}
 .event-checkout-page .ck-payable .ck-total{color:#c05600;font-size:20px;}
+.event-checkout-page .ck-coupon{border-top:1px solid var(--ck-line);margin-top:14px;padding-top:14px;}
+.event-checkout-page .ck-coupon label{display:block;color:var(--ck-mut);font-size:12px;font-weight:700;margin:0 0 7px;text-transform:uppercase;letter-spacing:.4px;}
+.event-checkout-page .ck-coupon>div{display:flex;gap:8px;}
+.event-checkout-page .ck-coupon input{width:100%;height:42px;border:1px solid #d8dee8;border-radius:9px;padding:0 12px;text-transform:uppercase;outline:none;}
+.event-checkout-page .ck-coupon input:focus{border-color:var(--ck-accent);box-shadow:0 0 0 3px rgba(243,100,11,.12);}
+.event-checkout-page .ck-coupon button{border:0;border-radius:9px;background:#173d77;color:#fff;font-size:13px;font-weight:700;padding:0 17px;cursor:pointer;}
+.event-checkout-page .ck-coupon button:disabled{cursor:wait;opacity:.65;}
+.event-checkout-page .ck-coupon-message{min-height:17px;margin:6px 0 0;font-size:12px;}
+.event-checkout-page .ck-coupon-message.success,.event-checkout-page .ck-discount{color:#14834d;}
+.event-checkout-page .ck-coupon-message.error{color:#c33;}
+.event-checkout-page .ck-amount-breakdown{margin-top:14px;border:1px solid #dfe5ed;border-radius:12px;background:#fff;overflow:hidden;}
+.event-checkout-page .ck-amount-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 15px;border-bottom:1px solid #edf0f4;font-size:14px;font-weight:600;color:#3d4658;}
+.event-checkout-page .ck-amount-row:last-child{border-bottom:0;}
+.event-checkout-page .ck-amount-row strong{font-size:16px;color:var(--ck-ink);white-space:nowrap;}
+.event-checkout-page .ck-amount-row.ck-discount{background:#f0fbf5;color:#14834d;}
+.event-checkout-page .ck-amount-row.ck-discount strong{color:#14834d;}
+.event-checkout-page .ck-amount-row.ck-payable{margin:0;border:0;border-radius:0;background:#fff7e9;font-size:17px;color:var(--ck-ink);}
+.event-checkout-page .ck-amount-row.ck-payable strong{color:#c05600;font-size:22px;}
 .event-checkout-page .ck-pay-now{width:100%;margin-top:16px;}
 .event-checkout-page .ck-secure{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;color:var(--ck-mut);margin:12px 0 0;}
 .event-checkout-page .ck-secure .material-icons{font-size:15px;color:#1b9e5a;}

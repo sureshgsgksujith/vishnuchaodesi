@@ -86,3 +86,34 @@ export function splitPhoneValue(value: string, fallbackCode = "+1") {
     number: matched ? matched[2] || "" : trimmedValue,
   };
 }
+
+const phoneRules: Record<string, { pattern: RegExp; example: string }> = {
+  "+1": { pattern: /^[2-9]\d{2}[2-9]\d{6}$/, example: "10 digits, for example 2125550123" },
+  "+91": { pattern: /^[6-9]\d{9}$/, example: "10 digits starting with 6, 7, 8, or 9" },
+  "+44": { pattern: /^\d{10}$/, example: "10 digits without the leading 0" },
+  "+61": { pattern: /^[23478]\d{8}$/, example: "9 digits without the leading 0" },
+  "+971": { pattern: /^[2-9]\d{8}$/, example: "9 digits without the leading 0" },
+  "+65": { pattern: /^[3689]\d{7}$/, example: "8 digits" },
+  "+60": { pattern: /^\d{8,10}$/, example: "8 to 10 digits without the leading 0" },
+  "+974": { pattern: /^[3-7]\d{7}$/, example: "8 digits" },
+  "+966": { pattern: /^[1-9]\d{8}$/, example: "9 digits without the leading 0" },
+  "+49": { pattern: /^\d{7,12}$/, example: "7 to 12 digits without the leading 0" },
+};
+
+export function getPhoneNumberValidationError(value: string) {
+  const { code, number } = splitPhoneValue(value);
+  const digits = number.replace(/[\s().-]/g, "");
+
+  if (!digits) {
+    return "Phone Number is required.";
+  }
+
+  if (!/^\d+$/.test(digits)) {
+    return "Phone Number can contain digits, spaces, parentheses, and hyphens only.";
+  }
+
+  const rule = phoneRules[code];
+  return rule && !rule.pattern.test(digits)
+    ? `Enter a valid ${code} phone number (${rule.example}).`
+    : "";
+}

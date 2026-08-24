@@ -6,18 +6,22 @@ import {
   type EventTicketBooking,
 } from "../api/eventTicketsApi";
 import { getMyProfile, type UserProfileFormValues } from "../api/profileApi";
-import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
+import { getMyPlanPayments, getMyPlanUsage, type PlanPayment, type PlanUsage } from "../../pricing/api/pricingApi";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import { getMyAllServicePostings, type AllServicePosting } from "../api/allServicePostingsApi";
 import "../styles/invoice.css";
 
 type InvoiceRecord = {
   id: string;
-  type: "Plan" | "Event";
+  type: "Plan" | "Event" | "Service";
   name: string;
   description: string;
   reference: string;
   paymentDate: string;
   amount: number;
+  totalBeforeDiscount: number;
+  discountAmount: number;
+  couponCode?: string | null;
   currency?: string;
   status: string;
   provider: string;
@@ -35,6 +39,8 @@ export default function InvoicePage() {
   const [profile, setProfile] = useState<UserProfileFormValues | null>(null);
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
   const [eventBookings, setEventBookings] = useState<EventTicketBooking[]>([]);
+  const [servicePayments, setServicePayments] = useState<AllServicePosting[]>([]);
+  const [planPayments, setPlanPayments] = useState<PlanPayment[]>([]);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,8 +56,10 @@ export default function InvoicePage() {
       getMyProfile(),
       getMyPlanUsage(),
       getMyEventTicketBookings(),
+      getMyAllServicePostings(),
+      getMyPlanPayments(),
     ])
-      .then(([profileResult, planResult, bookingsResult]) => {
+      .then(([profileResult, planResult, bookingsResult, serviceResult, planPaymentsResult]) => {
         if (!isActive) {
           return;
         }
@@ -69,6 +77,8 @@ export default function InvoicePage() {
         } else {
           setErrorMessage(getEventTicketApiErrorMessage(bookingsResult.reason));
         }
+        if (serviceResult.status === "fulfilled") setServicePayments(serviceResult.value || []);
+        if (planPaymentsResult.status === "fulfilled") setPlanPayments(planPaymentsResult.value || []);
       })
       .finally(() => {
         if (isActive) {
@@ -86,8 +96,8 @@ export default function InvoicePage() {
   }, [search]);
 
   const invoices = useMemo(
-    () => buildInvoices(profile, planUsage, eventBookings),
-    [eventBookings, planUsage, profile],
+    () => buildInvoices(profile, planUsage, eventBookings, servicePayments, planPayments),
+    [eventBookings, planPayments, planUsage, profile, servicePayments],
   );
   const filteredInvoices = useMemo(
     () => filterInvoices(invoices, search),
@@ -295,12 +305,14 @@ function buildInvoices(
   profile: UserProfileFormValues | null,
   planUsage: PlanUsage | null,
   bookings: EventTicketBooking[],
+  servicePayments: AllServicePosting[],
+  planPayments: PlanPayment[],
 ): InvoiceRecord[] {
   const plan = planUsage?.plan;
   const records: InvoiceRecord[] = [];
   const fullName = getProfileName(profile);
 
-  if (plan) {
+  if (plan && !planPayments.length) {
     records.push({
       id: `plan-${plan.code}`,
       type: "Plan",
@@ -309,6 +321,8 @@ function buildInvoices(
       reference: `PLAN-${plan.code.toUpperCase()}`,
       paymentDate: profile?.createdAt || new Date().toISOString(),
       amount: plan.price || 0,
+      totalBeforeDiscount: plan.price || 0,
+      discountAmount: 0,
       currency: plan.currency,
       status: planUsage?.isPlanExpired ? "Expired" : "Active",
       provider: "Plan payment",
@@ -325,6 +339,27 @@ function buildInvoices(
     });
   }
 
+
+  planPayments.forEach((payment) => records.push({
+    id: `plan-payment-${payment.id}`,
+    type: "Plan",
+    name: `${payment.planName} Plan`,
+    description: "Yellow Pages listing plan",
+    reference: payment.paymentReference,
+    paymentDate: payment.paidAt || payment.createdAt,
+    amount: payment.totalAmount,
+    totalBeforeDiscount: payment.subtotalAmount,
+    discountAmount: payment.discountAmount,
+    couponCode: payment.couponCode,
+    currency: payment.currency,
+    status: payment.paymentStatus,
+    provider: payment.paymentProvider,
+    buyerName: fullName,
+    buyerEmail: profile?.email || "",
+    buyerPhone: profile?.mobileNumber || "",
+    lines: [{ label: `${payment.planName} Yellow Pages plan`, quantity: 1, amount: payment.subtotalAmount }],
+  }));
+
   bookings
     .filter((booking) => isPaidStatus(booking.paymentStatus))
     .forEach((booking) => {
@@ -338,6 +373,9 @@ function buildInvoices(
         reference: booking.bookingReference,
         paymentDate: booking.paidAt || booking.createdAt,
         amount: booking.totalAmount,
+        totalBeforeDiscount: booking.subtotalAmount + booking.feeAmount + booking.taxAmount,
+        discountAmount: booking.discountAmount || 0,
+        couponCode: booking.couponCode,
         currency: booking.currency,
         status: booking.paymentStatus,
         provider: booking.paymentProvider,
@@ -361,6 +399,28 @@ function buildInvoices(
             ],
       });
     });
+
+  servicePayments.filter((payment) => isPaidStatus(payment.paymentStatus || "")).forEach((payment) => {
+    records.push({
+      id: `service-${payment.id}`,
+      type: "Service",
+      name: payment.businessName,
+      description: `${payment.packageCode} Local Service posting`,
+      reference: payment.paymentReference || `SERVICE-${payment.id}`,
+      paymentDate: payment.paidAt || payment.createdAt,
+      amount: payment.totalAmount,
+      totalBeforeDiscount: payment.subtotalAmount,
+      discountAmount: payment.discountAmount || 0,
+      couponCode: payment.couponCode,
+      currency: payment.currency,
+      status: payment.paymentStatus,
+      provider: payment.paymentProvider || "Demo",
+      buyerName: payment.contactName || fullName,
+      buyerEmail: payment.email || profile?.email || "",
+      buyerPhone: `${payment.phoneCountryCode || ""} ${payment.phoneNumber || ""}`.trim(),
+      lines: [{ label: `${payment.packageCode} service plan`, quantity: 1, amount: payment.subtotalAmount }],
+    });
+  });
 
   return records.sort(
     (first, second) => getDateTime(second.paymentDate) - getDateTime(first.paymentDate),
@@ -485,7 +545,9 @@ function buildInvoiceHtml(invoice: InvoiceRecord, profile: UserProfileFormValues
         </thead>
         <tbody>${lines}</tbody>
       </table>
-      <div class="total">Total: ${escapeHtml(formatCurrencyAmount(invoice.amount, invoice.currency))}</div>
+      <div class="total" style="font-size:16px">Total Amount: ${escapeHtml(formatCurrencyAmount(invoice.totalBeforeDiscount, invoice.currency))}</div>
+      <div class="total" style="font-size:16px;color:#15803d">Discount Amount${invoice.couponCode ? ` (${escapeHtml(invoice.couponCode)})` : ""}: -${escapeHtml(formatCurrencyAmount(invoice.discountAmount, invoice.currency))}</div>
+      <div class="total">Pay Amount: ${escapeHtml(formatCurrencyAmount(invoice.amount, invoice.currency))}</div>
     </section>
     <div class="footer">Generated from the Chao Desi customer dashboard.</div>
   </main>

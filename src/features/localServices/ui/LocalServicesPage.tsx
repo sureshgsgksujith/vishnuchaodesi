@@ -9,6 +9,11 @@ import {
   type AllServiceDetailedCategoryOption,
   type AllServiceSubCategoryOption,
 } from "../../allServices/api/allServiceDirectoryApi";
+import { getPublicAllServicePostings } from "../../allServices/api/allServicePostingsApi";
+import { getBlogPosts } from "../../blog/api/blogApi";
+import { getCoupons } from "../../coupons/api/couponsApi";
+import { getPublicListings } from "../../dashboard/api/listingsApi";
+import { filterActiveEventListings } from "../../listing/utils/eventListings";
 import {
   getLocationCities,
   getLocationCountries,
@@ -60,11 +65,26 @@ const categoryAssets = [
   { icon: "/template-17/images/icon/shield.png", image: "/template-17/classifieds/images/8.jpg" },
 ];
 
+const serviceCategoryImages: Record<string, string> = {
+  "educational-institutes": "/images/service-categories/educational-institutes.jpg",
+  "religious-community-services": "/images/service-categories/religious-community-services.jpg",
+  "astrology-services": "/images/service-categories/astrology-services.jpg",
+  "real-estate-services": "/images/service-categories/real-estate-services.jpg",
+  "health-wellness": "/images/service-categories/health-wellness.jpg",
+  "food-catering": "/images/service-categories/food-catering.jpg",
+  "wedding-events": "/images/service-categories/wedding-events.jpg",
+  "lessons-tuitions": "/images/service-categories/lessons-tuitions.jpg",
+  "home-business-needs": "/images/service-categories/home-business-needs.jpg",
+  "lawyers-immigration-services": "/images/service-categories/lawyers-immigration-services.jpg",
+  "financial-legal-services": "/images/service-categories/financial-legal-services.jpg",
+  "travel-accommodation": "/images/service-categories/travel-accommodation.jpg",
+};
+
 const fallbackServiceCategories: ServiceCategory[] = [
   {
     title: "Financial & Taxation Services",
     icon: categoryAssets[0].icon,
-    image: categoryAssets[0].image,
+    image: serviceCategoryImages["financial-legal-services"],
     count: 18,
     categoryName: "Financial & Taxation Services",
     services: buildFallbackItems("Finance & Tax", ["Tax Filing", "Accounting Services", "Bookkeeping", "Insurance Services", "Loan Services", "Financial Planning"]),
@@ -72,7 +92,7 @@ const fallbackServiceCategories: ServiceCategory[] = [
   {
     title: "Real Estate Services",
     icon: categoryAssets[1].icon,
-    image: categoryAssets[1].image,
+    image: serviceCategoryImages["real-estate-services"],
     count: 24,
     category: "real-estate",
     services: buildFallbackItems("Real Estate Services", ["Buy Property", "Sell Property", "Rental Homes", "Commercial Space", "Property Management", "Mortgage Services"]),
@@ -80,7 +100,7 @@ const fallbackServiceCategories: ServiceCategory[] = [
   {
     title: "Wedding & Events",
     icon: categoryAssets[2].icon,
-    image: categoryAssets[2].image,
+    image: serviceCategoryImages["wedding-events"],
     count: 16,
     category: "events-tickets",
     services: buildFallbackItems("Wedding & Events", ["Wedding Planning", "Photography", "Videography", "Decoration", "DJ Services", "Event Venues"]),
@@ -88,7 +108,7 @@ const fallbackServiceCategories: ServiceCategory[] = [
   {
     title: "Lessons/Tuitions",
     icon: categoryAssets[3].icon,
-    image: categoryAssets[3].image,
+    image: serviceCategoryImages["lessons-tuitions"],
     count: 20,
     categoryName: "Lessons/Tuitions",
     services: buildFallbackItems("Lessons/Tuitions", ["Math Tutors", "Science Tutors", "Music Classes", "Dance Classes", "Language Training", "Online Tutoring"]),
@@ -96,7 +116,7 @@ const fallbackServiceCategories: ServiceCategory[] = [
   {
     title: "Food & Catering",
     icon: categoryAssets[4].icon,
-    image: categoryAssets[4].image,
+    image: serviceCategoryImages["food-catering"],
     count: 22,
     category: "restaurants-food",
     services: buildFallbackItems("Food Services", ["Indian Catering", "Party Catering", "Wedding Catering", "Private Chef", "Tiffin Services", "Bakery Services"]),
@@ -104,7 +124,7 @@ const fallbackServiceCategories: ServiceCategory[] = [
   {
     title: "Home & Business Needs",
     icon: categoryAssets[5].icon,
-    image: categoryAssets[5].image,
+    image: serviceCategoryImages["home-business-needs"],
     count: 28,
     categoryName: "Home & Business Needs",
     services: buildFallbackItems("Home Services", ["Cleaning Services", "Electricians", "Plumbing", "Handyman", "Office Setup", "Pest Control"]),
@@ -112,7 +132,7 @@ const fallbackServiceCategories: ServiceCategory[] = [
   {
     title: "Travel & Accommodation",
     icon: categoryAssets[6].icon,
-    image: categoryAssets[6].image,
+    image: serviceCategoryImages["travel-accommodation"],
     count: 14,
     categoryName: "Travel & Accommodation",
     services: buildFallbackItems("Travel Services", ["Travel Agents", "Vacation Packages", "Hotels", "Air Tickets", "Car Rentals", "Tour Guides"]),
@@ -120,23 +140,70 @@ const fallbackServiceCategories: ServiceCategory[] = [
   {
     title: "Health & Wellness",
     icon: categoryAssets[7].icon,
-    image: categoryAssets[7].image,
+    image: serviceCategoryImages["health-wellness"],
     count: 26,
     categoryName: "Health & Wellness",
     services: buildFallbackItems("Health & Wellness", ["Doctors", "Dental Care", "Yoga Classes", "Fitness Trainers", "Massage Therapy", "Mental Wellness"]),
   },
 ];
 
-const summaryCards = [
-  { title: "All Services", value: "120+", icon: "/template-17/images/icon/shop.png", href: "/all-services" },
-  { title: "Service Experts", value: "85+", icon: "/template-17/images/icon/expert.png", href: "/service-experts/all-experts" },
-  { title: "Jobs", value: "60+", icon: "/template-17/images/icon/employee.png", href: "/all-listing?category=jobs" },
-  { title: "Products", value: "45+", icon: "/template-17/images/icon/shop.png", href: "/dashboard/products" },
-  { title: "Events", value: "25+", icon: "/template-17/images/icon/event.png", href: "/all-listing?category=events-tickets" },
-  { title: "Coupons", value: "30+", icon: "/template-17/images/icon/coupons.png", href: "/coupons" },
-  { title: "Blogs", value: "75+", icon: "/template-17/images/icon/blog.png", href: "/blog-posts" },
-  { title: "Community", value: "15+", icon: "/template-17/images/icon/general.png", href: "/community" },
+type SummaryCountKey = "allServices" | "serviceExperts" | "jobs" | "events" | "coupons" | "blogs" | "community";
+
+const summaryCards: Array<{ key: SummaryCountKey; title: string; icon: string; href: string }> = [
+  { key: "allServices", title: "All Services", icon: "/template-17/images/icon/shop.png", href: "/all-services" },
+  { key: "serviceExperts", title: "Service Experts", icon: "/template-17/images/icon/expert.png", href: "/service-experts/all-experts" },
+  { key: "jobs", title: "Jobs", icon: "/template-17/images/icon/employee.png", href: "/all-listing?category=jobs" },
+  { key: "events", title: "Events", icon: "/template-17/images/icon/event.png", href: "/all-listing?category=events-tickets" },
+  { key: "coupons", title: "Coupons", icon: "/template-17/images/icon/coupons.png", href: "/coupons" },
+  { key: "blogs", title: "Blogs", icon: "/template-17/images/icon/blog.png", href: "/blog-posts" },
+  { key: "community", title: "Community", icon: "/template-17/images/icon/general.png", href: "/all-listing?category=groups-communities" },
 ];
+
+const initialSummaryCounts: Record<SummaryCountKey, number | null> = {
+  allServices: null,
+  serviceExperts: null,
+  jobs: null,
+  events: null,
+  coupons: null,
+  blogs: null,
+  community: null,
+};
+
+function getListingCountCity(city: string) {
+  return city.split(/[–—]/, 1)[0]?.trim() || city.trim();
+}
+
+function getLocationAwareSummaryHref(card: (typeof summaryCards)[number], city: string) {
+  if (!city || !["jobs", "events", "community"].includes(card.key)) return card.href;
+
+  const params = new URLSearchParams(card.href.split("?", 2)[1] || "");
+  params.set("city", city);
+  return `${card.href.split("?", 1)[0]}?${params.toString()}`;
+}
+
+async function getActiveEventCount(city?: string) {
+  const firstPage = await getPublicListings({
+    category: "events-tickets",
+    city: city || undefined,
+    page: 1,
+    pageSize: 100,
+    forceRefresh: true,
+  });
+  const pageSize = Math.max(1, firstPage.pageSize || firstPage.items.length || 100);
+  const pageCount = Math.ceil(firstPage.totalCount / pageSize);
+  const remainingPages = pageCount > 1
+    ? await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) => getPublicListings({
+        category: "events-tickets",
+        city: city || undefined,
+        page: index + 2,
+        pageSize,
+        forceRefresh: true,
+      })))
+    : [];
+  const items = [firstPage, ...remainingPages].flatMap((result) => result.items || []);
+
+  return { totalCount: filterActiveEventListings(items).length };
+}
 
 export default function LocalServicesPage() {
   const navigate = useNavigate();
@@ -156,6 +223,7 @@ export default function LocalServicesPage() {
   const [states, setStates] = useState<StateOption[]>([]);
   const [cities, setCities] = useState<CityOption[]>([]);
   const [serviceCategories, setServiceCategories] = useState<ServiceCategory[]>(fallbackServiceCategories);
+  const [summaryCounts, setSummaryCounts] = useState(initialSummaryCounts);
   const [draftCountryId, setDraftCountryId] = useState("");
   const [draftStateId, setDraftStateId] = useState("");
   const [draftCityName, setDraftCityName] = useState("");
@@ -165,6 +233,7 @@ export default function LocalServicesPage() {
   const [isLoadingStates, setIsLoadingStates] = useState(false);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const city = activeCity || "Novi";
+  const listingCountCity = getListingCountCity(activeCity);
   const locationButtonText =
     currentLocation.status === "loading" && !activeLocationLabel
       ? "Detecting location"
@@ -197,6 +266,16 @@ export default function LocalServicesPage() {
 
         const nextCategories = categories.map(mapDirectoryCategoryToLocalCard).filter((category) => category.services.length);
         setServiceCategories(nextCategories.length ? mergeFallbackCategories(nextCategories) : fallbackServiceCategories);
+        setSummaryCounts((current) => ({
+          ...current,
+          allServices: categories.reduce(
+            (categoryTotal, category) => categoryTotal + category.subCategories.reduce(
+              (subCategoryTotal, subCategory) => subCategoryTotal + Math.max(1, subCategory.detailedCategories.length),
+              0,
+            ),
+            0,
+          ),
+        }));
       })
       .catch(() => {
         if (isActive) {
@@ -208,6 +287,42 @@ export default function LocalServicesPage() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    setSummaryCounts((current) => ({
+      ...current,
+      serviceExperts: null,
+      jobs: null,
+      events: null,
+      community: null,
+    }));
+
+    Promise.allSettled([
+      getPublicAllServicePostings({ city: listingCountCity || undefined, page: 1, pageSize: 1 }),
+      getPublicListings({ category: "jobs", city: listingCountCity || undefined, page: 1, pageSize: 1, forceRefresh: true }),
+      getActiveEventCount(listingCountCity),
+      getCoupons("", 1, 1),
+      getBlogPosts({ page: 1, pageSize: 1 }),
+      getPublicListings({ category: "groups-communities", city: listingCountCity || undefined, page: 1, pageSize: 1, forceRefresh: true }),
+    ]).then((results) => {
+      if (!isActive) return;
+
+      const keys: SummaryCountKey[] = ["serviceExperts", "jobs", "events", "coupons", "blogs", "community"];
+      setSummaryCounts((current) => {
+        const next = { ...current };
+        results.forEach((result, index) => {
+          next[keys[index]] = result.status === "fulfilled" ? result.value.totalCount || 0 : null;
+        });
+        return next;
+      });
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [listingCountCity]);
 
   useEffect(() => {
     let isActive = true;
@@ -620,9 +735,9 @@ export default function LocalServicesPage() {
         <section className="local-services-summary" aria-label="Service summary">
           <div className="local-services-container local-services-summary-grid">
             {summaryCards.map((card) => (
-              <Link to={card.href} className="local-services-summary-card" key={card.title}>
+              <Link to={getLocationAwareSummaryHref(card, listingCountCity)} className="local-services-summary-card" key={card.title}>
                 <img src={card.icon} alt="" />
-                <strong>{card.value}</strong>
+                <strong>{summaryCounts[card.key] ?? "—"}</strong>
                 <span>{card.title}</span>
               </Link>
             ))}
@@ -702,11 +817,12 @@ function mapDirectoryCategoryToLocalCard(category: AllServiceCategoryOption, ind
   const assets = categoryAssets[index % categoryAssets.length];
   const services = category.subCategories.flatMap(mapDirectorySubCategoryToItems);
   const isAstrology = /astro|horoscope|kundali/i.test(`${category.name} ${category.slug}`);
+  const categorySlug = category.slug || buildSlug(category.name);
 
   return {
     title: category.name,
     icon: isAstrology ? "/template-17/images/icon/expert-book.png" : assets.icon,
-    image: isAstrology ? "/template-17/images/home/astro.png" : assets.image,
+    image: serviceCategoryImages[categorySlug] || assets.image,
     count: services.length,
     categoryId: category.id,
     categoryName: category.name,

@@ -10,13 +10,15 @@ import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 import { getAddressPlaceDetail, searchAddressPredictions } from "../../../shared/api/addressAutocompleteApi";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
-import { getMyPlanUsage, getPricingPlans, selectPricingPlan, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
+import { getMyPlanUsage, getPricingPlans, selectPricingPlan, validatePricingCoupon, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
 import { resolveListingImageUrl } from "../utils/listingImages";
+import { getPostingFieldValidationError, getPostingInputKind, sanitizePostingFieldValue } from "../utils/postingFieldValidation";
 import { formatCurrencyAmount, labelWithCountryCurrency } from "../../../shared/utils/currency";
-import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
+import PhoneNumberInput, { getPhoneNumberValidationError } from "../../../shared/components/PhoneNumberInput";
 import { fallbackListingCategoryTree, supportedListingCategoryNames } from "../config/listingCategoryTree";
 import { getVehicleBrandOptions, getVehicleModelOptions, vehicleBrandOptions, vehicleSubCategoryOptions } from "../config/vehicleBrandModelData";
 import "../styles/listings.css";
+import "../styles/eventBookings.css";
 
 const wizardSteps = [
   { title: "Step 1", label: "Basic Info" },
@@ -3050,11 +3052,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }));
   }
 
-  async function handleSelectPlan(plan: PricingPlan) {
+  async function handleSelectPlan(plan: PricingPlan, payment?: { paymentReference: string; paymentProvider: string; couponCode?: string }) {
     setSelectingPlanCode(plan.code);
     setPlansModalMessage("");
     try {
-      const nextUsage = await selectPricingPlan(plan.code);
+      const nextUsage = await selectPricingPlan(plan.code, payment);
       setPlanUsage(nextUsage);
       updateField("adType", plan.name);
       setIsPlansModalOpen(false);
@@ -3467,6 +3469,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
               if (isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
                 addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
               }
+              const validationError = getPostingFieldValidationError(field, categoryAttributes[field.key]);
+              if (validationError) addFieldError(categoryFieldErrorKey(field.key), validationError);
             });
           addSharedListingLocationErrors(addFieldError);
         }
@@ -3764,6 +3768,17 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
     });
 
+    const phoneValidationError = getPhoneNumberValidationError(form.mobileNumber);
+    if (phoneValidationError) {
+      addFieldError("mobileNumber", phoneValidationError);
+    }
+
+    if (!form.email.trim()) {
+      addFieldError("email", "Email ID is required.");
+    } else if (!isValidEmailAddress(form.email)) {
+      addFieldError("email", "Enter a valid Email ID.");
+    }
+
     if (!sellerName.trim()) {
       addFieldError("sellerName", "Name is required.");
     }
@@ -3918,6 +3933,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           if (isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
             addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
           }
+          const validationError = getPostingFieldValidationError(field, categoryAttributes[field.key]);
+          if (validationError) addFieldError(categoryFieldErrorKey(field.key), validationError);
         });
       addSharedListingLocationErrors(addFieldError);
     }
@@ -3953,6 +3970,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         if (isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
           addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
         }
+        const validationError = getPostingFieldValidationError(field, categoryAttributes[field.key]);
+        if (validationError) addFieldError(categoryFieldErrorKey(field.key), validationError);
       });
   }
 
@@ -6759,6 +6778,7 @@ function shouldOfferAiTextGeneration(label: string) {
     "latitude",
     "longitude",
     "map",
+    "name",
     "phone",
     "pincode",
     "state",
@@ -6771,6 +6791,10 @@ function shouldOfferAiTextGeneration(label: string) {
   ];
 
   return !blockedTerms.some((term) => normalized.includes(term));
+}
+
+function isValidEmailAddress(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim());
 }
 
 function getAiTextCharacterLimit(value: string, kind: AiTextTargetKind) {
@@ -7348,7 +7372,7 @@ function InputColumn({ placeholder, value, onChange, error, type = "text", width
               name={`listing-field-${inputId}`}
             />
           ) : (
-            <input className={`form-control${error ? " is-invalid" : ""}`} type={type} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} min={min} onChange={(event) => onChange(event.target.value)} />
+            <input className={`form-control${error ? " is-invalid" : ""}`} type={type} inputMode={type === "number" ? "decimal" : undefined} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} min={min} onChange={(event) => onChange(type === "number" ? sanitizePostingFieldValue({ key: placeholder, label, type }, event.target.value) : event.target.value)} />
           )}
         <FieldError message={error} />
       </div>
@@ -7627,6 +7651,7 @@ function CategoryAttributesFields({
     const error = fieldErrors[categoryFieldErrorKey(field.key)];
     const inputMin = getCategoryAttributeInputMin(field, categoryName, values);
     const inputStep = getCategoryAttributeInputStep(field, categoryName);
+    const inputKind = getPostingInputKind(field);
 
     if (isMultiSelectCategoryAttributeField(field, categoryName)) {
       const selectedValues = splitCategoryAttributeValues(values[field.key]);
@@ -7720,12 +7745,12 @@ function CategoryAttributesFields({
       <InputColumn
         key={field.key}
         placeholder={displayLabel}
-        type={field.type || "text"}
+        type={inputKind}
         value={values[field.key] || ""}
         error={error}
         min={inputMin}
         step={inputStep}
-        onChange={(value) => updateAttribute(field.key, value)}
+        onChange={(value) => updateAttribute(field.key, sanitizePostingFieldValue(field, value))}
       />
     );
   }
@@ -10126,18 +10151,76 @@ function PlansSelectionModal({
   isLoading: boolean;
   selectingPlanCode: string;
   country: string;
-  onSelect: (plan: PricingPlan) => void | Promise<void>;
+  onSelect: (plan: PricingPlan, payment?: { paymentReference: string; paymentProvider: string; couponCode?: string }) => void | Promise<void>;
   onClose: () => void;
 }) {
+  const [checkoutPlan, setCheckoutPlan] = useState<PricingPlan | null>(null);
+  const [gateway, setGateway] = useState("card");
+  const [couponCode, setCouponCode] = useState("");
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [appliedCouponCode, setAppliedCouponCode] = useState("");
+  const [couponMessage, setCouponMessage] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const checkoutTotal = Math.max(0, (checkoutPlan?.price || 0) - couponDiscount);
+
+  async function applyCoupon() {
+    const code = couponCode.trim().toUpperCase();
+    if (!code || !checkoutPlan) { setCouponMessage("Enter a coupon code."); return; }
+    try {
+      setIsApplyingCoupon(true);
+      setCouponMessage("");
+      const result = await validatePricingCoupon(code, checkoutPlan.price);
+      setCouponDiscount(result.discountAmount || 0);
+      setAppliedCouponCode(result.code);
+      setCouponMessage(`${result.code} applied successfully.`);
+    } catch (error) {
+      const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setCouponDiscount(0);
+      setAppliedCouponCode("");
+      setCouponMessage(responseMessage || "Unable to validate this coupon right now.");
+    } finally { setIsApplyingCoupon(false); }
+  }
+
+  function choosePlan(plan: PricingPlan) {
+    if (plan.price <= 0) { void onSelect(plan); return; }
+    setCheckoutPlan(plan);
+    setCouponCode("");
+    setCouponDiscount(0);
+    setAppliedCouponCode("");
+    setCouponMessage("");
+    setAcceptedTerms(false);
+  }
+
   return (
     <div className="listing-plan-modal-backdrop" role="presentation" onMouseDown={onClose}>
       <div className="listing-plan-modal" role="dialog" aria-modal="true" aria-label="Select listing plan" onMouseDown={(event) => event.stopPropagation()}>
         <div className="listing-plan-modal-head">
-          <h3>View Plans</h3>
+          <h3>{checkoutPlan ? "Yellow Pages Payment" : "View Plans"}</h3>
           <button type="button" className="listing-plan-modal-close" aria-label="Close plans" onClick={onClose}>x</button>
         </div>
         {message ? <div className="listing-plan-modal-message">{message}</div> : null}
-        <div className="listing-plan-modal-grid">
+        {checkoutPlan ? (
+          <div className="plan-checkout" style={{ margin: 0 }}>
+            <div className="plan-checkout-bar"><span><i className="material-icons">lock</i> Your payment details are protected</span><span>Yellow Pages checkout</span></div>
+            <div className="plan-checkout-hero"><span className="material-icons">storefront</span><div><small>YELLOW PAGES PLAN</small><h2>{checkoutPlan.name}</h2><p>Complete payment securely to activate this listing plan.</p></div></div>
+            <div className="plan-checkout-layout">
+              <div className="plan-checkout-steps">
+                <section className="plan-checkout-step is-open"><div className="plan-checkout-step-head"><span>1</span><b>Payment Options</b><i className="material-icons">expand_less</i></div><div className="plan-checkout-step-body">
+                  {[{ id: "card", icon: "credit_card", label: "Credit / Debit Card" }, { id: "bank", icon: "account_balance", label: "Net Banking" }, { id: "wallet", icon: "account_balance_wallet", label: "Wallet / UPI" }, { id: "paypal", icon: "payments", label: "PayPal" }].map((item) => <label className="plan-checkout-pay" key={item.id}><input type="radio" name="yellow-pages-payment" checked={gateway === item.id} onChange={() => setGateway(item.id)} /><i className="material-icons">{item.icon}</i>{item.label}</label>)}
+                </div></section>
+                <section className="plan-checkout-step is-open"><div className="plan-checkout-step-head"><span>2</span><b>Terms &amp; Conditions</b><i className="material-icons">expand_less</i></div><div className="plan-checkout-step-body"><label className="plan-checkout-terms"><input type="checkbox" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} /> I agree to the Terms of Service, Privacy Policy and Refund Policy of Chao Desi.</label></div></section>
+              </div>
+              <aside className="plan-checkout-summary"><h3>Order Summary</h3><small>YELLOW PAGES PLAN</small><div className="plan-checkout-line"><span><b>{checkoutPlan.name}</b><em>{checkoutPlan.durationMonths} month{checkoutPlan.durationMonths === 1 ? "" : "s"}</em></span><strong>{formatCurrencyAmount(checkoutPlan.price, country)}</strong></div>
+                <div className="plan-checkout-coupon"><label htmlFor="yellow-pages-coupon">COUPON CODE</label><div><input id="yellow-pages-coupon" value={couponCode} onChange={(event) => { setCouponCode(event.target.value); setCouponMessage(""); }} placeholder="Enter coupon code" /><button type="button" onClick={applyCoupon} disabled={isApplyingCoupon}>{isApplyingCoupon ? "Checking..." : "Apply"}</button></div>{couponMessage ? <p className={appliedCouponCode ? "is-success" : "is-error"}>{couponMessage}</p> : null}</div>
+                <div className="plan-checkout-fees"><div><span>Total Amount</span><b>{formatCurrencyAmount(checkoutPlan.price, country)}</b></div><div className="is-discount"><span>Discount Amount{appliedCouponCode ? ` (${appliedCouponCode})` : ""}</span><b>-{formatCurrencyAmount(couponDiscount, country)}</b></div></div>
+                <div className="plan-checkout-total"><span>Pay Amount</span><b>{formatCurrencyAmount(checkoutTotal, country)}</b></div>
+                <button type="button" className="plan-checkout-pay-now" disabled={!acceptedTerms || selectingPlanCode === checkoutPlan.code} onClick={() => onSelect(checkoutPlan, { paymentReference: `PLAN-${Date.now()}`, paymentProvider: gateway, couponCode: appliedCouponCode || undefined })}>{selectingPlanCode === checkoutPlan.code ? "Processing..." : <><i className="material-icons">lock</i> Pay Securely</>}</button>
+                <button type="button" className="btn btn-link" onClick={() => setCheckoutPlan(null)}>Back to plans</button><p className="plan-checkout-secure"><i className="material-icons">verified_user</i> 100% secure payment</p>
+              </aside>
+            </div>
+          </div>
+        ) : <div className="listing-plan-modal-grid">
           {isLoading ? (
             <div className="listing-plan-modal-empty">Loading plans...</div>
           ) : plans.length ? plans.map((plan) => {
@@ -10155,7 +10238,7 @@ function PlansSelectionModal({
                     <li key={feature}>{feature}</li>
                   ))}
                 </ul>
-                <button type="button" className="btn btn-primary" disabled={selectingPlanCode === plan.code} onClick={() => onSelect(plan)}>
+                <button type="button" className="btn btn-primary" disabled={selectingPlanCode === plan.code} onClick={() => choosePlan(plan)}>
                   {selectingPlanCode === plan.code ? "Selecting..." : isSelected ? "Selected" : "Select Plan"}
                 </button>
               </article>
@@ -10163,7 +10246,7 @@ function PlansSelectionModal({
           }) : (
             <div className="listing-plan-modal-empty">Plans are not available right now.</div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );

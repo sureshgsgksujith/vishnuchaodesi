@@ -5,12 +5,14 @@ import {
 } from "../../allServices/api/allServiceDirectoryApi";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
-import { createAllServicePosting, type AllServicePostingLocation, type AllServicePricingPackage } from "../api/allServicePostingsApi";
+import { createAllServicePosting, validateAllServiceCoupon, type AllServicePostingLocation, type AllServicePricingPackage } from "../api/allServicePostingsApi";
 import { generateListingAiImages, getListingAiImageErrorMessage, getListingAiSuggestions } from "../api/listingAiApi";
 import { getAllServicePricingPlans, type AllServicePricingPlan } from "../api/allServicePricingPlansApi";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
+import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import "../styles/serviceOnboarding.css";
+import "../styles/eventBookings.css";
 
 type LocationForm = {
   label: string;
@@ -69,10 +71,17 @@ type PostingForm = {
 type ServicePackageForm = AllServicePricingPackage;
 
 type FieldErrors = Record<string, string>;
+type ServicePaymentReceipt = { provider: string; couponCode: string; subtotalAmount: number; discountAmount: number; totalAmount: number; currency: string };
 
 const totalSteps = 4;
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const paymentModes = ["Cash", "Credit Card", "Debit Card", "UPI / Zelle", "PayPal", "Cheque"];
+const checkoutPaymentModes = [
+  { id: "card", label: "Credit / Debit Card", icon: "credit_card" },
+  { id: "bank", label: "Net Banking", icon: "account_balance" },
+  { id: "wallet", label: "Wallet / UPI", icon: "account_balance_wallet" },
+  { id: "paypal", label: "PayPal", icon: "payments" },
+];
 type ServicePlanCard = {
   code: string;
   name: string;
@@ -358,6 +367,7 @@ export default function ServicePartnerPostingPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paidPlan, setPaidPlan] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
+  const [paymentReceipt, setPaymentReceipt] = useState<ServicePaymentReceipt | null>(null);
   const [successReference, setSuccessReference] = useState("");
   const [isAiGeneratingProfile, setIsAiGeneratingProfile] = useState(false);
   const [aiProfileMessage, setAiProfileMessage] = useState("");
@@ -568,6 +578,7 @@ export default function ServicePartnerPostingPage() {
     updateField("plan", plan);
     setPaidPlan("");
     setPaymentReference("");
+    setPaymentReceipt(null);
     setIsPaymentGatewayOpen(false);
     setIsProcessingPayment(false);
     setFieldErrors((current) => {
@@ -595,7 +606,7 @@ export default function ServicePartnerPostingPage() {
     setIsPaymentGatewayOpen(true);
   }
 
-  function completeDummyPayment() {
+  function completeDummyPayment(receipt: ServicePaymentReceipt) {
     if (!form.plan || isProcessingPayment) {
       return;
     }
@@ -604,6 +615,7 @@ export default function ServicePartnerPostingPage() {
     window.setTimeout(() => {
       setPaidPlan(form.plan);
       setPaymentReference(`DUMMY-${Date.now()}`);
+      setPaymentReceipt(receipt);
       setIsPaymentGatewayOpen(false);
       setIsProcessingPayment(false);
       setFieldErrors((current) => {
@@ -1060,6 +1072,9 @@ export default function ServicePartnerPostingPage() {
         verificationMethod: form.verificationMethod,
         isPhoneVerified: form.isPhoneVerified,
         packageCode: form.plan,
+        paymentReference,
+        paymentProvider: paymentReceipt?.provider || "Demo",
+        couponCode: paymentReceipt?.couponCode || undefined,
         saveAsDraft: false,
       });
       setSuccessReference(String(posting.id));
@@ -1966,11 +1981,45 @@ function StepReview({
   onGoto: (step: number) => void;
   onPlan: (value: string) => void;
   onOpenPayment: () => void;
-  onCompletePayment: () => void;
+  onCompletePayment: (receipt: ServicePaymentReceipt) => void;
   onTerms: (value: boolean) => void;
 }) {
   const selectedPlan = servicePlans.find((plan) => plan.code === form.plan);
   const visiblePackages = normalizeServicePackages(servicePackages);
+  const [selectedGateway, setSelectedGateway] = useState(checkoutPaymentModes[0].id);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
+  const [couponMessage, setCouponMessage] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const planAmount = selectedPlan?.price || 0;
+  const discountAmount = appliedCoupon?.discountAmount || 0;
+  const payAmount = Math.max(0, planAmount - discountAmount);
+
+  useEffect(() => {
+    setCouponCode("");
+    setAppliedCoupon(null);
+    setCouponMessage("");
+  }, [form.plan]);
+
+  async function applyServiceCoupon() {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      setCouponMessage("Enter a coupon code.");
+      return;
+    }
+    try {
+      setIsApplyingCoupon(true);
+      setCouponMessage("");
+      const coupon = await validateAllServiceCoupon(code, form.plan);
+      setAppliedCoupon({ code: coupon.code, discountAmount: coupon.discountAmount });
+      setCouponMessage(`${coupon.code} applied successfully.`);
+    } catch (error) {
+      setAppliedCoupon(null);
+      setCouponMessage(getErrorMessage(error));
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  }
 
   return (
     <div className="spaw-panel active">
@@ -1999,59 +2048,46 @@ function StepReview({
       </div>
 
       <div className={`spaw-field-block${errors.payment ? " spaw-input-error" : ""}`}>
-        <label className="spaw-label">Payment <span className="spaw-req">*</span><small>Dummy payment is required before submit is enabled.</small></label>
-        <div
-          style={{
-            border: "1px solid #dce5f1",
-            borderRadius: 8,
-            padding: 18,
-            background: isPaymentPaid ? "#ecfdf3" : "#fbfdff",
-          }}
-        >
+        <label className="spaw-label">Payment <span className="spaw-req">*</span><small>Complete payment before submitting the service posting.</small></label>
+        <div className="plan-checkout">
+          <div className="plan-checkout-bar"><span><i className="material-icons">lock</i> Your payment details are protected</span><span>Service posting checkout</span></div>
           {selectedPlan ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <div>
-                <strong style={{ display: "block", fontSize: 20, color: "#0a1b36" }}>{selectedPlan.name}</strong>
-                <span style={{ color: "#64748b", fontWeight: 700 }}>{formatServicePlanPrice(selectedPlan)} payment due</span>
-                {isPaymentPaid ? <p style={{ margin: "8px 0 0", color: "#008f67", fontWeight: 700 }}>Payment completed. Reference: {paymentReference}</p> : null}
+            <>
+              <div className="plan-checkout-hero"><i className="material-icons">storefront</i><div><small>Local Service plan</small><h2>{selectedPlan.name}</h2><p>Complete your payment securely to submit this service listing.</p></div></div>
+              <div className="plan-checkout-layout">
+                <div className="plan-checkout-steps">
+                  <section className="plan-checkout-step is-open">
+                    <div className="plan-checkout-step-head"><span>1</span><b>Payment Options</b><i className="material-icons">expand_less</i></div>
+                    <div className="plan-checkout-step-body">
+                      {checkoutPaymentModes.map((gateway) => <label className="plan-checkout-pay" key={gateway.id}><input type="radio" name="service-payment" checked={selectedGateway === gateway.id} onChange={() => setSelectedGateway(gateway.id)} /><i className="material-icons">{gateway.icon}</i>{gateway.label}</label>)}
+                    </div>
+                  </section>
+                  <section className="plan-checkout-step is-open">
+                    <div className="plan-checkout-step-head"><span>2</span><b>Terms &amp; Conditions</b><i className="material-icons">expand_less</i></div>
+                    <div className="plan-checkout-step-body"><label className="plan-checkout-terms"><input type="checkbox" checked={acceptedTerms} onChange={(event) => onTerms(event.target.checked)} /> I agree to the Terms of Service, Privacy Policy and Refund Policy of Chao Desi.</label></div>
+                  </section>
+                  {isPaymentPaid ? <p style={{ color: "#008f67", fontWeight: 700 }}>Payment completed. Reference: {paymentReference}</p> : null}
+                </div>
+                <aside className="plan-checkout-summary">
+                  <h3>Order Summary</h3><small>SERVICE PLAN</small>
+                  <div className="plan-checkout-line"><span><b>{selectedPlan.name}</b><em>{selectedPlan.duration}</em></span><strong>{formatCurrencyAmount(planAmount, selectedPlan.currency)}</strong></div>
+                  <div className="plan-checkout-coupon"><label htmlFor="service-coupon">COUPON CODE</label><div><input id="service-coupon" value={couponCode} onChange={(event) => { setCouponCode(event.target.value); setCouponMessage(""); }} placeholder="Enter coupon code" disabled={isPaymentPaid} /><button type="button" onClick={applyServiceCoupon} disabled={isApplyingCoupon || isPaymentPaid}>{isApplyingCoupon ? "Checking..." : "Apply"}</button></div>{couponMessage ? <p className={appliedCoupon ? "is-success" : "is-error"}>{couponMessage}</p> : null}</div>
+                  <div className="plan-checkout-fees"><div><span>Total Amount</span><b>{formatCurrencyAmount(planAmount, selectedPlan.currency)}</b></div><div className="is-discount"><span>Discount Amount{appliedCoupon ? ` (${appliedCoupon.code})` : ""}</span><b>-{formatCurrencyAmount(discountAmount, selectedPlan.currency)}</b></div></div>
+                  <div className="plan-checkout-total"><span>Pay Amount</span><b>{formatCurrencyAmount(payAmount, selectedPlan.currency)}</b></div>
+                  {!isPaymentGatewayOpen && !isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" onClick={onOpenPayment}><i className="material-icons">lock</i> Continue to Payment</button> : null}
+                  {isPaymentGatewayOpen && !isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" onClick={() => onCompletePayment({ provider: selectedGateway, couponCode: appliedCoupon?.code || "", subtotalAmount: planAmount, discountAmount, totalAmount: payAmount, currency: selectedPlan.currency })} disabled={isProcessingPayment || !acceptedTerms}>{isProcessingPayment ? "Processing..." : <><i className="material-icons">lock</i> Pay Securely</>}</button> : null}
+                  {isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" disabled><i className="material-icons">check_circle</i> Payment Completed</button> : null}
+                  <p className="plan-checkout-secure"><i className="material-icons">verified_user</i> 100% secure payment</p>
+                </aside>
               </div>
-              <button type="button" className="spaw-btn spaw-btn-next" onClick={onOpenPayment} disabled={isPaymentPaid || isProcessingPayment}>
-                {isPaymentPaid ? "Paid" : "Pay Now"}
-              </button>
-            </div>
+            </>
           ) : (
-            <p style={{ margin: 0, color: "#64748b", fontWeight: 700 }}>Select a listing plan to view payment amount.</p>
+            <p style={{ margin: 0, padding: 22, color: "#64748b", fontWeight: 700 }}>Select a listing plan to view the payment checkout.</p>
           )}
-
-          {isPaymentGatewayOpen && selectedPlan ? (
-            <div
-              style={{
-                marginTop: 18,
-                border: "1px solid #ffb36b",
-                borderRadius: 8,
-                padding: 16,
-                background: "#fff7ed",
-              }}
-            >
-              <strong style={{ display: "block", color: "#0a1b36", fontSize: 18 }}>Dummy Payment Gateway</strong>
-              <p style={{ margin: "6px 0 14px", color: "#52627a" }}>Pay {formatServicePlanPrice(selectedPlan)} for {selectedPlan.name}. This is a demo transaction only.</p>
-              <button type="button" className="spaw-btn spaw-btn-submit app-loading-button" onClick={onCompletePayment} disabled={isProcessingPayment}>
-                {isProcessingPayment ? (
-                  <>
-                    <span className="app-button-spinner" aria-hidden="true"></span>
-                    Processing...
-                  </>
-                ) : "Complete Dummy Payment"}
-              </button>
-            </div>
-          ) : null}
         </div>
         <FieldError message={errors.payment} />
       </div>
-      <div className={`spaw-check-row spaw-terms-row${errors.terms ? " spaw-input-error" : ""}`}>
-        <label className="spaw-checkbox"><input type="checkbox" checked={acceptedTerms} onChange={(event) => onTerms(event.target.checked)} /><span /> By checking this box, I agree to the <a href="/terms-of-use" target="_blank">Terms of Use</a> and confirm that all information submitted is accurate and complete.</label>
-        <FieldError message={errors.terms} />
-      </div>
+      <FieldError message={errors.terms} />
     </div>
   );
 }

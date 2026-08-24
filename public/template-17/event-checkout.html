@@ -405,7 +405,16 @@
                                 <div class="ck-li"><span>Transaction Fee</span><span class="ck-tx">$0.00</span></div>
                                 <div class="ck-li"><span>Convenience Fee</span><span class="ck-conv">$0.00</span></div>
                                 <div class="ck-li"><span>Sales Tax</span><span class="ck-tax">$0.00</span></div>
-                                <div class="ck-payable"><span>Amount Payable</span><span class="ck-total">$0.00</span></div>
+                                <div class="ck-coupon">
+                                    <label for="ck-coupon-code">Coupon code</label>
+                                    <div><input id="ck-coupon-code" type="text" placeholder="Enter coupon code" autocomplete="off"><button class="ck-coupon-apply" type="button">Apply</button></div>
+                                    <p class="ck-coupon-message" aria-live="polite"></p>
+                                </div>
+                                <div class="ck-amount-breakdown">
+                                    <div class="ck-amount-row ck-gross"><span>Total Amount</span><strong class="ck-before-discount">$0.00</strong></div>
+                                    <div class="ck-amount-row ck-discount"><span>Discount Amount</span><strong class="ck-discount-value">-$0.00</strong></div>
+                                    <div class="ck-amount-row ck-payable"><span>Pay Amount</span><strong class="ck-total">$0.00</strong></div>
+                                </div>
                                 <button class="ck-btn ck-pay-now" type="button"><i class="material-icons">lock</i> Pay Securely</button>
                                 <p class="ck-secure"><i class="material-icons">verified_user</i> 100% secure payment</p>
                             </div>

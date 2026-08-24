@@ -43,6 +43,9 @@ export type AllServicePostingPayload = {
   verificationMethod: string;
   isPhoneVerified: boolean;
   packageCode: string;
+  paymentReference?: string;
+  paymentProvider?: string;
+  couponCode?: string;
   saveAsDraft: boolean;
 };
 
@@ -57,6 +60,12 @@ export type AllServicePosting = AllServicePostingPayload & {
   rejectedAt?: string | null;
   createdAt: string;
   updatedAt?: string | null;
+  paymentStatus: string;
+  subtotalAmount: number;
+  discountAmount: number;
+  totalAmount: number;
+  currency: string;
+  paidAt?: string | null;
 };
 
 export async function createAllServicePosting(payload: AllServicePostingPayload) {
@@ -64,5 +73,15 @@ export async function createAllServicePosting(payload: AllServicePostingPayload)
     timeout: 15000,
   });
 
+  return response.data;
+}
+
+export async function getMyAllServicePostings() {
+  const response = await apiClient.get<{ items: AllServicePosting[] }>("/AllServicePostings/mine", { params: { page: 1, pageSize: 100 }, timeout: 10000 });
+  return response.data.items || [];
+}
+
+export async function validateAllServiceCoupon(code: string, planCode: string) {
+  const response = await apiClient.get<{ code: string; discountAmount: number; totalAmount: number; currency: string }>(`/AllServicePostings/coupons/${encodeURIComponent(code)}/validate`, { params: { planCode }, timeout: 10000 });
   return response.data;
 }

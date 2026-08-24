@@ -19,6 +19,7 @@ import {
   type StateOption,
 } from "../../../shared/api/locationMastersApi";
 import { getAddressPlaceDetail, searchAddressPredictions } from "../../../shared/api/addressAutocompleteApi";
+import { getPostingFieldValidationError, getPostingInputKind, sanitizePostingFieldValue } from "../utils/postingFieldValidation";
 import "../styles/listings.css";
 
 const classifiedDraftKey = "chaodesi_classified_draft";
@@ -467,6 +468,13 @@ export default function ClassifiedPostingPage() {
     visibleDynamicFields.forEach((field) => {
       if (field.isRequired && isMissingRequiredClassifiedValue(field, draft.customFields[field.fieldKey])) {
         nextErrors[customFieldErrorKey(field.fieldKey)] = `${field.label} is required.`;
+      }
+      const validationError = getPostingFieldValidationError(
+        { key: field.fieldKey, label: field.label, type: field.fieldType },
+        draft.customFields[field.fieldKey],
+      );
+      if (validationError && !nextErrors[customFieldErrorKey(field.fieldKey)]) {
+        nextErrors[customFieldErrorKey(field.fieldKey)] = validationError;
       }
     });
     setFieldErrors(nextErrors);
@@ -1010,6 +1018,7 @@ function InlineInputColumn({
         <input
           className={`form-control${error ? " is-invalid" : ""}`}
           type={type}
+          inputMode={type === "number" ? "decimal" : type === "tel" ? "tel" : undefined}
           value={value}
           placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
@@ -1524,6 +1533,7 @@ function ClassifiedDynamicField({
   onChange: (value: string) => void;
 }) {
   const label = `${field.label}${field.isRequired ? "*" : ""}`;
+  const descriptor = { key: field.fieldKey, label: field.label, type: field.fieldType };
 
   if (field.fieldType === "textarea") {
     return (
@@ -1585,10 +1595,10 @@ function ClassifiedDynamicField({
   return (
     <InlineInputColumn
       placeholder={field.placeholder || label}
-      type={field.fieldType === "number" || field.fieldType === "date" ? field.fieldType : "text"}
+      type={getPostingInputKind(descriptor)}
       value={value}
       error={error}
-      onChange={onChange}
+      onChange={(nextValue) => onChange(sanitizePostingFieldValue(descriptor, nextValue))}
     />
   );
 }

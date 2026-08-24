@@ -206,6 +206,7 @@
                 feeAmount: Math.round((amounts.transactionFee + amounts.convenienceFee) * 100) / 100,
                 taxAmount: Math.round(amounts.tax * 100) / 100,
                 totalAmount: Math.round(amounts.total * 100) / 100,
+                couponCode: appliedCouponCode || null,
                 currency: "USD",
                 paymentProvider: "Demo",
                 items: cart.items.map(function (item) {
@@ -540,12 +541,82 @@
     var txFee = sub * rates.tx;
     var conv = cart.items.length ? rates.conv : 0;
     var tax = sub * rates.tax;
+    var couponDiscount = 0;
+    var appliedCouponCode = "";
     var total = sub + txFee + conv + tax;
+
+    function refreshCheckoutTotal() {
+        var beforeDiscount = sub + txFee + conv + tax;
+        total = Math.max(0, beforeDiscount - couponDiscount);
+        set(".ck-before-discount", money(beforeDiscount));
+        set(".ck-total", money(total));
+        set(".ck-discount-value", "-" + money(couponDiscount));
+    }
 
     set(".ck-tx", money(txFee));
     set(".ck-conv", money(conv));
     set(".ck-tax", money(tax));
-    set(".ck-total", money(total));
+    refreshCheckoutTotal();
+
+    // ---- Coupon validation ----
+    var couponInput = page.querySelector("#ck-coupon-code");
+    var couponApply = page.querySelector(".ck-coupon-apply");
+    var couponMessage = page.querySelector(".ck-coupon-message");
+    function showCouponMessage(message, type) {
+        if (!couponMessage) { return; }
+        couponMessage.textContent = message;
+        couponMessage.className = "ck-coupon-message" + (type ? " " + type : "");
+    }
+    async function applyCouponCode() {
+        var code = couponInput ? couponInput.value.trim().toUpperCase() : "";
+        if (!code) { showCouponMessage("Enter a coupon code.", "error"); return; }
+        couponApply.disabled = true;
+        couponApply.textContent = "Checking...";
+        showCouponMessage("", "");
+        try {
+            var token = getToken();
+            if (!token) { throw new Error("Please login again to apply this coupon."); }
+            var response = await fetch(getApiBaseUrl() + "/EventTickets/coupons/" + encodeURIComponent(code) + "/validate?subtotal=" + encodeURIComponent(sub), {
+                headers: { "Authorization": "Bearer " + token }
+            });
+            var result = await response.json();
+            if (!response.ok) {
+                couponDiscount = 0;
+                appliedCouponCode = "";
+                refreshCheckoutTotal();
+                showCouponMessage(result.message || "Coupon is invalid or no longer active.", "error");
+                return;
+            }
+            couponDiscount = Number(result.discountAmount || result.DiscountAmount || 0);
+            if (couponDiscount <= 0) {
+                appliedCouponCode = "";
+                refreshCheckoutTotal();
+                showCouponMessage("This coupon does not contain a valid discount.", "error");
+                return;
+            }
+            appliedCouponCode = code;
+            refreshCheckoutTotal();
+            showCouponMessage(code + " applied successfully.", "success");
+        } catch (error) {
+            couponDiscount = 0;
+            appliedCouponCode = "";
+            refreshCheckoutTotal();
+            showCouponMessage(error && error.message ? error.message : "Unable to validate this coupon right now.", "error");
+        } finally {
+            couponApply.disabled = false;
+            couponApply.textContent = "Apply";
+        }
+    }
+    if (couponApply) { couponApply.addEventListener("click", applyCouponCode); }
+    if (couponInput) { couponInput.addEventListener("keydown", function (event) { if (event.key === "Enter") { event.preventDefault(); applyCouponCode(); } }); }
+
+    // Prefill authenticated customer details so Pay Securely can validate immediately.
+    var checkoutPhone = page.querySelector('.ck-step[data-step="1"] input[type="tel"]');
+    var checkoutName = page.querySelector('.ck-step[data-step="2"] input:first-child');
+    var checkoutEmail = page.querySelector('.ck-step[data-step="2"] input[type="email"]');
+    if (checkoutPhone && !checkoutPhone.value) { checkoutPhone.value = getLocal("mobileNumber") || getLocal("mobile_number"); }
+    if (checkoutName && !checkoutName.value) { checkoutName.value = getLocal("fullName") || getLocal("customer_name"); }
+    if (checkoutEmail && !checkoutEmail.value) { checkoutEmail.value = getLocal("email"); }
 
     // ---- Countdown timer (10 minutes) ----
     var timeLeft = 10 * 60;
@@ -588,7 +659,8 @@
     if (payBtn) {
         payBtn.addEventListener("click", function () {
             if (!validateCheckout()) {
-                alert("Please complete all checkout details before payment.");
+                payBtn.textContent = "Complete required details";
+                window.setTimeout(function () { payBtn.innerHTML = '<i class="material-icons">lock</i> Pay Securely'; }, 1600);
                 return;
             }
             openGatewayModal(getCheckoutAmounts());

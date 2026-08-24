@@ -1,5 +1,4 @@
 import { clearStoredProfileSnapshot, readStoredProfileSnapshot } from "../../dashboard/utils/profileStorage";
-import { clearHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 
 const CUSTOMER_AUTH_KEYS = [
   "token",
@@ -128,7 +127,6 @@ export function clearCustomerSession() {
   CUSTOMER_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
   localStorage.removeItem(CUSTOMER_LAST_ACTIVITY_KEY);
   clearStoredProfileSnapshot();
-  clearHomeSelectedLocation();
 }
 
 let isSessionPopupOpen = false;

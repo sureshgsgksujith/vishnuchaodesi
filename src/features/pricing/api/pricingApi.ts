@@ -51,7 +51,19 @@ export async function getMyPlanUsage() {
   return response.data;
 }
 
-export async function selectPricingPlan(planCode: string) {
-  const response = await apiClient.post<PlanUsage>(`/PricingPlans/${planCode}/select`);
+export type PlanPayment = { id: number; planCode: string; planName: string; paymentReference: string; paymentProvider: string; paymentStatus: string; subtotalAmount: number; couponCode?: string | null; discountAmount: number; totalAmount: number; currency: string; paidAt?: string | null; createdAt: string };
+
+export async function selectPricingPlan(planCode: string, payment?: { paymentReference: string; paymentProvider: string; couponCode?: string }) {
+  const response = await apiClient.post<PlanUsage>(`/PricingPlans/${planCode}/select`, payment || null);
+  return response.data;
+}
+
+export async function getMyPlanPayments() {
+  const response = await apiClient.get<PlanPayment[]>("/PricingPlans/payments/mine", { timeout: 10000 });
+  return response.data;
+}
+
+export async function validatePricingCoupon(code: string, subtotal: number) {
+  const response = await apiClient.get<{ code: string; discountAmount: number; discountText: string }>(`/EventTickets/coupons/${encodeURIComponent(code)}/validate`, { params: { subtotal }, timeout: 10000 });
   return response.data;
 }

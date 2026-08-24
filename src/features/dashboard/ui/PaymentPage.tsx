@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { ChangeEvent, FormEvent } from "react";
+import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
@@ -8,14 +8,17 @@ import {
   type EventTicketBooking,
 } from "../api/eventTicketsApi";
 import { getMyProfile, type UserProfileFormValues } from "../api/profileApi";
-import { getMyPlanUsage, type PlanUsage } from "../../pricing/api/pricingApi";
+import { getMyPlanPayments, getMyPlanUsage, type PlanPayment, type PlanUsage } from "../../pricing/api/pricingApi";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import { getCoupons, type Coupon } from "../../coupons/api/couponsApi";
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
+import { getMyAllServicePostings, type AllServicePosting } from "../api/allServicePostingsApi";
 import "../styles/eventBookings.css";
 
 type PaymentGateway = {
   id: string;
   label: string;
+  icon: string;
   helpText: string;
   question: string;
 };
@@ -33,29 +36,33 @@ type BillingFormState = {
 
 const paymentGateways: PaymentGateway[] = [
   {
-    id: "paymentpaypal",
-    label: "PayPal payment gateway",
+    id: "card",
+    label: "Credit / Debit Card",
+    icon: "credit_card",
     helpText:
       "You can pay with your credit card if you don’t have a PayPal account.",
     question: "What is PayPal?",
   },
   {
-    id: "paymentstripe",
-    label: "Stripe payment gateway",
+    id: "netbanking",
+    label: "Net Banking",
+    icon: "account_balance",
     helpText:
       "You can pay with your credit card if you don’t have a Stripe account.",
     question: "What is Stripe?",
   },
   {
-    id: "payment_razor_pay",
-    label: "RazorPay payment gateway",
+    id: "wallet",
+    label: "Wallet / UPI",
+    icon: "account_balance_wallet",
     helpText:
       "You can pay with your credit card if you don’t have a RazorPay account.",
     question: "What is RazorPay?",
   },
   {
-    id: "payment_paytm",
-    label: "PayTm payment gateway",
+    id: "paytm",
+    label: "PayTm",
+    icon: "payments",
     helpText:
       "You can pay with your credit card if you don’t have a PayTm account.",
     question: "What is PayTm?",
@@ -77,9 +84,17 @@ const PAYMENT_PAGE_SIZE = 5;
 
 export default function PaymentPage() {
   const [selectedGateway, setSelectedGateway] = useState(paymentGateways[0].id);
+  const [checkoutStep, setCheckoutStep] = useState(1);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponMessage, setCouponMessage] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [billingForm, setBillingForm] =
     useState<BillingFormState>(initialBillingState);
   const [eventBookings, setEventBookings] = useState<EventTicketBooking[]>([]);
+  const [servicePayments, setServicePayments] = useState<AllServicePosting[]>([]);
+  const [yellowPagePayments, setYellowPagePayments] = useState<PlanPayment[]>([]);
   const [paymentSearch, setPaymentSearch] = useState("");
   const [paymentPage, setPaymentPage] = useState(1);
   const [profile, setProfile] = useState<UserProfileFormValues | null>(null);
@@ -115,7 +130,10 @@ export default function PaymentPage() {
     [paidBookings],
   );
   const activePlan = planUsage?.plan;
-  const checkoutAmount = formatCurrencyAmount(activePlan?.price ?? 0, billingForm.country);
+  const baseCheckoutAmount = activePlan?.price ?? 0;
+  const discountAmount = appliedCoupon ? getCouponDiscount(appliedCoupon, baseCheckoutAmount) : 0;
+  const payableAmount = Math.max(0, baseCheckoutAmount - discountAmount);
+  const checkoutAmount = formatCurrencyAmount(payableAmount, billingForm.country);
   const planStartDate = profile?.createdAt || "";
   const planExpiryDate = profile?.profileExpiryDate || derivePlanExpiryDate(planStartDate, activePlan?.durationMonths);
   const remainingDays = getRemainingDays(planExpiryDate);
@@ -128,10 +146,12 @@ export default function PaymentPage() {
       try {
         setIsLoadingBookings(true);
         setBookingError("");
-        const bookings = await getMyEventTicketBookings();
+        const [bookings, postings, planPayments] = await Promise.all([getMyEventTicketBookings(), getMyAllServicePostings(), getMyPlanPayments()]);
 
         if (isMounted) {
           setEventBookings(bookings || []);
+          setServicePayments((postings || []).filter((posting) => posting.paymentStatus?.toLowerCase() === "paid"));
+          setYellowPagePayments(planPayments || []);
         }
       } catch (error) {
         if (isMounted) {
@@ -196,15 +216,40 @@ export default function PaymentPage() {
     };
   }, []);
 
-  const handleBillingChange = (
-    event: ChangeEvent<HTMLInputElement>
-  ) => {
-    const { name, value } = event.target;
-    setBillingForm((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+  };
+
+  const handleBillingChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setBillingForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) {
+      setCouponMessage("Enter a coupon code.");
+      return;
+    }
+
+    try {
+      setIsApplyingCoupon(true);
+      setCouponMessage("");
+      const result = await getCoupons(code, 1, 100);
+      const coupon = result.items.find((item) => item.code.trim().toUpperCase() === code);
+      if (!coupon) {
+        setAppliedCoupon(null);
+        setCouponMessage("Coupon is invalid or no longer active.");
+        return;
+      }
+      setAppliedCoupon(coupon);
+      setCouponMessage(`${coupon.code} applied successfully.`);
+    } catch {
+      setAppliedCoupon(null);
+      setCouponMessage("Unable to validate this coupon right now.");
+    } finally {
+      setIsApplyingCoupon(false);
+    }
   };
 
   return (
@@ -369,7 +414,60 @@ export default function PaymentPage() {
             onPageChange={setPaymentPage}
           />
 
-          <div className="ud-pay-op">
+          <div className="dashboard-payment-history-head" style={{ marginTop: 28 }}><div><h3>Local Service Payments</h3><p>{servicePayments.length} payments found</p></div></div>
+          <div className="table-responsive dashboard-payment-table-wrap">
+            <table className="responsive-table bordered dashboard-payment-table">
+              <thead><tr><th>Reference</th><th>Business / Plan</th><th>Total Amount</th><th>Coupon</th><th>Discount Amount</th><th>Pay Amount</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody>{servicePayments.length ? servicePayments.map((payment) => <tr key={`service-${payment.id}`}><td><span className="dashboard-payment-ref">{payment.paymentReference}</span></td><td><b>{payment.businessName}</b><span>{payment.packageCode}</span></td><td>{formatCurrencyAmount(payment.subtotalAmount, payment.currency)}</td><td>{payment.couponCode || "-"}</td><td style={{ color: "#16834d" }}>-{formatCurrencyAmount(payment.discountAmount, payment.currency)}</td><td><b>{formatCurrencyAmount(payment.totalAmount, payment.currency)}</b><span>{payment.paymentProvider}</span></td><td>{formatDate(payment.paidAt || payment.createdAt)}</td><td><span className="db-list-ststus dashboard-booking-paid">{payment.paymentStatus}</span></td></tr>) : <tr><td colSpan={8} className="dashboard-empty-row">No Local Service payments found.</td></tr>}</tbody>
+            </table>
+          </div>
+
+          <div className="dashboard-payment-history-head" style={{ marginTop: 28 }}><div><h3>Yellow Pages Payments</h3><p>{yellowPagePayments.length} payments found</p></div></div>
+          <div className="table-responsive dashboard-payment-table-wrap"><table className="responsive-table bordered dashboard-payment-table"><thead><tr><th>Reference</th><th>Plan</th><th>Total Amount</th><th>Coupon</th><th>Discount Amount</th><th>Pay Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>{yellowPagePayments.length ? yellowPagePayments.map((payment) => <tr key={`plan-${payment.id}`}><td><span className="dashboard-payment-ref">{payment.paymentReference}</span></td><td><b>{payment.planName}</b><span>{payment.planCode}</span></td><td>{formatCurrencyAmount(payment.subtotalAmount, payment.currency)}</td><td>{payment.couponCode || "-"}</td><td style={{ color: "#16834d" }}>-{formatCurrencyAmount(payment.discountAmount, payment.currency)}</td><td><b>{formatCurrencyAmount(payment.totalAmount, payment.currency)}</b><span>{payment.paymentProvider}</span></td><td>{formatDate(payment.paidAt || payment.createdAt)}</td><td><span className="db-list-ststus dashboard-booking-paid">{payment.paymentStatus}</span></td></tr>) : <tr><td colSpan={8} className="dashboard-empty-row">No Yellow Pages payments found.</td></tr>}</tbody></table></div>
+
+          <form className="plan-checkout" onSubmit={handleSubmit}>
+            <div className="plan-checkout-bar">
+              <span><i className="material-icons">verified_user</i> Secure checkout</span>
+              <span><i className="material-icons">lock</i> Your payment details are protected</span>
+            </div>
+            <div className="plan-checkout-hero">
+              <span className="material-icons">workspace_premium</span>
+              <div><small>Subscription checkout</small><h2>{activePlan?.name || "Select a plan"}</h2><p>Complete your payment securely to activate your Chao Desi benefits.</p></div>
+            </div>
+            <div className="plan-checkout-layout">
+              <div className="plan-checkout-steps">
+                <CheckoutStep number={1} title="Phone Number Verification" activeStep={checkoutStep} onOpen={setCheckoutStep}>
+                  <p className="plan-checkout-help">A One-Time Password (OTP) will be sent for verification. Please use a valid mobile number to continue.</p>
+                  <div className="plan-checkout-phone"><select aria-label="Country code"><option>USA (+1)</option><option>IND (+91)</option><option>UK (+44)</option></select><input type="tel" value={billingForm.contactMobile} onChange={(event) => setBillingForm((current) => ({ ...current, contactMobile: event.target.value }))} placeholder="Enter your mobile number" /></div>
+                  <button type="button" className="plan-checkout-btn" onClick={() => setCheckoutStep(2)}>Continue</button>
+                </CheckoutStep>
+                <CheckoutStep number={2} title="Share Your Contact Details" activeStep={checkoutStep} onOpen={setCheckoutStep}>
+                  <div className="plan-checkout-fields"><input value={billingForm.contactName} onChange={(event) => setBillingForm((current) => ({ ...current, contactName: event.target.value }))} placeholder="Full name" /><input type="email" value={billingForm.contactEmail} onChange={(event) => setBillingForm((current) => ({ ...current, contactEmail: event.target.value }))} placeholder="Email address" /></div>
+                  <button type="button" className="plan-checkout-btn" onClick={() => setCheckoutStep(3)}>Continue</button>
+                </CheckoutStep>
+                <CheckoutStep number={3} title="Payment Options" activeStep={checkoutStep} onOpen={setCheckoutStep}>
+                  <p className="plan-checkout-help">Your card information is encrypted and never stored on our servers.</p>
+                  {paymentGateways.map((gateway) => <label className="plan-checkout-pay" key={gateway.id}><input type="radio" name="payment" checked={selectedGateway === gateway.id} onChange={() => setSelectedGateway(gateway.id)} /><i className="material-icons">{gateway.icon}</i>{gateway.label}</label>)}
+                  <button type="button" className="plan-checkout-btn" onClick={() => setCheckoutStep(4)}>Continue</button>
+                </CheckoutStep>
+                <CheckoutStep number={4} title="Terms & Conditions" activeStep={checkoutStep} onOpen={setCheckoutStep}>
+                  <label className="plan-checkout-terms"><input type="checkbox" checked={agreedToTerms} onChange={(event) => setAgreedToTerms(event.target.checked)} /> I agree to the Terms of Service, Privacy Policy and Refund Policy of Chao Desi.</label>
+                </CheckoutStep>
+              </div>
+              <aside className="plan-checkout-summary">
+                <h3>Order Summary</h3>
+                <small>PLAN</small>
+                <div className="plan-checkout-line"><span><b>{activePlan?.name || "No plan selected"}</b><em>{formatDurationMonths(activePlan?.durationMonths)}</em></span><strong>{formatCurrencyAmount(baseCheckoutAmount, billingForm.country)}</strong></div>
+                <div className="plan-checkout-coupon"><label htmlFor="plan-coupon">Coupon code</label><div><input id="plan-coupon" value={couponCode} onChange={(event) => { setCouponCode(event.target.value); setCouponMessage(""); }} placeholder="Enter coupon code" /><button type="button" onClick={applyCoupon} disabled={isApplyingCoupon}>{isApplyingCoupon ? "Checking..." : "Apply"}</button></div>{couponMessage ? <p className={appliedCoupon ? "is-success" : "is-error"}>{couponMessage}</p> : null}</div>
+                <div className="plan-checkout-fees"><div><span>Subtotal</span><b>{formatCurrencyAmount(baseCheckoutAmount, billingForm.country)}</b></div>{appliedCoupon ? <div className="is-discount"><span>Coupon discount</span><b>-{formatCurrencyAmount(discountAmount, billingForm.country)}</b></div> : null}<div><span>Transaction Fee</span><b>{formatCurrencyAmount(0, billingForm.country)}</b></div></div>
+                <div className="plan-checkout-total"><span>Amount Payable</span><b>{checkoutAmount}</b></div>
+                <button type="submit" className="plan-checkout-pay-now" disabled={!agreedToTerms || !activePlan}><i className="material-icons">lock</i> Pay Securely</button>
+                <p className="plan-checkout-secure"><i className="material-icons">verified_user</i> 100% secure payment</p>
+              </aside>
+            </div>
+          </form>
+
+          <div className="ud-pay-op legacy-plan-payment" hidden>
             <h4>Select your payment option</h4>
             <ul>
               {paymentGateways.map((gateway) => {
@@ -553,6 +651,18 @@ export default function PaymentPage() {
       </div>
     </DashboardLayout>
   );
+}
+
+function CheckoutStep({ number, title, activeStep, onOpen, children }: { number: number; title: string; activeStep: number; onOpen: (step: number) => void; children: ReactNode }) {
+  const isOpen = activeStep === number;
+  return <section className={`plan-checkout-step${isOpen ? " is-open" : ""}${activeStep > number ? " is-done" : ""}`}><button type="button" className="plan-checkout-step-head" onClick={() => onOpen(number)}><span>{activeStep > number ? <i className="material-icons">check</i> : number}</span><b>{title}</b><i className="material-icons">expand_more</i></button>{isOpen ? <div className="plan-checkout-step-body">{children}</div> : null}</section>;
+}
+
+function getCouponDiscount(coupon: Coupon, amount: number) {
+  const text = coupon.discountText.trim();
+  const value = Number(text.match(/[\d.]+/)?.[0] || 0);
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.min(amount, text.includes("%") ? amount * value / 100 : value);
 }
 
 function TicketLines({ booking }: { booking: EventTicketBooking }) {
