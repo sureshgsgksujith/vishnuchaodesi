@@ -156,7 +156,7 @@ const summaryCards: Array<{ key: SummaryCountKey; title: string; icon: string; h
   { key: "events", title: "Events", icon: "/template-17/images/icon/event.png", href: "/all-listing?category=events-tickets" },
   { key: "coupons", title: "Coupons", icon: "/template-17/images/icon/coupons.png", href: "/coupons" },
   { key: "blogs", title: "Blogs", icon: "/template-17/images/icon/blog.png", href: "/blog-posts" },
-  { key: "community", title: "Community", icon: "/template-17/images/icon/general.png", href: "/all-listing?category=groups-communities" },
+  { key: "community", title: "Groups & Communities", icon: "/template-17/images/icon/general.png", href: "/community" },
 ];
 
 const initialSummaryCounts: Record<SummaryCountKey, number | null> = {

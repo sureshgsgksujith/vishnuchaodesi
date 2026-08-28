@@ -35,7 +35,7 @@ export const categoryLinks: ExploreMenuLink[] = [
   { label: "Jobs", href: "/all-listing?category=jobs", icon: "/template-17/images/icon/employee.png" },
   { label: "Electronics & Appliances", href: "/all-listing?category=electronics-appliances", icon: "/template-17/images/icon/cart.png" },
   { label: "Pets & Animals", href: "/all-listing?category=pets-animals", icon: "/template-17/classifieds/images/pets-1.jpg" },
-  { label: "Groups & Communities", href: "/all-listing?category=groups-communities", icon: "/template-17/images/icon/11.png" },
+  { label: "Groups & Communities", href: "/community", icon: "/template-17/images/icon/11.png" },
   { label: "Classified Ads", href: "/classifieds/index", icon: "/template-17/images/icon/ads.png" },
   { label: "Service Experts", href: "/service-experts/index", icon: "/template-17/images/icon/expert.png" },
   { label: "Explore Travel", href: "/places/index", icon: "/template-17/images/places/icons/hot-air-balloon.png" },
@@ -43,7 +43,6 @@ export const categoryLinks: ExploreMenuLink[] = [
   { label: "Products", href: "/products", icon: "/template-17/images/icon/cart.png" },
   { label: "Coupon & Deals", href: "/coupons", icon: "/template-17/images/icon/coupons.png" },
   { label: "Blogs", href: "/blog-posts", icon: "/template-17/images/icon/blog1.png" },
-  { label: "Community", href: "/community", icon: "/template-17/images/icon/11.png" },
 ];
 
 export function useExploreCategories(): ExploreCategoryLink[] {

@@ -33,6 +33,11 @@ const profileMenuItems: MenuItem[] = [
   },
   dashboardItem,
   {
+    label: "Groups & Communities",
+    href: "/community",
+    icon: "/template-17/images/icon/11.png",
+  },
+  {
     label: "Blogs",
     href: "/blog-posts",
     icon: "/template-17/images/icon/blog1.png",

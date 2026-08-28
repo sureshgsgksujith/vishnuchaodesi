@@ -1,0 +1,230 @@
+.community-home {
+  min-height: 70vh;
+  background: #f5f7fb;
+  color: #17233c;
+  padding: 34px max(20px, calc((100vw - 1180px) / 2)) 72px;
+}
+.community-hero {
+  background: linear-gradient(130deg, #10236f, #3157d5 60%, #697fea);
+  border-radius: 24px;
+  padding: 38px;
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 34px;
+  box-shadow: 0 18px 46px rgba(24, 47, 125, 0.2);
+}
+.community-eyebrow {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 800;
+  color: #cdd8ff;
+  margin-bottom: 8px;
+}
+.community-hero h1 {
+  color: #fff;
+  font-size: 38px;
+  line-height: 1.12;
+  margin: 0 0 12px;
+}
+.community-hero p {
+  font-size: 17px;
+  color: #e9edff;
+  margin: 0;
+  max-width: 570px;
+}
+.community-location {
+  background: #fff;
+  color: #263550;
+  border-radius: 16px;
+  padding: 18px;
+}
+.community-location label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.community-location > div {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dbe1ed;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.community-location > div > span {
+  color: #4563c9;
+  margin-left: 10px;
+}
+.community-location input {
+  border: 0 !important;
+  box-shadow: none !important;
+  min-width: 0;
+  flex: 1;
+  height: 44px;
+  padding: 0 8px !important;
+}
+.community-location > div button {
+  height: 44px;
+  border: 0;
+  background: #193fc1;
+  color: #fff;
+  font-weight: 700;
+  padding: 0 18px;
+}
+.community-near-me {
+  border: 0;
+  background: transparent;
+  color: #234bc9;
+  font-weight: 700;
+  padding: 10px 0 4px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.community-near-me .material-icons {
+  font-size: 17px;
+}
+.community-location small {
+  display: block;
+  color: #6c788e;
+  margin-top: 5px;
+}
+.community-quick-nav {
+  display: flex;
+  gap: 10px;
+  overflow: auto;
+  padding: 22px 2px 12px;
+}
+.community-quick-nav a {
+  white-space: nowrap;
+  background: #fff;
+  border: 1px solid #e2e6ee;
+  border-radius: 999px;
+  padding: 9px 14px;
+  color: #35445e;
+  text-decoration: none;
+  font-weight: 650;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.community-quick-nav .material-icons {
+  font-size: 18px;
+  color: #3157d5;
+}
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  opacity: 0.65;
+  transition: opacity 0.2s;
+}
+.community-grid.is-ready {
+  opacity: 1;
+}
+.community-panel {
+  background: #fff;
+  border: 1px solid #e5e9f0;
+  border-radius: 18px;
+  padding: 22px;
+  min-height: 245px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 28px rgba(28, 43, 76, 0.05);
+  scroll-margin-top: 100px;
+}
+.community-panel header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.community-panel header > .material-icons {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #edf1ff;
+  color: #3157d5;
+  display: grid;
+  place-items: center;
+}
+.community-panel h2 {
+  font-size: 20px;
+  margin: 0;
+  color: #18243b;
+}
+.community-panel header small {
+  color: #72809a;
+}
+.community-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  color: #718099;
+  padding: 20px;
+}
+.community-empty > .material-icons {
+  font-size: 38px;
+  color: #c1c9d9;
+}
+.community-empty p {
+  max-width: 390px;
+  margin: 8px 0;
+}
+.community-panel > a {
+  border-top: 1px solid #eef0f4;
+  padding-top: 14px;
+  color: #244bc8;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  justify-content: space-between;
+}
+.community-panel-1 {
+  grid-row: span 2;
+  min-height: 508px;
+}
+.community-panel-1 .community-empty > .material-icons {
+  font-size: 55px;
+}
+@media (max-width: 760px) {
+  .community-home {
+    padding: 18px 14px 48px;
+  }
+  .community-hero {
+    grid-template-columns: 1fr;
+    padding: 25px 20px;
+    gap: 24px;
+    border-radius: 18px;
+  }
+  .community-hero h1 {
+    font-size: 29px;
+  }
+  .community-grid {
+    grid-template-columns: 1fr;
+  }
+  .community-panel-1 {
+    grid-row: auto;
+    min-height: 260px;
+  }
+  .community-quick-nav {
+    margin-right: -14px;
+  }
+  .community-location > div button {
+    padding: 0 12px;
+  }
+}
+/* Keep the hero eyebrow clear of the fixed customer header. */
+.community-home {
+  padding-top: 72px;
+}
+@media (max-width: 760px) {
+  .community-home {
+    padding-top: 44px;
+  }
+}

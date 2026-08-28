@@ -36,7 +36,7 @@ const quickLinks = [
   { title: "Jobs", image: "/template-17/images/icon/employee.png", category: "jobs" },
   { title: "Electronics & Appliances", image: "/template-17/images/icon/electronics.png", category: "electronics-appliances" },
   { title: "Pets & Animals", image: "/template-17/classifieds/images/pets-1.jpg", category: "pets-animals" },
-  { title: "Groups & Communities", image: "/template-17/images/icon/11.png", category: "groups-communities" },
+  { title: "Groups & Communities", image: "/template-17/images/icon/11.png", href: "/community" },
 ];
 
 const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> = [

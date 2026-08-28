@@ -43,6 +43,13 @@ const PublicBlogDetailPage = lazy(() => import("../../features/blog/ui/BlogPages
 const PublicCouponsPage = lazy(() => import("../../features/coupons/ui/PublicCouponsPage"));
 const GlobalSearchPage = lazy(() => import("../../features/search/ui/GlobalSearchPage"));
 const SupportPage = lazy(() => import("../../features/support/ui/SupportPage"));
+const CommunityHomePage = lazy(() => import("../../features/community/ui/CommunityHomePage"));
+const GroupDetailPage = lazy(() => import("../../features/community/ui/GroupDetailPage"));
+const InvitationBuilderPage = lazy(() => import("../../features/community/ui/InvitationBuilderPage"));
+const InvitationManagePage = lazy(() => import("../../features/community/ui/InvitationManagePage"));
+const PublicInvitationPage = lazy(() => import("../../features/community/ui/PublicInvitationPage"));
+const CommunityFeatureGuard = lazy(() => import("../../features/community/ui/CommunityFeatureGuard"));
+const CommunityPortalPage = lazy(() => import("../../features/community/ui/CommunityPortalPage"));
 const AstrologyPage = lazy(() => import("../../features/astrology/ui/AstrologyPage"));
 const ClassifiedsHomePage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({ default: module.ClassifiedsHomePage }))
@@ -269,6 +276,12 @@ export function AppRouter() {
       <Route path="/" element={<HomePage />} />
       <Route path="/index.html" element={<Navigate to="/" replace />} />
       <Route path="/home" element={<HomePage />} />
+      <Route path="/community" element={<ProtectedCustomerRoute><CommunityHomePage /></ProtectedCustomerRoute>} />
+      <Route path="/community/:section" element={<ProtectedCustomerRoute><CommunityPortalPage /></ProtectedCustomerRoute>} />
+      <Route path="/community/groups/:slug" element={<ProtectedCustomerRoute><CommunityFeatureGuard feature="Groups"><GroupDetailPage /></CommunityFeatureGuard></ProtectedCustomerRoute>} />
+      <Route path="/community/invitations/new" element={<ProtectedCustomerRoute><CommunityFeatureGuard feature="Invitations"><InvitationBuilderPage /></CommunityFeatureGuard></ProtectedCustomerRoute>} />
+      <Route path="/community/invitations/manage/:id" element={<ProtectedCustomerRoute><CommunityFeatureGuard feature="Invitations"><InvitationManagePage /></CommunityFeatureGuard></ProtectedCustomerRoute>} />
+      <Route path="/community/invitations/:token" element={<PublicInvitationPage />} />
 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterRedirect />} />
