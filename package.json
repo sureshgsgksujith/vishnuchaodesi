@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "audit:category-fields": "node scripts/category-field-audit.mjs",
     "smoke:postings": "node scripts/posting-smoke.mjs"
   },
   "browserslist": [

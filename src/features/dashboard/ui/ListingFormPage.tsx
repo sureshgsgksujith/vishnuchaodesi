@@ -1005,7 +1005,7 @@ const electronicsPostingCommonFields: CategoryAttributeField[] = [
   { key: "warranty", label: "Warranty Available", options: yesNoOptions, isRequired: true, sectionName: "Pricing Information", sectionOrder: 4 },
   { key: "brand", label: "Brand", options: electronicsBrandOptions, isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "modelNameNumber", label: "Model", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "color", label: "Color", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "color", label: "Color", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "dimensions", label: "Dimensions", sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "weight", label: "Weight", sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "area_locality", label: "Pickup Area / Locality", sectionName: "Location Information", sectionOrder: 5 },
@@ -1039,7 +1039,7 @@ const electronicsMobileFields: CategoryAttributeField[] = [
   ...electronicsPostingCommonFields,
   { key: "storage", label: "Storage Capacity", isRequired: true, options: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "ram", label: "RAM", isRequired: true, options: ["2GB", "4GB", "6GB", "8GB", "12GB", "16GB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "screenSize", label: "Screen Size", sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "screenSize", label: "Screen Size", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "carrier_status", label: "Carrier Locked / Unlocked", isRequired: true, options: ["Unlocked", "Carrier Locked"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "batteryHealth", label: "Battery Health", sectionName: "Product Specifications", sectionOrder: 4 },
 ];
@@ -1048,7 +1048,7 @@ const electronicsComputerFields: CategoryAttributeField[] = [
   ...electronicsPostingCommonFields,
   { key: "processor", label: "Processor", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "ram", label: "RAM", isRequired: true, options: ["4GB", "8GB", "16GB", "32GB", "64GB", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "storage_type", label: "Storage Type (SSD/HDD)", options: ["SSD", "HDD", "Hybrid", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "storage_type", label: "Storage Type (SSD/HDD)", isRequired: true, options: ["SSD", "HDD", "Hybrid", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "operatingSystem", label: "Operating System", isRequired: true, options: ["Windows", "macOS", "Linux", "Chrome OS", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "graphicsCard", label: "Graphics Card", sectionName: "Product Specifications", sectionOrder: 4 },
 ];
@@ -1078,7 +1078,7 @@ const electronicsAudioFields: CategoryAttributeField[] = [
 const electronicsApplianceFields: CategoryAttributeField[] = [
   ...electronicsPostingCommonFields,
   { key: "capacity", label: "Capacity", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "energyRating", label: "Energy Rating", options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "ENERGY STAR", "Not Rated"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "energyRating", label: "Energy Rating", isRequired: true, options: ["1 Star", "2 Star", "3 Star", "4 Star", "5 Star", "ENERGY STAR", "Not Rated"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "powerConsumption", label: "Power Consumption", sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "installation_service", label: "Installation Included", options: yesNoOptions, sectionName: "Product Specifications", sectionOrder: 4 },
 ];
@@ -1086,8 +1086,8 @@ const electronicsApplianceFields: CategoryAttributeField[] = [
 const electronicsAccessoryFields: CategoryAttributeField[] = [
   ...electronicsPostingCommonFields,
   { key: "accessoryType", label: "Accessory Type", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "compatibility", label: "Compatibility", sectionName: "Product Specifications", sectionOrder: 4 },
-  { key: "connectivity", label: "Connectivity", options: ["Bluetooth", "WiFi", "Wired", "USB-C", "Lightning", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "compatibility", label: "Compatibility", isRequired: true, sectionName: "Product Specifications", sectionOrder: 4 },
+  { key: "connectivity", label: "Connectivity", isRequired: true, options: ["Bluetooth", "WiFi", "Wired", "USB-C", "Lightning", "Other"], sectionName: "Product Specifications", sectionOrder: 4 },
   { key: "battery_life", label: "Battery Life", sectionName: "Product Specifications", sectionOrder: 4 },
 ];
 
@@ -2647,6 +2647,22 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }, [selectedState?.id]);
 
   useEffect(() => {
+    if (!form.state.trim() || !states.length) return;
+    const matchingState = states.find((item) => namesMatch(item.name, form.state));
+    if (matchingState && form.stateId !== matchingState.id) {
+      setForm((current) => ({ ...current, stateId: matchingState.id }));
+    }
+  }, [states, form.state, form.stateId]);
+
+  useEffect(() => {
+    if (!form.city.trim() || !cities.length) return;
+    const matchingCity = cities.find((item) => namesMatch(item.name, form.city));
+    if (matchingCity && (form.cityId !== matchingCity.id || form.stateId !== matchingCity.stateId)) {
+      setForm((current) => ({ ...current, cityId: matchingCity.id, stateId: matchingCity.stateId }));
+    }
+  }, [cities, form.city, form.cityId, form.stateId]);
+
+  useEffect(() => {
     let isActive = true;
 
     getMyProfile()
@@ -2814,8 +2830,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   const categoryOptions = useMemo(
     () => forcedListingCategoryName
-      ? [forcedListingCategoryName]
-      : includeCurrentValue(listingCategories.filter((category) => category.name !== "Chao TV").map((category) => category.name), form.categoryName),
+      ? forcedListingCategoryName === "Groups & Communities" ? [] : [forcedListingCategoryName]
+      : includeCurrentValue(listingCategories.filter((category) => category.name !== "Chao TV" && category.name !== "Groups & Communities").map((category) => category.name), form.categoryName === "Groups & Communities" ? "" : form.categoryName),
     [forcedListingCategoryName, listingCategories, form.categoryName],
   );
 
@@ -2833,6 +2849,25 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     () => selectedListingSubCategory?.detailedCategories.find((detailCategory) => detailCategory.name === form.detailCategory),
     [selectedListingSubCategory, form.detailCategory],
   );
+
+  useEffect(() => {
+    if (form.categoryName !== "Beauty Services") {
+      return;
+    }
+
+    setCategoryAttributes((current) => {
+      const serviceCategory = form.subCategory.trim();
+      const serviceSubcategory = form.detailCategory.trim();
+      if (current.service_category === serviceCategory && current.service_subcategory === serviceSubcategory) {
+        return current;
+      }
+      return {
+        ...current,
+        service_category: serviceCategory,
+        service_subcategory: serviceSubcategory,
+      };
+    });
+  }, [form.categoryName, form.subCategory, form.detailCategory]);
 
   const subCategoryOptions = useMemo(
     () => includeCurrentValue(selectedListingCategory?.subCategories.map((subCategory) => subCategory.name) || [], form.subCategory),
@@ -2938,6 +2973,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
           nextForm.sellerType = "";
         }
         setCategoryAttributes({});
+        setRestaurantInfo({ ...initialRestaurantInfo });
+        setRestaurantMenuItems([]);
       }
 
       if (name === "country") {
@@ -2990,6 +3027,21 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         nextForm.genderPreference = "";
         nextForm.foodIncluded = "";
         nextForm.pgAmenities = "";
+        setRestaurantInfo((currentInfo) => ({
+          ...currentInfo,
+          serviceTypes: [],
+          deliveryAvailable: false,
+          serviceRadiusMiles: "",
+          deliveryFee: "",
+          minimumOrderValue: "",
+          thirdPartyIntegrations: [],
+          cateringType: "",
+          minimumGuests: "",
+          maximumGuests: "",
+          perPlatePricing: "",
+          eventTypes: [],
+          bulkOrderNotes: "",
+        }));
       }
 
       if (name === "detailCategory") {
@@ -3479,7 +3531,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return finishStepValidation();
     }
 
-    if (step === 2 && isRealEstateListing) {
+    if (step === 1 && isRealEstateListing) {
       const isPgListing = isPgRealEstateCategory(form.subCategory, form.detailCategory);
 
       if (!form.price.trim()) {
@@ -3512,6 +3564,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       }
 
       if (!isPgListing && getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
+        if (!isPlotRealEstateCategory(form.subCategory, form.detailCategory)) {
+          if (!form.bhk.trim()) addFieldError("bhk", "BHK is required.");
+          if (!form.bathrooms.trim()) addFieldError("bathrooms", "Bathrooms are required.");
+          if (!form.furnishingType.trim()) addFieldError("furnishingType", "Furnishing type is required.");
+        }
         const areaUnit = getAttributeValue(categoryAttributes, "area_unit").trim();
         if (!areaUnit) {
           addFieldError(categoryFieldErrorKey("area_unit"), "Area is required.");
@@ -3531,6 +3588,13 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         addFieldError("bathrooms", "Bathrooms must be a valid number.");
       }
 
+      return finishStepValidation();
+    }
+
+    if (step === 3 && isRealEstateListing) {
+      if (!form.sellerType.trim()) {
+        addFieldError("sellerType", "Ownership type is required.");
+      }
       return finishStepValidation();
     }
 
@@ -3733,8 +3797,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         if (!item.foodType.trim()) addFieldError(restaurantMenuItemErrorKey(index, "foodType"), "Veg / Non-Veg is required.");
       });
 
-      if ((isDeliveryListing || selectedRestaurantServiceTypes.includes("Catering") || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
-        addFieldError("restaurantServiceRadiusMiles", "Delivery Radius is required for delivery, catering, and cloud kitchen listings.");
+      if ((isDeliveryListing || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
+        addFieldError("restaurantServiceRadiusMiles", "Delivery Radius is required for delivery, catering-subcategory, and cloud kitchen listings.");
       }
 
       if (isDeliveryListing && !restaurantInfo.deliveryFee.trim()) {
@@ -3796,7 +3860,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function validateListingDetailsForSubmit() {
     const nextFieldErrors: FieldErrors = {};
-    let validationTargetStep = 1;
+    let validationTargetStep = wizardSteps.length - 1;
     const addFieldError = (name: string, message: string) => {
       if (!nextFieldErrors[name]) {
         nextFieldErrors[name] = message;
@@ -3856,6 +3920,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       : getRequiredDetailFields(form.subCategory, form.detailCategory).find(([name]) => !form[name].trim());
 
     if (missingDetailField) {
+      validationTargetStep = 1;
       addFieldError(missingDetailField[0], `${missingDetailField[1]} is required.`);
     }
 
@@ -3864,24 +3929,24 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     if (!hasDynamicCategoryFields && isRealEstateListing && !form.price.trim()) {
-      validationTargetStep = 2;
+      validationTargetStep = 1;
       addFieldError("price", isRentRealEstateSubCategory(form.subCategory) ? "Monthly Rent is required." : "Total Price is required.");
     }
 
     if (!hasDynamicCategoryFields && isRealEstateListing && !isRentOnlyRealEstatePriceTypeCategory(form.subCategory, form.detailCategory) && !getAttributeValue(categoryAttributes, "price_type").trim()) {
-      validationTargetStep = 2;
+      validationTargetStep = 1;
       addFieldError(categoryFieldErrorKey("price_type"), "Price Type is required.");
     }
 
     const isPgListing = isRealEstateListing && isPgRealEstateCategory(form.subCategory, form.detailCategory);
 
     if (!hasDynamicCategoryFields && isRealEstateListing && !isPgListing && !getAttributeValue(categoryAttributes, "property_type_group").trim()) {
-      validationTargetStep = 2;
+      validationTargetStep = 1;
       addFieldError(categoryFieldErrorKey("property_type_group"), "Property Type is required.");
     }
 
     if (!hasDynamicCategoryFields && isPgListing) {
-      validationTargetStep = 2;
+      validationTargetStep = 1;
       if (!form.superBuiltUpArea.trim()) {
         addFieldError("superBuiltUpArea", "Room Size is required.");
       }
@@ -3899,8 +3964,13 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     }
 
     if (!hasDynamicCategoryFields && isRealEstateListing && !isPgListing && getAttributeValue(categoryAttributes, "property_type_group") === "Residential") {
-      validationTargetStep = 2;
+      validationTargetStep = 1;
       const areaUnit = getAttributeValue(categoryAttributes, "area_unit").trim();
+      if (!isPlotRealEstateCategory(form.subCategory, form.detailCategory)) {
+        if (!form.bhk.trim()) addFieldError("bhk", "BHK is required.");
+        if (!form.bathrooms.trim()) addFieldError("bathrooms", "Bathrooms are required.");
+        if (!form.furnishingType.trim()) addFieldError("furnishingType", "Furnishing type is required.");
+      }
       if (!areaUnit) {
         addFieldError(categoryFieldErrorKey("area_unit"), "Area is required.");
       } else if (areaUnit === "Acres" && !form.plotArea.trim()) {
@@ -3914,29 +3984,43 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (isRealEstateListing || form.categoryName === "Roommates & Rentals") {
       const bathroomsValue = form.bathrooms.trim() || getAttributeValue(categoryAttributes, "bathrooms").trim();
       if (bathroomsValue && !isNonNegativeDecimalText(bathroomsValue)) {
-        validationTargetStep = 2;
+        validationTargetStep = 1;
         addFieldError(form.categoryName === "Roommates & Rentals" ? categoryFieldErrorKey("bathrooms") : "bathrooms", "Bathrooms must be a valid number.");
       }
     }
 
     if (!hasDynamicCategoryFields && isRealEstateListing && isRentRealEstateSubCategory(form.subCategory) && !form.securityDeposit.trim()) {
       if (!form.securityDeposit.trim()) {
-        validationTargetStep = 2;
+        validationTargetStep = 1;
         addFieldError("securityDeposit", "Security Deposit is required.");
       }
+    }
+
+    if (isRealEstateListing && !form.sellerType.trim()) {
+      validationTargetStep = Math.min(validationTargetStep, 3);
+      addFieldError("sellerType", "Ownership type is required.");
     }
 
     if (!isRealEstateListing && !isRestaurantListing) {
       effectiveDynamicCategoryFields
         .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+        .filter((field) => !shouldUseSharedListingLocationSection(form.categoryName) || !isSharedListingLocationAttributeField(field))
         .forEach((field) => {
           if (isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
             addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
+            validationTargetStep = Math.min(validationTargetStep, getCategoryFieldFormStep(form.categoryName, field.sectionOrder || 1));
           }
           const validationError = getPostingFieldValidationError(field, categoryAttributes[field.key]);
-          if (validationError) addFieldError(categoryFieldErrorKey(field.key), validationError);
+          if (validationError) {
+            addFieldError(categoryFieldErrorKey(field.key), validationError);
+            validationTargetStep = Math.min(validationTargetStep, getCategoryFieldFormStep(form.categoryName, field.sectionOrder || 1));
+          }
         });
+      const errorCountBeforeLocation = Object.keys(nextFieldErrors).length;
       addSharedListingLocationErrors(addFieldError);
+      if (Object.keys(nextFieldErrors).length > errorCountBeforeLocation) {
+        validationTargetStep = Math.min(validationTargetStep, getSharedListingLocationFormStep(form.categoryName));
+      }
     }
 
     if (Object.keys(nextFieldErrors).length) {
@@ -3952,7 +4036,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }
 
   function addSharedListingLocationErrors(addFieldError: (name: string, message: string) => void) {
-    if (!shouldUseSharedListingLocationSection(form.categoryName) || isClassifiedMode) {
+    if (!shouldUseSharedListingLocationSection(form.categoryName)) {
       return;
     }
 
@@ -3961,11 +4045,18 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (!form.state.trim()) addFieldError("state", "State is required.");
     if (!form.city.trim()) addFieldError("city", "City is required.");
     if (!form.pincode.trim()) addFieldError("pincode", "ZIP Code is required.");
+    if (form.stateId && states.length && !states.some((state) => state.id === form.stateId && (!form.countryId || state.countryId === form.countryId))) {
+      addFieldError("state", "Selected state does not belong to the selected country. Please select it again.");
+    }
+    if (form.cityId && cities.length && !cities.some((city) => city.id === form.cityId && (!form.stateId || city.stateId === form.stateId))) {
+      addFieldError("city", "Selected city does not belong to the selected state. Please select it again.");
+    }
   }
 
   function addRequiredCategoryFieldErrorsForFields(fields: CategoryAttributeField[], addFieldError: (name: string, message: string) => void) {
     fields
       .filter((field) => shouldShowCategoryAttributeField(field, categoryAttributes, form))
+      .filter((field) => !shouldUseSharedListingLocationSection(form.categoryName) || !isSharedListingLocationAttributeField(field))
       .forEach((field) => {
         if (isEffectivelyRequiredCategoryField(field, form.categoryName, form.subCategory, form.detailCategory, categoryAttributes, form) && isMissingRequiredCategoryValue(field, categoryAttributes[field.key])) {
           addFieldError(categoryFieldErrorKey(field.key), `${field.label} is required.`);
@@ -4028,6 +4119,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     const isCatering = ["Catering", "Catering Services"].includes(form.subCategory);
     const selectedRestaurantServiceTypes = getSelectedRestaurantServiceTypes(restaurantInfo, categoryAttributes);
     const isDeliveryListing = restaurantInfo.deliveryAvailable || selectedRestaurantServiceTypes.includes("Delivery") || isCloudKitchen;
+    const isCateringListing = isCatering;
     const restaurantZipcode = contactInfo.zipcode || form.pincode;
 
     if (!restaurantInfo.restaurantName.trim()) {
@@ -4044,6 +4136,17 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (!restaurantInfo.foodTypes.length) {
       addFieldError("restaurantFoodTypes", "Food Type is required.", 1);
+    }
+
+    const businessType = restaurantInfo.businessType.trim() || getAttributeValue(categoryAttributes, "business_type", "businessType").trim();
+    if (!businessType) {
+      addFieldError("restaurantBusinessType", "Business Type is required.", 1);
+    }
+
+    const yearEstablishedText = restaurantInfo.yearEstablished.trim() || getAttributeValue(categoryAttributes, "year_established", "yearEstablished").trim();
+    const yearEstablished = Number(yearEstablishedText);
+    if (!yearEstablishedText || !Number.isInteger(yearEstablished) || yearEstablished < 1800 || yearEstablished > new Date().getFullYear()) {
+      addFieldError("restaurantYearEstablished", "Year Established must be between 1800 and the current year.", 1);
     }
 
     if (!selectedRestaurantServiceTypes.length) {
@@ -4080,8 +4183,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       addFieldError("restaurantState", "State is required.", 2);
     }
 
-    if ((selectedRestaurantServiceTypes.includes("Delivery") || selectedRestaurantServiceTypes.includes("Catering") || isCloudKitchen || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
-      addFieldError("restaurantServiceRadiusMiles", "Delivery Radius is required for delivery, catering, and cloud kitchen listings.", 3);
+    if ((selectedRestaurantServiceTypes.includes("Delivery") || isCloudKitchen || isCatering) && !restaurantInfo.serviceRadiusMiles.trim()) {
+      addFieldError("restaurantServiceRadiusMiles", "Delivery Radius is required for delivery, catering-subcategory, and cloud kitchen listings.", 3);
     }
 
     if (isDeliveryListing && !restaurantInfo.deliveryFee.trim()) {
@@ -4090,6 +4193,31 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     if (isDeliveryListing && !restaurantInfo.minimumOrderValue.trim()) {
       addFieldError("restaurantMinimumOrderValue", "Minimum Order Amount is required when delivery is available.", 3);
+    }
+
+    if (restaurantInfo.couponCodes.trim() && !/^[A-Za-z0-9_-]+(?:\s*,\s*[A-Za-z0-9_-]+)*$/.test(restaurantInfo.couponCodes.trim())) {
+      addFieldError("restaurantCouponCodes", "Use letters, numbers, hyphens, or underscores; separate multiple codes with commas.", 3);
+    }
+
+    if (isCateringListing) {
+      const minimumGuests = numberOrNull(restaurantInfo.minimumGuests);
+      const maximumGuests = numberOrNull(restaurantInfo.maximumGuests);
+      const perPlatePricing = numberOrNull(restaurantInfo.perPlatePricing);
+
+      if (!restaurantInfo.cateringType.trim()) {
+        addFieldError("restaurantCateringType", "Catering Type is required when Catering is offered.", 3);
+      }
+      if (minimumGuests === null || !Number.isInteger(minimumGuests) || minimumGuests < 1) {
+        addFieldError("restaurantMinimumGuests", "Minimum Guests must be a whole number greater than 0.", 3);
+      }
+      if (maximumGuests === null || !Number.isInteger(maximumGuests) || maximumGuests < 1) {
+        addFieldError("restaurantMaximumGuests", "Maximum Guests must be a whole number greater than 0.", 3);
+      } else if (minimumGuests !== null && maximumGuests < minimumGuests) {
+        addFieldError("restaurantMaximumGuests", "Maximum Guests must be equal to or greater than Minimum Guests.", 3);
+      }
+      if (perPlatePricing === null || perPlatePricing <= 0) {
+        addFieldError("restaurantPerPlatePricing", "Per Plate Pricing must be greater than 0.", 3);
+      }
     }
 
     if (form.subCategory === "Bars & Beverages" && !restaurantInfo.alcoholLicenseNumber.trim()) {
@@ -4876,6 +5004,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       ["productName", "product_name", "Product Name"],
       ["description", "Description"],
       ["condition", "Condition"],
+      ["color", "Color"],
       ["sellerType", "seller_type", "Ownership"],
       ["price", "listing_price", "total_price", "Selling Price"],
       ["warranty", "Warranty Available"],
@@ -4897,6 +5026,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       const mobileMissing = [
         ["ram", "RAM"],
         ["storage", "Storage Capacity"],
+        ["screenSize", "screen_size", "Screen Size"],
         ["carrierStatus", "carrier_status", "Carrier Locked / Unlocked"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
@@ -4935,6 +5065,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     } else if (subCategory === "Home Appliances" || subCategory === "Kitchen Appliances") {
       const applianceMissing = [
         ["capacity", "Capacity"],
+        ["energyRating", "energy_rating", "Energy Rating"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (applianceMissing) {
@@ -4945,6 +5076,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     if (subCategory === "Wearables & Accessories") {
       const accessoryMissing = [
         ["accessoryType", "accessory_type", "Accessory Type"],
+        ["compatibility", "Compatibility"],
+        ["connectivity", "Connectivity"],
       ].find((field) => !getAttributeValue(categoryAttributes, ...field.slice(0, -1)).trim());
 
       if (accessoryMissing) {
@@ -5303,6 +5436,17 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
         .replace(/\bProperty age is required\.\s*/gi, "")
         .replace(/\bFacing is required\.\s*/gi, "")
         .trim();
+      const routedApiErrors = getApiValidationFieldErrors(message, effectiveDynamicCategoryFields, form.categoryName);
+      if (Object.keys(routedApiErrors.fieldErrors).length) {
+        setFieldErrors(routedApiErrors.fieldErrors);
+        setErrorMessage("Please fix the required fields shown below.");
+        pendingValidationScrollRef.current = true;
+        setCurrentStep(routedApiErrors.step);
+        if (isClassifiedMode) {
+          window.history.pushState(null, "", getClassifiedListingFormPath(routedApiErrors.step + 1, editListingId));
+        }
+        return false;
+      }
       setErrorMessage(obsoleteRealEstateMessage || "Please check the visible required fields and try again.");
       return false;
     } finally {
@@ -5477,7 +5621,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderVehiclePostingSections(formStep: number) {
     const vehicleStepFields = getVehicleStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const includeLocationSection = formStep === 1 && !isClassifiedMode && shouldUseSharedListingLocationSection(form.categoryName);
+    const includeLocationSection = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     return (
       <>
@@ -5606,7 +5750,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       );
     }
 
-    const useSharedLocation = !isClassifiedMode && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = shouldUseSharedListingLocationSection(form.categoryName);
 
     return (
       <>
@@ -5648,7 +5792,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderEventPostingSections(formStep: number) {
     const eventFields = getEventStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     return (
       <>
@@ -5688,7 +5832,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderRoommatesRentalPostingSections(formStep: number) {
     const roommateFields = getRoommatesRentalStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     return (
       <>
@@ -5728,7 +5872,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderJobPostingSections(formStep: number) {
     const jobFields = getJobStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     const renderJobFields = (fields: CategoryAttributeField[]) => fields.length ? (
       <CategoryAttributesFields
@@ -5786,7 +5930,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderElectronicsPostingSections(formStep: number) {
     const electronicsFields = getElectronicsStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 2 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 2 && shouldUseSharedListingLocationSection(form.categoryName);
 
     const renderElectronicsFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
       <CategoryAttributesFields
@@ -5849,7 +5993,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderPetPostingSections(formStep: number) {
     const petFields = getPetStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     const renderPetFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
       <CategoryAttributesFields
@@ -5922,7 +6066,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderGroupPostingSections(formStep: number) {
     const groupFields = getGroupStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     const renderGroupFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
       <CategoryAttributesFields
@@ -5997,7 +6141,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderFashionPostingSections(formStep: number) {
     const fashionFields = getFashionStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     const renderFashionFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
       <CategoryAttributesFields
@@ -6064,7 +6208,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderBeautyPostingSections(formStep: number) {
     const beautyFields = getBeautyStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     const renderBeautyFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
       <CategoryAttributesFields
@@ -6129,7 +6273,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderBooksSportsPostingSections(formStep: number) {
     const booksSportsFields = getBooksSportsStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 1 && shouldUseSharedListingLocationSection(form.categoryName);
 
     const renderBooksSportsFields = (fields: CategoryAttributeField[]) => fields.length || useSharedLocation ? (
       <CategoryAttributesFields
@@ -6196,7 +6340,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
   function renderFurniturePostingSections(formStep: number) {
     const furnitureFields = getFurnitureStepCategoryFields(effectiveDynamicCategoryFields, formStep);
-    const useSharedLocation = !isClassifiedMode && formStep === 3 && shouldUseSharedListingLocationSection(form.categoryName);
+    const useSharedLocation = formStep === 3 && shouldUseSharedListingLocationSection(form.categoryName);
     const renderFurnitureFields = (fields: CategoryAttributeField[]) => (
       <CategoryAttributesFields
         categoryName={form.categoryName}
@@ -7538,6 +7682,7 @@ function CategoryAttributesFields({
     : getCategoryAttributeFields(categoryName, subCategory, detailCategory);
   const fields = baseFields
     .filter((field) => shouldShowCategoryAttributeField(field, values, form))
+    .filter((field) => categoryName !== "Beauty Services" || !["servicecategory", "servicesubcategory"].includes(normalizeFieldKey(field.key)))
     .filter((field) => !omitLocationFields || !isSharedListingLocationAttributeField(field));
   const sharedLocationSectionTitle = getSharedListingLocationSectionTitle(categoryName);
   const attachedLocationFields = locationSection
@@ -7878,7 +8023,12 @@ function RealEstatePostingSections({
     return categoryAttributes[key] || "";
   }
 
-  const propertyTypeGroup = attribute("property_type_group");
+  const inferredPropertyTypeGroup = isCommercialRealEstateSubCategory(form.subCategory)
+    ? "Commercial"
+    : isResidentialRealEstateSubCategory(form.subCategory)
+      ? "Residential"
+      : "";
+  const propertyTypeGroup = inferredPropertyTypeGroup || attribute("property_type_group");
   const isCommercial = propertyTypeGroup === "Commercial";
   const isResidential = propertyTypeGroup === "Residential";
   const isPg = isPgRealEstateCategory(form.subCategory, detailCategory);
@@ -7915,6 +8065,29 @@ function RealEstatePostingSections({
   }
 
   const propertyImageFiles = galleryFiles.filter((item) => form.galleryMedia.includes(item.marker));
+
+  useEffect(() => {
+    if (!inferredPropertyTypeGroup || attribute("property_type_group") === inferredPropertyTypeGroup) {
+      return;
+    }
+
+    const nextAttributes: CategoryAttributes = {
+      ...categoryAttributes,
+      property_type_group: inferredPropertyTypeGroup,
+    };
+    if (inferredPropertyTypeGroup === "Residential") {
+      delete nextAttributes.commercial_type;
+      delete nextAttributes.office_type;
+      delete nextAttributes.office_capacity;
+      delete nextAttributes.seating_capacity;
+      delete nextAttributes.conference_rooms;
+      delete nextAttributes.business_use;
+      delete nextAttributes.pantry;
+      delete nextAttributes.parking_spaces;
+    }
+    updateCategoryAttributes(nextAttributes);
+    updateField("propertyType", "");
+  }, [form.subCategory, form.detailCategory, inferredPropertyTypeGroup]);
 
   useEffect(() => {
     if (!selectedPriceType && priceTypeOptions.length === 1) {
@@ -8001,7 +8174,8 @@ function RealEstatePostingSections({
             placeholder="Property Type*"
             value={propertyTypeGroup}
             error={fieldErrors[categoryFieldErrorKey("property_type_group")]}
-            options={["Residential", "Commercial"]}
+            options={inferredPropertyTypeGroup ? [inferredPropertyTypeGroup] : ["Residential", "Commercial"]}
+            disabled={Boolean(inferredPropertyTypeGroup)}
             onChange={(value) => {
               setAttribute("property_type_group", value);
               updateField("propertyType", "");
@@ -8166,6 +8340,9 @@ function RealEstatePostingSections({
 
       {shouldShowRealEstateStep([2]) ? (
         <>
+      <h4>Ownership & Contact</h4>
+      <Select placeholder="Select Ownership Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Agent", "Builder"]} onChange={(value) => updateField("sellerType", value)} />
+
       <h4>Amenities</h4>
       <div className="row listing-amenity-row">
         <div className="col-md-6">
@@ -8258,7 +8435,6 @@ function RealEstatePostingSections({
       <Select placeholder="Schedule Visit" value={attribute("schedule_visit")} options={yesNoOptions} onChange={(value) => setAttribute("schedule_visit", value)} />
 
       <h4>Legal & Compliance</h4>
-      <Select placeholder="Select Ownership Type*" value={form.sellerType} error={fieldErrors.sellerType} options={["Owner", "Agent", "Builder"]} onChange={(value) => updateField("sellerType", value)} />
       <div className="row">
         <InputColumn placeholder="MLS Number" value={attribute("mls_number")} onChange={(value) => setAttribute("mls_number", value)} />
         <FileUploadColumn
@@ -8512,7 +8688,7 @@ function RestaurantMenuPricingFields({
   const isFoodTruck = form.subCategory === "Food Trucks & Pop-ups";
   const isGrocery = form.subCategory === "Grocery & Specialty Food Stores";
   const showDeliveryFields = restaurantInfo.deliveryAvailable || restaurantInfo.serviceTypes.includes("Delivery") || isCloudKitchen;
-  const showCatering = restaurantInfo.serviceTypes.includes("Catering") || isCatering;
+  const showCatering = isCatering;
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
   const [menuModalIndex, setMenuModalIndex] = useState<number | null>(null);
   const [menuDraft, setMenuDraft] = useState<RestaurantMenuItem>({ ...initialRestaurantMenuItem });
@@ -8665,10 +8841,10 @@ function RestaurantMenuPricingFields({
         <InputColumn placeholder={labelWithCountryCurrency("Average Cost for Two", currencyCountry)} type="number" value={restaurantInfo.averageCostForTwo} onChange={(value) => onChange({ ...restaurantInfo, averageCostForTwo: value })} />
         <SelectColumn placeholder="Price Range" value={restaurantInfo.priceRange} options={["Budget", "Moderate", "Premium"]} onChange={(value) => onChange({ ...restaurantInfo, priceRange: value })} />
       </div>
-      <Textarea placeholder="Offers / Discounts" value={restaurantInfo.discountsOffers} onChange={(value) => onChange({ ...restaurantInfo, discountsOffers: value })} />
+      <Textarea placeholder="Offers / Discounts (optional)" value={restaurantInfo.discountsOffers} onChange={(value) => onChange({ ...restaurantInfo, discountsOffers: value })} />
       <div className="row">
-        <InputColumn placeholder="Coupon Codes (optional)" value={restaurantInfo.couponCodes} onChange={(value) => onChange({ ...restaurantInfo, couponCodes: value })} />
-        <InputColumn placeholder="Happy Hours" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} />
+        <InputColumn placeholder="Coupon Codes (optional, comma-separated)" value={restaurantInfo.couponCodes} error={fieldErrors.restaurantCouponCodes} onChange={(value) => onChange({ ...restaurantInfo, couponCodes: value })} />
+        <InputColumn placeholder="Happy Hours (optional, e.g. Mon-Fri 4 PM-7 PM)" value={restaurantInfo.happyHours} onChange={(value) => onChange({ ...restaurantInfo, happyHours: value })} />
       </div>
 
       {showDeliveryFields ? (
@@ -8687,11 +8863,12 @@ function RestaurantMenuPricingFields({
       {showCatering ? (
         <>
           <h5 className="mt-3 mb-3">Catering Details</h5>
+          <p className="listing-form-section-note">Shown for Catering and Catering Services subcategories. Event Types and Bulk Pricing are optional.</p>
           <div className="row">
-            <InputColumn placeholder="Catering Type" value={restaurantInfo.cateringType} onChange={(value) => onChange({ ...restaurantInfo, cateringType: value })} />
-            <InputColumn placeholder="Minimum Guests" type="number" value={restaurantInfo.minimumGuests} onChange={(value) => onChange({ ...restaurantInfo, minimumGuests: value })} />
-            <InputColumn placeholder="Maximum Guests" type="number" value={restaurantInfo.maximumGuests} onChange={(value) => onChange({ ...restaurantInfo, maximumGuests: value })} />
-            <InputColumn placeholder={labelWithCountryCurrency("Per Plate Pricing", currencyCountry)} type="number" value={restaurantInfo.perPlatePricing} onChange={(value) => onChange({ ...restaurantInfo, perPlatePricing: value })} />
+            <InputColumn placeholder="Catering Type*" value={restaurantInfo.cateringType} error={fieldErrors.restaurantCateringType} onChange={(value) => onChange({ ...restaurantInfo, cateringType: value })} />
+            <InputColumn placeholder="Minimum Guests*" type="number" value={restaurantInfo.minimumGuests} error={fieldErrors.restaurantMinimumGuests} onChange={(value) => onChange({ ...restaurantInfo, minimumGuests: value })} />
+            <InputColumn placeholder="Maximum Guests*" type="number" value={restaurantInfo.maximumGuests} error={fieldErrors.restaurantMaximumGuests} onChange={(value) => onChange({ ...restaurantInfo, maximumGuests: value })} />
+            <InputColumn placeholder={labelWithCountryCurrency("Per Plate Pricing*", currencyCountry)} type="number" value={restaurantInfo.perPlatePricing} error={fieldErrors.restaurantPerPlatePricing} onChange={(value) => onChange({ ...restaurantInfo, perPlatePricing: value })} />
           </div>
           <MultiSelectCheckboxes title="Event Types" options={["Wedding", "Corporate", "Birthday", "Festival"]} selected={restaurantInfo.eventTypes} onChange={(value, checked) => toggleRestaurantList("eventTypes", value, checked)} />
           <Textarea placeholder="Bulk Pricing" value={restaurantInfo.bulkOrderNotes} onChange={(value) => onChange({ ...restaurantInfo, bulkOrderNotes: value })} />
@@ -9666,6 +9843,7 @@ function RestaurantInfoFields({
   onChange: (value: RestaurantInfo) => void;
 }) {
   const cuisineOptions = ["Indian", "Chinese", "Italian", "Mexican", "Thai", "Mediterranean", "American", "Vegan", "Korean", "Japanese", "Middle Eastern"];
+  const businessTypeOptions = ["Restaurant", "Cafe", "Bakery", "Cloud Kitchen", "Food Truck", "Catering", "Grocery / Specialty Food Store", "Bar / Beverage Business"];
   const selectedCuisines = restaurantInfo.cuisine
     .split(",")
     .map((value) => value.trim())
@@ -9696,6 +9874,22 @@ function RestaurantInfoFields({
         <InputColumn placeholder="Tagline (optional)" value={restaurantInfo.tagline} onChange={(value) => onChange({ ...restaurantInfo, tagline: value })} />
       </div>
       <Textarea placeholder="Description*" value={restaurantInfo.description} error={fieldErrors.restaurantDescription} onChange={(value) => onChange({ ...restaurantInfo, description: value })} />
+      <div className="row">
+        <SelectColumn
+          placeholder="Business Type*"
+          value={restaurantInfo.businessType}
+          error={fieldErrors.restaurantBusinessType}
+          options={businessTypeOptions}
+          onChange={(value) => onChange({ ...restaurantInfo, businessType: value })}
+        />
+        <InputColumn
+          placeholder="Year Established*"
+          type="number"
+          value={restaurantInfo.yearEstablished}
+          error={fieldErrors.restaurantYearEstablished}
+          onChange={(value) => onChange({ ...restaurantInfo, yearEstablished: value })}
+        />
+      </div>
       <MultiSelectCheckboxes title="Cuisine Information" options={cuisineOptions} selected={selectedCuisines} error={fieldErrors.restaurantCuisine} onChange={toggleCuisine} />
       <MultiSelectCheckboxes title="Food Type" options={["Veg", "Non-Veg", "Vegan", "Halal", "Kosher", "Gluten-Free"]} selected={restaurantInfo.foodTypes} error={fieldErrors.restaurantFoodTypes} onChange={toggleFoodType} />
     </>
@@ -10313,6 +10507,12 @@ function buildListingPayload(
   const priceNegotiableValue = getAttributeValue(categoryAttributes, "price_negotiable", "priceNegotiable", "negotiable").trim();
   const vehicleMapLocation = parseLatLong(getAttributeValue(categoryAttributes, "map_lat_long", "mapLatLong", "google_map_lat_long").trim());
   const vehicleAreaLocality = getAttributeValue(categoryAttributes, "area_locality", "areaLocality").trim();
+  const classifiedCountry = getAttributeValue(categoryAttributes, "country", "country_name", "countryName").trim();
+  const classifiedState = getAttributeValue(categoryAttributes, "state", "state_name", "stateName", "registration_state", "registrationState").trim();
+  const classifiedCity = getAttributeValue(categoryAttributes, "city", "city_name", "cityName").trim();
+  const classifiedLocality = getAttributeValue(categoryAttributes, "area_locality", "areaLocality", "locality", "street_address", "streetAddress", "address").trim();
+  const classifiedPincode = getAttributeValue(categoryAttributes, "pincode", "pin_code", "postal_code", "postalCode", "zipcode", "zip_code", "zipCode").trim();
+  const classifiedMapLocation = parseLatLong(getAttributeValue(categoryAttributes, "map_lat_long", "mapLatLong", "google_map_lat_long", "googleMapLatLong").trim());
   const isEvVehiclePayload = isVehicleEvSelection(form.subCategory, form.detailCategory);
   const isChargingStationPayload = form.detailCategory === "Charging Stations";
   const isCarsVehiclePayload = form.subCategory === "Cars";
@@ -10450,14 +10650,14 @@ function buildListingPayload(
       countryId: form.countryId,
       stateId: form.stateId,
       cityId: form.cityId,
-      country: (form.categoryName === "Restaurants & Food" ? form.country || "USA" : form.country).trim(),
-      state: (form.categoryName === "Restaurants & Food" ? contactInfo.state || form.state : form.state).trim(),
-      city: (form.categoryName === "Restaurants & Food" ? contactInfo.city || form.city : form.city).trim(),
-      locality: form.categoryName === "Restaurants & Food" ? (contactInfo.streetAddress || form.address).trim() : vehicleAreaLocality || form.address.trim(),
+      country: (isClassifiedMode ? form.country || classifiedCountry || "United States" : form.categoryName === "Restaurants & Food" ? form.country || "USA" : form.country).trim(),
+      state: (isClassifiedMode ? form.state || classifiedState : form.categoryName === "Restaurants & Food" ? contactInfo.state || form.state : form.state).trim(),
+      city: (isClassifiedMode ? form.city || classifiedCity : form.categoryName === "Restaurants & Food" ? contactInfo.city || form.city : form.city).trim(),
+      locality: isClassifiedMode ? form.address || classifiedLocality : form.categoryName === "Restaurants & Food" ? (contactInfo.streetAddress || form.address).trim() : vehicleAreaLocality || form.address.trim(),
       landmark: form.serviceLocations.trim(),
-      pincode: (form.categoryName === "Restaurants & Food" ? contactInfo.zipcode || form.pincode : form.pincode).trim(),
-      latitude: numberOrNull(form.latitude) ?? vehicleMapLocation?.latitude ?? null,
-      longitude: numberOrNull(form.longitude) ?? vehicleMapLocation?.longitude ?? null,
+      pincode: (isClassifiedMode ? form.pincode || classifiedPincode : form.categoryName === "Restaurants & Food" ? contactInfo.zipcode || form.pincode : form.pincode).trim(),
+      latitude: numberOrNull(form.latitude) ?? classifiedMapLocation?.latitude ?? vehicleMapLocation?.latitude ?? null,
+      longitude: numberOrNull(form.longitude) ?? classifiedMapLocation?.longitude ?? vehicleMapLocation?.longitude ?? null,
     },
     amenities: {
       parking: form.amenityParking,
@@ -11708,11 +11908,15 @@ function isEffectivelyRequiredCategoryField(
     const isAppliance = subCategory === "Home Appliances" || subCategory === "Kitchen Appliances";
     const isAccessory = subCategory === "Wearables & Accessories";
 
+    if (isField("color")) {
+      return true;
+    }
+
     if (warranty === "Yes" && isField("manufacturerWarranty", "manufacturer_warranty", "extendedWarranty", "extended_warranty", "warrantyExpiryDate", "warranty_expiry_date")) {
       return true;
     }
 
-    if (isMobile && isField("ram", "storage", "carrierStatus", "carrier_status")) {
+    if (isMobile && isField("ram", "storage", "screenSize", "screen_size", "carrierStatus", "carrier_status")) {
       return true;
     }
 
@@ -11728,11 +11932,11 @@ function isEffectivelyRequiredCategoryField(
       return true;
     }
 
-    if (isAppliance && isField("capacity")) {
+    if (isAppliance && isField("capacity", "energyRating", "energy_rating")) {
       return true;
     }
 
-    if (isAccessory && isField("accessoryType", "accessory_type")) {
+    if (isAccessory && isField("accessoryType", "accessory_type", "compatibility", "connectivity")) {
       return true;
     }
   }
@@ -12109,6 +12313,58 @@ function getSharedListingLocationSectionTitle(categoryName: string) {
   if (categoryName === "Groups & Communities") return "Group Location";
   if (categoryName === "Vehicles") return "Location";
   return "Location Information";
+}
+
+function getSharedListingLocationFormStep(categoryName: string) {
+  if (isElectronicsCategoryName(categoryName)) return 2;
+  if (isFurnitureCategory(categoryName)) return 3;
+  return 1;
+}
+
+function getCategoryFieldFormStep(categoryName: string, sectionOrder: number) {
+  if (categoryName === "Vehicles") return getVehicleFormStepForSectionOrder(sectionOrder);
+  if (isEventsListingCategory(categoryName)) return getEventFormStepForSectionOrder(sectionOrder);
+  if (categoryName === "Roommates & Rentals") return getRoommatesRentalFormStepForSectionOrder(sectionOrder);
+  if (categoryName === "Jobs") return getJobFormStepForSectionOrder(sectionOrder);
+  if (isElectronicsCategoryName(categoryName)) return getElectronicsFormStepForSectionOrder(sectionOrder);
+  if (categoryName === "Pets & Animals") return getPetFormStepForSectionOrder(sectionOrder);
+  if (isFurnitureCategory(categoryName)) return getFurnitureFormStepForSectionOrder(sectionOrder);
+  if (categoryName === "Groups & Communities") return getGroupFormStepForSectionOrder(sectionOrder);
+  if (categoryName === "Fashion & Lifestyle") return getFashionFormStepForSectionOrder(sectionOrder);
+  if (categoryName === "Beauty Services") return getBeautyFormStepForSectionOrder(sectionOrder);
+  if (categoryName === "Books, Sports & Hobbies") return getBooksSportsFormStepForSectionOrder(sectionOrder);
+  return Math.min(Math.max(sectionOrder, 1), 4);
+}
+
+function getApiValidationFieldErrors(message: string, fields: CategoryAttributeField[], categoryName: string) {
+  const rules = [
+    { pattern: /\bcountry is required\b/i, aliases: ["country", "country_name", "countryName"], fallback: "country", label: "Country is required." },
+    { pattern: /\bstate is required\b/i, aliases: ["state", "state_name", "stateName", "registration_state", "registrationState"], fallback: "state", label: "State is required." },
+    { pattern: /\bcity is required\b/i, aliases: ["city", "city_name", "cityName"], fallback: "city", label: "City is required." },
+    { pattern: /\b(?:area\s*\/\s*locality|locality|address) is required\b/i, aliases: ["area_locality", "areaLocality", "locality", "street_address", "streetAddress", "address"], fallback: "address", label: "Area / Locality is required." },
+    { pattern: /\b(?:pincode|pin code|postal code|zip code) is required\b/i, aliases: ["pincode", "pin_code", "postal_code", "postalCode", "zipcode", "zip_code", "zipCode"], fallback: "pincode", label: "ZIP Code is required." },
+  ];
+  const fieldErrors: FieldErrors = {};
+  let step = 4;
+
+  for (const rule of rules) {
+    if (!rule.pattern.test(message)) continue;
+    if (shouldUseSharedListingLocationSection(categoryName)) {
+      fieldErrors[rule.fallback] = rule.label;
+      step = Math.min(step, getSharedListingLocationFormStep(categoryName));
+      continue;
+    }
+    const dynamicField = fields.find((field) => rule.aliases.some((alias) => normalizeFieldKey(field.key) === normalizeFieldKey(alias)));
+    if (dynamicField) {
+      fieldErrors[categoryFieldErrorKey(dynamicField.key)] = rule.label;
+      step = Math.min(step, getCategoryFieldFormStep(categoryName, dynamicField.sectionOrder || 1));
+    } else {
+      fieldErrors[rule.fallback] = rule.label;
+      step = Math.min(step, getSharedListingLocationFormStep(categoryName));
+    }
+  }
+
+  return { fieldErrors, step };
 }
 
 function isSharedListingLocationAttributeField(field: CategoryAttributeField) {

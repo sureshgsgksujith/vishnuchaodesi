@@ -61,7 +61,12 @@ export default function CommunityHomePage() {
       </section>
 
       <nav className="community-quick-nav" aria-label="Community sections">
-        {visiblePanels.map((panel) => <a key={panel.title} href={`#${panelId(panel.title)}`}><span className="material-icons">{panel.icon}</span>{panel.title}</a>)}
+        {visiblePanels.map((panel) => (
+          <a key={panel.title} href={`#${panelId(panel.title)}`}>
+            <span className="material-icons" aria-hidden="true">{panel.icon}</span>
+            <span className="community-quick-nav-label">{panel.title}</span>
+          </a>
+        ))}
       </nav>
 
       <section className={`community-grid${isReady ? " is-ready" : ""}`} aria-live="polite">

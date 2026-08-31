@@ -14,7 +14,6 @@ export const supportedListingCategoryNames = [
   "Beauty Services",
   "Pets & Animals",
   "Books, Sports & Hobbies",
-  "Groups & Communities",
 ] as const;
 
 const supportedListingCategoryNameSet = new Set<string>(supportedListingCategoryNames);

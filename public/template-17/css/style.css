@@ -29671,6 +29671,20 @@ select.ls-input {
     color: var(--spaw-mut);
 }
 
+.spa-biz-page .spaw-service-no-results {
+    position: absolute;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    padding: 14px 16px;
+    border: 1px solid #e5e8ef;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--spaw-mut);
+    box-shadow: 0 10px 24px rgba(20, 35, 60, .12);
+}
+
 .spa-biz-page .spaw-selected-service {
     background: #f0faf4;
     border: 1px solid #b8e6c8;

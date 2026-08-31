@@ -77,13 +77,18 @@ export default function PhoneNumberInput({
 
 export function splitPhoneValue(value: string, fallbackCode = "+1") {
   const trimmedValue = value.trim();
-  const matched = trimmedValue.match(/^(\+\d{1,4})\s*(.*)$/);
-  const matchedCode = matched?.[1] || fallbackCode;
-  const code = phoneCountryOptions.some((option) => option.code === matchedCode) ? matchedCode : fallbackCode;
+  const matchedCode = phoneCountryOptions
+    .map((option) => option.code)
+    .sort((left, right) => right.length - left.length)
+    .find((countryCode) => trimmedValue.startsWith(countryCode));
+  const code = matchedCode || fallbackCode;
+  const number = matchedCode
+    ? trimmedValue.slice(matchedCode.length).trimStart()
+    : trimmedValue.replace(/^\+\d{1,4}\s*/, "");
 
   return {
     code,
-    number: matched ? matched[2] || "" : trimmedValue,
+    number,
   };
 }
 

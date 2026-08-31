@@ -408,7 +408,7 @@ export default function ServicePartnerPostingPage() {
   const filteredCategories = useMemo(() => {
     const query = form.serviceSearch.trim().toLowerCase();
     if (!query) {
-      return [];
+      return categories.slice(0, 8);
     }
 
     return categories.filter((category) => [
@@ -1744,7 +1744,7 @@ function StepService({
               setIsServiceOpen(true);
             }}
             onFocus={() => {
-              if (filteredCategories.length && form.serviceSearch !== selectedServiceRef.current) {
+              if (filteredCategories.length) {
                 setIsServiceOpen(true);
               }
             }}
@@ -1753,9 +1753,23 @@ function StepService({
           {isServiceOpen && filteredCategories.length ? (
             <ul className="spaw-suggest-list" style={{ display: "block" }}>
               {filteredCategories.map((category) => (
-                <li key={category.id} onMouseDown={() => chooseService(category)}><strong>{category.name}</strong><span>{category.code}</span></li>
+                <li
+                  key={category.id}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    chooseService(category);
+                  }}
+                >
+                  <strong>{category.name}</strong>
+                  <span>{category.subCategories.flatMap((sub) => sub.detailedCategories).length} services available</span>
+                </li>
               ))}
             </ul>
+          ) : null}
+          {isServiceOpen && form.serviceSearch.trim() && !filteredCategories.length ? (
+            <div className="spaw-service-no-results" role="status">
+              No matching service found. Try another keyword.
+            </div>
           ) : null}
         </div>
         <FieldError message={errors.serviceCategory} />
