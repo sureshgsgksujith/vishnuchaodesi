@@ -6,6 +6,7 @@ import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import { communityApi, type CommunityConversation, type CommunityEvent, type CommunityGroup, type CommunityMessage, type CommunityPost } from "../api/communityApi";
 import { getCustomerToken } from "../../auth/utils/customerSession";
 import { env } from "../../../app/config/env";
+import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import "./communityPortal.css";
 
 const nav = [["discover","Discover"],["groups","My Groups"],["feed","Feed"],["messages","Messages"],["events","Events"],["invitations","Invitations"],["gifts","Gifts"],["notifications","Notifications"],["profile","Profile"]];
@@ -15,17 +16,18 @@ export default function CommunityPortalPage() {
 }
 
 function CommunitySection({section}:{section:string}) {
+  const { activeCity } = useHomeSelectedLocation();
   const [groups,setGroups]=useState<CommunityGroup[]>([]), [posts,setPosts]=useState<CommunityPost[]>([]), [events,setEvents]=useState<CommunityEvent[]>([]);
   const [conversations,setConversations]=useState<CommunityConversation[]>([]), [messages,setMessages]=useState<CommunityMessage[]>([]), [selected,setSelected]=useState<number>();
   const [items,setItems]=useState<Record<string,unknown>[]>([]), [error,setError]=useState(""), [busy,setBusy]=useState(true);
   const reload=useCallback(async()=>{setBusy(true);setError("");try{
-    if(section==="discover"){const x=await communityApi.discover();setGroups(x.groups);setEvents(x.events);}
+    if(section==="discover"){const x=await communityApi.discover(activeCity || undefined);setGroups(x.groups);setEvents(x.events);}
     else if(section==="groups"||section==="feed"){const x=await communityApi.groups({pageSize:100});setGroups(x.items);if(section==="feed"&&x.items[0])setPosts((await communityApi.posts(x.items[0].id)).items);}
     else if(section==="messages")setConversations((await communityApi.conversations()).items);
     else if(section==="events")setEvents((await communityApi.events({pageSize:100})).items);
     else if(section==="invitations")setItems((await communityApi.invitations()).items);
     else if(section==="notifications")setItems((await communityApi.notifications()).items);
-  }catch(e){setError(e instanceof Error?e.message:"Unable to load Community data.");}finally{setBusy(false)}},[section]);
+  }catch(e){setError(e instanceof Error?e.message:"Unable to load Community data.");}finally{setBusy(false)}},[activeCity,section]);
   useEffect(()=>{void reload()},[reload]);
   useEffect(()=>{
     if(section!=="messages"||!selected)return;
