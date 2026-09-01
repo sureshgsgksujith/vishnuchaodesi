@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   getPublicListings,
@@ -18,6 +18,8 @@ export default function HomeArtistToursSection() {
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isShowingAllCities, setIsShowingAllCities] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const sliderRef = useRef<HTMLUListElement>(null);
   const eventsHref = `/all-listing?${new URLSearchParams({
     category: "events-tickets",
     ...(activeCity ? { city: activeCity } : {}),
@@ -80,13 +82,27 @@ export default function HomeArtistToursSection() {
     };
   }, [activeCity, currentLocation.status, locationRevision, selectedCity]);
 
-  const isSingleRow = items.length <= 3;
-  const isScrolling = items.length > 6;
-  const groups = useMemo(
-    () => isSingleRow ? items.map((item) => [item]) : chunk(isScrolling ? fillTwoRowItems(items) : items, 2),
-    [isScrolling, isSingleRow, items],
-  );
-  const visibleSlides = isScrolling ? [...groups, ...groups] : groups;
+  const moveSlider = (direction: -1 | 1) => {
+    const slider = sliderRef.current;
+    if (!slider || !items.length) return;
+
+    const nextSlide = (activeSlide + direction + items.length) % items.length;
+    slider.children[nextSlide]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    setActiveSlide(nextSlide);
+  };
+
+  const syncActiveSlide = () => {
+    const slider = sliderRef.current;
+    if (!slider) return;
+
+    const sliderCenter = slider.scrollLeft + slider.clientWidth / 2;
+    const slides = Array.from(slider.children) as HTMLElement[];
+    const closest = slides.reduce((best, slide, index) => {
+      const distance = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - sliderCenter);
+      return distance < best.distance ? { index, distance } : best;
+    }, { index: 0, distance: Number.POSITIVE_INFINITY });
+    setActiveSlide(closest.index);
+  };
 
   return (
     <section className="home-artist">
@@ -111,17 +127,19 @@ export default function HomeArtistToursSection() {
             <div className="plac-hom-all-pla">
               {isLoading ? (
                 <div className="home-artist-empty">Loading Events & Tickets...</div>
-              ) : visibleSlides.length ? (
-                <ul className={`artist-sliser-auto ${isScrolling ? "is-scrolling" : "is-static"} ${isSingleRow ? "is-single-row" : "is-two-row"}`}>
-                  {visibleSlides.map((group, index) => (
-                    <li key={`${index}-${group[0]?.id}`} aria-hidden={isScrolling && index >= groups.length}>
-                      <div className="artist-slide-group">
-                        {group.map((listing) => {
+              ) : items.length ? (
+                <div className="home-artist-carousel">
+                  <button className="home-artist-nav home-artist-nav-prev" type="button" onClick={() => moveSlider(-1)} aria-label="Previous event">
+                    <i className="material-icons" aria-hidden="true">chevron_left</i>
+                  </button>
+                  <ul ref={sliderRef} className="artist-sliser-auto" onScroll={syncActiveSlide} aria-label="Trending events carousel">
+                    {items.map((listing, index) => {
                           const detailHref = `/event-details?id=${encodeURIComponent(String(listing.id))}`;
                           const image = resolveListingImageUrl(listing.primaryImageUrl || listing.imageUrls?.[0]) || fallbackImage;
 
                           return (
-                          <Link className="service-card" key={listing.id} to={detailHref}>
+                          <li key={listing.id} aria-label={`${index + 1} of ${items.length}`}>
+                          <Link className="service-card" to={detailHref}>
                             <div className="service-left">
                               <img src={image} alt={listing.title} onError={setFallbackListingImage} />
                             </div>
@@ -134,12 +152,17 @@ export default function HomeArtistToursSection() {
                               <i className="material-icons">chevron_right</i>
                             </div>
                           </Link>
+                          </li>
                           );
                         })}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                  </ul>
+                  <button className="home-artist-nav home-artist-nav-next" type="button" onClick={() => moveSlider(1)} aria-label="Next event">
+                    <i className="material-icons" aria-hidden="true">chevron_right</i>
+                  </button>
+                  <div className="home-artist-dots" aria-hidden="true">
+                    {items.map((item, index) => <span key={item.id} className={index === activeSlide ? "is-active" : ""} />)}
+                  </div>
+                </div>
               ) : (
                 <div className="home-artist-empty">
                   <strong>No Events & Tickets listings available yet.</strong>
@@ -154,24 +177,6 @@ export default function HomeArtistToursSection() {
       </div>
     </section>
   );
-}
-
-function chunk(items: ListingSummary[], size: number) {
-  const groups: ListingSummary[][] = [];
-
-  for (let index = 0; index < items.length; index += size) {
-    groups.push(items.slice(index, index + size));
-  }
-
-  return groups;
-}
-
-function fillTwoRowItems(items: ListingSummary[]) {
-  if (items.length > 1 && items.length % 2 !== 0) {
-    return [...items, items[0]];
-  }
-
-  return items;
 }
 
 function isArtistEventListing(listing: ListingSummary) {

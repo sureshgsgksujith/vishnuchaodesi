@@ -509,9 +509,8 @@ export default function LoginPage() {
                     <div className="login login-new">
                       <div className="login-hero">
                         <img
-                          src="/template-17/images/login/2.png"
-                          alt="Login"
-                          style={{ maxWidth: "100%", marginBottom: "20px" }}
+                          src="/template-17/images/home/logo-web.png"
+                          alt="Chao Desi"
                         />
                       </div>
 

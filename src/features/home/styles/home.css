@@ -367,6 +367,15 @@
   cursor: pointer;
 }
 
+.chao-home-page .home-plans-carousel {
+  position: relative;
+}
+
+.chao-home-page .home-plans-nav,
+.chao-home-page .home-plans-dots {
+  display: none;
+}
+
 .chao-home-page .home-plan-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -3884,6 +3893,150 @@ html {
   }
 }
 
+@media (max-width: 767px) {
+  .chao-home-page .pri {
+    padding: 28px 0 38px;
+    overflow: hidden;
+  }
+
+  .chao-home-page .pri .plac-det-tit-inn {
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  .chao-home-page .pri .plac-det-tit-inn h2 {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 800;
+  }
+
+  .chao-home-page .home-plans-carousel {
+    margin: 0 -2px;
+    padding: 0 36px 30px;
+  }
+
+  .chao-home-page .pri .home-plans-track {
+    display: flex;
+    width: 100%;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+    touch-action: pan-x pan-y;
+  }
+
+  .chao-home-page .pri .home-plans-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chao-home-page .pri .home-plans-track > li {
+    float: none;
+    flex: 0 0 100%;
+    width: 100%;
+    margin: 0;
+    padding: 4px 2px;
+    scroll-snap-align: center;
+  }
+
+  .chao-home-page .pri .home-plans-track > li > .pri-box {
+    float: none;
+    width: 100%;
+    min-height: 410px;
+    border: 1px solid #e4eaf2;
+    border-radius: 22px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12);
+  }
+
+  .chao-home-page .pri-box .c2 {
+    padding: 18px 14px;
+  }
+
+  .chao-home-page .pri-box .c2 h4 {
+    font-size: 20px;
+  }
+
+  .chao-home-page .pri-box .c2 p {
+    font-size: 14px;
+  }
+
+  .chao-home-page .pri-box .c3 {
+    padding: 30px 16px 22px;
+  }
+
+  .chao-home-page .pri-box .c3 h2 {
+    font-size: 48px;
+  }
+
+  .chao-home-page .pri-box .c5 {
+    padding: 0 20px 24px;
+  }
+
+  .chao-home-page .pri-box .c5 a.cta1 {
+    min-height: 48px;
+    border-radius: 10px;
+    font-size: 16px;
+    line-height: 28px;
+  }
+
+  .chao-home-page .home-plan-know-more {
+    margin-top: 10px;
+    color: #34435d;
+    font-weight: 700;
+  }
+
+  .chao-home-page .home-plans-nav {
+    position: absolute;
+    top: 48%;
+    z-index: 4;
+    display: grid;
+    width: 34px;
+    height: 46px;
+    padding: 0;
+    border: 0;
+    border-radius: 12px;
+    background: #17243c;
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.24);
+    cursor: pointer;
+    place-items: center;
+    transform: translateY(-50%);
+  }
+
+  .chao-home-page .home-plans-nav i {
+    font-size: 27px;
+  }
+
+  .chao-home-page .home-plans-prev { left: 0; }
+  .chao-home-page .home-plans-next { right: 0; }
+
+  .chao-home-page .home-plans-dots {
+    position: absolute;
+    right: 0;
+    bottom: 4px;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .chao-home-page .home-plans-dots span {
+    width: 7px;
+    height: 7px;
+    border-radius: 99px;
+    background: #cbd4e1;
+    transition: width 180ms ease, background 180ms ease;
+  }
+
+  .chao-home-page .home-plans-dots span.is-active {
+    width: 22px;
+    background: #9100ff;
+  }
+}
+
 @media (min-width: 769px) and (max-width: 991px) {
   .chao-home-page .chao-law .law-tab-content ul {
     gap: 24px;
@@ -3969,4 +4122,161 @@ html {
     animation: none;
     overflow-x: auto;
   }
+}
+
+/* Trending events: touch-friendly, user-controlled carousel. */
+.chao-home-page .home-artist-carousel {
+  position: relative;
+  padding: 0 54px 28px;
+}
+
+.chao-home-page .home-artist-carousel .artist-sliser-auto {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  animation: none;
+  overscroll-behavior-inline: contain;
+  touch-action: pan-x pan-y;
+}
+
+.chao-home-page .home-artist-carousel .artist-sliser-auto::-webkit-scrollbar {
+  display: none;
+}
+
+.chao-home-page .home-artist-carousel .artist-sliser-auto > li {
+  flex: 0 0 calc((100% - 32px) / 3);
+  width: calc((100% - 32px) / 3);
+  padding: 4px;
+  scroll-snap-align: center;
+}
+
+.chao-home-page .home-artist-carousel .service-card {
+  height: 100%;
+  min-height: 104px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(12, 23, 43, 0.16);
+}
+
+.chao-home-page .home-artist-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: grid;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 50%;
+  background: #f89a16;
+  color: #172033;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  place-items: center;
+  transform: translateY(-70%);
+}
+
+.chao-home-page .home-artist-nav:hover,
+.chao-home-page .home-artist-nav:focus-visible {
+  background: #ffb340;
+  outline: 3px solid rgba(255, 255, 255, 0.45);
+}
+
+.chao-home-page .home-artist-nav i {
+  font-size: 30px;
+}
+
+.chao-home-page .home-artist-nav-prev { left: 2px; }
+.chao-home-page .home-artist-nav-next { right: 2px; }
+
+.chao-home-page .home-artist-dots {
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.chao-home-page .home-artist-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.42);
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.chao-home-page .home-artist-dots span.is-active {
+  width: 20px;
+  background: #f89a16;
+}
+
+@media (max-width: 767px) {
+  .chao-home-page .home-artist .plac-deta-sec {
+    padding: 26px 0 30px;
+  }
+
+  .chao-home-page .home-artist .home-artist-head {
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 4px;
+    text-align: left !important;
+  }
+
+  .chao-home-page .home-artist .plac-det-tit-inn h2 span {
+    font-size: 22px;
+  }
+
+  .chao-home-page .home-artist .home-artist-post {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 0 13px;
+  }
+
+  .chao-home-page .home-artist-carousel {
+    margin: 0 -4px;
+    padding: 0 42px 30px;
+  }
+
+  .chao-home-page .home-artist-carousel .artist-sliser-auto {
+    gap: 12px;
+  }
+
+  .chao-home-page .home-artist-carousel .artist-sliser-auto > li {
+    flex-basis: 100%;
+    width: 100%;
+    padding: 5px 2px;
+  }
+
+  .chao-home-page .home-artist-carousel .service-card {
+    min-height: 142px;
+    padding: 18px 16px;
+    border-radius: 24px;
+  }
+
+  .chao-home-page .home-artist .service-left img {
+    width: 58px;
+    height: 58px;
+  }
+
+  .chao-home-page .home-artist .service-content h4 {
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  .chao-home-page .home-artist-nav {
+    width: 36px;
+    height: 36px;
+  }
+
+  .chao-home-page .home-artist-nav-prev { left: 0; }
+  .chao-home-page .home-artist-nav-next { right: 0; }
 }

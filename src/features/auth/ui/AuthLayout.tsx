@@ -30,16 +30,16 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   }, []);
 
   return (
-    <>
-      <section>
+    <div className="auth-layout-shell">
+      <section className="auth-layout-header">
         <div className="str ind2-home">
           <HomeHeader />
         </div>
       </section>
 
-      {children}
+      <main className="auth-layout-content">{children}</main>
 
-      <HomeFooterSection />
-    </>
+      <div className="auth-layout-footer"><HomeFooterSection /></div>
+    </div>
   );
 }

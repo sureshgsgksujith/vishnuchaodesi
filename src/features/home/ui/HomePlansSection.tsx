@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import { getPricingPlans, selectPricingPlan, type PricingPlan } from "../../pricing/api/pricingApi";
@@ -88,6 +88,8 @@ export default function HomePlansSection() {
   const [showPaymentStep, setShowPaymentStep] = useState(false);
   const [isUpdatingPlan, setIsUpdatingPlan] = useState(false);
   const [planMessage, setPlanMessage] = useState("");
+  const [activePlanSlide, setActivePlanSlide] = useState(0);
+  const planSliderRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -176,6 +178,26 @@ export default function HomePlansSection() {
     void updatePlan(plan);
   }
 
+  function movePlans(direction: -1 | 1) {
+    const slider = planSliderRef.current;
+    if (!slider) return;
+    const next = (activePlanSlide + direction + plans.length) % plans.length;
+    slider.children[next]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    setActivePlanSlide(next);
+  }
+
+  function syncPlanSlide() {
+    const slider = planSliderRef.current;
+    if (!slider) return;
+    const center = slider.scrollLeft + slider.clientWidth / 2;
+    const slides = Array.from(slider.children) as HTMLElement[];
+    const closest = slides.reduce((best, slide, index) => {
+      const distance = Math.abs(slide.offsetLeft + slide.offsetWidth / 2 - center);
+      return distance < best.distance ? { index, distance } : best;
+    }, { index: 0, distance: Number.POSITIVE_INFINITY });
+    setActivePlanSlide(closest.index);
+  }
+
   return (
     <section className="pri">
       <div className="container">
@@ -184,8 +206,11 @@ export default function HomePlansSection() {
             <h2>Choose your plan</h2>
           </div>
 
-          <div>
-            <ul>
+          <div className="home-plans-carousel">
+            <button type="button" className="home-plans-nav home-plans-prev" onClick={() => movePlans(-1)} aria-label="Previous plan">
+              <i className="material-icons" aria-hidden="true">chevron_left</i>
+            </button>
+            <ul ref={planSliderRef} className="home-plans-track" onScroll={syncPlanSlide} aria-label="User plans">
               {plans.map((plan) => (
                 <li key={plan.code}>
                   <div className={plan.isFeatured ? "pri-box pri-box-featured" : "pri-box"}>
@@ -212,6 +237,12 @@ export default function HomePlansSection() {
                 </li>
               ))}
             </ul>
+            <button type="button" className="home-plans-nav home-plans-next" onClick={() => movePlans(1)} aria-label="Next plan">
+              <i className="material-icons" aria-hidden="true">chevron_right</i>
+            </button>
+            <div className="home-plans-dots" aria-hidden="true">
+              {plans.map((plan, index) => <span key={plan.code} className={index === activePlanSlide ? "is-active" : ""} />)}
+            </div>
           </div>
         </div>
       </div>

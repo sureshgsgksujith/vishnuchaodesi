@@ -40,7 +40,11 @@
 }
 
 .login-reg-pg .login-hero img {
-  height: 104px;
+  display: block;
+  width: min(220px, 82%);
+  height: auto;
+  margin-right: auto;
+  margin-left: auto;
   margin-bottom: 16px !important;
   object-fit: contain;
 }
@@ -79,15 +83,149 @@
 }
 
 @media (max-width: 768px) {
+  body:has(.auth-layout-shell) .chaodesi-chatbot {
+    display: none !important;
+  }
+
+  .auth-layout-shell {
+    min-height: 100dvh;
+    background:
+      radial-gradient(circle at 10% 10%, rgba(248, 154, 22, 0.18), transparent 34%),
+      linear-gradient(145deg, #101a31 0%, #253653 100%);
+  }
+
+  .auth-layout-footer {
+    display: none !important;
+  }
+
+  .auth-layout-header {
+    display: block !important;
+    position: relative;
+    z-index: 20;
+  }
+
+  .auth-layout-header .chaodesi-customer-header {
+    padding: 8px 0;
+    box-shadow: 0 8px 24px rgba(2, 8, 23, 0.25);
+  }
+
+  .auth-layout-header .chaodesi-mobile-global-search,
+  .auth-layout-header .top-ser,
+  .auth-layout-header .chaodesi-header-actions,
+  .auth-layout-header .menu,
+  .auth-layout-header .chaodesi-pop-menu {
+    display: none !important;
+  }
+
+  .auth-layout-content {
+    display: grid;
+    min-height: calc(100dvh - 72px);
+    padding: max(18px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
+    place-items: center;
+  }
+
   .side-ads {
-    display: none;
+    display: none !important;
   }
 
   .login-reg.login-reg-pg {
-    padding: 34px 0 30px;
+    width: 100%;
+    padding: 0;
+    background: transparent;
+  }
+
+  .login-reg-pg .container-fluid,
+  .login-reg-pg .row,
+  .login-reg-pg .col-md-6 {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .login-reg-pg .col-md-3 {
+    display: none !important;
+  }
+
+  .login-reg-pg .login-main {
+    width: 100%;
+    max-width: 390px;
+    margin: 0 auto;
   }
 
   .login-reg-pg .login-new {
-    padding: 22px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 34px 22px 22px;
+    border: 1px solid rgba(255, 255, 255, 0.72);
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 28px 70px rgba(2, 8, 23, 0.44), 0 2px 0 rgba(255, 255, 255, 0.9) inset;
+  }
+
+  .login-reg-pg .tit-tag {
+    display: table;
+    position: relative;
+    z-index: 2;
+    margin: 0 auto -10px;
+    border-radius: 999px;
+    background: #f89a16;
+    color: #172033;
+    font-weight: 800;
+  }
+
+  .login-reg-pg .login-hero img {
+    width: min(210px, 76%);
+    height: auto;
+    margin-bottom: 20px !important;
+  }
+
+  .login-reg-pg .log h4 {
+    margin-bottom: 20px;
+    color: #172033;
+    font-size: 22px;
+    text-align: center;
+  }
+
+  .login-reg-pg .log div input,
+  .login-reg-pg .log div select {
+    height: 48px;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #f8fafc;
+    border-color: #d8e0ea;
+    box-shadow: none;
+  }
+
+  .login-reg-pg .log div input:focus,
+  .login-reg-pg .log div select:focus {
+    border-color: #1671f8;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(22, 113, 248, 0.12);
+  }
+
+  .login-reg-pg .log div button.btn {
+    min-height: 48px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 800;
+    border: 0;
+    background: linear-gradient(135deg, #0969f7, #2454d8);
+    box-shadow: 0 10px 22px rgba(22, 113, 248, 0.25);
+  }
+
+  .login-reg-pg .log-bot ul {
+    justify-content: center !important;
+  }
+
+  .login-reg-pg .log-bot li {
+    flex: 1 1 130px;
+    text-align: center;
+  }
+
+  .login-reg-pg .log-bot span {
+    color: #2454d8;
+    font-weight: 700;
+    text-decoration: none;
   }
 }
