@@ -15,8 +15,6 @@ import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import {
   dashboardBlogPosts,
   dashboardCoupons,
-  followingUsers,
-  sentReviews,
 } from "../mock/dashboardMockData";
 import { getUnreadNotificationCount } from "../api/notificationsApi";
 import "../styles/dashboardPage.css";
@@ -157,15 +155,6 @@ export default function DashboardPage() {
   );
 
   const listingMetrics = useMemo(() => buildListingMetrics(listingItems), [listingItems]);
-  const activeFollowings = useMemo(
-    () => followingUsers.filter((user) => user.isFollowing).length,
-    [],
-  );
-  const reviewCount = useMemo(
-    () => sentReviews.length + listingItems.reduce((sum, listing) => sum + (listing.totalReviews || listing.reviews?.length || 0), 0),
-    [listingItems],
-  );
-
   const summaryCards = useMemo(
     () => [
       {
@@ -194,15 +183,6 @@ export default function DashboardPage() {
         href: "/dashboard/jobs",
         icon: "/template-17/images/icon/employee.png",
         tone: "slate",
-      },
-      {
-        eyebrow: "Store",
-        title: "Products",
-        count: formatDashboardCount(listingMetrics.products),
-        description: "Manage product posts",
-        href: "/dashboard/products",
-        icon: "/template-17/images/icon/cart.png",
-        tone: "orange",
       },
       {
         eyebrow: "Bookings",
@@ -241,24 +221,6 @@ export default function DashboardPage() {
         tone: "cyan",
       },
       {
-        eyebrow: "Network",
-        title: "Followings",
-        count: formatDashboardCount(activeFollowings),
-        description: "Listings and profiles you follow",
-        href: "/dashboard/followings",
-        icon: "/template-17/images/icon/dbl18.png",
-        tone: "slate",
-      },
-      {
-        eyebrow: "Feedback",
-        title: "Reviews",
-        count: formatDashboardCount(reviewCount),
-        description: "View and manage reviews",
-        href: "/dashboard/review",
-        icon: "/template-17/images/icon/dbl13.png",
-        tone: "green",
-      },
-      {
         eyebrow: "Updates",
         title: "Notifications",
         count: formatDashboardCount(notificationCount),
@@ -277,7 +239,7 @@ export default function DashboardPage() {
         tone: "orange",
       },
     ],
-    [activeFollowings, enquiries.length, eventBookings.length, listingMetrics, listingTotalCount, notificationCount, paidTicketBookingCount, reviewCount, totalTicketPayments]
+    [enquiries.length, eventBookings.length, listingMetrics, listingTotalCount, notificationCount, paidTicketBookingCount, totalTicketPayments]
   );
 
   return (

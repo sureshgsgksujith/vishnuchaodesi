@@ -51,11 +51,6 @@ export const dashboardNavSections: DashboardNavSection[] = [
         icon: "/template-17/images/icon/employee.png",
       },
       {
-        label: "All Products",
-        href: "/dashboard/products",
-        icon: "/template-17/images/icon/cart.png",
-      },
-      {
         label: "Events",
         href: "/dashboard/events",
         icon: "/template-17/images/icon/calendar.png",
@@ -115,21 +110,11 @@ export const dashboardNavSections: DashboardNavSection[] = [
         href: "/create-service-expert-profile",
         icon: "/template-17/images/icon/profile.png",
       },
-      {
-        label: "Job Profile",
-        href: "/create-job-seeker-profile",
-        icon: "/template-17/images/icon/profile.png",
-      },
     ],
   },
   {
     title: "My activities",
     items: [
-      {
-        label: "All Applied Jobs",
-        href: "/dashboard/user-applied-jobs",
-        icon: "/template-17/images/icon/job-apply.png",
-      },
       {
         label: "My Bookings",
         href: "/dashboard/my-service-bookings",
@@ -139,21 +124,6 @@ export const dashboardNavSections: DashboardNavSection[] = [
         label: "Astrology Requests",
         href: "/dashboard/astrology-requests",
         icon: "/template-17/images/icon/expert-book.png",
-      },
-      {
-        label: "Reviews",
-        href: "/dashboard/review",
-        icon: "/template-17/images/icon/dbl13.png",
-      },
-      {
-        label: "Liked Listings",
-        href: "/dashboard/like-listings",
-        icon: "/template-17/images/icon/dbl15.png",
-      },
-      {
-        label: "Followings",
-        href: "/dashboard/followings",
-        icon: "/template-17/images/icon/dbl18.png",
       },
       {
         label: "Notifications",

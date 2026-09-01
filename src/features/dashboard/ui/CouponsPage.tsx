@@ -1,151 +1,116 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
-import DashboardRightRail from "../components/DashboardRightRail";
-import DashboardSectionHeader from "../components/DashboardSectionHeader";
-import DashboardTabs from "../components/DashboardTabs";
-import type { DashboardTabItem } from "../components/DashboardTabs";
-import { couponAccessMembers, dashboardCoupons } from "../mock/dashboardMockData";
-
-const couponTabs: DashboardTabItem[] = [
-  { id: "coupon", label: "All Coupon Details" },
-  { id: "couponacc", label: "Coupon used members" },
-];
+import { getCoupons, type Coupon } from "../../coupons/api/couponsApi";
+import {
+  resolveListingImageUrl,
+  setFallbackListingImage,
+} from "../utils/listingImages";
+import "../styles/listings.css";
 
 export default function CouponsPage() {
-  const [activeTab, setActiveTab] = useState("coupon");
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    getCoupons("", 1, 50)
+      .then((result) => active && setCoupons(result.items || []))
+      .catch(() => active && setCoupons([]))
+      .finally(() => active && setLoading(false));
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
-    <DashboardLayout rightRail={<DashboardRightRail />}>
-      <div className="ud-cen">
+    <DashboardLayout mainContentClassName="ud-no-rhs dashboard-listings-main">
+      <div className="ud-cen dashboard-listings-page">
         <div className="log-bor">&nbsp;</div>
         <span className="udb-inst">Coupons</span>
 
-        <div className="ud-cen-s2">
-          <DashboardSectionHeader
-            title="Coupons"
-            actionLabel="Add new Coupon"
-            actionTo="/add-coupons"
-          />
+        <div className="ud-cen-s2 dashboard-listings-panel">
+          <div className="dashboard-listings-toolbar">
+            <div className="dashboard-listings-title-block">
+              <h2>Coupons &amp; Deals</h2>
+              <span>{coupons.length} active offers published by ChaoDesi</span>
+            </div>
+          </div>
 
-          <DashboardTabs tabs={couponTabs} activeTab={activeTab} onChange={setActiveTab} />
-
-          <div className="tab-content">
-            <div
-              id="coupon"
-              className={`container tab-pane ${activeTab === "coupon" ? "active" : "fade"}`.trim()}
-            >
-              <div className="db-coupons">
-                <ul className="row">
-                  {dashboardCoupons.map((coupon) => (
-                    <li key={coupon.id}>
-                      <div className="db-coup-lhs">
-                        <div className="coup-box">
-                          <div className="coup-box-1 row">
-                            <div className="s1 row">
-                              <div className="lhs">
-                                <img src={coupon.image} alt={coupon.title} loading="lazy" />
-                              </div>
-                              <div className="rhs">
-                                <h4>{coupon.title}</h4>
-                              </div>
-                            </div>
-                            <div className="s2 row">
-                              <div className="lhs">
-                                <span>Expires</span>
-                                <h6>{coupon.expiresAt}</h6>
-                                <Link to="/coupons">Terms &amp; Conditions Apply</Link>
-                              </div>
-                              <div className="rhs">
-                                <Link to="/coupons">
-                                  <span className="get-coup-btn get-coup-act">Get coupon</span>
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
+          <div className="table-responsive">
+            <table className="table bordered dashboard-listings-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Coupon</th>
+                  <th>Category</th>
+                  <th>Expires</th>
+                  <th>Discount</th>
+                  <th>Status</th>
+                  <th>View</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={7}>Loading coupons...</td></tr>
+                ) : coupons.length ? coupons.map((coupon, index) => (
+                  <tr key={coupon.id}>
+                    <td>{index + 1}</td>
+                    <td>
+                      <div className="dashboard-listing-title-cell">
+                        <img
+                          src={resolveListingImageUrl(coupon.imageUrl)}
+                          alt={coupon.title}
+                          onError={setFallbackListingImage}
+                        />
+                        <div>
+                          <strong>{coupon.title}</strong>
+                          <span className="dashboard-listing-module-badge is-coupons">Coupons</span>
+                          <span>{coupon.businessName || "ChaoDesi"}</span>
                         </div>
                       </div>
-
-                      <div className="db-coup-rhs">
-                        <h5>
-                          <b>{coupon.accessCount}</b>
-                          <span>Members access this coupon</span>
-                        </h5>
-                        <ol>
-                          <li>
-                            <b>Start date:</b> {coupon.startDate}
-                          </li>
-                          <li>
-                            <b>Expiry date:</b> {coupon.expiryDate}
-                          </li>
-                          <li>
-                            <b>Coupon code:</b> {coupon.couponCode}
-                          </li>
-                          <li>
-                            <Link to={coupon.editPath}>Edit</Link>
-                            <a
-                              href="#!"
-                              onClick={(event) => event.preventDefault()}
-                            >
-                              Delete
-                            </a>
-                          </li>
-                        </ol>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div
-              id="couponacc"
-              className={`container tab-pane ${activeTab === "couponacc" ? "active" : "fade"}`.trim()}
-            >
-              <table className="responsive-table bordered">
-                <thead>
-                  <tr>
-                    <th>No</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
-                    <th>Coupon name</th>
-                    <th>Profile</th>
-                    <th>Delete</th>
+                    </td>
+                    <td>
+                      <span className="dashboard-listing-module-pill is-coupons">Coupons</span>
+                      <em className="dashboard-listing-category-path">
+                        {coupon.category || "Community deals"}
+                      </em>
+                    </td>
+                    <td>{formatDate(coupon.endDate)}</td>
+                    <td><strong>{coupon.discountText || "Offer"}</strong></td>
+                    <td>
+                      <span className="db-list-ststus dashboard-listing-approved">
+                        {coupon.status || "Active"}
+                      </span>
+                    </td>
+                    <td>
+                      <Link to="/coupons" className="db-list-edit" target="_blank" rel="noreferrer">
+                        View
+                      </Link>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {couponAccessMembers.map((member) => (
-                    <tr key={member.id}>
-                      <td>{member.id}</td>
-                      <td>
-                        <span>{member.dateLabel}</span>
-                      </td>
-                      <td>{member.email}</td>
-                      <td>{member.phone}</td>
-                      <td>{member.couponName}</td>
-                      <td>
-                        <Link to={member.profilePath} target="_blank" className="db-list-edit">
-                          View
-                        </Link>
-                      </td>
-                      <td>
-                        <a
-                          href="#!"
-                          className="db-list-edit"
-                          onClick={(event) => event.preventDefault()}
-                        >
-                          Delete
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                )) : (
+                  <tr><td colSpan={7}>No active coupons found.</td></tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </DashboardLayout>
   );
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "-";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(date);
 }

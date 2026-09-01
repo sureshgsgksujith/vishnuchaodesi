@@ -310,12 +310,6 @@ export default function HomeFooterSection() {
               Community
             </a>
           </li>
-          <li>
-            <span className="btn-ser-need-ani">
-              <img src="/template-17/images/icon/how1.png" alt="Support" />
-              Support
-            </span>
-          </li>
         </ul>
       </div>
     </>

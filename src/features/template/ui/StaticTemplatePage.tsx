@@ -123,7 +123,7 @@ export default function StaticTemplatePage({
       if (!existingStyle) {
         const style = frameDocument.createElement("style");
         style.setAttribute("data-chaodesi-shell-header", "true");
-        style.textContent = ".hom-top{display:none!important;}";
+        style.textContent = ".hom-top{display:none!important;}.btn-ser-need-ani,.ani-quo-form{display:none!important;}";
         frameDocument.head.appendChild(style);
       }
 

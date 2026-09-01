@@ -67,7 +67,6 @@ export default function DashboardLayout({
       </section>
 
       <DashboardFooter
-        onOpenSupport={() => undefined}
         onOpenMobileMenu={openMobileMenu}
       />
     </>

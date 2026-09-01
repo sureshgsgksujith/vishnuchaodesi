@@ -90,8 +90,7 @@ export default function PaymentPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponMessage, setCouponMessage] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-  const [billingForm, setBillingForm] =
-    useState<BillingFormState>(initialBillingState);
+  const [billingForm, setBillingForm] = useState<BillingFormState>(initialBillingState);
   const [eventBookings, setEventBookings] = useState<EventTicketBooking[]>([]);
   const [servicePayments, setServicePayments] = useState<AllServicePosting[]>([]);
   const [yellowPagePayments, setYellowPagePayments] = useState<PlanPayment[]>([]);
@@ -171,6 +170,24 @@ export default function PaymentPage() {
     };
   }, []);
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => event.preventDefault();
+  const handleBillingChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setBillingForm((current) => ({ ...current, [name]: value }));
+  };
+  const applyCoupon = async () => {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) { setCouponMessage("Enter a coupon code."); return; }
+    try {
+      setIsApplyingCoupon(true);
+      const result = await getCoupons(code, 1, 100);
+      const coupon = result.items.find((item) => item.code.trim().toUpperCase() === code);
+      setAppliedCoupon(coupon || null);
+      setCouponMessage(coupon ? `${coupon.code} applied successfully.` : "Coupon is invalid or no longer active.");
+    } catch { setAppliedCoupon(null); setCouponMessage("Unable to validate this coupon right now."); }
+    finally { setIsApplyingCoupon(false); }
+  };
+
   useEffect(() => {
     setPaymentPage(1);
   }, [paymentSearch, eventBookings.length]);
@@ -191,17 +208,6 @@ export default function PaymentPage() {
       if (profileResult.status === "fulfilled") {
         const nextProfile = profileResult.value.profile;
         setProfile(nextProfile);
-        setBillingForm((current) => ({
-          ...current,
-          country: nextProfile.country || current.country,
-          state: nextProfile.state || current.state,
-          city: nextProfile.city || current.city,
-          address: [nextProfile.addressLine1, nextProfile.addressLine2].filter(Boolean).join(", ") || current.address,
-          zipCode: nextProfile.zipCode || current.zipCode,
-          contactName: nextProfile.fullName || current.contactName,
-          contactMobile: nextProfile.mobileNumber || current.contactMobile,
-          contactEmail: nextProfile.email || current.contactEmail,
-        }));
       }
 
       if (planResult.status === "fulfilled") {
@@ -215,42 +221,6 @@ export default function PaymentPage() {
       isMounted = false;
     };
   }, []);
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-  };
-
-  const handleBillingChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = event.target;
-    setBillingForm((current) => ({ ...current, [name]: value }));
-  };
-
-  const applyCoupon = async () => {
-    const code = couponCode.trim().toUpperCase();
-    if (!code) {
-      setCouponMessage("Enter a coupon code.");
-      return;
-    }
-
-    try {
-      setIsApplyingCoupon(true);
-      setCouponMessage("");
-      const result = await getCoupons(code, 1, 100);
-      const coupon = result.items.find((item) => item.code.trim().toUpperCase() === code);
-      if (!coupon) {
-        setAppliedCoupon(null);
-        setCouponMessage("Coupon is invalid or no longer active.");
-        return;
-      }
-      setAppliedCoupon(coupon);
-      setCouponMessage(`${coupon.code} applied successfully.`);
-    } catch {
-      setAppliedCoupon(null);
-      setCouponMessage("Unable to validate this coupon right now.");
-    } finally {
-      setIsApplyingCoupon(false);
-    }
-  };
 
   return (
     <DashboardLayout mainContentClassName="ud-no-rhs dashboard-payment-main">
@@ -292,7 +262,7 @@ export default function PaymentPage() {
               <strong>{remainingDays}</strong>
             </div>
             <div className="dashboard-payment-plan-card is-amount">
-              <span>Checkout Amount</span>
+              <span>Plan Price</span>
               <strong>{checkoutAmount}</strong>
             </div>
             <div className={`dashboard-payment-plan-card is-status ${planStatus.className}`}>

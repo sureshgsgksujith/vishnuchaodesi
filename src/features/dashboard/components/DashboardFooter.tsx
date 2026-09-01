@@ -7,12 +7,12 @@ import {
 } from "../config/dashboardData";
 
 type DashboardFooterProps = {
-  onOpenSupport: () => void;
   onOpenMobileMenu: () => void;
+  /** Kept for compatibility with legacy pages; the duplicate support widget is intentionally removed. */
+  onOpenSupport?: () => void;
 };
 
 export default function DashboardFooter({
-  onOpenSupport,
   onOpenMobileMenu,
 }: DashboardFooterProps) {
   return (
@@ -283,23 +283,6 @@ export default function DashboardFooter({
               <img src="/template-17/images/icon/11.png" alt="Community" />
               Community
             </Link>
-          </li>
-          <li>
-            <span
-              className="btn-ser-need-ani"
-              onClick={onOpenSupport}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onOpenSupport();
-                }
-              }}
-              role="button"
-              tabIndex={0}
-            >
-              <img src="/template-17/images/icon/how1.png" alt="Support" />
-              Support
-            </span>
           </li>
         </ul>
       </div>

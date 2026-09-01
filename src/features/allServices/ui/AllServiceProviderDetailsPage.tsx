@@ -215,7 +215,7 @@ export default function AllServiceProviderDetailsPage() {
                 <li>Provider type <span>{posting.providerType}</span></li>
                 <li>Working mode <span>{posting.workingMode}</span></li>
                 <li>Experience <span>{posting.experienceYears}+ years</span></li>
-                <li>Availability <span>{posting.openDays?.join(", ") || "Mon - Sat"}</span></li>
+                <li>Availability <span>{posting.workingMode?.toLowerCase() === "unavailable" ? "Temporarily unavailable" : (posting.openDays?.join(", ") || "Mon - Sat")}</span></li>
                 <li>Package <span>{posting.packageCode || "Standard"}</span></li>
                 <li>Phone verified <span>{posting.status === "Approved" ? "Yes" : "Pending"}</span></li>
               </ul>

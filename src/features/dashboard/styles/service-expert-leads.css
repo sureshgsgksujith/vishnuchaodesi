@@ -1,0 +1,51 @@
+.service-expert-leads-page .dashboard-listings-panel { margin-top: 18px; }
+.service-expert-leads-header { grid-template-columns: minmax(220px, .8fr) minmax(220px, 1fr); }
+.service-expert-leads-help { color: #64748b; font-size: 12px; line-height: 1.5; align-self: center; }
+.service-expert-leads-filter { grid-column: 1 / -1; display: flex; gap: 10px; align-items: end; border: 1px solid #e0e8f2; border-radius: 8px; background: #fbfdff; padding: 12px; }
+.service-expert-leads-filter label { flex: 1; }
+.service-expert-leads-filter label span, .service-expert-modal label > span { display: block; color: #64748b; font-size: 10px; font-weight: 900; margin-bottom: 6px; text-transform: uppercase; }
+.service-expert-leads-filter input, .service-expert-modal select { width: 100%; min-height: 38px; border: 1px solid #d7e1ee; border-radius: 6px; padding: 0 11px; color: #24304a; background: #fff; }
+.service-expert-availability { border: 1px solid #dfe8f3; border-radius: 8px; background: #f8fbff; margin: 18px 0; padding: 16px; }
+.service-expert-availability h3 { color: #14223a; font-size: 16px; margin: 0; }
+.service-expert-availability p { color: #64748b; font-size: 12px; margin: 5px 0 12px; }
+.service-expert-muted, .service-expert-state { color: #64748b; font-size: 13px; padding: 22px; text-align: center; }
+.service-expert-state.is-error, .service-expert-feedback.is-error { color: #9f1239; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 6px; }
+.service-expert-feedback { color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 13px; font-weight: 700; margin-bottom: 12px; padding: 10px 12px; }
+.service-expert-profile-list { display: grid; gap: 9px; }
+.service-expert-profile { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #e0e8f2; border-radius: 7px; background: #fff; padding: 10px 12px; }
+.service-expert-profile strong, .service-expert-profile span { display: block; }
+.service-expert-profile strong { color: #18233d; font-size: 13px; }
+.service-expert-profile span { color: #64748b; font-size: 11px; margin-top: 3px; }
+.service-expert-profile-status { display: inline-block !important; width: fit-content; border-radius: 999px; background: #fef3c7; color: #92400e !important; font-size: 10px !important; font-style: normal; font-weight: 900; margin-top: 6px !important; padding: 3px 8px; }
+.service-expert-profile-status.is-active { background: #dcfce7; color: #166534 !important; }
+.service-expert-profile-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.service-expert-secondary-button, .service-expert-delete-button { border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #334155; cursor: pointer; font-size: 11px; font-weight: 800; padding: 8px 10px; white-space: nowrap; }
+.service-expert-secondary-button:hover { background: #f1f5f9; }
+.service-expert-delete-button { border-color: #fecaca; color: #b91c1c; }
+.service-expert-delete-button:hover { background: #fff1f2; }
+.service-expert-availability-button { border: 0; border-radius: 6px; background: #0f9f62; color: #fff; cursor: pointer; font-size: 12px; font-weight: 800; padding: 9px 13px; white-space: nowrap; }
+.service-expert-availability-button:hover { background: #087a4a; }
+.service-expert-availability-button:disabled { cursor: wait; opacity: .65; }
+.service-expert-table-wrap { margin-top: 18px; }
+.service-expert-leads-table td { white-space: normal; }
+.service-expert-lead-title { min-width: 190px; }
+.service-expert-lead-title img { width: 44px !important; height: 44px !important; }
+.service-expert-cell-detail { display: block; color: #64748b; font-size: 11px; margin-top: 3px; }
+.service-expert-message { max-width: 260px; color: #475569; line-height: 1.4; }
+.service-expert-leads-table .dashboard-listing-status { display: inline-block; border-radius: 4px; background: #dbeafe; color: #1d4ed8; font-size: 11px; font-weight: 900; padding: 5px 8px; }
+.service-expert-row-actions { display: flex; gap: 6px; }
+.service-expert-row-actions a { border: 1px solid #cbd5e1; border-radius: 5px; color: #2457a6; font-size: 11px; font-weight: 800; padding: 6px 8px; text-decoration: none; }
+.service-expert-modal-backdrop { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; background: rgba(15, 23, 42, .48); padding: 20px; }
+.service-expert-modal { width: min(480px, 100%); border-radius: 10px; background: #fff; box-shadow: 0 24px 70px rgba(15, 23, 42, .28); padding: 24px; }
+.service-expert-modal h2 { color: #0f172a; font-size: 21px; margin: 0; }
+.service-expert-modal p { color: #64748b; font-size: 13px; margin: 6px 0 20px; }
+.service-expert-modal fieldset { border: 0; margin: 18px 0 0; padding: 0; }
+.service-expert-modal legend { color: #334155; font-size: 12px; font-weight: 900; margin-bottom: 8px; }
+.service-expert-days { display: flex; flex-wrap: wrap; gap: 7px; }
+.service-expert-days label { cursor: pointer; }
+.service-expert-days input { position: absolute; opacity: 0; }
+.service-expert-days span { display: inline-block; border: 1px solid #cbd5e1; border-radius: 999px; color: #475569; font-size: 12px; font-weight: 800; padding: 8px 12px; }
+.service-expert-days input:checked + span { border-color: #0f9f62; background: #dcfce7; color: #166534; }
+.service-expert-validation { display: block; color: #be123c; font-size: 11px; margin-top: 8px; }
+.service-expert-modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
+@media (max-width: 760px) { .service-expert-leads-header { grid-template-columns: 1fr; } .service-expert-profile { align-items: flex-start; flex-direction: column; } .service-expert-row-actions { flex-wrap: wrap; } }

@@ -55,6 +55,7 @@ export type AllServicePosting = AllServicePostingPayload & {
   allServiceCategoryName: string;
   allServiceCategorySlug: string;
   status: string;
+  isAvailable: boolean;
   rejectionReason?: string | null;
   approvedAt?: string | null;
   rejectedAt?: string | null;
@@ -79,6 +80,31 @@ export async function createAllServicePosting(payload: AllServicePostingPayload)
 export async function getMyAllServicePostings() {
   const response = await apiClient.get<{ items: AllServicePosting[] }>("/AllServicePostings/mine", { params: { page: 1, pageSize: 100 }, timeout: 10000 });
   return response.data.items || [];
+}
+
+export async function updateMyAllServicePostingAvailability(
+  postingId: number,
+  payload: { openDays: string[]; workingMode?: string },
+) {
+  const response = await apiClient.put<AllServicePosting>(
+    `/AllServicePostings/mine/${postingId}/availability`,
+    payload,
+    { timeout: 10000 },
+  );
+  return response.data;
+}
+
+export async function setMyAllServicePostingActive(postingId: number, isActive: boolean) {
+  const response = await apiClient.put<AllServicePosting>(
+    `/AllServicePostings/mine/${postingId}/active`,
+    { isActive },
+    { timeout: 10000 },
+  );
+  return response.data;
+}
+
+export async function deleteMyAllServicePosting(postingId: number) {
+  await apiClient.delete(`/AllServicePostings/mine/${postingId}`, { timeout: 10000 });
 }
 
 export async function validateAllServiceCoupon(code: string, planCode: string) {

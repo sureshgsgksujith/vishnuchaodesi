@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
-import DashboardRightRail from "../components/DashboardRightRail";
 import {
   deleteListing,
   getListingApiErrorMessage,
@@ -12,6 +11,10 @@ import {
   getEventDateLabel,
   getEventStartDate,
 } from "../../listing/utils/eventListings";
+import {
+  resolveListingImageUrl,
+  setFallbackListingImage,
+} from "../utils/listingImages";
 import "../styles/listings.css";
 
 const PAGE_SIZE = 10;
@@ -119,7 +122,7 @@ export default function EventsPage() {
   }
 
   return (
-    <DashboardLayout rightRail={<DashboardRightRail />}>
+    <DashboardLayout mainContentClassName="ud-no-rhs dashboard-listings-main">
       <div className="ud-cen dashboard-listings-page">
         <div className="log-bor">&nbsp;</div>
         <span className="udb-inst">All Events</span>
@@ -177,6 +180,7 @@ export default function EventsPage() {
                 >
                   <option value="">All Statuses</option>
                   <option value="Pending">Pending</option>
+                  <option value="Waiting for approval">Waiting for approval</option>
                   <option value="Active">Active</option>
                   <option value="Rejected">Rejected</option>
                 </select>
@@ -199,12 +203,14 @@ export default function EventsPage() {
           </div>
 
           <div className="table-responsive">
-            <table className="responsive-table bordered dashboard-listings-table">
+            <table className="table bordered dashboard-listings-table">
               <thead>
                 <tr>
                   <th>No</th>
                   <th>Event Name</th>
+                  <th>Module</th>
                   <th>Event Date</th>
+                  <th>Rating</th>
                   <th>Views</th>
                   <th>Status</th>
                   <th>Edit</th>
@@ -215,17 +221,40 @@ export default function EventsPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8}>Loading events...</td>
+                    <td colSpan={10}>Loading events...</td>
                   </tr>
                 ) : items.length > 0 ? (
                   items.map((eventItem, index) => (
                     <tr key={eventItem.id}>
                       <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
                       <td>
-                        {eventItem.title}
-                        <span>{formatDate(eventItem.createdAt)}</span>
+                        <div className="dashboard-listing-title-cell">
+                          <img
+                            src={resolveListingImageUrl(
+                              eventItem.logoUrl || eventItem.primaryImageUrl || eventItem.imageUrls?.[0],
+                            )}
+                            alt={eventItem.title}
+                            onError={setFallbackListingImage}
+                          />
+                          <div>
+                            <strong>{eventItem.title}</strong>
+                            <span className="dashboard-listing-module-badge is-events">Events</span>
+                            <span>{formatDate(eventItem.createdAt)}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="dashboard-listing-module-pill is-events">Events</span>
+                        <em className="dashboard-listing-category-path">
+                          {[eventItem.categoryName, eventItem.subCategory, eventItem.detailCategory]
+                            .filter(Boolean)
+                            .join(" / ") || "Events"}
+                        </em>
                       </td>
                       <td>{getEventDateLabel(eventItem) || formatDate(getEventStartDate(eventItem)?.toISOString())}</td>
+                      <td>
+                        <span className="db-list-rat">{eventItem.rating ?? 0}</span>
+                      </td>
                       <td>
                         <span className="db-list-rat">{eventItem.views ?? 0}</span>
                       </td>
@@ -267,7 +296,7 @@ export default function EventsPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={8}>No events found.</td>
+                    <td colSpan={10}>No events found.</td>
                   </tr>
                 )}
               </tbody>

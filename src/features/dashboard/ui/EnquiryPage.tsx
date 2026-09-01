@@ -11,12 +11,11 @@ import {
 } from "../utils/listingImages";
 import "../styles/enquiry.css";
 
-type EnquiryTab = "all" | "listing" | "product" | "job" | "blog" | "event";
+type EnquiryTab = "all" | "listing" | "job" | "blog" | "event";
 
 const enquiryTabs: Array<{ key: EnquiryTab; label: string }> = [
   { key: "all", label: "All Leads" },
   { key: "listing", label: "Listing" },
-  { key: "product", label: "Product" },
   { key: "job", label: "Job" },
   { key: "blog", label: "Blog" },
   { key: "event", label: "Events" },
@@ -63,7 +62,7 @@ export default function EnquiryPage() {
         ? enquiries.length
         : enquiries.filter((item) => getLeadTypeKey(item) === tab.key).length;
       return result;
-    }, { all: 0, listing: 0, product: 0, job: 0, blog: 0, event: 0 });
+    }, { all: 0, listing: 0, job: 0, blog: 0, event: 0 });
   }, [enquiries]);
 
   const filteredEnquiries = useMemo(() => {
@@ -235,7 +234,6 @@ function getLeadTypeKey(enquiry: RequirementEnquiry): EnquiryTab {
   if (containsAny(text, ["event", "ticket"])) return "event";
   if (containsAny(text, ["job", "career", "hiring"])) return "job";
   if (containsAny(text, ["blog", "article", "news"])) return "blog";
-  if (containsAny(text, ["product", "electronics", "appliance", "furniture", "fashion", "book", "sports", "vehicle", "sale"])) return "product";
   return "listing";
 }
 

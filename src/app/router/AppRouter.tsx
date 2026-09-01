@@ -12,14 +12,11 @@ const PaymentPage = lazy(() => import("../../features/dashboard/ui/PaymentPage")
 const PlanChangePage = lazy(() => import("../../features/dashboard/ui/PlanChangePage"));
 const PointHistoryPage = lazy(() => import("../../features/dashboard/ui/PointHistoryPage"));
 const NotificationsPage = lazy(() => import("../../features/dashboard/ui/NotificationsPage"));
-const FollowingsPage = lazy(() => import("../../features/dashboard/ui/FollowingsPage"));
-const ReviewPage = lazy(() => import("../../features/dashboard/ui/ReviewPage"));
 const EnquiryPage = lazy(() => import("../../features/dashboard/ui/EnquiryPage"));
 const MyServiceBookingsPage = lazy(() => import("../../features/dashboard/ui/MyServiceBookingsPage"));
 const AstrologyRequestsPage = lazy(() => import("../../features/dashboard/ui/AstrologyRequestsPage"));
 const SettingsPage = lazy(() => import("../../features/dashboard/ui/SettingsPage"));
 const InvoicePage = lazy(() => import("../../features/dashboard/ui/InvoicePage"));
-const UserAppliedJobsPage = lazy(() => import("../../features/dashboard/ui/UserAppliedJobsPage"));
 const EventsPage = lazy(() => import("../../features/dashboard/ui/EventsPage"));
 const BlogPostsPage = lazy(() => import("../../features/dashboard/ui/BlogPostsPage"));
 const CouponsPage = lazy(() => import("../../features/dashboard/ui/CouponsPage"));
@@ -29,6 +26,7 @@ const ListingFormPage = lazy(() => import("../../features/dashboard/ui/ListingFo
 const ListingPreviewPage = lazy(() => import("../../features/dashboard/ui/ListingPreviewPage"));
 const ListingStartPage = lazy(() => import("../../features/dashboard/ui/ListingStartPage"));
 const ServicePartnerPostingPage = lazy(() => import("../../features/dashboard/ui/ServicePartnerPostingPage"));
+const ServiceExpertLeadsPage = lazy(() => import("../../features/dashboard/ui/ServiceExpertLeadsPage"));
 const PricingDetailsPage = lazy(() => import("../../features/pricing/ui/PricingDetailsPage"));
 const AllListingPage = lazy(() => import("../../features/listing/ui/AllListingPage"));
 const ListingDetailPage = lazy(() => import("../../features/listing/ui/ListingDetailPage"));
@@ -201,6 +199,9 @@ export function AppRouter() {
     "/dashboard/listings/new",
     "/dashboard/listings/start",
     "/dashboard/services/new",
+    "/create-service-expert-profile",
+    "/create-job-seeker-profile",
+    "/dashboard/service-expert",
     "/dashboard/listings/:listingId/edit",
     "/dashboard/listings/:listingId/preview",
     "/dashboard/classifieds/step-1",
@@ -293,15 +294,15 @@ export function AppRouter() {
       <Route path="/dashboard/plan-change" element={<ProtectedCustomerRoute><PlanChangePage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/point-history" element={<ProtectedCustomerRoute><PointHistoryPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/notifications" element={<ProtectedCustomerRoute><NotificationsPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/followings" element={<ProtectedCustomerRoute><FollowingsPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/review" element={<ProtectedCustomerRoute><ReviewPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/followings" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard/review" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard/enquiry" element={<ProtectedCustomerRoute><EnquiryPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/ad-posts" element={<ProtectedCustomerRoute><AllListingsPage defaultModule="classified" lockedModule title="Ads Posts" /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/products" element={<ProtectedCustomerRoute><AllListingsPage defaultModule="products" lockedModule title="Product Details" /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/my-service-bookings" element={<ProtectedCustomerRoute><MyServiceBookingsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/astrology-requests" element={<ProtectedCustomerRoute><AstrologyRequestsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/setting" element={<ProtectedCustomerRoute><SettingsPage /></ProtectedCustomerRoute>} />
-      <Route path="/dashboard/user-applied-jobs" element={<ProtectedCustomerRoute><UserAppliedJobsPage /></ProtectedCustomerRoute>} />
+      <Route path="/dashboard/user-applied-jobs" element={<Navigate to="/dashboard" replace />} />
       <Route path="/dashboard/events" element={<ProtectedCustomerRoute><EventsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/invoice" element={<ProtectedCustomerRoute><InvoicePage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/jobs" element={<ProtectedCustomerRoute><AllListingsPage defaultModule="jobs" lockedModule title="Jobs" /></ProtectedCustomerRoute>} />
@@ -320,6 +321,16 @@ export function AppRouter() {
           </ProtectedCustomerRoute>
         }
       />
+      <Route
+        path="/create-service-expert-profile"
+        element={
+          <ProtectedCustomerRoute>
+            <ServicePartnerPostingPage />
+          </ProtectedCustomerRoute>
+        }
+      />
+      <Route path="/create-job-seeker-profile" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard/service-expert" element={<ProtectedCustomerRoute><ServiceExpertLeadsPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/edit" element={<ProtectedCustomerRoute><ListingFormPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/listings/:listingId/preview" element={<ProtectedCustomerRoute><ListingPreviewPage /></ProtectedCustomerRoute>} />
       <Route path="/dashboard/classifieds/step-1" element={<ProtectedCustomerRoute><ListingFormPage mode="classified" /></ProtectedCustomerRoute>} />
