@@ -25,11 +25,9 @@ function CommunitySection({section}:{section:string}) {
     if(section==="discover"){const x=await discoverCommunityWithFallback(activeCity || undefined);setGroups(x.groups);setEvents(x.events);}
     else if(section==="groups"||section==="feed"){const x=await communityApi.groups({pageSize:100});setGroups(x.items);if(section==="feed"&&x.items[0])setPosts((await communityApi.posts(x.items[0].id)).items);}
     else if(section==="messages"){
-      const [conversationPage,groupPage,me]=await Promise.all([communityApi.conversations(),communityApi.groups({pageSize:100}),enterCommunity()]);setConversations(conversationPage.items);
-      const memberResults=await Promise.allSettled(groupPage.items.filter(group=>group.currentUserRole).map(group=>communityApi.groupMembers(group.id)));
-      const unique=new Map<number,CommunityGroupMember>();
-      memberResults.forEach(result=>{if(result.status==="fulfilled")result.value.items.filter(member=>member.userId!==me.id).forEach(member=>unique.set(member.userId,member))});
-      setContacts([...unique.values()].sort((a,b)=>a.displayName.localeCompare(b.displayName)));
+      const conversationPage=await communityApi.conversations();setConversations(conversationPage.items);
+      if(conversationPage.items[0]&&!selected){setSelected(conversationPage.items[0].id);try{setMessages((await communityApi.messages(conversationPage.items[0].id)).items)}catch{setMessages([])}}
+      try{const groupPage=await communityApi.groups({pageSize:100}),me=await enterCommunity();const memberResults=await Promise.allSettled(groupPage.items.filter(group=>group.currentUserRole).map(group=>communityApi.groupMembers(group.id)));const unique=new Map<number,CommunityGroupMember>();memberResults.forEach(result=>{if(result.status==="fulfilled")result.value.items.filter(member=>member.userId!==me.id).forEach(member=>unique.set(member.userId,member))});setContacts([...unique.values()].sort((a,b)=>a.displayName.localeCompare(b.displayName)))}catch{setContacts([])}
     }
     else if(section==="events")setEvents((await communityApi.events({pageSize:100})).items);
     else if(section==="invitations")setItems((await communityApi.invitations()).items);
