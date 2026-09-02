@@ -17,6 +17,7 @@ export async function getCommunityFeatureFlags() {
 export type Page<T> = { items: T[]; page: number; pageSize: number; totalCount: number };
 export type CursorPage<T> = { items: T[]; nextCursor?: string; hasMore: boolean };
 export type CommunityGroup = { id: number; publicId: string; name: string; slug: string; visibility: string; status: string; description?: string; city?: string; state?: string; country?: string; memberCount: number; ownerUserId: number; currentUserRole?: string };
+export type CommunityGroupMember = { id: number; userId: number; displayName: string; role: string; membershipStatus: string; joinedAtUtc: string };
 export type CommunityPost = { id: number; groupId: number; authorName: string; postType: string; title?: string; body?: string; commentCount: number; reactionCount: number; publishedAtUtc?: string; createdAtUtc: string };
 export type CommunityConversation = { id: number; conversationType: string; status: string; title?: string; groupId?: number; unreadCount: number; lastMessageAtUtc?: string };
 export type CommunityMessage = { id: number; conversationId: number; senderName: string; body?: string; sentAtUtc: string };
@@ -31,6 +32,7 @@ export const communityApi = {
   createGroup: async (body: unknown) => (await apiClient.post<CommunityGroup>("/community/groups", body, mutation())).data,
   joinGroup: async (id: number) => (await apiClient.post(`/community/groups/${id}/join`, {}, mutation())).data,
   leaveGroup: async (id: number) => apiClient.post(`/community/groups/${id}/leave`, {}, mutation()),
+  groupMembers: async (id: number) => (await apiClient.get<Page<CommunityGroupMember>>(`/community/groups/${id}/members`, { params: { pageSize: 100 } })).data,
   posts: async (groupId: number, cursor?: string) => (await apiClient.get<CursorPage<CommunityPost>>(`/community/groups/${groupId}/posts`, { params: { cursor, limit: 30 } })).data,
   createPost: async (body: unknown) => (await apiClient.post<CommunityPost>("/community/posts", body, mutation())).data,
   react: async (id: number, reactionType = "LIKE") => apiClient.put(`/community/posts/${id}/reaction`, { reactionType }),
