@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
-import { communityApi, type CommunityEvent, type CommunityGroup, type CommunityGroupMember, type CommunityPost } from "../api/communityApi";
+import { communityApi, type CommunityConversation, type CommunityEvent, type CommunityGroup, type CommunityGroupMember, type CommunityMessage, type CommunityPost } from "../api/communityApi";
 import "./groupDetail.css";
 
 const memberTabs = ["Home", "Feed", "Chat", "Events", "Members", "About"] as const;
@@ -19,6 +19,8 @@ export default function GroupDetailPage() {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [events, setEvents] = useState<CommunityEvent[]>([]);
   const [members, setMembers] = useState<CommunityGroupMember[]>([]);
+  const [conversations, setConversations] = useState<CommunityConversation[]>([]);
+  const [messages, setMessages] = useState<CommunityMessage[]>([]);
   const [error, setError] = useState("");
   const canManage = group?.currentUserRole === "OWNER" || group?.currentUserRole === "ADMIN";
   const groupName = useMemo(() => group?.name || slug.split("-").filter(Boolean).map(word => word[0]?.toUpperCase() + word.slice(1)).join(" ") || "Community Group", [group, slug]);
@@ -26,8 +28,9 @@ export default function GroupDetailPage() {
   useEffect(() => {
     communityApi.groupBySlug(slug).then(async value => {
       setGroup(value); setMembership(value.currentUserRole ? "active" : "none");
-      const [postPage, memberPage, eventPage] = await Promise.all([communityApi.posts(value.id), communityApi.groupMembers(value.id), communityApi.events({ pageSize: 20 })]);
-      setPosts(postPage.items); setMembers(memberPage.items); setEvents(eventPage.items);
+      const [postPage, memberPage, eventPage, conversationPage] = await Promise.all([communityApi.posts(value.id), communityApi.groupMembers(value.id), communityApi.events({ pageSize: 20 }), communityApi.conversations()]);
+      setPosts(postPage.items); setMembers(memberPage.items); setEvents(eventPage.items); setConversations(conversationPage.items);
+      if (conversationPage.items[0]) setMessages((await communityApi.messages(conversationPage.items[0].id)).items);
     }).catch(() => setError("This group is unavailable or private."));
   }, [slug]);
 
@@ -47,7 +50,7 @@ export default function GroupDetailPage() {
       <div className="group-actions"><button className="group-primary-action" disabled={!group || membership === "pending" || group.currentUserRole === "OWNER"} onClick={changeMembership}>{primaryAction}</button><button className="group-icon-action" aria-label="Share group"><span className="material-icons">ios_share</span></button><div className="group-more-wrap"><button className="group-icon-action" aria-label="More group actions" onClick={() => setShowActions(value => !value)}><span className="material-icons">more_horiz</span></button>{showActions ? <div className="group-action-menu">{secondaryActions.map(action => <button key={action} disabled><span className="material-icons">{actionIcon(action)}</span>{action}</button>)}</div> : null}</div></div>
     </section>
     <nav className="group-tabs" aria-label="Group sections">{visibleTabs.map(tab => <button key={tab} className={activeTab === tab ? "active" : ""} onClick={() => selectTab(tab)}>{tab}</button>)}</nav>
-    <section className="group-tab-content"><div className="group-panel">{renderTab(activeTab, group, posts, events, members)}</div><aside><h3>About this group</h3><p>{group?.description || "Meet neighbours, exchange ideas and take part in local activities."}</p><dl><div><dt><span className="material-icons">location_on</span>Location</dt><dd>{location(group)}</dd></div><div><dt><span className="material-icons">groups</span>Community</dt><dd>{Math.max(group?.memberCount || 0, members.length)} members</dd></div><div><dt><span className="material-icons">translate</span>Language</dt><dd>English, Telugu &amp; Hindi</dd></div></dl><Link className="group-discover-link" to="/community">Discover communities →</Link></aside></section>
+    <section className="group-tab-content"><div className="group-panel">{renderTab(activeTab, group, posts, events, members, conversations, messages)}</div><aside><h3>About this group</h3><p>{group?.description || "Meet neighbours, exchange ideas and take part in local activities."}</p><dl><div><dt><span className="material-icons">location_on</span>Location</dt><dd>{location(group)}</dd></div><div><dt><span className="material-icons">groups</span>Community</dt><dd>{Math.max(group?.memberCount || 0, members.length)} members</dd></div><div><dt><span className="material-icons">translate</span>Language</dt><dd>English, Telugu &amp; Hindi</dd></div></dl><Link className="group-discover-link" to="/community">Discover communities →</Link></aside></section>
   </main><HomeFooterSection /></>;
 }
 
@@ -55,11 +58,11 @@ function actionIcon(action: typeof secondaryActions[number]) { return action ===
 function tabIcon(tab: string) { if (tab === "Feed") return "dynamic_feed"; if (tab === "Chat") return "forum"; if (tab === "Events") return "event"; if (tab === "Members") return "groups"; if (adminTabs.includes(tab as typeof adminTabs[number])) return "admin_panel_settings"; return "info"; }
 function titleCase(value: string) { return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase(); }
 function location(group?: CommunityGroup) { return [group?.city, group?.state, group?.country].filter(Boolean).join(", ") || "Online community"; }
-function renderTab(tab: string, group: CommunityGroup | undefined, posts: CommunityPost[], events: CommunityEvent[], members: CommunityGroupMember[]) {
+function renderTab(tab: string, group: CommunityGroup | undefined, posts: CommunityPost[], events: CommunityEvent[], members: CommunityGroupMember[], conversations: CommunityConversation[], messages: CommunityMessage[]) {
   if (tab === "Feed" || tab === "Home") return <><Heading icon="dynamic_feed" title={tab === "Home" ? "Latest community updates" : "Community feed"} count={`${posts.length} posts`} />{posts.length ? posts.slice(0, tab === "Home" ? 3 : posts.length).map(post => <article className="group-post" key={post.id}><Avatar name={post.authorName} /><div><strong>{post.authorName || "Community member"}</strong><time>{new Date(post.publishedAtUtc || post.createdAtUtc).toLocaleDateString()}</time><h3>{post.title || "Community update"}</h3><p>{post.body}</p><div className="group-post-stats"><span>♡ {post.reactionCount}</span><span>💬 {post.commentCount}</span></div></div></article>) : <Empty icon="dynamic_feed" title="Welcome to the feed" message="Join the group and be the first to share an update." />}</>;
   if (tab === "Events") return <><Heading icon="event" title="Upcoming near this community" />{events.slice(0, 6).map(event => <article className="group-event" key={event.id}><div className="group-date"><b>{new Date(event.startAtUtc).toLocaleDateString(undefined,{day:"2-digit"})}</b><span>{new Date(event.startAtUtc).toLocaleDateString(undefined,{month:"short"})}</span></div><div><h3>{event.title}</h3><p>{new Date(event.startAtUtc).toLocaleString()} · {event.venueName || event.city || "Online"}</p><span className="group-pill">{titleCase(event.eventMode)}</span></div></article>)}</>;
   if (tab === "Members") return <><Heading icon="groups" title="Community members" count={`${members.length} people`} /><div className="group-member-grid">{members.map(member => <article key={member.id}><Avatar name={member.displayName} /><div><h3>{member.displayName || "Community member"}</h3><p>{titleCase(member.role)}</p></div></article>)}</div></>;
-  if (tab === "Chat") return <Empty icon="forum" title="Continue the conversation" message={group?.currentUserRole ? "Open Messages from the Community page to chat with members and groups." : "Join this community to chat with its members."} link />;
+  if (tab === "Chat") return <><Heading icon="forum" title="Community conversations" count={`${messages.length} messages`} />{messages.length ? <div className="group-chat-list">{messages.slice().reverse().slice(-8).map(message => <article key={message.id}><Avatar name={message.senderName} /><div><strong>{message.senderName}</strong><p>{message.body}</p><time>{new Date(message.sentAtUtc).toLocaleString()}</time></div></article>)}</div> : <Empty icon="forum" title="Start the conversation" message={group?.currentUserRole ? "Say hello from the Messages section." : "Join this community to chat with its members."} />}<Link className="group-chat-button" to="/community/messages">Open all messages ({conversations.length}) →</Link></>;
   if (tab === "About") return <><Heading icon="info" title={`About ${group?.name || "this community"}`} /><div className="group-about-copy"><p>{group?.description}</p><h3>What you’ll find here</h3><ul><li>Local news, recommendations and helpful conversations</li><li>Family-friendly cultural events and meetups</li><li>A respectful space to connect with neighbours</li></ul></div></>;
   return <Empty icon={tabIcon(tab)} title={tab} message="Management tools are ready for authorized owners and administrators." />;
 }
