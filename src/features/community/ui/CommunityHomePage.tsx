@@ -1,8 +1,9 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
+import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
 import { communityApi, discoverCommunityWithFallback, enterCommunity, getCommunityFeatureFlags, type CommunityConversation, type CommunityEvent, type CommunityGroup, type CommunityPost } from "../api/communityApi";
 import "./communityHome.css";
 
@@ -19,7 +20,7 @@ const panelId = (title: string) => title.toLowerCase().replace(/\s+/g, "-");
 
 export default function CommunityHomePage() {
   const { activeCity, activeLocation, activeLocationLabel, currentCity, currentLocation, setHomeSelectedLocation } = useHomeSelectedLocation();
-  const [cityDraft, setCityDraft] = useState<string | null>(null);
+  const [showLocation, setShowLocation] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [groups, setGroups] = useState<CommunityGroup[]>([]);
@@ -30,7 +31,6 @@ export default function CommunityHomePage() {
   const [notifications, setNotifications] = useState<Record<string, unknown>[]>([]);
   const [loadError, setLoadError] = useState("");
   const [isShowingAllCities, setIsShowingAllCities] = useState(false);
-  const city = cityDraft ?? activeCity;
   const visiblePanels = panels.filter(panel => flags[panel.feature] === true);
 
   useEffect(() => {
@@ -65,12 +65,6 @@ export default function CommunityHomePage() {
     return () => { active = false; };
   }, [activeCity, activeLocation.countryName, activeLocation.stateName, isReady]);
 
-  function saveLocation(event: FormEvent) {
-    event.preventDefault();
-    setHomeSelectedLocation({ ...activeLocation, cityName: city.trim() });
-    setCityDraft(null);
-  }
-
   return <>
     <UserHomeHeader hideAddAction />
     <main className="community-home">
@@ -81,19 +75,20 @@ export default function CommunityHomePage() {
           <p>Find people, conversations and celebrations that feel close to home.</p>
           <div className="community-hero-stats"><span><b>{groups.length}</b> communities</span><span><b>{posts.length}</b> updates</span><span><b>{events.length}</b> events</span></div>
         </div>
-        <form className="community-location" onSubmit={saveLocation}>
+        <div className="community-location">
           <label htmlFor="community-city">Your community location</label>
           <div>
             <span className="material-icons" aria-hidden="true">location_on</span>
             <input id="community-city" value={activeLocationLabel} readOnly aria-label="Location selected at the top of the page" />
-            <button type="submit">Apply</button>
+            <button type="button" onClick={()=>setShowLocation(true)}>Change</button>
           </div>
-          <button type="button" className="community-near-me" onClick={() => { setCityDraft(null); setHomeSelectedLocation({cityName:currentCity,stateName:currentLocation.state||"",countryName:currentLocation.country||""}); }} disabled={!currentCity}>
+          <button type="button" className="community-near-me" onClick={() => setHomeSelectedLocation({cityName:currentCity,stateName:currentLocation.state||"",countryName:currentLocation.country||""})} disabled={!currentCity}>
             <span className="material-icons" aria-hidden="true">my_location</span> Near me
           </button>
           <small>{activeLocationLabel ? `Using top location: ${activeLocationLabel}` : "Choose country, state and city from the top location selector."}</small>
-        </form>
+        </div>
       </section>
+      {showLocation?<CommunityLocationModal initial={activeLocation} close={()=>setShowLocation(false)} apply={location=>{setHomeSelectedLocation(location);setShowLocation(false)}}/>:null}
 
       <nav className="community-quick-nav" aria-label="Community sections">
         {visiblePanels.map((panel) => (
@@ -118,6 +113,8 @@ export default function CommunityHomePage() {
     <HomeFooterSection />
   </>;
 }
+
+function CommunityLocationModal({initial,close,apply}:{initial:{countryName?:string;stateName?:string;cityName?:string};close:()=>void;apply:(location:{countryName:string;stateName:string;cityName:string})=>void}){const [countries,setCountries]=useState<CountryOption[]>([]),[states,setStates]=useState<StateOption[]>([]),[cities,setCities]=useState<CityOption[]>([]),[country,setCountry]=useState<CountryOption>(),[state,setState]=useState<StateOption>(),[city,setCity]=useState<CityOption>(),[loading,setLoading]=useState(true);useEffect(()=>{let active=true;void(async()=>{const countryRows=await getLocationCountries();if(!active)return;setCountries(countryRows);const selectedCountry=countryRows.find(item=>item.name.toLowerCase()===initial.countryName?.toLowerCase());if(!selectedCountry)return;setCountry(selectedCountry);const stateRows=await getLocationStates(selectedCountry.id);if(!active)return;setStates(stateRows);const selectedState=stateRows.find(item=>item.name.toLowerCase()===initial.stateName?.toLowerCase()||item.code.toLowerCase()===initial.stateName?.toLowerCase());if(!selectedState)return;setState(selectedState);const cityRows=await getLocationCities(selectedState.id);if(!active)return;setCities(cityRows);setCity(cityRows.find(item=>item.name.toLowerCase()===initial.cityName?.toLowerCase()))})().finally(()=>active&&setLoading(false));return()=>{active=false}},[initial.cityName,initial.countryName,initial.stateName]);return <div className="community-location-modal" role="dialog" aria-modal="true" aria-labelledby="community-location-title" onMouseDown={event=>{if(event.target===event.currentTarget)close()}}><section><header><div><span className="material-icons">location_on</span><div><small>PERSONALIZE YOUR COMMUNITY</small><h2 id="community-location-title">Change your location</h2></div></div><button aria-label="Close location selector" onClick={close}>×</button></header><p>Choose your country, state and city. This location will be used across Community, Classifieds, Yellow Pages and Local Services.</p><div className="community-location-selects"><label>Country<select value={country?.id||""} disabled={loading} onChange={async event=>{const next=countries.find(item=>item.id===Number(event.target.value));setCountry(next);setState(undefined);setCity(undefined);setCities([]);setStates(next?await getLocationStates(next.id):[])}}><option value="">Select country</option>{countries.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label>State / Province<select value={state?.id||""} disabled={!country} onChange={async event=>{const next=states.find(item=>item.id===Number(event.target.value));setState(next);setCity(undefined);setCities(next?await getLocationCities(next.id):[])}}><option value="">Select state / province</option>{states.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label>City<select value={city?.id||""} disabled={!state} onChange={event=>setCity(cities.find(item=>item.id===Number(event.target.value)))}><option value="">Select city</option>{cities.map(item=><option value={item.id} key={item.id}>{item.name}</option>)}</select></label></div><footer><button className="secondary" onClick={close}>Cancel</button><button disabled={!country||!state||!city} onClick={()=>country&&state&&city&&apply({countryName:country.name,stateName:state.name,cityName:city.name})}>Apply location</button></footer></section></div>}
 
 function PanelPreview({ title, text, icon, groups, events, posts, conversations, invitations, notifications }: { title: string; text: string; icon: string; groups: CommunityGroup[]; events: CommunityEvent[]; posts: CommunityPost[]; conversations: CommunityConversation[]; invitations: Record<string, unknown>[]; notifications: Record<string, unknown>[] }) {
   if (title === "Community Feed" && posts.length) {
