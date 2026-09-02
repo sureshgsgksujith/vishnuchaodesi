@@ -110,10 +110,14 @@ function PanelPreview({ title, text, icon, groups, events, posts }: { title: str
   }
   if (title === "Recommended Groups" || title === "Trending Near You") {
     const preview = groups.slice(0, title === "Trending Near You" ? 2 : 3);
-    if (preview.length) return <div className="community-preview-list">{preview.map(group => <Link key={group.id} to={`/community/groups/${group.slug}`}><strong>{group.name}</strong><small>{group.memberCount} members{group.city ? ` · ${group.city}` : ""}</small></Link>)}</div>;
+    if (preview.length) return <div className="community-preview-list">{preview.map(group => <Link key={group.id} to={`/community/groups/${group.slug || toGroupSlug(group.name)}`}><strong>{group.name}</strong><small>{group.memberCount} members{group.city ? ` · ${group.city}` : ""}</small></Link>)}</div>;
   }
   if (title === "Upcoming Events" && events.length) {
     return <div className="community-preview-list">{events.slice(0, 3).map(event => <Link key={event.id} to="/community/events"><strong>{event.title}</strong><small>{new Date(event.startAtUtc).toLocaleDateString()} · {event.city || event.venueName || "Online"}</small></Link>)}</div>;
   }
   return <div className="community-empty"><span className="material-icons">{icon}</span><p>{text}</p></div>;
+}
+
+function toGroupSlug(name: string) {
+  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
