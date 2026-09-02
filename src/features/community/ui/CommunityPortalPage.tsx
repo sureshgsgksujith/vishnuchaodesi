@@ -44,7 +44,7 @@ function CommunitySection({section}:{section:string}) {
   if(busy)return <div className="community-state">Loading…</div>;
   return <section className="community-workspace">{error&&<p className="community-error">{error}</p>}
     {section==="discover"&&<><h2>Recommended groups</h2><GroupCards groups={groups} reload={reload}/><h2>Upcoming near you</h2><EventCards events={events}/></>}
-    {section==="groups"&&<GroupsView groups={groups} reload={reload}/>} 
+    {section==="groups"&&<GroupsView groups={groups} reload={reload}/>}
     {section==="feed"&&<><GroupPicker groups={groups} onPick={async id=>setPosts((await communityApi.posts(id)).items)}/><CreatePost groups={groups} done={reload}/><PostCards posts={posts}/></>}
     {section==="messages"&&<div className="community-messages"><aside><StartDirect contacts={contacts} done={reload}/>{conversations.map(c=><button key={c.id} onClick={async()=>{setSelected(c.id);setMessages((await communityApi.messages(c.id)).items)}}>{c.title||c.conversationType}<small>{c.unreadCount} unread</small></button>)}</aside><div>{selected?<><div className="message-list">{messages.map(m=><p key={m.id}><strong>{m.senderName}</strong>{m.body}<small>{new Date(m.sentAtUtc).toLocaleString()}</small></p>)}</div><SendMessage id={selected} done={async()=>setMessages((await communityApi.messages(selected)).items)}/></>:<div className="community-state">Select a conversation</div>}</div></div>}
     {section==="events"&&<><CreateEvent done={reload}/><EventCards events={events} register/></>}
