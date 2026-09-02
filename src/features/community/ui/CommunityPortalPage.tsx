@@ -26,7 +26,10 @@ function CommunitySection({section}:{section:string}) {
     else if(section==="groups"||section==="feed"){const x=await communityApi.groups({pageSize:100});setGroups(x.items);if(section==="feed"&&x.items[0])setPosts((await communityApi.posts(x.items[0].id)).items);}
     else if(section==="messages"){
       const [conversationPage,groupPage,me]=await Promise.all([communityApi.conversations(),communityApi.groups({pageSize:100}),enterCommunity()]);setConversations(conversationPage.items);
-      const memberPages=await Promise.all(groupPage.items.filter(group=>group.currentUserRole).map(group=>communityApi.groupMembers(group.id)));const unique=new Map<number,CommunityGroupMember>();memberPages.flatMap(page=>page.items).filter(member=>member.userId!==me.id).forEach(member=>unique.set(member.userId,member));setContacts([...unique.values()].sort((a,b)=>a.displayName.localeCompare(b.displayName)));
+      const memberResults=await Promise.allSettled(groupPage.items.filter(group=>group.currentUserRole).map(group=>communityApi.groupMembers(group.id)));
+      const unique=new Map<number,CommunityGroupMember>();
+      memberResults.forEach(result=>{if(result.status==="fulfilled")result.value.items.filter(member=>member.userId!==me.id).forEach(member=>unique.set(member.userId,member))});
+      setContacts([...unique.values()].sort((a,b)=>a.displayName.localeCompare(b.displayName)));
     }
     else if(section==="events")setEvents((await communityApi.events({pageSize:100})).items);
     else if(section==="invitations")setItems((await communityApi.invitations()).items);
