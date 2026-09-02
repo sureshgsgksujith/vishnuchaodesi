@@ -13,7 +13,36 @@
   grid-template-columns: 1.2fr 0.8fr;
   gap: 34px;
   box-shadow: 0 18px 46px rgba(24, 47, 125, 0.2);
+  position: relative;
+  overflow: hidden;
 }
+.community-hero::after {
+  content: "";
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  right: 27%;
+  top: -230px;
+  border: 42px solid rgba(255,255,255,.07);
+  border-radius: 50%;
+}
+.community-hero > * { position: relative; z-index: 1; }
+.community-hero-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 25px;
+}
+.community-hero-stats span {
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 999px;
+  background: rgba(255,255,255,.1);
+  color: #eef2ff;
+  font-size: 12px;
+  backdrop-filter: blur(6px);
+}
+.community-hero-stats b { color: #fff; font-size: 15px; margin-right: 4px; }
 .community-eyebrow {
   display: inline-block;
   text-transform: uppercase;
@@ -120,6 +149,12 @@
   line-height: 1.25;
   text-align: center;
   white-space: nowrap;
+  transition: transform .2s, box-shadow .2s, border-color .2s;
+}
+.community-quick-nav a:hover {
+  transform: translateY(-2px);
+  border-color: #9db1f1;
+  box-shadow: 0 10px 22px rgba(35,72,188,.12);
 }
 .community-quick-nav-label {
   min-width: 0;
@@ -154,6 +189,12 @@
   flex-direction: column;
   box-shadow: 0 8px 28px rgba(28, 43, 76, 0.05);
   scroll-margin-top: 100px;
+  border-top: 4px solid #3157d5;
+  transition: transform .2s, box-shadow .2s;
+}
+.community-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 35px rgba(28, 43, 76, 0.1);
 }
 .community-panel header {
   display: flex;

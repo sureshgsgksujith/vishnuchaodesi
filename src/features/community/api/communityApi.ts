@@ -57,6 +57,7 @@ export const communityApi = {
   notifications: async () => (await apiClient.get<CursorPage<Record<string, unknown>>>("/community/notifications", { params: { limit: 50 } })).data,
   readNotification: async (id: number) => apiClient.put(`/community/notifications/${id}/read`),
   createRegistry: async (body: unknown) => (await apiClient.post("/community/gift-registries", body)).data,
+  giftRegistries: async () => (await apiClient.get<Page<Record<string, unknown>>>("/community/gift-registries")).data,
   discover: async (city?: string) => (await apiClient.get<{ groups: CommunityGroup[]; events: CommunityEvent[] }>("/community/discover", { params: { city } })).data,
 };
 

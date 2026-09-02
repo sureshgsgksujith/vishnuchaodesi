@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
-import { communityApi, discoverCommunityWithFallback, enterCommunity, getCommunityFeatureFlags, type CommunityEvent, type CommunityGroup, type CommunityPost } from "../api/communityApi";
+import { communityApi, discoverCommunityWithFallback, enterCommunity, getCommunityFeatureFlags, type CommunityConversation, type CommunityEvent, type CommunityGroup, type CommunityPost } from "../api/communityApi";
 import "./communityHome.css";
 
 const panels = [
@@ -25,6 +25,9 @@ export default function CommunityHomePage() {
   const [groups, setGroups] = useState<CommunityGroup[]>([]);
   const [events, setEvents] = useState<CommunityEvent[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [conversations, setConversations] = useState<CommunityConversation[]>([]);
+  const [invitations, setInvitations] = useState<Record<string, unknown>[]>([]);
+  const [notifications, setNotifications] = useState<Record<string, unknown>[]>([]);
   const [loadError, setLoadError] = useState("");
   const [isShowingAllCities, setIsShowingAllCities] = useState(false);
   const city = cityDraft ?? activeCity;
@@ -41,11 +44,21 @@ export default function CommunityHomePage() {
     let active = true;
     discoverCommunityWithFallback(activeCity || undefined)
       .then(async result => {
+        const [allGroupsResult, conversationsResult, invitationsResult, notificationsResult] = await Promise.allSettled([
+          communityApi.groups({ pageSize: 100 }), communityApi.conversations(), communityApi.invitations(), communityApi.notifications()
+        ]);
+        const allGroups = allGroupsResult.status === "fulfilled" ? allGroupsResult.value.items : [];
+        const mergedGroups = [...result.groups, ...allGroups].filter((group, index, list) => list.findIndex(item => item.id === group.id) === index);
+        const postResults = await Promise.allSettled(mergedGroups.slice(0, 8).map(group => communityApi.posts(group.id)));
+        const allPosts = postResults.flatMap(item => item.status === "fulfilled" ? item.value.items : [])
+          .filter((post, index, list) => list.findIndex(item => item.id === post.id) === index)
+          .sort((a, b) => new Date(b.createdAtUtc).getTime() - new Date(a.createdAtUtc).getTime());
         if (!active) return;
-        setGroups(result.groups); setEvents(result.events); setLoadError(""); setIsShowingAllCities(result.isShowingAllCities);
-        if (result.groups[0]) {
-          try { const feed = await communityApi.posts(result.groups[0].id); if (active) setPosts(feed.items); } catch { if (active) setPosts([]); }
-        }
+        setGroups(mergedGroups); setEvents(result.events); setPosts(allPosts);
+        setConversations(conversationsResult.status === "fulfilled" ? conversationsResult.value.items : []);
+        setInvitations(invitationsResult.status === "fulfilled" ? invitationsResult.value.items : []);
+        setNotifications(notificationsResult.status === "fulfilled" ? notificationsResult.value.items : []);
+        setLoadError(""); setIsShowingAllCities(result.isShowingAllCities);
       })
       .catch(() => { if (active) setLoadError("Community previews could not be loaded. Please try again."); });
     return () => { active = false; };
@@ -65,6 +78,7 @@ export default function CommunityHomePage() {
           <span className="community-eyebrow">ChaoDesi Groups &amp; Communities</span>
           <h1>Connect with your community</h1>
           <p>Find people, conversations and celebrations that feel close to home.</p>
+          <div className="community-hero-stats"><span><b>{groups.length}</b> communities</span><span><b>{posts.length}</b> updates</span><span><b>{events.length}</b> events</span></div>
         </div>
         <form className="community-location" onSubmit={saveLocation}>
           <label htmlFor="community-city">Your community location</label>
@@ -94,7 +108,7 @@ export default function CommunityHomePage() {
       <section className={`community-grid${isReady ? " is-ready" : ""}`} aria-live="polite">
         {visiblePanels.map((panel, index) => <article id={panelId(panel.title)} className={`community-panel community-panel-${index + 1}`} key={panel.title}>
           <header><span className="material-icons">{panel.icon}</span><div><h2>{panel.title}</h2>{index === 1 && activeCity ? <small>Near {activeCity}</small> : null}</div></header>
-          <PanelPreview title={panel.title} text={panel.text} icon={panel.icon} groups={groups} events={events} posts={posts} />
+          <PanelPreview title={panel.title} text={panel.text} icon={panel.icon} groups={groups} events={events} posts={posts} conversations={conversations} invitations={invitations} notifications={notifications} />
           <Link to={panel.href}>{panel.action}<span aria-hidden="true">→</span></Link>
         </article>)}
         {isReady && visiblePanels.length === 0 ? <article className="community-panel"><div className="community-empty"><span className="material-icons">toggle_off</span><h2>Community features are currently disabled</h2><p>A Super Admin can enable individual capabilities when they are ready.</p></div></article> : null}
@@ -104,7 +118,7 @@ export default function CommunityHomePage() {
   </>;
 }
 
-function PanelPreview({ title, text, icon, groups, events, posts }: { title: string; text: string; icon: string; groups: CommunityGroup[]; events: CommunityEvent[]; posts: CommunityPost[] }) {
+function PanelPreview({ title, text, icon, groups, events, posts, conversations, invitations, notifications }: { title: string; text: string; icon: string; groups: CommunityGroup[]; events: CommunityEvent[]; posts: CommunityPost[]; conversations: CommunityConversation[]; invitations: Record<string, unknown>[]; notifications: Record<string, unknown>[] }) {
   if (title === "Community Feed" && posts.length) {
     return <div className="community-preview-list community-preview-feed">{posts.slice(0, 4).map(post => <Link key={post.id} to="/community/feed"><strong>{post.authorName}</strong><span>{post.title || post.body}</span><small>{post.reactionCount} reactions · {post.commentCount} comments</small></Link>)}</div>;
   }
@@ -114,6 +128,15 @@ function PanelPreview({ title, text, icon, groups, events, posts }: { title: str
   }
   if (title === "Upcoming Events" && events.length) {
     return <div className="community-preview-list">{events.slice(0, 3).map(event => <Link key={event.id} to="/community/events"><strong>{event.title}</strong><small>{new Date(event.startAtUtc).toLocaleDateString()} · {event.city || event.venueName || "Online"}</small></Link>)}</div>;
+  }
+  if (title === "Invitations" && invitations.length) {
+    return <div className="community-preview-list">{invitations.slice(0, 3).map((item, index) => <Link key={String(item.id ?? index)} to={`/community/invitations/manage/${String(item.id)}`}><strong>{String(item.title || "Community invitation")}</strong><small>{String(item.invitationType || "CUSTOM").replace(/_/g, " ")} · {String(item.status || "DRAFT")}</small></Link>)}</div>;
+  }
+  if (title === "Messages" && conversations.length) {
+    return <div className="community-preview-list">{conversations.slice(0, 3).map(item => <Link key={item.id} to="/community/messages"><strong>{item.title || "Community member"}</strong><span>{item.status === "REQUESTED" ? "New message request" : "Continue your conversation"}</span><small>{item.unreadCount} unread message{item.unreadCount === 1 ? "" : "s"}</small></Link>)}</div>;
+  }
+  if (title === "Trending Near You" && notifications.length) {
+    return <div className="community-preview-list">{notifications.slice(0, 2).map((item, index) => <Link key={String(item.id ?? index)} to="/community/notifications"><strong>{String(item.title || item.notificationType || "Community update")}</strong><span>{String(item.body || "See what is happening in your community.")}</span></Link>)}</div>;
   }
   return <div className="community-empty"><span className="material-icons">{icon}</span><p>{text}</p></div>;
 }
