@@ -78,6 +78,8 @@ export type PublicAllServicePostingQuery = {
   detailIds?: string;
   subCategory?: string;
   city?: string;
+  state?: string;
+  country?: string;
   page?: number;
   pageSize?: number;
   search?: string;
@@ -94,6 +96,8 @@ export async function getPublicAllServicePostings(query: PublicAllServicePosting
       detailIds: query.detailIds || undefined,
       subCategory: query.subCategory || undefined,
       city: query.city || undefined,
+      state: query.state || undefined,
+      country: query.country || undefined,
       search: query.search || undefined,
       page: query.page || 1,
       pageSize: query.pageSize || 6,

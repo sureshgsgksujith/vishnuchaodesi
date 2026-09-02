@@ -65,7 +65,7 @@ const initialQuoteForm: QuoteFormState = {
 
 export default function AllServicesDetailedPage() {
   const [searchParams] = useSearchParams();
-  const { activeCity, activeLocationLabel } = useHomeSelectedLocation();
+  const { activeCity, activeLocation, activeLocationLabel } = useHomeSelectedLocation();
   const requestedDetailSlug = cleanServiceName(searchParams.get("detail"));
   const requestedCategory = cleanServiceName(searchParams.get("category"));
   const requestedSubCategory = cleanServiceName(searchParams.get("subCategory"));
@@ -171,6 +171,8 @@ export default function AllServicesDetailedPage() {
       let result = await getPublicAllServicePostings({
         ...serviceQuery,
         city: activeCity || undefined,
+        state: activeLocation.stateName || undefined,
+        country: activeLocation.countryName || undefined,
       });
       let scopeMessage = "";
 
@@ -178,6 +180,8 @@ export default function AllServicesDetailedPage() {
         result = await getPublicAllServicePostings({
           ...baseQuery,
           city: activeCity || undefined,
+          state: activeLocation.stateName || undefined,
+          country: activeLocation.countryName || undefined,
         });
         if (result.totalCount > 0) {
           scopeMessage = `No exact ${matched.detail.name} providers are posted yet. Showing related ${matched.category?.name || "service"} providers.`;
@@ -214,6 +218,8 @@ export default function AllServicesDetailedPage() {
     };
   }, [
     activeCity,
+    activeLocation.countryName,
+    activeLocation.stateName,
     matched.category?.id,
     matched.category?.name,
     matched.detail.name,

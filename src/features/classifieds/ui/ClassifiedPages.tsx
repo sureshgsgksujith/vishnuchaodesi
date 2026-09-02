@@ -89,7 +89,7 @@ export function ClassifiedsHomePage() {
   const [heroBannerIndex, setHeroBannerIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const { activeCity, activeLocationLabel } = useHomeSelectedLocation();
+  const { activeCity, activeLocation, activeLocationLabel } = useHomeSelectedLocation();
   const currentCity = activeCity;
   const currentLocationLabel = activeLocationLabel || currentCity;
   const visibleHeroBanners = useMemo(() => getBannersForSlot(heroBanners, "hero"), [heroBanners]);
@@ -118,7 +118,7 @@ export function ClassifiedsHomePage() {
       try {
         setIsLoading(true);
         setErrorMessage("");
-        const listingResult = await getPublicListings({ categoryName: "Classifieds", city: currentCity || undefined, page: 1, pageSize: 12 });
+        const listingResult = await getPublicListings({ categoryName: "Classifieds", country:activeLocation.countryName||undefined,state:activeLocation.stateName||undefined,city: currentCity || undefined, page: 1, pageSize: 12 });
 
         if (!isActive) return;
         setListings(listingResult.items || []);
@@ -138,7 +138,7 @@ export function ClassifiedsHomePage() {
     return () => {
       isActive = false;
     };
-  }, [currentCity]);
+  }, [activeLocation.countryName, activeLocation.stateName, currentCity]);
 
   useEffect(() => {
     let isActive = true;
@@ -351,6 +351,7 @@ function ClassifiedListingBanner({ banners, className, index }: { banners: PageB
 }
 
 export function ClassifiedAdsAllPage() {
+  const { activeLocation } = useHomeSelectedLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [facets, setFacets] = useState<ListingSummary[]>([]);
@@ -364,7 +365,7 @@ export function ClassifiedAdsAllPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const category = searchParams.get("category") || "";
   const detailCategory = searchParams.get("detailCategory") || "";
-  const city = searchParams.get("city") || "";
+  const city = searchParams.get("city") || activeLocation.cityName || "";
   const search = searchParams.get("search") || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
 
@@ -379,6 +380,8 @@ export function ClassifiedAdsAllPage() {
         const result = await getPublicListings({
           categoryName: "Classifieds",
           subCategory: category || undefined,
+          country: activeLocation.countryName || undefined,
+          state: activeLocation.stateName || undefined,
           city: city || undefined,
           search: search || undefined,
           page: shouldClientFilterByClassifiedSubcategory ? 1 : page,
@@ -411,7 +414,7 @@ export function ClassifiedAdsAllPage() {
     return () => {
       isActive = false;
     };
-  }, [category, city, detailCategory, page, search]);
+  }, [activeLocation.countryName, activeLocation.stateName, category, city, detailCategory, page, search]);
 
   useEffect(() => {
     let isActive = true;

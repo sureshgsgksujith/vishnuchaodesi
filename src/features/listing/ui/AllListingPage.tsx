@@ -112,6 +112,8 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
   const rating = searchParams.get("rating") || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const activeCountry = includeAllCountries ? country : selectedLocation.countryName || currentLocation.country || "";
+  const activeState = state || (!includeAllCountries ? selectedLocation.stateName || currentLocation.state || "" : "");
+  const activeCity = city || (!includeAllCountries ? selectedLocation.cityName || currentLocation.city || "" : "");
   const isWaitingForCountry =
     !includeAllCountries &&
     !selectedLocation.countryName &&
@@ -253,8 +255,8 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
           subCategory,
           detailCategory,
           country: activeCountry || undefined,
-          state: includeAllCountries ? state || undefined : undefined,
-          city,
+          state: activeState || undefined,
+          city: activeCity || undefined,
           search,
           excludeCategoryName: "Chao TV",
           page,
@@ -282,7 +284,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
     return () => {
       isActive = false;
     };
-  }, [activeCountry, category, categoryName, city, detailCategory, includeAllCountries, isChaoTvCategory, isEventsTicketsCategory, isWaitingForCountry, locationRevision, page, search, state, subCategory]);
+  }, [activeCity, activeCountry, activeState, category, categoryName, detailCategory, includeAllCountries, isChaoTvCategory, isEventsTicketsCategory, isWaitingForCountry, locationRevision, page, search, subCategory]);
 
   useEffect(() => {
     let isActive = true;
