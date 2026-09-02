@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
-import { communityApi, enterCommunity, getCommunityFeatureFlags, type CommunityEvent, type CommunityGroup, type CommunityPost } from "../api/communityApi";
+import { communityApi, discoverCommunityWithFallback, enterCommunity, getCommunityFeatureFlags, type CommunityEvent, type CommunityGroup, type CommunityPost } from "../api/communityApi";
 import "./communityHome.css";
 
 const panels = [
@@ -26,6 +26,7 @@ export default function CommunityHomePage() {
   const [events, setEvents] = useState<CommunityEvent[]>([]);
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [loadError, setLoadError] = useState("");
+  const [isShowingAllCities, setIsShowingAllCities] = useState(false);
   const city = cityDraft ?? activeCity;
   const visiblePanels = panels.filter(panel => flags[panel.feature] === true);
 
@@ -38,10 +39,10 @@ export default function CommunityHomePage() {
   useEffect(() => {
     if (!isReady) return;
     let active = true;
-    communityApi.discover(activeCity || undefined)
+    discoverCommunityWithFallback(activeCity || undefined)
       .then(async result => {
         if (!active) return;
-        setGroups(result.groups); setEvents(result.events); setLoadError("");
+        setGroups(result.groups); setEvents(result.events); setLoadError(""); setIsShowingAllCities(result.isShowingAllCities);
         if (result.groups[0]) {
           try { const feed = await communityApi.posts(result.groups[0].id); if (active) setPosts(feed.items); } catch { if (active) setPosts([]); }
         }
@@ -89,6 +90,7 @@ export default function CommunityHomePage() {
       </nav>
 
       {loadError ? <p className="community-home-error">{loadError}</p> : null}
+      {isShowingAllCities ? <p className="community-home-notice"><span className="material-icons" aria-hidden="true">travel_explore</span>No communities were found near {activeCity}. Showing popular communities from all locations.</p> : null}
       <section className={`community-grid${isReady ? " is-ready" : ""}`} aria-live="polite">
         {visiblePanels.map((panel, index) => <article id={panelId(panel.title)} className={`community-panel community-panel-${index + 1}`} key={panel.title}>
           <header><span className="material-icons">{panel.icon}</span><div><h2>{panel.title}</h2>{index === 1 && activeCity ? <small>Near {activeCity}</small> : null}</div></header>

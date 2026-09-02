@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import HomeFooterSection from "../../home/ui/HomeFooterSection";
-import { communityApi, type CommunityConversation, type CommunityEvent, type CommunityGroup, type CommunityMessage, type CommunityPost } from "../api/communityApi";
+import { communityApi, discoverCommunityWithFallback, type CommunityConversation, type CommunityEvent, type CommunityGroup, type CommunityMessage, type CommunityPost } from "../api/communityApi";
 import { getCustomerToken } from "../../auth/utils/customerSession";
 import { env } from "../../../app/config/env";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
@@ -21,7 +21,7 @@ function CommunitySection({section}:{section:string}) {
   const [conversations,setConversations]=useState<CommunityConversation[]>([]), [messages,setMessages]=useState<CommunityMessage[]>([]), [selected,setSelected]=useState<number>();
   const [items,setItems]=useState<Record<string,unknown>[]>([]), [error,setError]=useState(""), [busy,setBusy]=useState(true);
   const reload=useCallback(async()=>{setBusy(true);setError("");try{
-    if(section==="discover"){const x=await communityApi.discover(activeCity || undefined);setGroups(x.groups);setEvents(x.events);}
+    if(section==="discover"){const x=await discoverCommunityWithFallback(activeCity || undefined);setGroups(x.groups);setEvents(x.events);}
     else if(section==="groups"||section==="feed"){const x=await communityApi.groups({pageSize:100});setGroups(x.items);if(section==="feed"&&x.items[0])setPosts((await communityApi.posts(x.items[0].id)).items);}
     else if(section==="messages")setConversations((await communityApi.conversations()).items);
     else if(section==="events")setEvents((await communityApi.events({pageSize:100})).items);

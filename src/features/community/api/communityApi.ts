@@ -56,3 +56,13 @@ export const communityApi = {
   createRegistry: async (body: unknown) => (await apiClient.post("/community/gift-registries", body)).data,
   discover: async (city?: string) => (await apiClient.get<{ groups: CommunityGroup[]; events: CommunityEvent[] }>("/community/discover", { params: { city } })).data,
 };
+
+export async function discoverCommunityWithFallback(city?: string) {
+  const local = await communityApi.discover(city);
+  if (!city || local.groups.length || local.events.length) {
+    return { ...local, isShowingAllCities: false };
+  }
+
+  const allCities = await communityApi.discover();
+  return { ...allCities, isShowingAllCities: true };
+}

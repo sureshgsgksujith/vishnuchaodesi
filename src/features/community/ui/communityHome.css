@@ -203,6 +203,22 @@
   color: #b42318;
   padding: 12px 16px;
 }
+.community-home-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1e4f9c;
+  padding: 11px 15px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.community-home-notice .material-icons {
+  font-size: 20px;
+}
 .community-preview-list {
   flex: 1;
   display: grid;
