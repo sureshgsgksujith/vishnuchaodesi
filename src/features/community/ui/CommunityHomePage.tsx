@@ -45,11 +45,11 @@ export default function CommunityHomePage() {
     discoverCommunityWithFallback(activeCity || undefined)
       .then(async result => {
         const [allGroupsResult, conversationsResult, invitationsResult, notificationsResult] = await Promise.allSettled([
-          communityApi.groups({ pageSize: 100 }), communityApi.conversations(), communityApi.invitations(), communityApi.notifications()
+          withRetry(() => communityApi.groups({ page: 1, pageSize: 100 })), withRetry(() => communityApi.conversations()), withRetry(() => communityApi.invitations()), withRetry(() => communityApi.notifications())
         ]);
         const allGroups = allGroupsResult.status === "fulfilled" ? allGroupsResult.value.items : [];
         const mergedGroups = [...result.groups, ...allGroups].filter((group, index, list) => list.findIndex(item => item.id === group.id) === index);
-        const postResults = await Promise.allSettled(mergedGroups.slice(0, 8).map(group => communityApi.posts(group.id)));
+        const postResults = await Promise.allSettled(mergedGroups.slice(0, 8).map(group => withRetry(() => communityApi.posts(group.id))));
         const allPosts = postResults.flatMap(item => item.status === "fulfilled" ? item.value.items : [])
           .filter((post, index, list) => list.findIndex(item => item.id === post.id) === index)
           .sort((a, b) => new Date(b.createdAtUtc).getTime() - new Date(a.createdAtUtc).getTime());
@@ -57,7 +57,8 @@ export default function CommunityHomePage() {
         setGroups(mergedGroups); setEvents(result.events); setPosts(allPosts);
         setConversations(conversationsResult.status === "fulfilled" ? conversationsResult.value.items : []);
         setInvitations(invitationsResult.status === "fulfilled" ? invitationsResult.value.items : []);
-        setNotifications(notificationsResult.status === "fulfilled" ? notificationsResult.value.items : []);
+        const loadedNotifications = notificationsResult.status === "fulfilled" ? notificationsResult.value.items : [];
+        setNotifications(loadedNotifications.length ? loadedNotifications : demoNotifications);
         setLoadError(""); setIsShowingAllCities(result.isShowingAllCities);
       })
       .catch(() => { if (active) setLoadError("Community previews could not be loaded. Please try again."); });
@@ -143,4 +144,15 @@ function PanelPreview({ title, text, icon, groups, events, posts, conversations,
 
 function toGroupSlug(name: string) {
   return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+const demoNotifications: Record<string, unknown>[] = [
+  { id: "welcome", title: "Welcome to ChaoDesi Community", body: "Explore local groups, introduce yourself and connect with neighbors." },
+  { id: "event", title: "Community events this week", body: "Three local celebrations are accepting RSVPs now." },
+  { id: "conversation", title: "Keep the conversation going", body: "Visit Messages to connect directly with community members." }
+];
+
+async function withRetry<T>(request: () => Promise<T>): Promise<T> {
+  try { return await request(); }
+  catch { await new Promise(resolve => window.setTimeout(resolve, 350)); return request(); }
 }

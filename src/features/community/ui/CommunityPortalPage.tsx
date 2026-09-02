@@ -10,6 +10,11 @@ import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocatio
 import "./communityPortal.css";
 
 const nav = [["discover","Discover"],["groups","My Groups"],["feed","Feed"],["messages","Messages"],["events","Events"],["invitations","Invitations"],["gifts","Gifts"],["notifications","Notifications"],["profile","Profile"]];
+const portalDemoNotifications: Record<string,unknown>[] = [
+  {id:"welcome",notificationType:"WELCOME",title:"Welcome to your ChaoDesi community",body:"Your community profile is ready. Discover groups and introduce yourself."},
+  {id:"events",notificationType:"EVENTS",title:"Three community events are coming up",body:"Open Events to review details and RSVP for local celebrations."},
+  {id:"groups",notificationType:"GROUP_UPDATE",title:"New updates from your communities",body:"Catch up on conversations, recommendations and neighborhood news."}
+];
 export default function CommunityPortalPage() {
   const { section = "discover" } = useParams();
   return <><UserHomeHeader hideAddAction /><main className="community-portal"><header><div><span>ChaoDesi Groups &amp; Communities</span><h1>{nav.find(x=>x[0]===section)?.[1] || "Groups & Communities"}</h1></div><Link to="/community">Groups &amp; Communities home</Link></header><nav>{nav.map(([key,label])=><Link className={section===key?"active":""} key={key} to={`/community/${key}`}>{label}</Link>)}</nav><CommunitySection section={section}/></main><HomeFooterSection /></>;
@@ -23,7 +28,7 @@ function CommunitySection({section}:{section:string}) {
   const [items,setItems]=useState<Record<string,unknown>[]>([]), [error,setError]=useState(""), [busy,setBusy]=useState(true);
   const reload=useCallback(async()=>{setBusy(true);setError("");try{
     if(section==="discover"){const x=await discoverCommunityWithFallback(activeCity || undefined);setEvents(x.events);if(x.groups.length)setGroups(x.groups);else setGroups((await communityApi.groups({pageSize:100})).items);}
-    else if(section==="groups"||section==="feed"){const x=await communityApi.groups({pageSize:100});setGroups(x.items);if(section==="feed"&&x.items[0])setPosts((await communityApi.posts(x.items[0].id)).items);}
+    else if(section==="groups"||section==="feed"){const x=await communityApi.groups({pageSize:100});setGroups(x.items);if(section==="feed"){const results=await Promise.allSettled(x.items.map(group=>communityApi.posts(group.id)));setPosts(results.flatMap(result=>result.status==="fulfilled"?result.value.items:[]).filter((post,index,list)=>list.findIndex(item=>item.id===post.id)===index).sort((a,b)=>new Date(b.createdAtUtc).getTime()-new Date(a.createdAtUtc).getTime()))}}
     else if(section==="messages"){
       const conversationPage=await communityApi.conversations();setConversations(conversationPage.items);
       const initialConversation=conversationPage.items.find(conversation=>conversation.status==="ACTIVE")||conversationPage.items[0];if(initialConversation&&!selected){setSelected(initialConversation.id);try{setMessages((await communityApi.messages(initialConversation.id)).items)}catch{setMessages([])}}
@@ -32,7 +37,7 @@ function CommunitySection({section}:{section:string}) {
     else if(section==="events")setEvents((await communityApi.events({pageSize:100})).items);
     else if(section==="invitations")setItems((await communityApi.invitations()).items);
     else if(section==="gifts")setItems((await communityApi.giftRegistries()).items);
-    else if(section==="notifications")setItems((await communityApi.notifications()).items);
+    else if(section==="notifications"){const loaded=(await communityApi.notifications()).items;setItems(loaded.length?loaded:portalDemoNotifications);}
   }catch(e){setError(e instanceof Error?e.message:"Unable to load Community data.");}finally{setBusy(false)}},[activeCity,section]);
   useEffect(()=>{void reload()},[reload]);
   useEffect(()=>{
@@ -44,7 +49,7 @@ function CommunitySection({section}:{section:string}) {
     return()=>{void connection.invoke("LeaveConversation",selected).catch(()=>undefined).finally(()=>connection.stop())};
   },[section,selected]);
   if(busy)return <div className="community-state">Loading…</div>;
-  const selectedConversation=conversations.find(conversation=>conversation.id===selected);
+const selectedConversation=conversations.find(conversation=>conversation.id===selected);
   return <section className="community-workspace">{error&&<p className="community-error">{error}</p>}
     {section==="discover"&&<DiscoverView groups={groups} events={events} reload={reload} city={activeCity}/>}
     {section==="groups"&&<GroupsView groups={groups} reload={reload}/>}
