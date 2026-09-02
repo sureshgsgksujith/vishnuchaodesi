@@ -94,6 +94,10 @@ export function useHomeSelectedLocation() {
   const activeCity = selectedCity || currentCity;
   const selectedLocationLabel = getLocationLabel(selectedLocation);
   const activeLocationLabel = selectedLocationLabel || currentLocation.label || currentCity;
+  const hasSelectedLocation = Boolean(selectedLocation.cityName || selectedLocation.stateName || selectedLocation.countryName);
+  const activeLocation: HomeSelectedLocation = hasSelectedLocation
+    ? selectedLocation
+    : { cityName: currentCity, stateName: currentLocation.state || "", countryName: currentLocation.country || "" };
 
   useEffect(() => {
     function syncSelectedLocation(event?: Event) {
@@ -131,6 +135,7 @@ export function useHomeSelectedLocation() {
     selectedLocation,
     selectedCity,
     activeCity,
+    activeLocation,
     activeLocationLabel,
     locationRevision,
     setHomeSelectedCity,

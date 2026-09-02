@@ -18,7 +18,7 @@ const panels = [
 const panelId = (title: string) => title.toLowerCase().replace(/\s+/g, "-");
 
 export default function CommunityHomePage() {
-  const { activeCity, activeLocationLabel, currentCity, setHomeSelectedCity } = useHomeSelectedLocation();
+  const { activeCity, activeLocation, activeLocationLabel, currentCity, currentLocation, setHomeSelectedLocation } = useHomeSelectedLocation();
   const [cityDraft, setCityDraft] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
@@ -42,7 +42,7 @@ export default function CommunityHomePage() {
   useEffect(() => {
     if (!isReady) return;
     let active = true;
-    discoverCommunityWithFallback(activeCity || undefined)
+    discoverCommunityWithFallback({city:activeLocation.cityName||undefined,state:activeLocation.stateName||undefined,country:activeLocation.countryName||undefined})
       .then(async result => {
         const [allGroupsResult, conversationsResult, invitationsResult, notificationsResult] = await Promise.allSettled([
           withRetry(() => communityApi.groups({ page: 1, pageSize: 100 })), withRetry(() => communityApi.conversations()), withRetry(() => communityApi.invitations()), withRetry(() => communityApi.notifications())
@@ -63,11 +63,11 @@ export default function CommunityHomePage() {
       })
       .catch(() => { if (active) setLoadError("Community previews could not be loaded. Please try again."); });
     return () => { active = false; };
-  }, [activeCity, isReady]);
+  }, [activeCity, activeLocation.countryName, activeLocation.stateName, isReady]);
 
   function saveLocation(event: FormEvent) {
     event.preventDefault();
-    setHomeSelectedCity(city.trim());
+    setHomeSelectedLocation({ ...activeLocation, cityName: city.trim() });
     setCityDraft(null);
   }
 
@@ -85,13 +85,13 @@ export default function CommunityHomePage() {
           <label htmlFor="community-city">Your community location</label>
           <div>
             <span className="material-icons" aria-hidden="true">location_on</span>
-            <input id="community-city" value={city} onChange={(event) => setCityDraft(event.target.value)} placeholder="Select a city" />
+            <input id="community-city" value={activeLocationLabel} readOnly aria-label="Location selected at the top of the page" />
             <button type="submit">Apply</button>
           </div>
-          <button type="button" className="community-near-me" onClick={() => { setCityDraft(null); setHomeSelectedCity(currentCity); }} disabled={!currentCity}>
+          <button type="button" className="community-near-me" onClick={() => { setCityDraft(null); setHomeSelectedLocation({cityName:currentCity,stateName:currentLocation.state||"",countryName:currentLocation.country||""}); }} disabled={!currentCity}>
             <span className="material-icons" aria-hidden="true">my_location</span> Near me
           </button>
-          <small>{activeLocationLabel ? `Showing communities near ${activeLocationLabel}` : "Choose a city to personalize your community."}</small>
+          <small>{activeLocationLabel ? `Using top location: ${activeLocationLabel}` : "Choose country, state and city from the top location selector."}</small>
         </form>
       </section>
 

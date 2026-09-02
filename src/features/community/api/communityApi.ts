@@ -21,7 +21,7 @@ export type CommunityGroupMember = { id: number; userId: number; displayName: st
 export type CommunityPost = { id: number; groupId: number; authorName: string; postType: string; title?: string; body?: string; commentCount: number; reactionCount: number; publishedAtUtc?: string; createdAtUtc: string };
 export type CommunityConversation = { id: number; conversationType: string; status: string; title?: string; groupId?: number; unreadCount: number; lastMessageAtUtc?: string; canAccept: boolean };
 export type CommunityMessage = { id: number; conversationId: number; senderName: string; body?: string; sentAtUtc: string };
-export type CommunityEvent = { id: number; title: string; eventMode: string; status: string; city?: string; venueName?: string; startAtUtc: string; endAtUtc: string; capacity?: number; confirmedCount: number; isPaid: boolean; currency: string };
+export type CommunityEvent = { id: number; title: string; eventMode: string; status: string; city?: string; state?: string; country?: string; venueName?: string; startAtUtc: string; endAtUtc: string; capacity?: number; confirmedCount: number; isPaid: boolean; currency: string };
 export type InvitationFunction = { id: number; name: string; startAtUtc: string; endAtUtc: string; timeZone: string; venueName?: string; address?: string; mapUrl?: string; dressCode?: string };
 export type CommunityInvitationDetail = { id: number; invitationType: string; title: string; message?: string; hostDetails?: string; templateCode: string; themeCode: string; visibility: string; status: string; rsvpDeadlineUtc: string; functions: InvitationFunction[] };
 
@@ -58,12 +58,12 @@ export const communityApi = {
   readNotification: async (id: number) => apiClient.put(`/community/notifications/${id}/read`),
   createRegistry: async (body: unknown) => (await apiClient.post("/community/gift-registries", body)).data,
   giftRegistries: async () => (await apiClient.get<Page<Record<string, unknown>>>("/community/gift-registries")).data,
-  discover: async (city?: string) => (await apiClient.get<{ groups: CommunityGroup[]; events: CommunityEvent[] }>("/community/discover", { params: { city } })).data,
+  discover: async (location?: {city?: string;state?: string;country?: string}) => (await apiClient.get<{ groups: CommunityGroup[]; events: CommunityEvent[] }>("/community/discover", { params: location })).data,
 };
 
-export async function discoverCommunityWithFallback(city?: string) {
-  const local = await communityApi.discover(city);
-  if (!city || local.groups.length || local.events.length) {
+export async function discoverCommunityWithFallback(location?: {city?: string;state?: string;country?: string}) {
+  const local = await communityApi.discover(location);
+  if (!location?.city && !location?.state && !location?.country || local.groups.length || local.events.length) {
     return { ...local, isShowingAllCities: false };
   }
 
