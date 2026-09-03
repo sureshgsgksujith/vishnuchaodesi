@@ -35,6 +35,7 @@ export type EnsureLocationResponse = {
 
 type ListResponse<T> = {
   items: T[];
+  totalCount?: number;
 };
 
 let countriesCache: CountryOption[] | null = null;
@@ -79,8 +80,20 @@ export async function getLocationCities(stateId?: number) {
   const response = await apiClient.get<ListResponse<CityOption>>("/location-masters/cities", {
     params: { stateId, page: 1, pageSize: 200 },
   });
-  citiesCache.set(cacheKey, response.data.items);
-  return response.data.items;
+  const totalCount = response.data.totalCount ?? response.data.items.length;
+  const pageCount = Math.ceil(totalCount / 200);
+  const remainingPages = pageCount > 1
+    ? await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) =>
+        apiClient.get<ListResponse<CityOption>>("/location-masters/cities", {
+          params: { stateId, page: index + 2, pageSize: 200 },
+        })))
+    : [];
+  const allCities = [response.data.items, ...remainingPages.map(page => page.data.items)]
+    .flat()
+    .filter((city, index, list) => list.findIndex(item => item.id === city.id) === index)
+    .sort((left, right) => left.name.localeCompare(right.name));
+  citiesCache.set(cacheKey, allCities);
+  return allCities;
 }
 
 export async function ensureLocationMaster(payload: EnsureLocationRequest) {
