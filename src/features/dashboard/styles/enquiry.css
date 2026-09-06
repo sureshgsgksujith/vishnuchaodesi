@@ -243,6 +243,53 @@
   padding: 0 14px;
 }
 
+.customer-enquiry-pipeline {
+  display: grid;
+  grid-template-columns: 160px 210px minmax(220px, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  border-top: 1px solid #e5edf5;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
+.customer-enquiry-pipeline label span {
+  display: block;
+  color: #526174;
+  font-size: 11px;
+  font-weight: 900;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.customer-enquiry-pipeline select,
+.customer-enquiry-pipeline input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid #ced9e6;
+  border-radius: 7px;
+  background: #fff;
+  color: #122033;
+  padding: 8px 10px;
+}
+
+.customer-enquiry-pipeline button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 7px;
+  background: #1266f1;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 900;
+  padding: 0 18px;
+}
+
+.customer-enquiry-pipeline button:disabled { opacity: .65; }
+.customer-enquiry-pipeline small { align-self: center; font-weight: 800; }
+.customer-enquiry-pipeline small.is-success { color: #087344; }
+.customer-enquiry-pipeline small.is-error { color: #b42318; }
+
 .customer-enquiry-state {
   border: 1px dashed #cbd5e1;
   border-radius: 8px;
@@ -278,6 +325,9 @@
   .customer-enquiry-contact-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .customer-enquiry-pipeline { grid-template-columns: 1fr 1fr; }
+  .customer-enquiry-notes { grid-column: 1 / -1; }
 }
 
 @media (max-width: 760px) {
@@ -309,4 +359,7 @@
   .customer-enquiry-contact-grid {
     grid-template-columns: 1fr;
   }
+
+  .customer-enquiry-pipeline { grid-template-columns: 1fr; }
+  .customer-enquiry-notes { grid-column: auto; }
 }

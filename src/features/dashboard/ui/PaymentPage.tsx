@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
   getEventTicketApiErrorMessage,
@@ -8,7 +8,7 @@ import {
   type EventTicketBooking,
 } from "../api/eventTicketsApi";
 import { getMyProfile, type UserProfileFormValues } from "../api/profileApi";
-import { getMyPlanPayments, getMyPlanUsage, type PlanPayment, type PlanUsage } from "../../pricing/api/pricingApi";
+import { getMyPlanPayments, getMyPlanUsage, selectPricingPlan, type PlanPayment, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import { getCoupons, type Coupon } from "../../coupons/api/couponsApi";
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
@@ -83,6 +83,10 @@ const initialBillingState: BillingFormState = {
 const PAYMENT_PAGE_SIZE = 5;
 
 export default function PaymentPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const checkoutState = location.state as { checkoutPlan?: PricingPlan; returnTo?: string; pendingListingDraft?: unknown } | null;
+  const checkoutPlan = checkoutState?.checkoutPlan;
   const [selectedGateway, setSelectedGateway] = useState(paymentGateways[0].id);
   const [checkoutStep, setCheckoutStep] = useState(1);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -100,6 +104,8 @@ export default function PaymentPage() {
   const [planUsage, setPlanUsage] = useState<PlanUsage | null>(null);
   const [isLoadingBookings, setIsLoadingBookings] = useState(true);
   const [bookingError, setBookingError] = useState("");
+  const [isProcessingPlan, setIsProcessingPlan] = useState(false);
+  const [checkoutMessage, setCheckoutMessage] = useState("");
   const fullName =
     profile?.fullName ||
     localStorage.getItem("fullName") ||
@@ -128,7 +134,7 @@ export default function PaymentPage() {
     () => paidBookings.reduce((sum, booking) => sum + booking.totalAmount, 0),
     [paidBookings],
   );
-  const activePlan = planUsage?.plan;
+  const activePlan = checkoutPlan || planUsage?.plan;
   const baseCheckoutAmount = activePlan?.price ?? 0;
   const discountAmount = appliedCoupon ? getCouponDiscount(appliedCoupon, baseCheckoutAmount) : 0;
   const payableAmount = Math.max(0, baseCheckoutAmount - discountAmount);
@@ -170,7 +176,33 @@ export default function PaymentPage() {
     };
   }, []);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => event.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!activePlan || !agreedToTerms || isProcessingPlan) return;
+
+    try {
+      setIsProcessingPlan(true);
+      setCheckoutMessage("");
+      await selectPricingPlan(activePlan.code, {
+        paymentReference: `PLAN-${Date.now()}`,
+        paymentProvider: selectedGateway,
+        couponCode: appliedCoupon?.code || undefined,
+      });
+      setCheckoutMessage("Payment completed and plan activated.");
+
+      if (checkoutState?.returnTo) {
+        navigate(checkoutState.returnTo, {
+          state: { pendingListingDraft: checkoutState.pendingListingDraft, pricingConfirmed: true },
+        });
+      } else {
+        navigate("/pricing-details", { replace: true });
+      }
+    } catch {
+      setCheckoutMessage("Unable to complete payment. Please try again.");
+    } finally {
+      setIsProcessingPlan(false);
+    }
+  };
   const handleBillingChange = (event: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setBillingForm((current) => ({ ...current, [name]: value }));
@@ -431,7 +463,8 @@ export default function PaymentPage() {
                 <div className="plan-checkout-coupon"><label htmlFor="plan-coupon">Coupon code</label><div><input id="plan-coupon" value={couponCode} onChange={(event) => { setCouponCode(event.target.value); setCouponMessage(""); }} placeholder="Enter coupon code" /><button type="button" onClick={applyCoupon} disabled={isApplyingCoupon}>{isApplyingCoupon ? "Checking..." : "Apply"}</button></div>{couponMessage ? <p className={appliedCoupon ? "is-success" : "is-error"}>{couponMessage}</p> : null}</div>
                 <div className="plan-checkout-fees"><div><span>Subtotal</span><b>{formatCurrencyAmount(baseCheckoutAmount, billingForm.country)}</b></div>{appliedCoupon ? <div className="is-discount"><span>Coupon discount</span><b>-{formatCurrencyAmount(discountAmount, billingForm.country)}</b></div> : null}<div><span>Transaction Fee</span><b>{formatCurrencyAmount(0, billingForm.country)}</b></div></div>
                 <div className="plan-checkout-total"><span>Amount Payable</span><b>{checkoutAmount}</b></div>
-                <button type="submit" className="plan-checkout-pay-now" disabled={!agreedToTerms || !activePlan}><i className="material-icons">lock</i> Pay Securely</button>
+                <button type="submit" className="plan-checkout-pay-now" disabled={!agreedToTerms || !activePlan || isProcessingPlan}><i className="material-icons">lock</i> {isProcessingPlan ? "Processing..." : "Pay Securely"}</button>
+                {checkoutMessage ? <p className={checkoutMessage.startsWith("Payment completed") ? "is-success" : "is-error"}>{checkoutMessage}</p> : null}
                 <p className="plan-checkout-secure"><i className="material-icons">verified_user</i> 100% secure payment</p>
               </aside>
             </div>

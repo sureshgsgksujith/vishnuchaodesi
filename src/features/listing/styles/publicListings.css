@@ -647,6 +647,26 @@
   z-index: 10000;
 }
 
+.public-business-claim .clim-edit {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.public-claim-modal label {
+  display: block;
+  color: #16233f;
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 12px;
+}
+
+.public-claim-modal label input,
+.public-claim-modal label textarea { margin-top: 6px; }
+.public-claim-eyebrow { color: #2456db; font-size: 12px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.public-claim-status { border-radius: 8px; background: #eef5ff; color: #1746b0; font-weight: 700; margin: 12px 0; padding: 12px; }
+
 .public-quote-modal {
   background: #fff;
   border-top: 6px solid #4c78f0;

@@ -131,6 +131,21 @@ export default function HomePlansSection() {
     [plans, selectedPlanCode]
   );
 
+  function startPlanCheckout(plan: HomePlanView) {
+    if (!isCustomerAuthenticated()) {
+      const returnUrl = `/pricing-details?plan=${encodeURIComponent(plan.code)}`;
+      navigate(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
+      return;
+    }
+
+    if (!plan.apiPlan) {
+      navigate(`/pricing-details?plan=${encodeURIComponent(plan.code)}`);
+      return;
+    }
+
+    navigate("/dashboard/payment", { state: { checkoutPlan: plan.apiPlan } });
+  }
+
   function openPlanPopup(plan: HomePlanView) {
     if (!isCustomerAuthenticated()) {
       const returnUrl = `${location.pathname}${location.search}${location.hash}`;
@@ -228,7 +243,7 @@ export default function HomePlansSection() {
                     </div>
 
                     <div className="c5">
-                      <a href="/login" className="cta1">Get Start</a>
+                      <a href="/dashboard/payment" className="cta1" onClick={(event) => { event.preventDefault(); startPlanCheckout(plan); }}>Get Start</a>
                       <button type="button" className="cta2 home-plan-know-more" onClick={() => openPlanPopup(plan)}>
                         Know more
                       </button>

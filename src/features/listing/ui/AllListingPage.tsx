@@ -74,6 +74,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [locationFallbackMessage, setLocationFallbackMessage] = useState("");
   const [searchDraft, setSearchDraft] = useState("");
   const [pageBanners, setPageBanners] = useState<PageBanner[]>(fallbackListingBanners);
   const [topBannerIndex, setTopBannerIndex] = useState(0);
@@ -248,8 +249,9 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
       try {
         setIsLoading(true);
         setErrorMessage("");
+        setLocationFallbackMessage("");
 
-        const result = await getPublicListings({
+        const listingQuery = {
           category,
           categoryName: category ? undefined : categoryName || undefined,
           subCategory,
@@ -262,12 +264,41 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
           page,
           pageSize: isEventsTicketsCategory ? PAGE_SIZE * 3 : PAGE_SIZE,
           forceRefresh: locationRevision > 0,
-        });
+        };
+        const locationQueries = [listingQuery];
+
+        if (activeCity && activeState) {
+          locationQueries.push({ ...listingQuery, city: undefined });
+        }
+
+        if (activeCountry) {
+          locationQueries.push({ ...listingQuery, state: undefined, city: undefined });
+        }
+
+        const locationResults = await Promise.all(locationQueries.map((query) => getPublicListings(query)));
 
         if (!isActive) return;
 
-        setItems(isEventsTicketsCategory ? filterActiveEventListings(result.items || []).slice(0, PAGE_SIZE) : result.items || []);
-        setTotalCount(result.totalCount || 0);
+        const mergedItems = Array.from(
+          new Map(
+            locationResults
+              .flatMap((locationResult) => locationResult.items || [])
+              .map((item) => [item.id, item] as const),
+          ).values(),
+        );
+        const displayItems = isEventsTicketsCategory
+          ? filterActiveEventListings(mergedItems).slice(0, PAGE_SIZE)
+          : mergedItems.slice(0, PAGE_SIZE);
+        const broadestResult = locationResults[locationResults.length - 1];
+
+        setItems(displayItems);
+        setTotalCount(broadestResult?.totalCount || mergedItems.length);
+
+        if (activeCity && activeState && activeCountry) {
+          setLocationFallbackMessage(
+            `Showing ${activeCity}, ${activeState}, and ${activeCountry} results, with city matches first.`,
+          );
+        }
       } catch (error) {
         if (isActive) {
           setErrorMessage(getListingApiErrorMessage(error));
@@ -655,6 +686,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
 
               {errorMessage ? <div className="alert alert-danger">{errorMessage}</div> : null}
               {isLoading ? <div className="alert alert-info">Loading listings...</div> : null}
+              {!isLoading && locationFallbackMessage ? <div className="alert alert-info">{locationFallbackMessage}</div> : null}
 
               {!isLoading && !sortedItems.length ? (
                 <div className="public-listing-empty">No approved listings found for this selection.</div>

@@ -32,11 +32,23 @@ export type RequirementEnquiry = {
   categoryName?: string | null;
   pageUrl?: string | null;
   isRead: boolean;
+  status: "New" | "Contacted" | "Qualified" | "Won" | "Lost";
+  ownerNotes?: string | null;
+  nextFollowUpAt?: string | null;
+  updatedAt?: string | null;
   createdAt: string;
 };
 
 export async function submitRequirement(payload: RequirementPayload) {
   await apiClient.post("/Requirements", payload);
+}
+
+export async function updateRequirementPipeline(
+  id: number,
+  payload: Pick<RequirementEnquiry, "status" | "ownerNotes" | "nextFollowUpAt"> & { isRead?: boolean },
+) {
+  const response = await apiClient.patch<RequirementEnquiry>(`/Requirements/${id}/pipeline`, payload);
+  return response.data;
 }
 
 export type ProviderInterestPayload = {

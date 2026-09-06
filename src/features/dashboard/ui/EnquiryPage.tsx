@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import {
   getMyRequirementEnquiries,
+  updateRequirementPipeline,
   type RequirementEnquiry,
 } from "../../listing/api/requirementsApi";
 import {
@@ -115,6 +116,7 @@ export default function EnquiryPage() {
                   key={enquiry.id}
                   enquiry={enquiry}
                   index={index}
+                  onUpdated={(updated) => setEnquiries((items) => items.map((item) => item.id === updated.id ? updated : item))}
                 />
               ))}
             </div>
@@ -130,10 +132,17 @@ export default function EnquiryPage() {
 function EnquiryCard({
   enquiry,
   index,
+  onUpdated,
 }: {
   enquiry: RequirementEnquiry;
   index: number;
+  onUpdated: (enquiry: RequirementEnquiry) => void;
 }) {
+  const [status, setStatus] = useState(enquiry.status || "New");
+  const [notes, setNotes] = useState(enquiry.ownerNotes || "");
+  const [followUp, setFollowUp] = useState(toLocalDateTime(enquiry.nextFollowUpAt));
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState("");
   const title = enquiry.listingTitle || enquiry.categoryName || "Customer enquiry";
   const location = [enquiry.locality, enquiry.city].filter(Boolean).join(", ");
   const categoryLine = [
@@ -187,9 +196,53 @@ function EnquiryCard({
             <a href={enquiry.pageUrl} target="_blank" rel="noreferrer">Open enquiry page</a>
           ) : null}
         </div>
+
+        <div className="customer-enquiry-pipeline">
+          <label>
+            <span>Lead status</span>
+            <select value={status} onChange={(event) => setStatus(event.target.value as RequirementEnquiry["status"])}>
+              {(["New", "Contacted", "Qualified", "Won", "Lost"] as const).map((value) => <option key={value}>{value}</option>)}
+            </select>
+          </label>
+          <label>
+            <span>Next follow-up</span>
+            <input type="datetime-local" value={followUp} onChange={(event) => setFollowUp(event.target.value)} />
+          </label>
+          <label className="customer-enquiry-notes">
+            <span>Private owner notes</span>
+            <input value={notes} maxLength={2000} placeholder="Add call notes or next action" onChange={(event) => setNotes(event.target.value)} />
+          </label>
+          <button type="button" disabled={isSaving} onClick={async () => {
+            try {
+              setIsSaving(true);
+              setSaveMessage("");
+              const updated = await updateRequirementPipeline(enquiry.id, {
+                status,
+                ownerNotes: notes || null,
+                nextFollowUpAt: followUp ? new Date(followUp).toISOString() : null,
+                isRead: true,
+              });
+              onUpdated(updated);
+              setSaveMessage("Saved");
+            } catch {
+              setSaveMessage("Could not save");
+            } finally {
+              setIsSaving(false);
+            }
+          }}>{isSaving ? "Saving..." : "Save lead"}</button>
+          {saveMessage ? <small className={saveMessage === "Saved" ? "is-success" : "is-error"}>{saveMessage}</small> : null}
+        </div>
       </div>
     </article>
   );
+}
+
+function toLocalDateTime(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
 }
 
 function splitFullName(value?: string | null) {

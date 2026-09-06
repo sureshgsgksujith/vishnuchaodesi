@@ -265,7 +265,7 @@ export type PublicListingQuery = {
 const publicListingCache = new Map<string, { value: ListingListResponse; expiresAt: number }>();
 const publicListingCacheTtlMs = 60_000;
 
-export async function getPublicListings(query: PublicListingQuery = {}) {
+async function fetchPublicListingsOnce(query: PublicListingQuery = {}) {
   const cacheKey = JSON.stringify({
     category: query.category || "",
     categoryName: query.categoryName || "",
@@ -319,6 +319,67 @@ export async function getPublicListings(query: PublicListingQuery = {}) {
   return response.data;
 }
 
+function readSelectedLocationForQuery(query: PublicListingQuery) {
+  if (typeof window === "undefined" || !query.city || (query.state && query.country)) {
+    return query;
+  }
+
+  try {
+    const stored = JSON.parse(window.localStorage.getItem("chaodesi.home.selectedLocation") || "{}") as {
+      cityName?: string;
+      stateName?: string;
+      countryName?: string;
+    };
+
+    if (stored.cityName?.trim().toLowerCase() !== query.city.trim().toLowerCase()) {
+      return query;
+    }
+
+    return {
+      ...query,
+      state: query.state || stored.stateName?.trim() || undefined,
+      country: query.country || stored.countryName?.trim() || undefined,
+    };
+  } catch {
+    return query;
+  }
+}
+
+export async function getPublicListings(query: PublicListingQuery = {}) {
+  const scopedQuery = readSelectedLocationForQuery(query);
+  const hierarchyQueries: PublicListingQuery[] = [scopedQuery];
+
+  if (scopedQuery.city && scopedQuery.state) {
+    hierarchyQueries.push({ ...scopedQuery, city: undefined });
+  }
+
+  if (scopedQuery.country) {
+    hierarchyQueries.push({ ...scopedQuery, state: undefined, city: undefined });
+  }
+
+  const uniqueQueries = Array.from(
+    new Map(hierarchyQueries.map((item) => [JSON.stringify(item), item])).values(),
+  );
+  const results = await Promise.all(uniqueQueries.map(fetchPublicListingsOnce));
+
+  if (results.length === 1) {
+    return results[0];
+  }
+
+  const mergedItems = Array.from(
+    new Map(
+      results
+        .flatMap((result) => result.items || [])
+        .map((item) => [item.id, item] as const),
+    ).values(),
+  );
+  const broadestResult = results[results.length - 1];
+
+  return {
+    ...broadestResult,
+    items: mergedItems.slice(0, scopedQuery.pageSize || 10),
+  };
+}
 export async function createListing(
   payload: UpsertListingPayload,
   files?: ListingUploadFiles

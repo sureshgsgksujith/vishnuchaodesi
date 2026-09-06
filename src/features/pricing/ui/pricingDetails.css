@@ -1,6 +1,6 @@
 .pricing-page {
   min-height: calc(100vh - 90px);
-  padding: 52px 24px 64px;
+  padding: 150px 24px 64px;
   background: #fff;
   color: #0f2437;
 }
@@ -175,7 +175,7 @@
 
 @media (max-width: 640px) {
   .pricing-page {
-    padding: 34px 14px 48px;
+    padding: 124px 14px 48px;
   }
 
   .pricing-hero h1 {

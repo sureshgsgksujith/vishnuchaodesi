@@ -110,7 +110,10 @@ const emptySummary: HomeListingSummary = {
   cities: [],
 };
 
-function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
+function buildQuickLinkHref(
+  item: (typeof quickLinks)[number],
+  location: { cityName?: string; stateName?: string; countryName?: string },
+) {
   if (item.href) {
     return item.href;
   }
@@ -125,9 +128,9 @@ function buildQuickLinkHref(item: (typeof quickLinks)[number], city: string) {
 
   const params = new URLSearchParams({ category: item.category });
 
-  if (city) {
-    params.set("city", city);
-  }
+  if (location.countryName) params.set("country", location.countryName);
+  if (location.stateName) params.set("state", location.stateName);
+  if (location.cityName) params.set("city", location.cityName);
 
   return `/all-listing?${params.toString()}`;
 }
@@ -190,6 +193,7 @@ export default function HomeHeroSection() {
     selectedLocation,
     selectedCity,
     activeCity,
+    activeLocation,
     activeLocationLabel,
     setHomeSelectedLocation,
   } = useHomeSelectedLocation();
@@ -761,7 +765,7 @@ export default function HomeHeroSection() {
                     <img src={item.image} alt={item.title} />
                     <h4>{item.title}</h4>
                     <span className="quick-link-tooltip">{item.title}</span>
-                    <a href={buildQuickLinkHref(item, activeCity)} className="fclick"></a>
+                    <a href={buildQuickLinkHref(item, activeLocation)} className="fclick"></a>
                   </div>
                 </li>
               ))}

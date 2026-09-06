@@ -20,6 +20,7 @@ import { getCurrentCustomerUserId, isCustomerAuthenticated } from "../../auth/ut
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import { getQuoteActionLabel, shouldShowQuoteAction } from "../utils/quoteVisibility";
 import { submitJobApplication, submitRequirement } from "../api/requirementsApi";
+import { submitBusinessClaim } from "../api/businessClaimsApi";
 import { getMyProfile } from "../../dashboard/api/profileApi";
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import "../styles/publicListings.css";
@@ -197,6 +198,10 @@ function ListingDetail({
   const [nearbyServices, setNearbyServices] = useState<NearbyService[]>([]);
   const [isNearbyLoading, setIsNearbyLoading] = useState(false);
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
+  const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
+  const [isClaimSubmitting, setIsClaimSubmitting] = useState(false);
+  const [claimStatus, setClaimStatus] = useState("");
+  const [claimForm, setClaimForm] = useState({ roleAtBusiness: "", businessEmail: "", businessPhone: "", evidenceNotes: "" });
   const [quoteForm, setQuoteForm] = useState({
     name: "",
     email: "",
@@ -949,14 +954,41 @@ function ListingDetail({
                     <div className="list-pg-oth-info">
                       <InfoList rows={companyRows.slice(0, 10)} />
                     </div>
-                    <div className="list-pg-guar" id="claim">
+                    <div className="list-pg-guar public-business-claim" id="claim">
                       <ul>
                         <li>
                           <h4>Claim this business</h4>
-                          <span className="clim-edit">Suggest an edit</span>
+                          {isOwnerViewing ? <span className="clim-edit">You own this listing</span> : (
+                            <button type="button" className="clim-edit" onClick={() => setIsClaimModalOpen(true)}>Verify ownership</button>
+                          )}
                         </li>
                       </ul>
                     </div>
+                    {isClaimModalOpen ? (
+                      <div className="public-quote-modal-backdrop" role="dialog" aria-modal="true" aria-label="Claim this business">
+                        <form className="public-quote-modal public-claim-modal" onSubmit={async (event) => {
+                          event.preventDefault();
+                          try {
+                            setIsClaimSubmitting(true); setClaimStatus("");
+                            await submitBusinessClaim({ listingId: listing.id, ...claimForm });
+                            setClaimStatus("Claim submitted. Our team will verify your details before transferring ownership.");
+                          } catch (error) {
+                            setClaimStatus(getListingApiErrorMessage(error));
+                          } finally { setIsClaimSubmitting(false); }
+                        }}>
+                          <button type="button" className="public-quote-modal-close" aria-label="Close" onClick={() => setIsClaimModalOpen(false)}>×</button>
+                          <span className="public-claim-eyebrow">Business verification</span>
+                          <h2>Claim {listing.title}</h2>
+                          <p>Tell us how you are connected to this business. An administrator reviews every ownership request.</p>
+                          <label>Your role<input required maxLength={100} placeholder="Owner, manager, authorized representative" value={claimForm.roleAtBusiness} onChange={(e) => setClaimForm((x) => ({ ...x, roleAtBusiness: e.target.value }))} /></label>
+                          <label>Business email<input required type="email" maxLength={320} placeholder="you@business.com" value={claimForm.businessEmail} onChange={(e) => setClaimForm((x) => ({ ...x, businessEmail: e.target.value }))} /></label>
+                          <label>Business phone<input required maxLength={40} placeholder="Business contact number" value={claimForm.businessPhone} onChange={(e) => setClaimForm((x) => ({ ...x, businessPhone: e.target.value }))} /></label>
+                          <label>Verification details<textarea required maxLength={2000} placeholder="Website, registration, address or other details our team can verify" value={claimForm.evidenceNotes} onChange={(e) => setClaimForm((x) => ({ ...x, evidenceNotes: e.target.value }))} /></label>
+                          {claimStatus ? <div className="public-claim-status">{claimStatus}</div> : null}
+                          <button type="submit" disabled={isClaimSubmitting || claimStatus.startsWith("Claim submitted")}>{isClaimSubmitting ? "Submitting..." : "Submit ownership claim"}</button>
+                        </form>
+                      </div>
+                    ) : null}
                   </div>
                 </TemplateSection>
 

@@ -93,6 +93,17 @@ export default function PricingDetailsPage() {
       return;
     }
 
+    if (plan.price > 0 && activePlanCode !== plan.code) {
+      navigate("/dashboard/payment", {
+        state: {
+          checkoutPlan: plan,
+          returnTo,
+          pendingListingDraft: pricingState?.pendingListingDraft,
+        },
+      });
+      return;
+    }
+
     const continueToPendingListing = () => {
       if (!returnTo) {
         return false;
