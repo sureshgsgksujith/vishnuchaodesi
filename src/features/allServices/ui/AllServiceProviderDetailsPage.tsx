@@ -26,8 +26,6 @@ function createInitialForm(): EnquiryForm {
   };
 }
 
-const reviewNames = ["Ravi Kumar", "Meena Shah", "Arun Patel"];
-
 export default function AllServiceProviderDetailsPage() {
   const { postingId } = useParams();
   const [searchParams] = useSearchParams();
@@ -75,8 +73,6 @@ export default function AllServiceProviderDetailsPage() {
 
   const serviceNames = useMemo(() => getServiceNames(posting, requestedServiceName), [posting, requestedServiceName]);
   const primaryLocation = useMemo(() => getPrimaryLocation(posting), [posting]);
-  const rating = useMemo(() => getRating(posting?.id || 0), [posting?.id]);
-  const reviewCount = useMemo(() => 48 + ((posting?.id || 0) % 85), [posting?.id]);
   const pricingPackages = useMemo(() => getPricingPackages(posting), [posting]);
 
   async function submitEnquiry(event: FormEvent<HTMLFormElement>) {
@@ -151,11 +147,9 @@ export default function AllServiceProviderDetailsPage() {
         <nav className="service-profile-tabs" aria-label="Service details sections">
           <a href="#overview"><i className="material-icons">person</i> Overview</a>
           <a href="#features"><i className="material-icons">check_circle</i> Features</a>
-          <a href="#pricing"><i className="material-icons">style</i> Pricing</a>
+          {pricingPackages.length ? <a href="#pricing"><i className="material-icons">style</i> Pricing</a> : null}
           <a href="#location"><i className="material-icons">map</i> Location</a>
           <a href="#contact"><i className="material-icons">mail</i> Contact</a>
-          <a href="#reviews"><i className="material-icons">star_half</i> Reviews</a>
-          <a href="#faq"><i className="material-icons">help</i> FAQ</a>
         </nav>
 
         <section className="service-profile-hero">
@@ -177,8 +171,7 @@ export default function AllServiceProviderDetailsPage() {
               <div className="service-profile-meta">
                 <span><i className="material-icons">category</i>{posting.allServiceCategoryName}</span>
                 <span><i className="material-icons">location_on</i>{formatShortLocation(primaryLocation, posting.primaryServiceLocation)}</span>
-                <span><i className="material-icons">star</i>{rating} ({reviewCount} reviews)</span>
-                <span><i className="material-icons">verified_user</i>Verified provider</span>
+                {posting.status === "Approved" ? <span><i className="material-icons">verified_user</i>Verified provider</span> : null}
               </div>
               <div className="service-profile-actions">
                 <a href="#contact">Get a free quote</a>
@@ -200,24 +193,17 @@ export default function AllServiceProviderDetailsPage() {
           <div className="service-profile-main">
             <ServicePanel id="overview" eyebrow="About" title="This Service">
               <p>{posting.description}</p>
-              <p>{posting.businessName} helps customers with {displayServiceName} requests across {formatShortLocation(primaryLocation, posting.primaryServiceLocation)}. The listing is verified and includes direct contact details for faster response.</p>
-              <div className="service-profile-highlights">
-                {["Verified contact", "Flexible scheduling", "Multiple service areas", "Transparent communication", "Community focused"].map((item) => (
-                  <span key={item}><i className="material-icons">check_circle</i>{item}</span>
-                ))}
-              </div>
             </ServicePanel>
 
             <ServicePanel eyebrow="Service" title="Information">
               <ul className="service-profile-info-list">
                 <li>Service category <span>{posting.allServiceCategoryName}</span></li>
                 <li>Primary service <span>{displayServiceName}</span></li>
-                <li>Provider type <span>{posting.providerType}</span></li>
-                <li>Working mode <span>{posting.workingMode}</span></li>
-                <li>Experience <span>{posting.experienceYears}+ years</span></li>
-                <li>Availability <span>{posting.workingMode?.toLowerCase() === "unavailable" ? "Temporarily unavailable" : (posting.openDays?.join(", ") || "Mon - Sat")}</span></li>
-                <li>Package <span>{posting.packageCode || "Standard"}</span></li>
-                <li>Phone verified <span>{posting.status === "Approved" ? "Yes" : "Pending"}</span></li>
+                {posting.providerType ? <li>Provider type <span>{posting.providerType}</span></li> : null}
+                {posting.workingMode ? <li>Working mode <span>{posting.workingMode}</span></li> : null}
+                {posting.experienceYears > 0 ? <li>Experience <span>{posting.experienceYears}+ years</span></li> : null}
+                {posting.openDays?.length ? <li>Availability <span>{posting.openDays.join(", ")}</span></li> : null}
+                {posting.packageCode ? <li>Package <span>{posting.packageCode}</span></li> : null}
               </ul>
             </ServicePanel>
 
@@ -231,25 +217,24 @@ export default function AllServiceProviderDetailsPage() {
                   >
                     <i className="material-icons">done_all</i>
                     <h4>{service}</h4>
-                    <p>Available through this provider.</p>
                   </Link>
                 ))}
               </div>
             </ServicePanel>
 
-            <ServicePanel id="pricing" eyebrow="Pricing" title="Packages">
-              <div className="service-profile-pricing">
-                {pricingPackages.map((item, index) => (
-                  <div className={index === 1 ? "popular" : ""} key={`${item.serviceName}-${index}`}>
-                    {index === 1 ? <span>Popular</span> : null}
-                    <h4>{item.serviceName}</h4>
-                    <b>{item.priceText}</b>
-                    <p>{item.description || "Available through this provider."}</p>
-                    <a href="#contact">Choose plan</a>
-                  </div>
-                ))}
-              </div>
-            </ServicePanel>
+            {pricingPackages.length ? (
+              <ServicePanel id="pricing" eyebrow="Pricing" title="Packages">
+                <div className="service-profile-pricing">
+                  {pricingPackages.map((item, index) => (
+                    <div key={`${item.serviceName}-${index}`}>
+                      <h4>{item.serviceName}</h4>
+                      <b>{item.priceText}</b>
+                      {item.description ? <p>{item.description}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              </ServicePanel>
+            ) : null}
 
             <ServicePanel id="location" eyebrow="Location" title="Service Areas">
               <div className="service-profile-location-box">
@@ -268,38 +253,6 @@ export default function AllServiceProviderDetailsPage() {
               </div>
             </ServicePanel>
 
-            <ServicePanel id="reviews" eyebrow="Reviews" title="Ratings">
-              <div className="service-profile-review-summary">
-                <b>{rating}</b>
-                <span>average based on {reviewCount} reviews</span>
-              </div>
-              <div className="service-profile-reviews">
-                {reviewNames.map((name) => (
-                  <article key={name}>
-                    <strong>{name}</strong>
-                    <span>{"star ".repeat(5).trim()}</span>
-                  <p>{posting.businessName} responded clearly and helped with our {displayServiceName.toLowerCase()} requirement.</p>
-                  </article>
-                ))}
-              </div>
-            </ServicePanel>
-
-            <ServicePanel id="faq" eyebrow="FAQ" title="Questions">
-              <div className="service-profile-faq">
-                <details open>
-                  <summary>How do I contact this provider?</summary>
-                  <p>Use the enquiry form or call the listed phone number. Your request will be sent with the selected service details.</p>
-                </details>
-                <details>
-                  <summary>Are prices fixed?</summary>
-                  <p>Pricing depends on the exact service, schedule and location. Request a quote to confirm pricing.</p>
-                </details>
-                <details>
-                  <summary>Can I request multiple services?</summary>
-                  <p>Yes. Mention all services in the enquiry message and the provider can respond with options.</p>
-                </details>
-              </div>
-            </ServicePanel>
           </div>
 
           <aside className="service-profile-side">
@@ -344,7 +297,7 @@ function getServiceNames(posting: PublicAllServicePosting | null, requestedServi
 }
 
 function getPricingPackages(posting: PublicAllServicePosting | null) {
-  const customPackages = (posting?.pricingPackages || [])
+  return (posting?.pricingPackages || [])
     .map((item) => ({
       serviceName: item.serviceName?.trim() || "",
       priceText: item.priceText?.trim() || "",
@@ -352,15 +305,6 @@ function getPricingPackages(posting: PublicAllServicePosting | null) {
     }))
     .filter((item) => item.serviceName && item.priceText);
 
-  if (customPackages.length) {
-    return customPackages;
-  }
-
-  return [
-    { serviceName: "Basic Enquiry", priceText: "Quote based", description: "Share your requirement and receive provider response." },
-    { serviceName: "Priority Consultation", priceText: "$49+", description: "Faster scheduling for time-sensitive requests." },
-    { serviceName: "Complete Service", priceText: "$119+", description: "Detailed assistance based on selected service needs." },
-  ];
 }
 
 function getPrimaryLocation(posting: PublicAllServicePosting | null) {
@@ -386,10 +330,6 @@ function buildServiceDetailHref(serviceName: string, categoryName: string) {
 
 function getProviderInitial(name: string) {
   return name.trim().charAt(0).toUpperCase() || "S";
-}
-
-function getRating(id: number) {
-  return (4.3 + ((id % 7) / 10)).toFixed(1);
 }
 
 function cleanQueryText(value: string | null) {

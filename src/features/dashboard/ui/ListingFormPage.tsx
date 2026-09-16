@@ -15,6 +15,7 @@ import { resolveListingImageUrl } from "../utils/listingImages";
 import { getPostingFieldValidationError, getPostingInputKind, sanitizePostingFieldValue } from "../utils/postingFieldValidation";
 import { formatCurrencyAmount, labelWithCountryCurrency } from "../../../shared/utils/currency";
 import PhoneNumberInput, { getPhoneNumberValidationError } from "../../../shared/components/PhoneNumberInput";
+import PaymentProcessingOverlay from "../../../shared/components/PaymentProcessingOverlay";
 import { fallbackListingCategoryTree, supportedListingCategoryNames } from "../config/listingCategoryTree";
 import { getVehicleBrandOptions, getVehicleModelOptions, vehicleBrandOptions, vehicleSubCategoryOptions } from "../config/vehicleBrandModelData";
 import "../styles/listings.css";
@@ -10388,6 +10389,7 @@ function PlansSelectionModal({
 
   return (
     <div className="listing-plan-modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <PaymentProcessingOverlay visible={Boolean(checkoutPlan && selectingPlanCode === checkoutPlan.code)} />
       <div className="listing-plan-modal" role="dialog" aria-modal="true" aria-label="Select listing plan" onMouseDown={(event) => event.stopPropagation()}>
         <div className="listing-plan-modal-head">
           <h3>{checkoutPlan ? "Yellow Pages Payment" : "View Plans"}</h3>

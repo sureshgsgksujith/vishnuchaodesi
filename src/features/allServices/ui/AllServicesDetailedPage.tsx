@@ -64,8 +64,8 @@ const initialQuoteForm: QuoteFormState = {
 };
 
 export default function AllServicesDetailedPage() {
-  const [searchParams] = useSearchParams();
-  const { activeCity, activeLocation, activeLocationLabel } = useHomeSelectedLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { activeCity, activeLocation, activeLocationLabel, currentLocation } = useHomeSelectedLocation();
   const requestedDetailSlug = cleanServiceName(searchParams.get("detail"));
   const requestedCategory = cleanServiceName(searchParams.get("category"));
   const requestedSubCategory = cleanServiceName(searchParams.get("subCategory"));
@@ -99,10 +99,13 @@ export default function AllServicesDetailedPage() {
 
   useEffect(() => {
     let isActive = true;
+    const cachedDirectory = sessionStorage.getItem("chaodesi.allServices.directory");
+    if (cachedDirectory) { try { setCategories(JSON.parse(cachedDirectory)); setLoadMessage(""); } catch { sessionStorage.removeItem("chaodesi.allServices.directory"); } }
     getAllServiceDirectoryTree()
       .then((items) => {
         if (!isActive) return;
         setCategories(items);
+        sessionStorage.setItem("chaodesi.allServices.directory", JSON.stringify(items));
         setLoadMessage("");
       })
       .catch(() => {
@@ -146,10 +149,14 @@ export default function AllServicesDetailedPage() {
     () => selectedServices.map((option) => option.name).join("|"),
     [selectedServices],
   );
+  const selectedServicesLabel = selectedServices.length
+    ? selectedServices.map((option) => option.name).join(" or ")
+    : matched.detail.name;
 
   useEffect(() => {
     let isActive = true;
 
+    if (currentLocation.status === "loading" || currentLocation.status === "idle") { setIsLoadingProviders(true); return () => { isActive = false; }; }
     setIsLoadingProviders(true);
     setProviderLoadError("");
     setProviderScopeMessage("");
@@ -168,7 +175,7 @@ export default function AllServicesDetailedPage() {
     };
 
     (async () => {
-      let result = await getPublicAllServicePostings({
+      const result = await getPublicAllServicePostings({
         ...serviceQuery,
         city: activeCity || undefined,
         state: activeLocation.stateName || undefined,
@@ -176,20 +183,9 @@ export default function AllServicesDetailedPage() {
       });
       let scopeMessage = "";
 
-      if (result.totalCount === 0 && !selectedDetailIds) {
-        result = await getPublicAllServicePostings({
-          ...baseQuery,
-          city: activeCity || undefined,
-          state: activeLocation.stateName || undefined,
-          country: activeLocation.countryName || undefined,
-        });
-        if (result.totalCount > 0) {
-          scopeMessage = `No exact ${matched.detail.name} providers are posted yet. Showing related ${matched.category?.name || "service"} providers.`;
-        }
-      }
-
-      if (result.totalCount === 0 && activeCity) {
-        scopeMessage = `No ${matched.detail.name} providers are posted in ${cityLabel} yet.`;
+      const hasLocationFilter = Boolean(activeCity || activeLocation.stateName || activeLocation.countryName);
+      if (result.totalCount === 0 && hasLocationFilter) {
+        scopeMessage = `No ${selectedServicesLabel} providers are posted in ${cityLabel} yet.`;
       }
 
       return { result, scopeMessage };
@@ -218,6 +214,7 @@ export default function AllServicesDetailedPage() {
     };
   }, [
     activeCity,
+    currentLocation.status,
     activeLocation.countryName,
     activeLocation.stateName,
     matched.category?.id,
@@ -228,6 +225,7 @@ export default function AllServicesDetailedPage() {
     requestedCategory,
     selectedDetailIds,
     selectedServiceNames,
+    selectedServicesLabel,
   ]);
 
   const visibleOptions = useMemo(() => {
@@ -251,9 +249,22 @@ export default function AllServicesDetailedPage() {
   const providerPageCount = Math.max(1, Math.ceil(providerTotalCount / providerPageSize));
 
   function toggleService(key: string) {
-    setSelectedKeys((current) =>
-      current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
-    );
+    const next = selectedKeys.includes(key) ? selectedKeys.filter((item) => item !== key) : [...selectedKeys, key];
+    setSelectedKeys(next);
+    if (next.length === 1) {
+      const option = matched.options.find((item) => item.key === next[0]);
+      if (option) {
+        const params = new URLSearchParams(searchParams);
+        params.set("service", option.name);
+        params.set("detail", option.slug);
+        params.set("subCategory", option.subCategoryName);
+        if (matched.category) {
+          params.set("category", matched.category.name);
+          params.set("categoryId", String(matched.category.id));
+        }
+        setSearchParams(params, { replace: true });
+      }
+    }
     setFormError("");
     setProviderPage(1);
   }
@@ -464,12 +475,12 @@ export default function AllServicesDetailedPage() {
                   <span>/</span>
                   <Link to="/all-services">All Services</Link>
                   <span>/</span>
-                  <b>{matched.detail.name}</b>
+                  <b>{selectedServicesLabel}</b>
                 </nav>
                 <h1>{pageTitle}</h1>
                 <p>
                   Choose the exact service you need and compare posted{" "}
-                  <strong>{matched.category?.name || matched.detail.name}</strong> providers in <strong>{cityLabel}</strong>.
+                  <strong>{selectedServicesLabel}</strong> providers in <strong>{cityLabel}</strong>.
                 </p>
                 {loadMessage ? <div className="sq-inline-note">{loadMessage}</div> : null}
                 {explorerGroups.length ? (
@@ -488,11 +499,11 @@ export default function AllServicesDetailedPage() {
                     <div className="sq-category-links-react">
                       {explorerOptions.map((option) => (
                         <Link
-                          className={option.key === matched.detail.key ? "active" : ""}
+                          className={selectedKeys.includes(option.key) ? "active" : ""}
                           to={buildDetailHref(option, matched.category)}
                           key={option.key}
                         >
-                          <i className="material-icons" aria-hidden="true">check</i>
+                          {selectedKeys.includes(option.key) ? <i className="material-icons" aria-hidden="true">check</i> : null}
                           <span>{option.name}</span>
                         </Link>
                       ))}
@@ -517,7 +528,7 @@ export default function AllServicesDetailedPage() {
 
                   {!isLoadingProviders && !providerLoadError && !providers.length ? (
                     <div className="sq-provider-status-react">
-                      No posted providers found for {matched.detail.name} in {cityLabel}.
+                      No posted providers found for {selectedServicesLabel} in {cityLabel}.
                     </div>
                   ) : null}
 
@@ -526,6 +537,7 @@ export default function AllServicesDetailedPage() {
                       key={provider.id}
                       provider={provider}
                       fallbackServiceName={matched.detail.name}
+                      preferredServiceNames={selectedServices.map((service) => service.name)}
                       className={index % 2 === 0 ? "drift-right" : "drift-left"}
                     />
                   ))}
@@ -578,7 +590,7 @@ export default function AllServicesDetailedPage() {
           <div className="all-services-container">
             <div className="sq-detail-support-grid">
               <article>
-                <h2>Compare {matched.detail.name} providers near {cityLabel}</h2>
+                <h2>Compare {selectedServicesLabel} providers near {cityLabel}</h2>
                 <p>Submit one request and let matching providers respond with availability, pricing, and next steps.</p>
               </article>
               <article>
@@ -599,7 +611,7 @@ export default function AllServicesDetailedPage() {
           {quoteStep === "details" ? (
             <form className="sq-modal-react" onSubmit={submitQuoteDetails}>
               <button type="button" className="sq-modal-close-react" aria-label="Close" onClick={() => setIsQuoteOpen(false)}>x</button>
-              <h4>Get Quote From {matched.detail.name}</h4>
+              <h4>Get Quote From {selectedServicesLabel}</h4>
               <p>Quickly compare and find the best local deals.</p>
               <label>Name <span>*</span><input type="text" name="name" value={quoteForm.name} onChange={(event) => updateQuoteForm({ name: event.target.value })} placeholder="Your full name" /></label>
               <label>City <span>*</span><input type="text" name="city" value={quoteForm.city} onChange={(event) => updateQuoteForm({ city: event.target.value })} /></label>
@@ -678,14 +690,16 @@ export default function AllServicesDetailedPage() {
 function ProviderCard({
   provider,
   fallbackServiceName,
+  preferredServiceNames,
   className,
 }: {
   provider: PublicAllServicePosting;
   fallbackServiceName: string;
+  preferredServiceNames: string[];
   className: string;
 }) {
   const services = getProviderServiceNames(provider);
-  const primaryService = services[0] || provider.serviceName || fallbackServiceName;
+  const primaryService = services.find((service) => preferredServiceNames.some((selected) => isSameText(service, selected))) || services[0] || provider.serviceName || fallbackServiceName;
   const extraCount = Math.max(services.length - 1, 0);
 
   return (
@@ -883,10 +897,18 @@ function resolveService(
   return { category, subCategory, detail, options };
 }
 
-function findCategory(categories: AllServiceCategoryOption[], request: { service: string; detailSlug: string; category: string; categoryId: number }) {
+function findCategory(categories: AllServiceCategoryOption[], request: { service: string; detailSlug: string; category: string; subCategory: string; categoryId: number }) {
   return (
-    categories.find((category) => request.categoryId > 0 && category.id === request.categoryId) ||
+    // Prefer the descriptive route values. Some legacy links carry a stale
+    // categoryId (often 1) alongside the correct category/subcategory text.
+    // Trusting that ID first opens financial services under Education and then
+    // makes every multi-select request filter the wrong category.
     categories.find((category) => isSameText(category.name, request.category) || category.slug === buildSlug(request.category)) ||
+    categories.find((category) =>
+      category.subCategories.some((subCategory) =>
+        isSameText(subCategory.name, request.subCategory) || subCategory.slug === buildSlug(request.subCategory),
+      ),
+    ) ||
     categories.find((category) =>
       category.subCategories.some((subCategory) =>
         subCategory.detailedCategories.some((detail) =>
@@ -894,6 +916,7 @@ function findCategory(categories: AllServiceCategoryOption[], request: { service
         ),
       ),
     ) ||
+    categories.find((category) => request.categoryId > 0 && category.id === request.categoryId) ||
     null
   );
 }
@@ -976,6 +999,8 @@ function buildSlug(name: string) {
 function getServiceAliases(serviceName: string, detailSlug: string) {
   const slug = detailSlug || buildSlug(serviceName);
   const aliases: Record<string, string[]> = {
+    "accounting-services": ["accountant-services", "accountant services"],
+    "tax-filing": ["tax-preparation-services", "tax preparation services"],
     "sell-property": ["sellers-agents", "sellers agents", "buying-selling-agents", "buying selling agents"],
     "buy-property": ["buyers-agents", "buyers agents", "buying-selling-agents", "buying selling agents"],
     "rent-property": ["rental-agents", "rental agents"],

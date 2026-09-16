@@ -28750,36 +28750,8 @@ select.ls-input {
     font-family: 'Source Sans Pro', Arial, sans-serif;
 }
 
-.spa-biz-page .spaw-promo-bar {
-    background: #fff8dc;
-    border-bottom: 1px solid #f0e4a8;
-    padding: 10px 48px 10px 16px;
-    text-align: center;
-    font-size: 13.5px;
-    color: #5a4a20;
-    position: relative;
-    margin-top: 62px;
-}
-
-.spa-biz-page .spaw-promo-bar strong {
-    color: var(--spaw-accent);
-}
-
-.spa-biz-page .spaw-promo-close {
-    position: absolute;
-    right: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: none;
-    background: none;
-    font-size: 20px;
-    line-height: 1;
-    color: #8a7a50;
-    cursor: pointer;
-    padding: 0 4px;
-}
-
 .spa-biz-page .spaw-page-head {
+    margin-top: 62px;
     padding: 36px 0 6px;
     text-align: center;
 }
@@ -29567,13 +29539,8 @@ select.ls-input {
 
 @media (max-width: 767px) {
     .spa-biz-page .spaw-page-head {
-        padding-top: 24px;
-    }
-
-    .spa-biz-page .spaw-promo-bar {
         margin-top: 56px;
-        font-size: 12.5px;
-        padding-right: 40px;
+        padding-top: 24px;
     }
 
     .spa-biz-page .spaw-main {

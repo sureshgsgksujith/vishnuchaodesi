@@ -116,12 +116,6 @@
         </div>
     </section>
 
-    <!-- ===== PROMO BANNER (Chao Desi marketplace style) ===== -->
-    <div class="spaw-promo-bar" id="spawPromoBar">
-        <span>Get up to 10% off. List your service now! Use code <strong>CHAODESI10</strong></span>
-        <button type="button" class="spaw-promo-close" id="spawPromoClose" aria-label="Close">&times;</button>
-    </div>
-
     <!-- ===== WIZARD PAGE HEAD ===== -->
     <section class="spaw-page-head">
         <div class="container">
@@ -1081,10 +1075,6 @@
             }
 
             $('#spawForm').on('input change', function () { updateProgress(); });
-
-            $('#spawPromoClose').on('click', function () {
-                $('#spawPromoBar').slideUp(200);
-            });
 
             updateStepper();
             updateStepHead();

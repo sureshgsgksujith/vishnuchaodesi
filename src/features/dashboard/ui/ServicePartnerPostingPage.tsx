@@ -1,15 +1,26 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Autocomplete, TextField as MuiTextField } from "@mui/material";
 import {
   getAllServiceDirectoryTree,
   type AllServiceCategoryOption,
 } from "../../allServices/api/allServiceDirectoryApi";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
+import { sendOtpApi, verifyOtpApi } from "../../auth/api/authApi";
 import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import { createAllServicePosting, validateAllServiceCoupon, type AllServicePostingLocation, type AllServicePricingPackage } from "../api/allServicePostingsApi";
 import { generateListingAiImages, getListingAiImageErrorMessage, getListingAiSuggestions } from "../api/listingAiApi";
 import { getAllServicePricingPlans, type AllServicePricingPlan } from "../api/allServicePricingPlansApi";
 import { lookupPostalCodeLocation } from "../../../shared/api/postalCodeLookup";
-import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
+import {
+  getLocationCities,
+  getLocationCountries,
+  getLocationStates,
+  type CityOption,
+  type CountryOption,
+  type StateOption,
+} from "../../../shared/api/locationMastersApi";
+import PhoneNumberInput, { getPhoneNumberValidationError } from "../../../shared/components/PhoneNumberInput";
+import PaymentProcessingOverlay from "../../../shared/components/PaymentProcessingOverlay";
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import "../styles/serviceOnboarding.css";
 import "../styles/eventBookings.css";
@@ -52,6 +63,10 @@ type PostingForm = {
   isPhoneVerified: boolean;
   secondaryEmail: string;
   secondaryPhone: string;
+  secondaryPhoneVerificationMethod: "" | "sms" | "call";
+  generatedSecondaryPhoneOtp: string;
+  secondaryPhoneOtp: string;
+  isSecondaryPhoneVerified: boolean;
   whatsapp: string;
   landline: string;
   serviceSearch: string;
@@ -185,6 +200,10 @@ const initialForm: PostingForm = {
   isPhoneVerified: false,
   secondaryEmail: "",
   secondaryPhone: "",
+  secondaryPhoneVerificationMethod: "",
+  generatedSecondaryPhoneOtp: "",
+  secondaryPhoneOtp: "",
+  isSecondaryPhoneVerified: false,
   whatsapp: "",
   landline: "",
   serviceSearch: "",
@@ -207,7 +226,7 @@ const initialServicePackages: ServicePackageForm[] = [
   { serviceName: "", priceText: "", description: "" },
 ];
 
-function blankLocation(label: string, country = "United States"): LocationForm {
+function blankLocation(label: string, country = ""): LocationForm {
   return {
     label,
     location: "",
@@ -275,8 +294,7 @@ function normalizeServicePackages(packages: ServicePackageForm[]) {
       priceText: item.priceText.trim(),
       description: item.description?.trim() || "",
     }))
-    .filter((item) => item.serviceName || item.priceText || item.description)
-    .slice(0, 6);
+    .filter((item) => item.serviceName || item.priceText || item.description);
 }
 
 function getServicePackageError(packages: ServicePackageForm[]) {
@@ -308,6 +326,28 @@ function isValidEmail(value: string) {
 
 function cleanPhone(value: string) {
   return value.replace(/\D/g, "");
+}
+
+function getPhoneValidationError(countryCode: string, value: string) {
+  const digits = cleanPhone(value);
+  if (!digits) return "Enter a phone number.";
+
+  switch (countryCode) {
+    case "+1":
+      return digits.length === 10 ? "" : "US/Canada phone numbers must contain exactly 10 digits.";
+    case "+91":
+      return digits.length === 10 && /^[6-9]/.test(digits)
+        ? ""
+        : "India mobile numbers must contain 10 digits and start with 6, 7, 8, or 9.";
+    case "+44":
+      return digits.length >= 10 && digits.length <= 11 ? "" : "UK phone numbers must contain 10 or 11 digits.";
+    case "+61":
+      return digits.length === 9 ? "" : "Australia phone numbers must contain exactly 9 digits after +61.";
+    case "+971":
+      return digits.length === 9 ? "" : "UAE phone numbers must contain exactly 9 digits after +971.";
+    default:
+      return digits.length >= 7 && digits.length <= 15 ? "" : "Phone number must contain 7 to 15 digits.";
+  }
 }
 
 function createDemoOtp() {
@@ -352,6 +392,8 @@ export default function ServicePartnerPostingPage() {
   const [selectedDetailedIds, setSelectedDetailedIds] = useState<number[]>([]);
   const [areas, setAreas] = useState<string[]>([]);
   const [areaInput, setAreaInput] = useState("");
+  const [serviceAreaCities, setServiceAreaCities] = useState<CityOption[]>([]);
+  const [loadingServiceAreaCities, setLoadingServiceAreaCities] = useState(false);
   const [openDays, setOpenDays] = useState(["Mon", "Tue", "Wed", "Thu", "Fri"]);
   const [payments, setPayments] = useState(["Cash"]);
   const [servicePackages, setServicePackages] = useState<ServicePackageForm[]>(initialServicePackages);
@@ -359,6 +401,16 @@ export default function ServicePartnerPostingPage() {
   const [showSecondaryPhone, setShowSecondaryPhone] = useState(false);
   const [showWhatsapp, setShowWhatsapp] = useState(false);
   const [showLandline, setShowLandline] = useState(false);
+  const [emailOtp, setEmailOtp] = useState("");
+  const [isEmailOtpSent, setIsEmailOtpSent] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isEmailOtpBusy, setIsEmailOtpBusy] = useState(false);
+  const [emailOtpMessage, setEmailOtpMessage] = useState("");
+  const [secondaryEmailOtp, setSecondaryEmailOtp] = useState("");
+  const [isSecondaryEmailOtpSent, setIsSecondaryEmailOtpSent] = useState(false);
+  const [isSecondaryEmailVerified, setIsSecondaryEmailVerified] = useState(false);
+  const [isSecondaryEmailOtpBusy, setIsSecondaryEmailOtpBusy] = useState(false);
+  const [secondaryEmailOtpMessage, setSecondaryEmailOtpMessage] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [notice, setNotice] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -379,7 +431,7 @@ export default function ServicePartnerPostingPage() {
 
   const currentMeta = stepMeta[step - 1];
   const homeLocationDefaults = useMemo(() => ({
-    country: selectedLocation.countryName || currentLocation.country || "United States",
+    country: selectedLocation.countryName || currentLocation.country || "",
   }), [
     currentLocation.country,
     selectedLocation.countryName,
@@ -419,6 +471,25 @@ export default function ServicePartnerPostingPage() {
       ]),
     ].join(" ").toLowerCase().includes(query)).slice(0, 8);
   }, [categories, form.serviceSearch]);
+
+  useEffect(() => {
+    if (!selectedCategory || !selectedDetailedIds.length) return;
+
+    const selectedNames = selectedCategory.subCategories.flatMap((subCategory) =>
+      subCategory.detailedCategories
+        .filter((detail) => selectedDetailedIds.includes(detail.id))
+        .map((detail) => detail.name)
+    );
+
+    setServicePackages((current) => selectedNames.map((serviceName, index) => {
+      const existing = current.find((item) => item.serviceName.toLowerCase() === serviceName.toLowerCase()) || current[index];
+      return {
+        serviceName,
+        priceText: existing?.priceText || "Quote based",
+        description: existing?.description || "",
+      };
+    }));
+  }, [selectedCategory, selectedDetailedIds]);
 
   useEffect(() => {
     addTemplateAssets();
@@ -502,7 +573,45 @@ export default function ServicePartnerPostingPage() {
     });
   }, [[primaryLocation, ...branches].map((location) => `${location.zip}:${location.country}`).join("|")]);
 
+  useEffect(() => {
+    let active = true;
+    setServiceAreaCities([]);
+    setAreaInput("");
+    if (!primaryLocation.country || !primaryLocation.state) {
+      setAreas([]);
+      return () => { active = false; };
+    }
+
+    setLoadingServiceAreaCities(true);
+    void (async () => {
+      const countries = await getLocationCountries();
+      const country = findLocationOption(countries, primaryLocation.country);
+      if (!country) return [];
+      const states = await getLocationStates(country.id);
+      const state = findLocationOption(states, primaryLocation.state);
+      return state ? getLocationCities(state.id) : [];
+    })()
+      .then((cities) => {
+        if (!active) return;
+        setServiceAreaCities(cities);
+        setAreas((current) => current.filter((area) => Boolean(findLocationOption(cities, area))));
+      })
+      .catch(() => active && setServiceAreaCities([]))
+      .finally(() => active && setLoadingServiceAreaCities(false));
+
+    return () => { active = false; };
+  }, [primaryLocation.country, primaryLocation.state]);
+
   function updateField<K extends keyof PostingForm>(key: K, value: PostingForm[K]) {
+    if (key === "verificationMethod" && value) {
+      const phoneError = getPhoneValidationError(form.phoneCode, form.phone);
+      if (phoneError) {
+        setFieldErrors((current) => ({ ...current, phone: phoneError }));
+        setNotice("Enter a valid phone number before selecting SMS or Call.");
+        return;
+      }
+    }
+
     setForm((current) => {
       const next = { ...current, [key]: value };
       if (key === "phone" || key === "phoneCode") {
@@ -511,11 +620,34 @@ export default function ServicePartnerPostingPage() {
         next.phoneOtp = "";
         next.generatedPhoneOtp = "";
       }
+      if (key === "email") {
+        setEmailOtp("");
+        setIsEmailOtpSent(false);
+        setIsEmailVerified(false);
+        setEmailOtpMessage("");
+      }
+      if (key === "secondaryPhone") {
+        next.secondaryPhoneVerificationMethod = "";
+        next.generatedSecondaryPhoneOtp = "";
+        next.secondaryPhoneOtp = "";
+        next.isSecondaryPhoneVerified = false;
+      }
+      if (key === "secondaryPhoneVerificationMethod") {
+        next.generatedSecondaryPhoneOtp = getPhoneNumberValidationError(current.secondaryPhone) ? "" : createDemoOtp();
+        next.secondaryPhoneOtp = "";
+        next.isSecondaryPhoneVerified = false;
+      }
+      if (key === "secondaryEmail") {
+        setSecondaryEmailOtp("");
+        setIsSecondaryEmailOtpSent(false);
+        setIsSecondaryEmailVerified(false);
+        setSecondaryEmailOtpMessage("");
+      }
 
       if (key === "verificationMethod") {
         next.isPhoneVerified = false;
         next.phoneOtp = "";
-        next.generatedPhoneOtp = current.phone.trim() && cleanPhone(current.phone).length >= 7 ? createDemoOtp() : "";
+        next.generatedPhoneOtp = getPhoneValidationError(current.phoneCode, current.phone) ? "" : createDemoOtp();
       }
       return next;
     });
@@ -681,7 +813,7 @@ export default function ServicePartnerPostingPage() {
 
   function addServicePackage() {
     setServicePackages((current) =>
-      current.length >= 6 ? current : [...current, { serviceName: "", priceText: "", description: "" }]
+      [...current, { serviceName: "", priceText: "", description: "" }]
     );
   }
 
@@ -692,39 +824,25 @@ export default function ServicePartnerPostingPage() {
     });
   }
 
-  function addArea() {
-    const nextAreas = mergeServiceAreas(areas, areaInput);
-    if (nextAreas.length !== areas.length) {
-      setAreas(nextAreas);
-      setFieldErrors((current) => {
-        if (!current.serviceAreas) return current;
-        const next = { ...current };
-        delete next.serviceAreas;
-        return next;
-      });
-    }
-    setAreaInput("");
-  }
-
-  function updateAreaInput(value: string) {
-    setAreaInput(value);
-    if (value.trim()) {
-      setFieldErrors((current) => {
-        if (!current.serviceAreas) return current;
-        const next = { ...current };
-        delete next.serviceAreas;
-        return next;
-      });
-      setNotice("");
-    }
+  function addServiceArea(value: string) {
+    const city = serviceAreaCities.find((item) => item.id === Number(value));
+    if (!city) return;
+    setAreas((current) => mergeServiceAreas(current, city.name));
+    setFieldErrors((current) => {
+      if (!current.serviceAreas) return current;
+      const next = { ...current };
+      delete next.serviceAreas;
+      return next;
+    });
   }
 
   function validatePhoneOtp() {
     const errors: FieldErrors = {};
     if (!form.phone.trim()) {
       errors.phone = "Enter a phone number before validating.";
-    } else if (cleanPhone(form.phone).length < 7) {
-      errors.phone = "Enter a valid phone number before validating.";
+    } else {
+      const phoneError = getPhoneValidationError(form.phoneCode, form.phone);
+      if (phoneError) errors.phone = phoneError;
     }
 
     if (!form.verificationMethod) {
@@ -756,6 +874,104 @@ export default function ServicePartnerPostingPage() {
       return next;
     });
     setNotice("");
+  }
+
+  function validateSecondaryPhoneOtp() {
+    const phoneError = getPhoneNumberValidationError(form.secondaryPhone);
+    let error = phoneError;
+    if (!error && !form.secondaryPhoneVerificationMethod) error = "Select SMS or Call to receive OTP.";
+    if (!error && !form.secondaryPhoneOtp.trim()) error = "Enter the OTP received on the secondary phone.";
+    if (!error && form.secondaryPhoneOtp.trim() !== form.generatedSecondaryPhoneOtp) error = "Invalid OTP.";
+    if (error) {
+      setFieldErrors((current) => ({ ...current, secondaryPhone: error }));
+      return;
+    }
+    setForm((current) => ({ ...current, isSecondaryPhoneVerified: true }));
+    setFieldErrors((current) => { const next = { ...current }; delete next.secondaryPhone; return next; });
+  }
+
+  async function sendEmailOtp() {
+    const email = form.email.trim();
+    if (!isValidEmail(email)) {
+      setFieldErrors((current) => ({ ...current, email: "Enter a valid email address before sending OTP." }));
+      return;
+    }
+    setIsEmailOtpBusy(true);
+    setEmailOtp("");
+    setIsEmailVerified(false);
+    setEmailOtpMessage("");
+    try {
+      const result = await sendOtpApi(email, "ServicePosting", form.contactName);
+      setIsEmailOtpSent(true);
+      setEmailOtpMessage(result.message || "OTP sent to your email address.");
+      setFieldErrors((current) => { const next = { ...current }; delete next.email; delete next.emailOtp; return next; });
+    } catch (error) {
+      setFieldErrors((current) => ({ ...current, emailOtp: error instanceof Error ? error.message : "Unable to send email OTP." }));
+    } finally {
+      setIsEmailOtpBusy(false);
+    }
+  }
+
+  async function verifyEmailOtp() {
+    if (!/^\d{4,6}$/.test(emailOtp.trim())) {
+      setFieldErrors((current) => ({ ...current, emailOtp: "Enter the 4 to 6 digit OTP sent to your email." }));
+      return;
+    }
+    setIsEmailOtpBusy(true);
+    try {
+      const result = await verifyOtpApi(form.email.trim(), emailOtp.trim(), "ServicePosting");
+      setIsEmailVerified(true);
+      setEmailOtpMessage(result.message || "Email verified successfully.");
+      setFieldErrors((current) => { const next = { ...current }; delete next.email; delete next.emailOtp; return next; });
+    } catch (error) {
+      setFieldErrors((current) => ({ ...current, emailOtp: error instanceof Error ? error.message : "Email OTP verification failed." }));
+    } finally {
+      setIsEmailOtpBusy(false);
+    }
+  }
+
+  async function sendSecondaryEmailOtp() {
+    const email = form.secondaryEmail.trim();
+    if (!isValidEmail(email)) {
+      setFieldErrors((current) => ({ ...current, secondaryEmail: "Enter a valid secondary email before sending OTP." }));
+      return;
+    }
+    if (email.toLowerCase() === form.email.trim().toLowerCase()) {
+      setFieldErrors((current) => ({ ...current, secondaryEmail: "Secondary email must be different from the primary email." }));
+      return;
+    }
+    setIsSecondaryEmailOtpBusy(true);
+    setSecondaryEmailOtp("");
+    setIsSecondaryEmailVerified(false);
+    setSecondaryEmailOtpMessage("");
+    try {
+      const result = await sendOtpApi(email, "ServicePosting", form.contactName);
+      setIsSecondaryEmailOtpSent(true);
+      setSecondaryEmailOtpMessage(result.message || "OTP sent to your secondary email address.");
+      setFieldErrors((current) => { const next = { ...current }; delete next.secondaryEmail; delete next.secondaryEmailOtp; return next; });
+    } catch (error) {
+      setFieldErrors((current) => ({ ...current, secondaryEmailOtp: error instanceof Error ? error.message : "Unable to send secondary email OTP." }));
+    } finally {
+      setIsSecondaryEmailOtpBusy(false);
+    }
+  }
+
+  async function verifySecondaryEmailOtp() {
+    if (!/^\d{4,6}$/.test(secondaryEmailOtp.trim())) {
+      setFieldErrors((current) => ({ ...current, secondaryEmailOtp: "Enter the 4 to 6 digit OTP sent to the secondary email." }));
+      return;
+    }
+    setIsSecondaryEmailOtpBusy(true);
+    try {
+      const result = await verifyOtpApi(form.secondaryEmail.trim(), secondaryEmailOtp.trim(), "ServicePosting");
+      setIsSecondaryEmailVerified(true);
+      setSecondaryEmailOtpMessage(result.message || "Secondary email verified successfully.");
+      setFieldErrors((current) => { const next = { ...current }; delete next.secondaryEmail; delete next.secondaryEmailOtp; return next; });
+    } catch (error) {
+      setFieldErrors((current) => ({ ...current, secondaryEmailOtp: error instanceof Error ? error.message : "Secondary email OTP verification failed." }));
+    } finally {
+      setIsSecondaryEmailOtpBusy(false);
+    }
   }
 
   function getSelectedServiceNames() {
@@ -828,8 +1044,8 @@ export default function ServicePartnerPostingPage() {
       const fieldValues = response.fieldValues || {};
       const nextDescription = (fieldValues.businessDescription || response.description || "").trim().slice(0, 500);
       const nextTagline = (fieldValues.businessTagline || response.shortTagline || "").trim().slice(0, 120);
-      const nextPackages = [0, 1, 2].map((_, index) => ({
-        serviceName: String(fieldValues[`package${index + 1}Name`] || servicePackages[index]?.serviceName || selectedServices[index] || selectedCategory.name).trim().slice(0, 120),
+      const nextPackages = selectedServices.map((serviceName, index) => ({
+        serviceName: String(fieldValues[`package${index + 1}Name`] || servicePackages[index]?.serviceName || serviceName || selectedCategory.name).trim().slice(0, 120),
         priceText: String(fieldValues[`package${index + 1}Price`] || servicePackages[index]?.priceText || "Quote based").trim().slice(0, 60),
         description: String(fieldValues[`package${index + 1}Description`] || servicePackages[index]?.description || "").trim().slice(0, 220),
       }));
@@ -843,8 +1059,9 @@ export default function ServicePartnerPostingPage() {
       }
 
       setServicePackages((current) => {
-        const existingExtraRows = current.slice(3);
-        return [...nextPackages, ...existingExtraRows].slice(0, 6);
+        const generatedNames = new Set(nextPackages.map((item) => item.serviceName.toLowerCase()));
+        const existingExtraRows = current.filter((item) => !generatedNames.has(item.serviceName.toLowerCase()));
+        return [...nextPackages, ...existingExtraRows];
       });
       setAiProfileMessage("AI profile copy added. Review before submitting.");
     } catch {
@@ -942,12 +1159,35 @@ export default function ServicePartnerPostingPage() {
         errors.email = "Enter an email address.";
       } else if (!isValidEmail(form.email)) {
         errors.email = "Enter a valid email address.";
+      } else if (!isEmailVerified) {
+        errors.emailOtp = "Verify the email address using OTP before continuing.";
+      }
+
+      if (showSecondaryEmail) {
+        if (!isValidEmail(form.secondaryEmail)) {
+          errors.secondaryEmail = "Enter a valid secondary email address.";
+        } else if (form.secondaryEmail.trim().toLowerCase() === form.email.trim().toLowerCase()) {
+          errors.secondaryEmail = "Secondary email must be different from the primary email.";
+        } else if (!isSecondaryEmailVerified) {
+          errors.secondaryEmailOtp = "Verify the secondary email using OTP before continuing.";
+        }
+      }
+
+      if (showSecondaryPhone) {
+        const secondaryPhoneError = getPhoneNumberValidationError(form.secondaryPhone);
+        if (secondaryPhoneError) {
+          errors.secondaryPhone = secondaryPhoneError;
+        } else if (!form.secondaryPhoneVerificationMethod) {
+          errors.secondaryPhone = "Select SMS or Call to verify the secondary phone.";
+        } else if (!form.isSecondaryPhoneVerified) {
+          errors.secondaryPhone = "Enter and validate the secondary phone OTP before continuing.";
+        }
       }
 
       if (!form.phone.trim()) {
         errors.phone = "Enter a phone number.";
-      } else if (cleanPhone(form.phone).length < 7) {
-        errors.phone = "Enter a valid phone number.";
+      } else if (getPhoneValidationError(form.phoneCode, form.phone)) {
+        errors.phone = getPhoneValidationError(form.phoneCode, form.phone);
       } else if (!form.verificationMethod) {
         errors.phoneOtp = "Select SMS or Call to receive OTP.";
       } else if (!form.isPhoneVerified) {
@@ -1047,6 +1287,17 @@ export default function ServicePartnerPostingPage() {
         isPrimary: index === 0,
       }))
       .filter((location) => location.formattedAddress);
+    serviceAreas.forEach((city) => {
+      if (locations.some((location) => location.city?.toLowerCase() === city.toLowerCase())) return;
+      locations.push({
+        label: "Service area",
+        formattedAddress: [city, primaryLocation.state, primaryLocation.country].filter(Boolean).join(", "),
+        city,
+        state: primaryLocation.state,
+        country: primaryLocation.country,
+        isPrimary: false,
+      });
+    });
 
     try {
       setIsSubmitting(true);
@@ -1067,6 +1318,7 @@ export default function ServicePartnerPostingPage() {
         pricingPackages: normalizeServicePackages(servicePackages),
         contactName: form.contactName.trim(),
         email: form.email.trim(),
+        secondaryEmail: showSecondaryEmail ? form.secondaryEmail.trim() : undefined,
         phoneCountryCode: form.phoneCode,
         phoneNumber: form.phone.trim(),
         verificationMethod: form.verificationMethod,
@@ -1079,7 +1331,16 @@ export default function ServicePartnerPostingPage() {
       });
       setSuccessReference(String(posting.id));
     } catch (error) {
-      setNotice(getErrorMessage(error));
+      const message = getErrorMessage(error);
+      setNotice(message);
+      if (message.toLowerCase().includes("verify the email address using otp")) {
+        setIsEmailVerified(false);
+        setIsEmailOtpSent(false);
+        setEmailOtp("");
+        setFieldErrors((current) => ({ ...current, emailOtp: "Email verification expired. Send and verify a new OTP." }));
+        setStep(1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -1088,6 +1349,7 @@ export default function ServicePartnerPostingPage() {
   if (successReference) {
     return (
       <main className="spa-biz-page">
+        <PaymentProcessingOverlay visible={isProcessingPayment} />
         <TemplateHeader />
         <section className="spaw-wrap">
           <div className="container">
@@ -1105,8 +1367,8 @@ export default function ServicePartnerPostingPage() {
 
   return (
     <main className="spa-biz-page">
+      <PaymentProcessingOverlay visible={isProcessingPayment} />
       <TemplateHeader />
-      <PromoBar />
 
       <section className="spaw-page-head">
         <div className="container">
@@ -1115,7 +1377,13 @@ export default function ServicePartnerPostingPage() {
           </nav>
           <h1>{currentMeta.title}</h1>
           <p>{currentMeta.subtitle}</p>
-          <Stepper step={step} onStep={setStep} />
+          <Stepper step={step} onStep={(targetStep) => {
+            if (targetStep <= step) {
+              setStep(targetStep);
+              return;
+            }
+            validateStep(targetStep);
+          }} />
         </div>
       </section>
 
@@ -1139,8 +1407,33 @@ export default function ServicePartnerPostingPage() {
                     onAddBranch={() => setBranches((current) => [...current, blankLocation(`Branch ${current.length + 1}`, homeLocationDefaults.country)])}
                     onRemoveBranch={(index) => setBranches((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                     onValidatePhoneOtp={validatePhoneOtp}
-                    onToggleSecondaryEmail={setShowSecondaryEmail}
-                    onToggleSecondaryPhone={setShowSecondaryPhone}
+                    onValidateSecondaryPhoneOtp={validateSecondaryPhoneOtp}
+                    emailOtp={emailOtp}
+                    isEmailOtpSent={isEmailOtpSent}
+                    isEmailVerified={isEmailVerified}
+                    isEmailOtpBusy={isEmailOtpBusy}
+                    emailOtpMessage={emailOtpMessage}
+                    onEmailOtp={setEmailOtp}
+                    onSendEmailOtp={sendEmailOtp}
+                    onVerifyEmailOtp={verifyEmailOtp}
+                    secondaryEmailOtp={secondaryEmailOtp}
+                    isSecondaryEmailOtpSent={isSecondaryEmailOtpSent}
+                    isSecondaryEmailVerified={isSecondaryEmailVerified}
+                    isSecondaryEmailOtpBusy={isSecondaryEmailOtpBusy}
+                    secondaryEmailOtpMessage={secondaryEmailOtpMessage}
+                    onSecondaryEmailOtp={setSecondaryEmailOtp}
+                    onSendSecondaryEmailOtp={sendSecondaryEmailOtp}
+                    onVerifySecondaryEmailOtp={verifySecondaryEmailOtp}
+                    onToggleSecondaryEmail={(value) => {
+                      setShowSecondaryEmail(value);
+                      if (!value) {
+                        updateField("secondaryEmail", "");
+                      }
+                    }}
+                    onToggleSecondaryPhone={(value) => {
+                      setShowSecondaryPhone(value);
+                      if (!value) updateField("secondaryPhone", "");
+                    }}
                     onToggleWhatsapp={setShowWhatsapp}
                     onToggleLandline={setShowLandline}
                   />
@@ -1153,10 +1446,10 @@ export default function ServicePartnerPostingPage() {
                     selectedCategory={selectedCategory}
                     selectedDetailedIds={selectedDetailedIds}
                     areas={areas}
-                    areaInput={areaInput}
+                    availableCities={serviceAreaCities}
+                    loadingCities={loadingServiceAreaCities}
                     errors={fieldErrors}
-                    onAreaInput={updateAreaInput}
-                    onAddArea={addArea}
+                    onSelectArea={addServiceArea}
                     onRemoveArea={(index) => setAreas((current) => current.filter((_, itemIndex) => itemIndex !== index))}
                     onChooseCategory={chooseCategory}
                     onField={updateField}
@@ -1270,16 +1563,6 @@ function TemplateHeader() {
   return <UserHomeHeader hideAddAction />;
 }
 
-function PromoBar() {
-  const [show, setShow] = useState(true);
-  return show ? (
-    <div className="spaw-promo-bar">
-      <span>Get up to 10% off. List your service now! Use code <strong>CHAODESI10</strong></span>
-      <button type="button" className="spaw-promo-close" aria-label="Close" onClick={() => setShow(false)}>&times;</button>
-    </div>
-  ) : null;
-}
-
 function Stepper({ step, onStep }: { step: number; onStep: (step: number) => void }) {
   return (
     <div className="spaw-stepper">
@@ -1315,6 +1598,23 @@ function StepBasic({
   onAddBranch,
   onRemoveBranch,
   onValidatePhoneOtp,
+  onValidateSecondaryPhoneOtp,
+  emailOtp,
+  isEmailOtpSent,
+  isEmailVerified,
+  isEmailOtpBusy,
+  emailOtpMessage,
+  onEmailOtp,
+  onSendEmailOtp,
+  onVerifyEmailOtp,
+  secondaryEmailOtp,
+  isSecondaryEmailOtpSent,
+  isSecondaryEmailVerified,
+  isSecondaryEmailOtpBusy,
+  secondaryEmailOtpMessage,
+  onSecondaryEmailOtp,
+  onSendSecondaryEmailOtp,
+  onVerifySecondaryEmailOtp,
   onToggleSecondaryEmail,
   onToggleSecondaryPhone,
   onToggleWhatsapp,
@@ -1333,6 +1633,23 @@ function StepBasic({
   onAddBranch: () => void;
   onRemoveBranch: (index: number) => void;
   onValidatePhoneOtp: () => void;
+  onValidateSecondaryPhoneOtp: () => void;
+  emailOtp: string;
+  isEmailOtpSent: boolean;
+  isEmailVerified: boolean;
+  isEmailOtpBusy: boolean;
+  emailOtpMessage: string;
+  onEmailOtp: (value: string) => void;
+  onSendEmailOtp: () => void;
+  onVerifyEmailOtp: () => void;
+  secondaryEmailOtp: string;
+  isSecondaryEmailOtpSent: boolean;
+  isSecondaryEmailVerified: boolean;
+  isSecondaryEmailOtpBusy: boolean;
+  secondaryEmailOtpMessage: string;
+  onSecondaryEmailOtp: (value: string) => void;
+  onSendSecondaryEmailOtp: () => void;
+  onVerifySecondaryEmailOtp: () => void;
   onToggleSecondaryEmail: (value: boolean) => void;
   onToggleSecondaryPhone: (value: boolean) => void;
   onToggleWhatsapp: (value: boolean) => void;
@@ -1381,9 +1698,31 @@ function StepBasic({
       ) : null}
 
       <TextField label="Official Business Contact" required value={form.contactName} error={errors.contactName} onChange={(value) => onField("contactName", value)} placeholder="Contact name" />
-      <TextField label="Email" required small="This email address will be used to access your dashboard and receive all responses." type="email" value={form.email} error={errors.email} onChange={(value) => onField("email", value)} placeholder="Email address" />
+      <div className={`spaw-field-block spaw-email-verify${errors.email || errors.emailOtp ? " spaw-input-error" : ""}`}>
+        <label className="spaw-label">Email <span className="spaw-req">*</span><small>This email address will be used to access your dashboard and receive all responses.</small></label>
+        <div className="spaw-otp-row">
+          <input type="email" className={`spaw-input${errors.email ? " is-invalid" : ""}`} value={form.email} onChange={(event) => onField("email", event.target.value)} placeholder="Email address" disabled={isEmailVerified} />
+          <button type="button" className="spaw-otp-btn" onClick={onSendEmailOtp} disabled={isEmailOtpBusy || isEmailVerified || !form.email.trim()}>{isEmailOtpBusy && !isEmailOtpSent ? "Sending..." : isEmailVerified ? "Verified" : isEmailOtpSent ? "Resend OTP" : "Send OTP"}</button>
+        </div>
+        <FieldError message={errors.email} />
+        {isEmailOtpSent && !isEmailVerified ? <div className="spaw-otp-row"><input type="text" inputMode="numeric" className={`spaw-input${errors.emailOtp ? " is-invalid" : ""}`} value={emailOtp} onChange={(event) => onEmailOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Enter email OTP" /><button type="button" className="spaw-otp-btn" onClick={onVerifyEmailOtp} disabled={isEmailOtpBusy}>{isEmailOtpBusy ? "Verifying..." : "Verify OTP"}</button></div> : null}
+        <FieldError message={errors.emailOtp} />
+        {emailOtpMessage ? <div className={isEmailVerified ? "spaw-verify-success" : "spaw-demo-otp"}>{isEmailVerified ? "✓ " : ""}{emailOtpMessage}</div> : null}
+      </div>
       <Toggle label="Add a secondary email address (Optional)" value={showSecondaryEmail} onChange={onToggleSecondaryEmail} />
-      {showSecondaryEmail ? <TextField value={form.secondaryEmail} onChange={(value) => onField("secondaryEmail", value)} placeholder="Secondary email address" /> : null}
+      {showSecondaryEmail ? (
+        <div className={`spaw-field-block spaw-email-verify${errors.secondaryEmail || errors.secondaryEmailOtp ? " spaw-input-error" : ""}`}>
+          <label className="spaw-label">Secondary Email <span className="spaw-req">*</span><small>Verify this address before continuing.</small></label>
+          <div className="spaw-otp-row">
+            <input type="email" className={`spaw-input${errors.secondaryEmail ? " is-invalid" : ""}`} value={form.secondaryEmail} onChange={(event) => onField("secondaryEmail", event.target.value)} placeholder="Secondary email address" disabled={isSecondaryEmailVerified} />
+            <button type="button" className="spaw-otp-btn" onClick={onSendSecondaryEmailOtp} disabled={isSecondaryEmailOtpBusy || isSecondaryEmailVerified || !form.secondaryEmail.trim()}>{isSecondaryEmailOtpBusy && !isSecondaryEmailOtpSent ? "Sending..." : isSecondaryEmailVerified ? "Verified" : isSecondaryEmailOtpSent ? "Resend OTP" : "Send OTP"}</button>
+          </div>
+          <FieldError message={errors.secondaryEmail} />
+          {isSecondaryEmailOtpSent && !isSecondaryEmailVerified ? <div className="spaw-otp-row"><input type="text" inputMode="numeric" className={`spaw-input${errors.secondaryEmailOtp ? " is-invalid" : ""}`} value={secondaryEmailOtp} onChange={(event) => onSecondaryEmailOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Enter secondary email OTP" /><button type="button" className="spaw-otp-btn" onClick={onVerifySecondaryEmailOtp} disabled={isSecondaryEmailOtpBusy}>{isSecondaryEmailOtpBusy ? "Verifying..." : "Verify OTP"}</button></div> : null}
+          <FieldError message={errors.secondaryEmailOtp} />
+          {secondaryEmailOtpMessage ? <div className={isSecondaryEmailVerified ? "spaw-verify-success" : "spaw-demo-otp"}>{isSecondaryEmailVerified ? "✓ " : ""}{secondaryEmailOtpMessage}</div> : null}
+        </div>
+      ) : null}
 
       <div className={`spaw-field-block${errors.phone ? " spaw-input-error" : ""}`}>
         <label className="spaw-label">Phone <span className="spaw-req">*</span><small>All responses will be directed to the latest phone number updated here.</small></label>
@@ -1410,28 +1749,41 @@ function StepBasic({
               Demo OTP sent by {form.verificationMethod === "sms" ? "SMS" : "Call"}: <strong>{form.generatedPhoneOtp}</strong>
             </div>
           ) : null}
-          <div className="spaw-otp-row">
-            <input
-              type="text"
-              inputMode="numeric"
-              className={`spaw-input${errors.phoneOtp ? " is-invalid" : ""}`}
-              value={form.phoneOtp}
-              onChange={(event) => onField("phoneOtp", event.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="Enter OTP"
-              disabled={!form.verificationMethod || form.isPhoneVerified}
-            />
-            <button type="button" className="spaw-otp-btn" onClick={onValidatePhoneOtp} disabled={form.isPhoneVerified}>
-              {form.isPhoneVerified ? "Validated" : "Validate"}
-            </button>
-          </div>
+          {form.generatedPhoneOtp || form.isPhoneVerified ? (
+            <div className="spaw-otp-row">
+              <input
+                type="text"
+                inputMode="numeric"
+                className={`spaw-input${errors.phoneOtp ? " is-invalid" : ""}`}
+                value={form.phoneOtp}
+                onChange={(event) => onField("phoneOtp", event.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="Enter OTP"
+                disabled={form.isPhoneVerified}
+              />
+              <button type="button" className="spaw-otp-btn" onClick={onValidatePhoneOtp} disabled={form.isPhoneVerified}>
+                {form.isPhoneVerified ? "Validated" : "Validate"}
+              </button>
+            </div>
+          ) : null}
           <FieldError message={errors.phoneOtp} />
           {form.isPhoneVerified ? <div className="spaw-verify-success">Phone number validated by {form.verificationMethod === "sms" ? "SMS" : "Call"}.</div> : null}
         </div>
       </div>
       <Toggle label="Would you like to add a secondary phone number?" value={showSecondaryPhone} onChange={onToggleSecondaryPhone} />
       {showSecondaryPhone ? (
-        <div className="spaw-field-block">
-          <PhoneNumberInput value={form.secondaryPhone} onChange={(value) => onField("secondaryPhone", value)} placeholder="Secondary phone number" inputClassName="spaw-input" selectClassName="spaw-phone-code" />
+        <div className={`spaw-field-block${errors.secondaryPhone ? " spaw-input-error" : ""}`}>
+          <label className="spaw-label">Secondary Phone <span className="spaw-req">*</span><small>This number must be verified before continuing.</small></label>
+          <PhoneNumberInput required disabled={form.isSecondaryPhoneVerified} value={form.secondaryPhone} onChange={(value) => onField("secondaryPhone", value)} placeholder="Secondary phone number" inputClassName="spaw-input" selectClassName="spaw-phone-code" />
+          <div className="spaw-phone-verify">
+            <div className="spaw-verify-methods" role="radiogroup" aria-label="Secondary phone verification method">
+              <label><input name="secondaryPhoneVerificationMethod" type="radio" disabled={form.isSecondaryPhoneVerified} checked={form.secondaryPhoneVerificationMethod === "sms"} onChange={() => onField("secondaryPhoneVerificationMethod", "sms")} /><span>SMS</span></label>
+              <label><input name="secondaryPhoneVerificationMethod" type="radio" disabled={form.isSecondaryPhoneVerified} checked={form.secondaryPhoneVerificationMethod === "call"} onChange={() => onField("secondaryPhoneVerificationMethod", "call")} /><span>Call</span></label>
+            </div>
+            {form.generatedSecondaryPhoneOtp ? <div className="spaw-demo-otp">Demo OTP sent by {form.secondaryPhoneVerificationMethod === "sms" ? "SMS" : "Call"}: <strong>{form.generatedSecondaryPhoneOtp}</strong></div> : null}
+            {form.generatedSecondaryPhoneOtp || form.isSecondaryPhoneVerified ? <div className="spaw-otp-row"><input type="text" inputMode="numeric" className={`spaw-input${errors.secondaryPhone ? " is-invalid" : ""}`} value={form.secondaryPhoneOtp} disabled={form.isSecondaryPhoneVerified} onChange={(event) => onField("secondaryPhoneOtp", event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Enter secondary phone OTP" /><button type="button" className="spaw-otp-btn" disabled={form.isSecondaryPhoneVerified} onClick={onValidateSecondaryPhoneOtp}>{form.isSecondaryPhoneVerified ? "Validated" : "Validate OTP"}</button></div> : null}
+            <FieldError message={errors.secondaryPhone} />
+            {form.isSecondaryPhoneVerified ? <div className="spaw-verify-success">Secondary phone number validated by {form.secondaryPhoneVerificationMethod === "sms" ? "SMS" : "Call"}.</div> : null}
+          </div>
         </div>
       ) : null}
       <Toggle label="Would you like to add a WhatsApp number?" value={showWhatsapp} onChange={onToggleWhatsapp} />
@@ -1484,7 +1836,7 @@ function LocationFields({ title, location, index, error, onChange }: { title: st
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
-      searchAddressSuggestions(query, location.country, controller.signal)
+      searchAddressSuggestions(`${query}${location.state ? `, ${location.state}` : ""}`, location.country, controller.signal)
         .then((items) => {
           setSuggestions(items);
           setIsOpen(items.length > 0);
@@ -1539,14 +1891,137 @@ function LocationFields({ title, location, index, error, onChange }: { title: st
               </ul>
             ) : null}
           </div>
+          <CascadingLocationDropdowns
+            location={location}
+            invalid={Boolean(error)}
+            onChange={(value) => onChange(index, value)}
+          />
           <div className="spaw-location-row">
-            <input type="text" className={error ? "is-invalid" : ""} placeholder="City" value={location.city} onChange={(event) => onChange(index, { city: event.target.value })} />
             <input type="text" className={error ? "is-invalid" : ""} placeholder="Zipcode" value={location.zip} onChange={(event) => onChange(index, { zip: event.target.value })} />
           </div>
         </div>
         <FieldError message={error} />
       </div>
     </div>
+  );
+}
+
+function normalizeLocationName(value: string) {
+  return value.trim().toLocaleLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function findLocationOption<T extends { name: string; code?: string }>(options: T[], value: string) {
+  const target = normalizeLocationName(value);
+  if (!target) return undefined;
+  return options.find((option) =>
+    normalizeLocationName(option.name) === target || normalizeLocationName(option.code || "") === target);
+}
+
+function CascadingLocationDropdowns({
+  location,
+  invalid,
+  onChange,
+}: {
+  location: LocationForm;
+  invalid?: boolean;
+  onChange: (value: Partial<LocationForm>) => void;
+}) {
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [states, setStates] = useState<StateOption[]>([]);
+  const [cities, setCities] = useState<CityOption[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
+
+  const selectedCountry = useMemo(
+    () => findLocationOption(countries, location.country),
+    [countries, location.country],
+  );
+  const selectedState = useMemo(
+    () => findLocationOption(states, location.state),
+    [states, location.state],
+  );
+  const selectedCity = useMemo(
+    () => findLocationOption(cities, location.city),
+    [cities, location.city],
+  );
+
+  useEffect(() => {
+    let active = true;
+    getLocationCountries()
+      .then((items) => active && setCountries(items))
+      .catch(() => active && setCountries([]))
+      .finally(() => active && setLoadingCountries(false));
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    setStates([]);
+    setCities([]);
+    if (!selectedCountry) return () => { active = false; };
+    setLoadingStates(true);
+    getLocationStates(selectedCountry.id)
+      .then((items) => active && setStates(items))
+      .catch(() => active && setStates([]))
+      .finally(() => active && setLoadingStates(false));
+    return () => { active = false; };
+  }, [selectedCountry?.id]);
+
+  useEffect(() => {
+    let active = true;
+    setCities([]);
+    if (!selectedState) return () => { active = false; };
+    setLoadingCities(true);
+    getLocationCities(selectedState.id)
+      .then((items) => active && setCities(items))
+      .catch(() => active && setCities([]))
+      .finally(() => active && setLoadingCities(false));
+    return () => { active = false; };
+  }, [selectedState?.id]);
+
+  return (
+    <>
+      <select
+        aria-label="Country"
+        className={invalid ? "is-invalid" : ""}
+        disabled={loadingCountries}
+        value={selectedCountry?.id || ""}
+        onChange={(event) => {
+          const country = countries.find((item) => item.id === Number(event.target.value));
+          onChange({ country: country?.name || "", state: "", city: "", zip: "" });
+        }}
+      >
+        <option value="">{loadingCountries ? "Loading countries…" : "Select country"}</option>
+        {countries.map((country) => <option key={country.id} value={country.id}>{country.name}</option>)}
+      </select>
+      <select
+        aria-label="State or province"
+        className={invalid ? "is-invalid" : ""}
+        disabled={!selectedCountry || loadingStates}
+        value={selectedState?.id || ""}
+        onChange={(event) => {
+          const state = states.find((item) => item.id === Number(event.target.value));
+          onChange({ state: state?.name || "", city: "", zip: "" });
+        }}
+      >
+        <option value="">{loadingStates ? "Loading states…" : "Select state / province"}</option>
+        {states.map((state) => <option key={state.id} value={state.id}>{state.name}</option>)}
+      </select>
+      <select
+        aria-label="City"
+        className={invalid ? "is-invalid" : ""}
+        disabled={!selectedState || loadingCities}
+        value={selectedCity?.id || ""}
+        onChange={(event) => {
+          const city = cities.find((item) => item.id === Number(event.target.value));
+          onChange({ city: city?.name || "", zip: "" });
+        }}
+      >
+        <option value="">{loadingCities ? "Loading cities…" : "Select city"}</option>
+        {cities.map((city) => <option key={city.id} value={city.id}>{city.name}</option>)}
+      </select>
+    </>
   );
 }
 
@@ -1600,7 +2075,7 @@ function BranchLocationRow({
 
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
-      searchAddressSuggestions(query, branch.country, controller.signal)
+      searchAddressSuggestions(`${query}${branch.state ? `, ${branch.state}` : ""}`, branch.country, controller.signal)
         .then((items) => {
           setSuggestions(items);
           setIsOpen(items.length > 0);
@@ -1651,8 +2126,8 @@ function BranchLocationRow({
           </ul>
         ) : null}
       </div>
+      <CascadingLocationDropdowns location={branch} onChange={onChange} />
       <div className="spaw-location-row">
-        <input type="text" value={branch.city} onChange={(event) => onChange({ city: event.target.value })} placeholder="City" />
         <input type="text" value={branch.zip} onChange={(event) => onChange({ zip: event.target.value })} placeholder="Zipcode" />
         <button type="button" className="spaw-branch-remove" onClick={onRemove}><i className="material-icons">close</i></button>
       </div>
@@ -1666,10 +2141,10 @@ function StepService({
   selectedCategory,
   selectedDetailedIds,
   areas,
-  areaInput,
+  availableCities,
+  loadingCities,
   errors,
-  onAreaInput,
-  onAddArea,
+  onSelectArea,
   onRemoveArea,
   onChooseCategory,
   onField,
@@ -1688,10 +2163,10 @@ function StepService({
   selectedCategory: AllServiceCategoryOption | null;
   selectedDetailedIds: number[];
   areas: string[];
-  areaInput: string;
+  availableCities: CityOption[];
+  loadingCities: boolean;
   errors: FieldErrors;
-  onAreaInput: (value: string) => void;
-  onAddArea: () => void;
+  onSelectArea: (value: string) => void;
   onRemoveArea: (index: number) => void;
   onChooseCategory: (category: AllServiceCategoryOption) => void;
   onField: <K extends keyof PostingForm>(key: K, value: PostingForm[K]) => void;
@@ -1706,6 +2181,8 @@ function StepService({
   onGenerateAiImage: () => void;
 }) {
   const [isServiceOpen, setIsServiceOpen] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
+  const [isCityOpen, setIsCityOpen] = useState(false);
   const selectedServiceRef = useRef("");
 
   function chooseService(category: AllServiceCategoryOption) {
@@ -1838,18 +2315,85 @@ function StepService({
           <div className="spaw-tag-chips">
             {areas.map((area, index) => <span className="spaw-chip" key={area}>{area}<i className="material-icons" onClick={() => onRemoveArea(index)}>close</i></span>)}
           </div>
-          <input
-            value={areaInput}
-            onBlur={onAddArea}
-            onChange={(event) => onAreaInput(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === ",") {
-                event.preventDefault();
-                onAddArea();
-              }
+          <Autocomplete
+            key={areas.join("|")}
+            className="spaw-city-autocomplete"
+            options={availableCities.filter((city) => !areas.some((area) => area.toLowerCase() === city.name.toLowerCase()))}
+            getOptionLabel={(city) => city.name}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            loading={loadingCities}
+            disabled={loadingCities || !availableCities.length}
+            openOnFocus
+            autoHighlight
+            clearOnBlur
+            value={null}
+            onChange={(_, city) => {
+              if (city) onSelectArea(String(city.id));
             }}
-            placeholder="Type a city or area and press Enter"
+            noOptionsText="No cities found"
+            renderInput={(params) => (
+              <MuiTextField
+                {...params}
+                placeholder="Select a city"
+                aria-label="Search and select a city"
+              />
+            )}
           />
+          {false ? (
+          <div className="spaw-city-picker" onBlur={() => window.setTimeout(() => setIsCityOpen(false), 120)}>
+            <button
+              type="button"
+              className="spaw-city-picker-trigger"
+              disabled={loadingCities || !availableCities.length}
+              onClick={() => setIsCityOpen((current) => !current)}
+            >
+              <span>{loadingCities ? "Loading cities..." : "Select a city"}</span>
+              <i className="material-icons">keyboard_arrow_down</i>
+            </button>
+            {isCityOpen ? (
+              <div className="spaw-city-picker-menu">
+                <div className="spaw-city-picker-search">
+                  <i className="material-icons">search</i>
+                  <input
+                    type="search"
+                    aria-label="Search cities"
+                    placeholder="Search city"
+                    autoComplete="off"
+                    autoFocus
+                    value={citySearch}
+                    onChange={(event) => setCitySearch(event.target.value)}
+                  />
+                </div>
+                <div className="spaw-city-picker-options">
+            {false ? <option value="">
+              {loadingCities
+                ? "Loading cities…"
+                : availableCities.length
+                  ? `Select a city in ${availableCities[0] ? "the selected state" : "your state"}`
+                  : "Select country and state on the first page"}
+            </option> : null}
+            {availableCities
+              .filter((city) => !areas.some((area) => area.toLowerCase() === city.name.toLowerCase()))
+              .filter((city) => city.name.toLowerCase().includes(citySearch.trim().toLowerCase()))
+              .map((city) => (
+                <button
+                  type="button"
+                  key={city.id}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    onSelectArea(String(city.id));
+                    setCitySearch("");
+                    setIsCityOpen(false);
+                  }}
+                >
+                  {city.name}
+                </button>
+              ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+          ) : null}
         </div>
         <FieldError message={errors.serviceAreas} />
       </div>
@@ -1941,7 +2485,7 @@ function StepProfile({
             </div>
           ))}
         </div>
-        <button type="button" className="spaw-add-package" onClick={onAddServicePackage} disabled={servicePackages.length >= 6}>
+        <button type="button" className="spaw-add-package" onClick={onAddServicePackage}>
           <i className="material-icons">add</i>
           Add another service
         </button>

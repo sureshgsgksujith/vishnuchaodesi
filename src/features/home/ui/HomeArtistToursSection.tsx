@@ -14,7 +14,7 @@ import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 const fallbackImage = "/template-17/images/chao-home-artists/2.jpg";
 
 export default function HomeArtistToursSection() {
-  const { currentLocation, selectedCity, activeCity, activeLocationLabel, locationRevision } = useHomeSelectedLocation();
+  const { currentLocation, selectedCity, selectedLocation, activeCity, activeLocationLabel, locationRevision } = useHomeSelectedLocation();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isShowingAllCities, setIsShowingAllCities] = useState(false);
@@ -37,6 +37,8 @@ export default function HomeArtistToursSection() {
     setIsLoading(true);
     const query = {
       category: "events-tickets",
+      country: selectedLocation.countryName || currentLocation.country || undefined,
+      state: selectedLocation.stateName || currentLocation.state || undefined,
       city: activeCity || undefined,
       page: 1,
       pageSize: 30,
@@ -80,7 +82,7 @@ export default function HomeArtistToursSection() {
     return () => {
       isActive = false;
     };
-  }, [activeCity, currentLocation.status, locationRevision, selectedCity]);
+  }, [activeCity, currentLocation.country, currentLocation.state, currentLocation.status, locationRevision, selectedCity, selectedLocation.countryName, selectedLocation.stateName]);
 
   const moveSlider = (direction: -1 | 1) => {
     const slider = sliderRef.current;

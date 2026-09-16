@@ -27,7 +27,7 @@ async function parseResponse(response: Response): Promise<AuthApiResponse> {
 
 export async function sendOtpApi(
   loginId: string,
-  purpose: "Register" | "ForgotPassword",
+  purpose: "Register" | "ForgotPassword" | "ServicePosting",
   fullName?: string
 ) {
   const response = await fetch(`${API_BASE_URL}/send-otp`, {
@@ -48,7 +48,7 @@ export async function sendOtpApi(
 export async function verifyOtpApi(
   loginId: string,
   otpCode: string,
-  purpose: "Register" | "ForgotPassword"
+  purpose: "Register" | "ForgotPassword" | "ServicePosting"
 ) {
   const response = await fetch(`${API_BASE_URL}/verify-otp`, {
     method: "POST",

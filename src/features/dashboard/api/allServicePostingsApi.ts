@@ -38,6 +38,7 @@ export type AllServicePostingPayload = {
   pricingPackages?: AllServicePricingPackage[];
   contactName: string;
   email: string;
+  secondaryEmail?: string;
   phoneCountryCode: string;
   phoneNumber: string;
   verificationMethod: string;

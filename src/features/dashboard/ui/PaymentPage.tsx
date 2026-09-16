@@ -12,6 +12,7 @@ import { getMyPlanPayments, getMyPlanUsage, selectPricingPlan, type PlanPayment,
 import { formatCurrencyAmount } from "../../../shared/utils/currency";
 import { getCoupons, type Coupon } from "../../coupons/api/couponsApi";
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
+import PaymentProcessingOverlay from "../../../shared/components/PaymentProcessingOverlay";
 import { getMyAllServicePostings, type AllServicePosting } from "../api/allServicePostingsApi";
 import "../styles/eventBookings.css";
 
@@ -256,6 +257,7 @@ export default function PaymentPage() {
 
   return (
     <DashboardLayout mainContentClassName="ud-no-rhs dashboard-payment-main">
+      <PaymentProcessingOverlay visible={isProcessingPlan} />
       <div className="ud-cen dashboard-payment-page">
         <div className="log-bor">&nbsp;</div>
         <span className="udb-inst">Payment</span>
