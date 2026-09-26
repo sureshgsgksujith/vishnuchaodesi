@@ -2,7 +2,7 @@
   min-height: 70vh;
   background: #f5f7fb;
   color: #17233c;
-  padding: 34px max(20px, calc((100vw - 1180px) / 2)) 72px;
+  padding: 120px max(20px, calc((100vw - 1180px) / 2)) 72px;
 }
 .community-hero {
   background: linear-gradient(130deg, #10236f, #3157d5 60%, #697fea);
@@ -43,6 +43,8 @@
   backdrop-filter: blur(6px);
 }
 .community-hero-stats b { color: #fff; font-size: 15px; margin-right: 4px; }
+.community-create-group-link { align-items: center; background: #fff; border-radius: 10px; color: #173cb5; display: inline-flex; font-weight: 800; gap: 8px; margin-top: 18px; padding: 11px 17px; text-decoration: none; }
+.community-create-group-link:hover { background: #f1f5ff; color: #0d2c91; }
 .community-eyebrow {
   display: inline-block;
   text-transform: uppercase;
@@ -377,7 +379,7 @@
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: 72px max(20px, calc((100vw - 1180px) / 2)) 72px;
+  padding: 120px max(20px, calc((100vw - 1180px) / 2)) 72px;
 }
 .community-home.chao-home-page > .community-hero {
   box-sizing: border-box;
@@ -386,6 +388,6 @@
   padding: 38px;
 }
 @media (max-width: 760px) {
-  .community-home.chao-home-page { padding: 44px 14px 48px; }
+  .community-home.chao-home-page { padding: 76px 14px 92px; }
   .community-home.chao-home-page > .community-hero { padding: 25px 20px; }
 }

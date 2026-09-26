@@ -198,8 +198,9 @@ export default function PaymentPage() {
       } else {
         navigate("/pricing-details", { replace: true });
       }
-    } catch {
-      setCheckoutMessage("Unable to complete payment. Please try again.");
+    } catch (error) {
+      const responseMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setCheckoutMessage(responseMessage || "Unable to complete payment. Please try again.");
     } finally {
       setIsProcessingPlan(false);
     }
@@ -431,8 +432,8 @@ export default function PaymentPage() {
 
           <form className="plan-checkout" onSubmit={handleSubmit}>
             <div className="plan-checkout-bar">
-              <span><i className="material-icons">verified_user</i> Secure checkout</span>
-              <span><i className="material-icons">lock</i> Your payment details are protected</span>
+              <span><i className="material-icons">science</i> Demo payment</span>
+              <span>No money will be charged</span>
             </div>
             <div className="plan-checkout-hero">
               <span className="material-icons">workspace_premium</span>
@@ -467,7 +468,7 @@ export default function PaymentPage() {
                 <div className="plan-checkout-total"><span>Amount Payable</span><b>{checkoutAmount}</b></div>
                 <button type="submit" className="plan-checkout-pay-now" disabled={!agreedToTerms || !activePlan || isProcessingPlan}><i className="material-icons">lock</i> {isProcessingPlan ? "Processing..." : "Pay Securely"}</button>
                 {checkoutMessage ? <p className={checkoutMessage.startsWith("Payment completed") ? "is-success" : "is-error"}>{checkoutMessage}</p> : null}
-                <p className="plan-checkout-secure"><i className="material-icons">verified_user</i> 100% secure payment</p>
+                <p className="plan-checkout-secure"><i className="material-icons">science</i> Demo transaction - no money will be charged</p>
               </aside>
             </div>
           </form>

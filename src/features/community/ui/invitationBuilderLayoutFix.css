@@ -1,0 +1,100 @@
+.invite-builder {
+  padding-top: 112px;
+}
+
+.invite-rsvp-preview {
+  display: grid;
+  gap: 14px;
+  text-align: left;
+}
+
+.invite-rsvp-preview h1 {
+  margin: 0 0 4px;
+  text-align: center;
+}
+
+.invite-rsvp-preview label {
+  display: grid;
+  gap: 7px;
+  color: #33476b;
+  font-weight: 700;
+}
+
+.invite-rsvp-preview input,
+.invite-rsvp-preview select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #ccd7e8;
+  border-radius: 9px;
+  background: #fff;
+  color: #102b55;
+  font: inherit;
+}
+
+.invite-rsvp-preview button[type="submit"] {
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #3159dc;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.invite-rsvp-preview .invite-note {
+  margin: 0;
+  text-align: center;
+}
+
+.invite-rsvp-help {
+  margin: -4px 0 4px;
+  color: #6f7e98;
+  text-align: center;
+}
+
+.invite-rsvp-success {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.invite-rsvp-success > .material-icons {
+  color: #1da565;
+  font-size: 64px;
+}
+
+.invite-rsvp-success h1,
+.invite-rsvp-success p {
+  margin: 0;
+}
+
+.invite-rsvp-success p {
+  max-width: 520px;
+  color: #6f7e98;
+  line-height: 1.55;
+}
+
+.invite-rsvp-success button {
+  width: min(320px, 100%);
+  margin-top: 8px;
+  padding: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: #3159dc;
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .invite-builder {
+    padding-top: 76px;
+    padding-bottom: 95px;
+  }
+}

@@ -2608,7 +2608,7 @@ function StepReview({
       <div className={`spaw-field-block${errors.payment ? " spaw-input-error" : ""}`}>
         <label className="spaw-label">Payment <span className="spaw-req">*</span><small>Complete payment before submitting the service posting.</small></label>
         <div className="plan-checkout">
-          <div className="plan-checkout-bar"><span><i className="material-icons">lock</i> Your payment details are protected</span><span>Service posting checkout</span></div>
+          <div className="plan-checkout-bar"><span><i className="material-icons">science</i> Demo payment - no money will be charged</span><span>DEMO CHECKOUT</span></div>
           {selectedPlan ? (
             <>
               <div className="plan-checkout-hero"><i className="material-icons">storefront</i><div><small>Local Service plan</small><h2>{selectedPlan.name}</h2><p>Complete your payment securely to submit this service listing.</p></div></div>
@@ -2635,7 +2635,7 @@ function StepReview({
                   {!isPaymentGatewayOpen && !isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" onClick={onOpenPayment}><i className="material-icons">lock</i> Continue to Payment</button> : null}
                   {isPaymentGatewayOpen && !isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" onClick={() => onCompletePayment({ provider: selectedGateway, couponCode: appliedCoupon?.code || "", subtotalAmount: planAmount, discountAmount, totalAmount: payAmount, currency: selectedPlan.currency })} disabled={isProcessingPayment || !acceptedTerms}>{isProcessingPayment ? "Processing..." : <><i className="material-icons">lock</i> Pay Securely</>}</button> : null}
                   {isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" disabled><i className="material-icons">check_circle</i> Payment Completed</button> : null}
-                  <p className="plan-checkout-secure"><i className="material-icons">verified_user</i> 100% secure payment</p>
+                  <p className="plan-checkout-secure"><i className="material-icons">science</i> Test transaction only</p>
                 </aside>
               </div>
             </>

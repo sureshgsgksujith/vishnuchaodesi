@@ -1,0 +1,162 @@
+.feed-toolbar {
+  align-items: flex-end;
+  padding: 4px 0;
+}
+
+.feed-toolbar > div:first-child {
+  position: relative;
+  min-height: 58px;
+  padding-left: 72px;
+}
+
+.feed-toolbar > div:first-child > .material-icons {
+  display: none !important;
+}
+
+.feed-toolbar > div:first-child::before {
+  content: "☷";
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #3157d5, #667dea);
+  color: #fff;
+  font: 700 28px/1 "Segoe UI Symbol", Arial, sans-serif;
+  box-shadow: 0 8px 18px rgba(49, 87, 213, .2);
+}
+
+.feed-toolbar h2 {
+  font-size: 32px;
+  line-height: 1.15;
+}
+
+.feed-toolbar > label {
+  width: min(390px, 40%);
+}
+
+.feed-toolbar .community-picker {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+}
+
+.community-feed-composer {
+  padding: 24px;
+}
+
+.community-feed-composer .community-form {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.community-feed-composer .community-form > select {
+  grid-column: 1 / 4;
+  grid-row: 1;
+  min-width: 0;
+  height: 52px;
+}
+
+.community-feed-composer .community-form > textarea {
+  grid-column: 1 / 10;
+  grid-row: 2;
+  box-sizing: border-box;
+  width: 100%;
+  height: 52px;
+  min-height: 52px;
+}
+
+.community-feed-composer .feed-title-input {
+  grid-column: 4 / 10;
+  grid-row: 1;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+}
+
+.community-feed-composer .community-form > button {
+  grid-column: 10 / 13;
+  grid-row: 1;
+  min-height: 52px;
+  font-weight: 800;
+}
+
+.community-feed-composer .feed-file {
+  grid-column: 1 / 13;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: 24px auto minmax(220px, 1fr);
+  align-items: center;
+  gap: 9px;
+  margin-top: 2px;
+  padding: 11px 13px;
+  border: 1px dashed #bdcae4;
+  border-radius: 12px;
+  background: rgba(255,255,255,.72);
+  color: #33496f;
+  font-weight: 700;
+}
+
+.profile-post-composer {
+  margin-bottom: 16px;
+  border: 1px solid #dfe6f2;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.community-feed-composer .feed-file > .material-icons {
+  margin: 0;
+  color: #3157d5;
+  font-size: 22px;
+}
+
+.community-feed-composer .feed-file input[type="file"] {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #71809b;
+  font: inherit;
+  font-weight: 400;
+}
+
+.community-feed-composer .feed-file input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: #e8edff;
+  color: #2447c9;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.feed-sidebar ul {
+  margin: 0;
+}
+
+.feed-sidebar li {
+  margin: 8px 0;
+  padding-left: 3px;
+}
+
+@media (max-width: 1000px) {
+  .feed-toolbar > label { width: min(390px, 46%); }
+}
+
+@media (max-width: 720px) {
+  .feed-toolbar { align-items: stretch; }
+  .feed-toolbar > label { width: 100%; }
+  .community-feed-composer .community-form { display: flex; flex-direction: column; }
+  .community-feed-composer .feed-file { display: flex; flex-wrap: wrap; }
+  .community-feed-composer .feed-file input[type="file"] { flex: 1 1 100%; }
+}

@@ -1,0 +1,16 @@
+.feed-comment-count { border: 0; padding: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.feed-comment-count:hover { color: #3157d5; text-decoration: underline; }
+.comment-thread { max-height: 340px; margin: 16px 0; overflow-y: auto; border-top: 1px solid #e5eaf3; border-bottom: 1px solid #e5eaf3; }
+.comment-thread article { display: grid; grid-template-columns: 42px 1fr; gap: 10px; padding: 14px 4px; border-bottom: 1px solid #edf0f5; }
+.comment-thread article:last-child { border-bottom: 0; }
+.comment-thread .feed-avatar { width: 40px; height: 40px; font-size: 15px; }
+.comment-thread strong { color: #172f60; }
+.comment-thread small { display: block; margin-top: 2px; color: #8a96aa; font-size: 11px; }
+.comment-thread p { margin: 6px 0; color: #3f506d; line-height: 1.45; }
+.comment-thread article button { border: 0; padding: 0; background: transparent; color: #3157d5; font-weight: 700; cursor: pointer; }
+.comment-thread .comment-reply { margin-left: 38px; border-left: 2px solid #dbe4fb; padding-left: 12px; }
+.comment-loading,.comment-empty { padding: 28px; text-align: center; color: #77849b; }
+.comment-empty .material-icons { display: block; margin-bottom: 5px; color: #aeb9cc; font-size: 34px; }
+.comment-replying { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-radius: 9px; background: #edf2ff; color: #536584; font-size: 12px; }
+.comment-replying button { border: 0; background: transparent; color: #536584; cursor: pointer; }
+@media(max-width:600px){.comment-thread{max-height:280px}.comment-thread .comment-reply{margin-left:20px}}

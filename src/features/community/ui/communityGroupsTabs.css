@@ -1,0 +1,98 @@
+.community-workspace .community-group-view-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  overflow: visible;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.community-workspace .community-group-view-tabs button {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 62px;
+  overflow: hidden;
+  padding: 12px 48px 12px 64px;
+  border: 1px solid #dfe6f2;
+  border-radius: 13px;
+  background: #f8faff;
+  color: #40516e;
+  box-shadow: none;
+}
+
+.community-workspace .community-group-view-tabs button > .material-icons {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+.community-workspace .community-group-view-tabs button::before {
+  content: "●";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: "Segoe UI Symbol", Arial, sans-serif;
+  font-weight: 700;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border-radius: 10px;
+  background: #e8edfb;
+  color: #3157d5;
+  font-size: 20px;
+}
+
+.community-workspace .community-group-view-tabs button:nth-child(1)::before { content: "★"; }
+.community-workspace .community-group-view-tabs button:nth-child(2)::before { content: "♟"; }
+.community-workspace .community-group-view-tabs button:nth-child(3)::before { content: "⌛"; }
+.community-workspace .community-group-view-tabs button:nth-child(4)::before { content: "⌖"; }
+
+.community-workspace .community-group-view-tabs button > b {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 26px;
+  height: 26px;
+  margin-left: 0;
+  flex: 0 0 auto;
+}
+
+.community-workspace .community-group-view-tabs button.active {
+  border-color: #2447c9;
+  background: #2447c9;
+  color: #fff;
+}
+
+.community-workspace .community-group-view-tabs button.active::before {
+  background: rgba(255, 255, 255, .18);
+  color: #fff;
+}
+
+@media (max-width: 1050px) {
+  .community-workspace .community-group-view-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .community-workspace .community-group-view-tabs { grid-template-columns: 1fr; }
+}

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { createListing, getListing, getListingApiErrorMessage, isListingUpgradeRequired, updateListing, type ListingSummary, type UpsertListingPayload } from "../api/listingsApi";
 import { getClassifiedSpecificationFields, getListingCategoryFields, getListingCategoryTree, type ListingCategoryFieldDefinition, type ListingCategoryOption } from "../api/listingCategoriesApi";
 import { getMyProfile } from "../api/profileApi";
@@ -3113,8 +3114,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       setPlanUsage(nextUsage);
       updateField("adType", plan.name);
       setIsPlansModalOpen(false);
-    } catch {
-      setPlansModalMessage("Unable to select this plan. Please try again.");
+      toast.success(`${plan.name} activated successfully. ${plan.price > 0 ? "Demo payment approved; no money was charged." : ""}`.trim());
+    } catch (error) {
+      setPlansModalMessage(getListingApiErrorMessage(error));
     } finally {
       setSelectingPlanCode("");
     }
@@ -10357,7 +10359,11 @@ function PlansSelectionModal({
   const [couponMessage, setCouponMessage] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [simulateDecline, setSimulateDecline] = useState(false);
+  const [demoPaymentMessage, setDemoPaymentMessage] = useState("");
   const checkoutTotal = Math.max(0, (checkoutPlan?.price || 0) - couponDiscount);
+  const isIndiaCheckout = country.trim().toLowerCase() === "india";
+  const demoGatewayName = isIndiaCheckout ? "Razorpay" : "Stripe";
 
   async function applyCoupon() {
     const code = couponCode.trim().toUpperCase();
@@ -10385,6 +10391,8 @@ function PlansSelectionModal({
     setAppliedCouponCode("");
     setCouponMessage("");
     setAcceptedTerms(false);
+    setSimulateDecline(false);
+    setDemoPaymentMessage("");
   }
 
   return (
@@ -10398,7 +10406,7 @@ function PlansSelectionModal({
         {message ? <div className="listing-plan-modal-message">{message}</div> : null}
         {checkoutPlan ? (
           <div className="plan-checkout" style={{ margin: 0 }}>
-            <div className="plan-checkout-bar"><span><i className="material-icons">lock</i> Your payment details are protected</span><span>Yellow Pages checkout</span></div>
+            <div className="plan-checkout-bar"><span><i className="material-icons">science</i> {demoGatewayName} test payment - no money will be charged</span><span>{demoGatewayName.toUpperCase()} TEST MODE</span></div>
             <div className="plan-checkout-hero"><span className="material-icons">storefront</span><div><small>YELLOW PAGES PLAN</small><h2>{checkoutPlan.name}</h2><p>Complete payment securely to activate this listing plan.</p></div></div>
             <div className="plan-checkout-layout">
               <div className="plan-checkout-steps">
@@ -10411,7 +10419,17 @@ function PlansSelectionModal({
                 <div className="plan-checkout-coupon"><label htmlFor="yellow-pages-coupon">COUPON CODE</label><div><input id="yellow-pages-coupon" value={couponCode} onChange={(event) => { setCouponCode(event.target.value); setCouponMessage(""); }} placeholder="Enter coupon code" /><button type="button" onClick={applyCoupon} disabled={isApplyingCoupon}>{isApplyingCoupon ? "Checking..." : "Apply"}</button></div>{couponMessage ? <p className={appliedCouponCode ? "is-success" : "is-error"}>{couponMessage}</p> : null}</div>
                 <div className="plan-checkout-fees"><div><span>Total Amount</span><b>{formatCurrencyAmount(checkoutPlan.price, country)}</b></div><div className="is-discount"><span>Discount Amount{appliedCouponCode ? ` (${appliedCouponCode})` : ""}</span><b>-{formatCurrencyAmount(couponDiscount, country)}</b></div></div>
                 <div className="plan-checkout-total"><span>Pay Amount</span><b>{formatCurrencyAmount(checkoutTotal, country)}</b></div>
-                <button type="button" className="plan-checkout-pay-now" disabled={!acceptedTerms || selectingPlanCode === checkoutPlan.code} onClick={() => onSelect(checkoutPlan, { paymentReference: `PLAN-${Date.now()}`, paymentProvider: gateway, couponCode: appliedCouponCode || undefined })}>{selectingPlanCode === checkoutPlan.code ? "Processing..." : <><i className="material-icons">lock</i> Pay Securely</>}</button>
+                <label className="plan-checkout-terms"><input type="checkbox" checked={simulateDecline} onChange={(event) => { setSimulateDecline(event.target.checked); setDemoPaymentMessage(""); }} /> Simulate a declined test payment</label>
+                {demoPaymentMessage ? <p className="is-error" role="alert">{demoPaymentMessage}</p> : null}
+                <button type="button" className="plan-checkout-pay-now" disabled={!acceptedTerms || selectingPlanCode === checkoutPlan.code} onClick={() => {
+                  if (simulateDecline) {
+                    setDemoPaymentMessage(`${demoGatewayName} test payment declined. The plan was not activated and no money was charged.`);
+                    toast.error("Test payment declined. Plan was not activated.");
+                    return;
+                  }
+                  setDemoPaymentMessage("");
+                  void onSelect(checkoutPlan, { paymentReference: `${demoGatewayName.toUpperCase()}-TEST-${Date.now()}`, paymentProvider: `${demoGatewayName} Test`, couponCode: appliedCouponCode || undefined });
+                }}>{selectingPlanCode === checkoutPlan.code ? "Processing..." : <><i className="material-icons">lock</i> Pay with {demoGatewayName} test mode</>}</button>
                 <button type="button" className="btn btn-link" onClick={() => setCheckoutPlan(null)}>Back to plans</button><p className="plan-checkout-secure"><i className="material-icons">verified_user</i> 100% secure payment</p>
               </aside>
             </div>
@@ -10429,6 +10447,7 @@ function PlansSelectionModal({
                 </div>
                 <strong>{plan.price === 0 ? "Free" : formatCurrencyAmount(plan.price, country)}</strong>
                 <span>{plan.durationMonths} month{plan.durationMonths === 1 ? "" : "s"} - {plan.listingLimit < 0 ? "Unlimited" : plan.listingLimit} listings</span>
+                <span>{plan.photoLimit < 0 ? "Unlimited photos" : `${plan.photoLimit} photo(s)`} and {plan.videoLimit < 0 ? "unlimited videos" : `${plan.videoLimit} video(s)`} per listing</span>
                 <ul>
                   {plan.features.slice(0, 4).map((feature) => (
                     <li key={feature}>{feature}</li>

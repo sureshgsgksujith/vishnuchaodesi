@@ -1,0 +1,23 @@
+.profile-privacy-card { margin: 0 28px 28px; padding: 20px; border: 1px solid #dce4f4; border-radius: 17px; background: #fff; }
+.profile-privacy-title { display: block; }
+.profile-privacy-title > .material-icons { display: grid; place-items: center; flex: 0 0 46px; height: 46px; border-radius: 13px; background: #edf2ff; color: #3157d5; }
+.profile-privacy-title small { color: #3157d5; font-size: 10px; font-weight: 850; letter-spacing: .11em; }
+.profile-privacy-title h3 { margin: 3px 0; color: #172f60; }
+.profile-privacy-title p { margin: 0; color: #71809a; font-size: 13px; }
+.profile-privacy-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0; }
+.profile-privacy-options button { display: flex; align-items: center; gap: 10px; padding: 15px; border: 1px solid #dce4f4; border-radius: 13px; background: #fafbfe; text-align: left; color: #172f60; cursor: pointer; }
+.profile-privacy-options button.selected { border: 2px solid #3157d5; background: #f0f4ff; }
+.profile-privacy-options button > .material-icons:first-child { color: #3157d5; font-size: 27px; }
+.profile-privacy-options button div { flex: 1; }
+.profile-privacy-options strong,.profile-privacy-options small { display: block; }
+.profile-privacy-options small { margin-top: 3px; color: #71809a; line-height: 1.35; }
+.profile-privacy-check { visibility: hidden; color: #3157d5; }
+.profile-privacy-options .selected .profile-privacy-check { visibility: visible; }
+.profile-privacy-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.profile-privacy-footer p { display: flex; align-items: center; gap: 5px; margin: 0; color: #567064; font-size: 12px; }
+.profile-privacy-footer p .material-icons { color: #26a65b; font-size: 17px; }
+.profile-privacy-footer button { padding: 10px 16px; border: 0; border-radius: 9px; background: #3157d5; color: #fff; font-weight: 750; cursor: pointer; }
+.profile-privacy-footer button:disabled { opacity: .5; cursor: not-allowed; }
+.profile-privacy-notice { margin: 12px 0 0; padding: 9px 11px; border-radius: 8px; background: #eaf8f0; color: #187647; font-size: 12px; }
+.profile-privacy-notice.error { background: #fff0f1; color: #b42335; }
+@media(max-width:650px){.profile-privacy-card{margin:0 16px 18px;padding:15px}.profile-privacy-options{grid-template-columns:1fr}.profile-privacy-footer{align-items:stretch;flex-direction:column}.profile-privacy-footer button{width:100%}}

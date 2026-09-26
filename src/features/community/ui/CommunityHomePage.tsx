@@ -7,62 +7,70 @@ import { getLocationCities, getLocationCountries, getLocationStates, type CityOp
 import { communityApi, discoverCommunityWithFallback, enterCommunity, getCommunityFeatureFlags, type CommunityConversation, type CommunityEvent, type CommunityGroup, type CommunityPost } from "../api/communityApi";
 import "./communityHome.css";
 import "../../home/styles/home.css";
+import "./communityHomeMobile.css";
 
 const panels = [
   { icon: "forum", title: "Community Feed", text: "Posts from groups you join and communities recommended for you.", action: "Open feed", href: "/community/feed", feature: "Groups" },
   { icon: "groups", title: "Recommended Groups", text: "Suggestions will adapt to your location, interests and activity.", action: "Discover communities", href: "/community/discover", feature: "Recommendations" },
   { icon: "event", title: "Upcoming Events", text: "Nearby events and events from your groups will appear here.", action: "Browse events", href: "/community/events", feature: "Events" },
-  { icon: "mark_email_unread", title: "Invitations", text: "You have no pending personal invitations.", action: "Create an invitation", href: "/community/invitations/new", feature: "Invitations" },
+  { icon: "mail", title: "Invitations", text: "You have no pending personal invitations.", action: "Create an invitation", href: "/community/invitations/new", feature: "Invitations" },
   { icon: "chat", title: "Messages", text: "Unread direct and group conversations will appear here.", action: "Open messages", href: "/community/messages", feature: "DirectChat" },
-  { icon: "local_fire_department", title: "Trending Near You", text: "Popular groups, posts and events in your selected area.", action: "See what’s trending", href: "/community/discover", feature: "Recommendations" },
+  { icon: "explore", title: "Trending Near You", text: "Popular groups, posts and events in your selected area.", action: "See what’s trending", href: "/community/discover", feature: "Recommendations" },
 ];
 
 const panelId = (title: string) => title.toLowerCase().replace(/\s+/g, "-");
+type CommunityHomeCache = { flags:Record<string,boolean>;groups:CommunityGroup[];events:CommunityEvent[];posts:CommunityPost[];conversations:CommunityConversation[];invitations:Record<string,unknown>[];notifications:Record<string,unknown>[];isShowingAllCities:boolean };
+let communityHomeCache: CommunityHomeCache | undefined;
 
 export default function CommunityHomePage() {
   const { activeCity, activeLocation, activeLocationLabel, currentCity, currentLocation, setHomeSelectedLocation } = useHomeSelectedLocation();
   const [showLocation, setShowLocation] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-  const [flags, setFlags] = useState<Record<string, boolean>>({});
-  const [groups, setGroups] = useState<CommunityGroup[]>([]);
-  const [events, setEvents] = useState<CommunityEvent[]>([]);
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
-  const [conversations, setConversations] = useState<CommunityConversation[]>([]);
-  const [invitations, setInvitations] = useState<Record<string, unknown>[]>([]);
-  const [notifications, setNotifications] = useState<Record<string, unknown>[]>([]);
+  const [isReady, setIsReady] = useState(Boolean(communityHomeCache));
+  const [flags, setFlags] = useState<Record<string, boolean>>(communityHomeCache?.flags||{});
+  const [groups, setGroups] = useState<CommunityGroup[]>(communityHomeCache?.groups||[]);
+  const [events, setEvents] = useState<CommunityEvent[]>(communityHomeCache?.events||[]);
+  const [posts, setPosts] = useState<CommunityPost[]>(communityHomeCache?.posts||[]);
+  const [conversations, setConversations] = useState<CommunityConversation[]>(communityHomeCache?.conversations||[]);
+  const [invitations, setInvitations] = useState<Record<string, unknown>[]>(communityHomeCache?.invitations||[]);
+  const [notifications, setNotifications] = useState<Record<string, unknown>[]>(communityHomeCache?.notifications||[]);
   const [loadError, setLoadError] = useState("");
-  const [isShowingAllCities, setIsShowingAllCities] = useState(false);
+  const [isShowingAllCities, setIsShowingAllCities] = useState(communityHomeCache?.isShowingAllCities||false);
   const visiblePanels = panels.filter(panel => flags[panel.feature] === true);
 
   useEffect(() => {
     let active = true;
-    Promise.all([enterCommunity(), getCommunityFeatureFlags()]).then(([, result]) => { if (active) { setFlags(result); setIsReady(true); } }).catch(() => active && setIsReady(true));
+    void enterCommunity().catch(()=>undefined);
+    getCommunityFeatureFlags().then(result => { if (active) { setFlags(result); setIsReady(true); } }).catch(() => active && setIsReady(true));
     return () => { active = false; };
   }, []);
 
   useEffect(() => {
     if (!isReady) return;
     let active = true;
-    discoverCommunityWithFallback({city:activeLocation.cityName||undefined,state:activeLocation.stateName||undefined,country:activeLocation.countryName||undefined})
-      .then(async result => {
-        const [allGroupsResult, conversationsResult, invitationsResult, notificationsResult] = await Promise.allSettled([
-          withRetry(() => communityApi.groups({ page: 1, pageSize: 100 })), withRetry(() => communityApi.conversations()), withRetry(() => communityApi.invitations()), withRetry(() => communityApi.notifications())
-        ]);
+    void (async()=>{try {
+        const discoveryTask=discoverCommunityWithFallback({city:activeLocation.cityName||undefined,state:activeLocation.stateName||undefined,country:activeLocation.countryName||undefined});
+        const auxiliaryTask=Promise.allSettled([communityApi.groups({ page: 1, pageSize: 100 }),communityApi.conversations(),communityApi.invitations(),communityApi.notifications()]);
+        const result=await discoveryTask;
+        if (!active) return;
+        setGroups(result.groups);setEvents(result.events);setIsShowingAllCities(result.isShowingAllCities);setLoadError("");
+        const [allGroupsResult, conversationsResult, invitationsResult, notificationsResult] = await auxiliaryTask;
         const allGroups = allGroupsResult.status === "fulfilled" ? allGroupsResult.value.items : [];
         const mergedGroups = [...result.groups, ...allGroups].filter((group, index, list) => list.findIndex(item => item.id === group.id) === index);
-        const postResults = await Promise.allSettled(mergedGroups.slice(0, 8).map(group => withRetry(() => communityApi.posts(group.id))));
+        if (!active) return;
+        setGroups(mergedGroups);
+        setConversations(conversationsResult.status === "fulfilled" ? conversationsResult.value.items : []);
+        setInvitations(invitationsResult.status === "fulfilled" ? invitationsResult.value.items : []);
+        const loadedNotifications = notificationsResult.status === "fulfilled" ? notificationsResult.value.items : [];
+        const finalNotifications=loadedNotifications.length ? loadedNotifications : demoNotifications;
+        setNotifications(finalNotifications);
+        const postResults = await Promise.allSettled(mergedGroups.slice(0, 4).map(group => communityApi.posts(group.id)));
         const allPosts = postResults.flatMap(item => item.status === "fulfilled" ? item.value.items : [])
           .filter((post, index, list) => list.findIndex(item => item.id === post.id) === index)
           .sort((a, b) => new Date(b.createdAtUtc).getTime() - new Date(a.createdAtUtc).getTime());
         if (!active) return;
-        setGroups(mergedGroups); setEvents(result.events); setPosts(allPosts);
-        setConversations(conversationsResult.status === "fulfilled" ? conversationsResult.value.items : []);
-        setInvitations(invitationsResult.status === "fulfilled" ? invitationsResult.value.items : []);
-        const loadedNotifications = notificationsResult.status === "fulfilled" ? notificationsResult.value.items : [];
-        setNotifications(loadedNotifications.length ? loadedNotifications : demoNotifications);
-        setLoadError(""); setIsShowingAllCities(result.isShowingAllCities);
-      })
-      .catch(() => { if (active) setLoadError("Community previews could not be loaded. Please try again."); });
+        setPosts(allPosts);
+        communityHomeCache={flags,groups:mergedGroups,events:result.events,posts:allPosts,conversations:conversationsResult.status==="fulfilled"?conversationsResult.value.items:[],invitations:invitationsResult.status==="fulfilled"?invitationsResult.value.items:[],notifications:finalNotifications,isShowingAllCities:result.isShowingAllCities};
+      } catch { if(active)setLoadError("Community previews could not be loaded. Please try again."); }})();
     return () => { active = false; };
   }, [activeCity, activeLocation.countryName, activeLocation.stateName, isReady]);
 
@@ -75,6 +83,7 @@ export default function CommunityHomePage() {
           <h1>Connect with your community</h1>
           <p>Find people, conversations and celebrations that feel close to home.</p>
           <div className="community-hero-stats"><span><b>{groups.length}</b> communities</span><span><b>{posts.length}</b> updates</span><span><b>{events.length}</b> events</span></div>
+          {flags.Groups === true ? <Link className="community-create-group-link" to="/community/groups"><span className="material-icons">group_add</span>Create or manage groups</Link> : null}
         </div>
         <div className="community-location">
           <label htmlFor="community-city">Your community location</label>
@@ -93,10 +102,10 @@ export default function CommunityHomePage() {
 
       <nav className="community-quick-nav" aria-label="Community sections">
         {visiblePanels.map((panel) => (
-          <a key={panel.title} href={`#${panelId(panel.title)}`}>
+          <Link key={panel.title} to={panel.href}>
             <span className="material-icons" aria-hidden="true">{panel.icon}</span>
             <span className="community-quick-nav-label">{panel.title}</span>
-          </a>
+          </Link>
         ))}
       </nav>
 
@@ -157,8 +166,3 @@ const demoNotifications: Record<string, unknown>[] = [
   { id: "event", title: "Community events this week", body: "Three local celebrations are accepting RSVPs now." },
   { id: "conversation", title: "Keep the conversation going", body: "Visit Messages to connect directly with community members." }
 ];
-
-async function withRetry<T>(request: () => Promise<T>): Promise<T> {
-  try { return await request(); }
-  catch { await new Promise(resolve => window.setTimeout(resolve, 350)); return request(); }
-}
