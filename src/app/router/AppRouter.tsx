@@ -158,6 +158,9 @@ const ClassifiedAdsAllPage = lazy(() =>
     default: module.ClassifiedAdsAllPage,
   })),
 );
+const ServicesMarketplacePlaceholderPage = lazy(
+  () => import("../../features/servicesMarketplace/ui/ServicesMarketplacePlaceholderPage"),
+);
 const ClassifiedAdDetailsPage = lazy(() =>
   import("../../features/classifieds/ui/ClassifiedPages").then((module) => ({
     default: module.ClassifiedAdDetailsPage,
@@ -303,6 +306,8 @@ export function AppRouter() {
     "/dashboard/plan-change",
     "/dashboard/point-history",
     "/dashboard/notifications",
+    "/dashboard/services-marketplace",
+    "/provider/services",
     "/dashboard/followings",
     "/dashboard/review",
     "/dashboard/enquiry",
@@ -401,6 +406,22 @@ export function AppRouter() {
         <Route path="/" element={<HomePage />} />
         <Route path="/index.html" element={<Navigate to="/" replace />} />
         <Route path="/home" element={<HomePage />} />
+        <Route
+          path="/dashboard/services-marketplace"
+          element={
+            <ProtectedCustomerRoute>
+              <ServicesMarketplacePlaceholderPage surface="customer" />
+            </ProtectedCustomerRoute>
+          }
+        />
+        <Route
+          path="/provider/services"
+          element={
+            <ProtectedCustomerRoute>
+              <ServicesMarketplacePlaceholderPage surface="provider" />
+            </ProtectedCustomerRoute>
+          }
+        />
         <Route
           path="/community"
           element={

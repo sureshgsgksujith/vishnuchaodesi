@@ -11,6 +11,8 @@ type DashboardSidebarProps = {
   profileImageUrl?: string;
   joinDate?: string;
   onLogout: () => void;
+  servicesMarketplaceCustomerEnabled?: boolean;
+  servicesMarketplaceProviderEnabled?: boolean;
 };
 
 export default function DashboardSidebar({
@@ -18,8 +20,34 @@ export default function DashboardSidebar({
   profileImageUrl = "/template-17/images/user/1.jpg",
   joinDate = "Join on 17, Apr 2026",
   onLogout,
+  servicesMarketplaceCustomerEnabled = false,
+  servicesMarketplaceProviderEnabled = false,
 }: DashboardSidebarProps) {
   const location = useLocation();
+  const visibleSections: DashboardNavSection[] = [
+    ...dashboardNavSections,
+    ...(servicesMarketplaceCustomerEnabled || servicesMarketplaceProviderEnabled
+      ? [{
+          title: "Services Marketplace",
+          items: [
+            ...(servicesMarketplaceCustomerEnabled
+              ? [{
+                  label: "Marketplace",
+                  href: "/dashboard/services-marketplace",
+                  icon: "/template-17/images/icon/expert-book.png",
+                }]
+              : []),
+            ...(servicesMarketplaceProviderEnabled
+              ? [{
+                  label: "Provider workspace",
+                  href: "/provider/services",
+                  icon: "/template-17/images/icon/expert.png",
+                }]
+              : []),
+          ],
+        } satisfies DashboardNavSection]
+      : []),
+  ];
 
   return (
     <div className="ud-lhs">
@@ -40,7 +68,7 @@ export default function DashboardSidebar({
 
       <div className="ud-lhs-s2 row">
         <ul>
-          {dashboardNavSections.map((section) => (
+          {visibleSections.map((section) => (
             <SidebarSection
               key={section.title || section.items[0]?.label}
               section={section}

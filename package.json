@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "audit:category-fields": "node scripts/category-field-audit.mjs",
     "smoke:postings": "node scripts/posting-smoke.mjs"
+    ,"smoke:services-marketplace": "node scripts/services-marketplace-smoke.mjs"
   },
   "browserslist": [
     "defaults",
