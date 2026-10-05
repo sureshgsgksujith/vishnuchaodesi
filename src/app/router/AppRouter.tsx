@@ -4,6 +4,7 @@ import {
   Navigate,
   useLocation,
   useNavigate,
+  useParams,
 } from "react-router-dom";
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import { customerTemplateRoutes } from "./customerTemplateRoutes";
@@ -277,6 +278,21 @@ function ProtectedCustomerRoute({ children }: { children: ReactNode }) {
   return <Navigate to={`/login?${searchParams.toString()}`} replace />;
 }
 
+function CityServicesRoute() {
+  const { citySlug } = useParams<{ citySlug: string }>();
+  const cityName = (citySlug || "")
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+  return (
+    <ProtectedCustomerRoute>
+      <ServicesMarketplacePlaceholderPage surface="customer" cityName={cityName} />
+    </ProtectedCustomerRoute>
+  );
+}
+
 function RegisterRedirect() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -307,6 +323,7 @@ export function AppRouter() {
     "/dashboard/point-history",
     "/dashboard/notifications",
     "/dashboard/services-marketplace",
+    "/hyderabad",
     "/provider/services",
     "/dashboard/followings",
     "/dashboard/review",
@@ -414,6 +431,7 @@ export function AppRouter() {
             </ProtectedCustomerRoute>
           }
         />
+        <Route path="/:citySlug" element={<CityServicesRoute />} />
         <Route
           path="/provider/services"
           element={

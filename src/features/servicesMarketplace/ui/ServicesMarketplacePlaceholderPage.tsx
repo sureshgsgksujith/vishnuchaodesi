@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../dashboard/components/DashboardLayout";
@@ -40,16 +40,69 @@ import ProviderJobWorkspace from "./ProviderJobWorkspace";
 import { CustomerAdditionalWork } from "./AdditionalWorkPanel";
 import ServicesPaymentPanel from "./ServicesPaymentPanel";
 import { CustomerCompletion } from "./CompletionPanel";
+import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
+import CustomerHeader from "../../home/ui/CustomerHeader";
 
 type Surface = "customer" | "provider";
 type PageState = "loading" | "enabled" | "unavailable";
+type ServiceLocation = {
+  countryCode: string;
+  administrativeArea: string;
+  locality: string;
+  postalCode: string;
+};
 const recentKey = "chaodesi_services_recent_v1";
+const fallbackCategoryNames = ["Home repair", "Appliance & HVAC", "Cleaning", "Pest control"];
+type HeroQuickCategory = {
+  key: string;
+  label: string;
+  imageUrl?: string | null;
+  categoryId: string;
+  subCategoryId?: string;
+  query?: string;
+  durationMinutes?: number | null;
+};
+
+function serviceIcon(value: string) {
+  const name = value.toLowerCase();
+  if (name.includes("clean")) return "cleaning_services";
+  if (name.includes("paint")) return "format_paint";
+  if (name.includes("ac") || name.includes("hvac") || name.includes("appliance")) return "ac_unit";
+  if (name.includes("pest")) return "pest_control";
+  if (name.includes("electric")) return "electrical_services";
+  if (name.includes("plumb")) return "plumbing";
+  return "home_repair_service";
+}
+
+function serviceImage(value: string, index = 0) {
+  const name = value.toLowerCase();
+  if (name.includes("clean") || name.includes("sofa") || name.includes("carpet")) return "/services-marketplace/categories/cleaning.png";
+  if (name.includes("ac") || name.includes("hvac") || name.includes("appliance") || name.includes("refrigerator") || name.includes("washing")) return "/services-marketplace/categories/appliance-hvac.png";
+  if (name.includes("electric") || name.includes("plumb") || name.includes("repair") || name.includes("carpenter") || name.includes("handyman")) return "/services-marketplace/categories/home-repair.png";
+  if (name.includes("pest")) return "/services-marketplace/categories/pest-control.png";
+  return ["/template-17/images/services/6.jpeg", "/template-17/images/services/7.jpg", "/template-17/images/services/8.jpg"][index % 3];
+}
+
+function categoryImage(value: string, index = 0) {
+  return serviceImage(value, index);
+}
+
+function localDateInput(daysFromToday = 0) {
+  const value = new Date();
+  value.setHours(12, 0, 0, 0);
+  value.setDate(value.getDate() + daysFromToday);
+  return value.toISOString().slice(0, 10);
+}
 
 export default function ServicesMarketplacePlaceholderPage({
   surface,
+  cityName,
 }: {
   surface: Surface;
+  cityName?: string;
 }) {
+  const { activeCity, activeLocationLabel } = useHomeSelectedLocation();
+  const resolvedCity = cityName || activeCity || "";
   const [state, setState] = useState<PageState>("loading");
   const [categories, setCategories] = useState<DiscoveryCategory[]>([]);
   const [results, setResults] = useState<DiscoveryPage>({
@@ -66,15 +119,80 @@ export default function ServicesMarketplacePlaceholderPage({
   const [query, setQuery] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [subCategoryId, setSubCategoryId] = useState("");
-  const [location, setLocation] = useState({
-    countryCode: "",
+  const [hasSearched, setHasSearched] = useState(false);
+  const [location, setLocation] = useState<ServiceLocation>({
+    // The local pilot is seeded for India. Keep the default development-only
+    // value so a customer can try the flow immediately; production still
+    // starts blank and requires an explicit country code.
+    countryCode: import.meta.env.DEV ? "IN" : "",
     administrativeArea: "",
-    locality: "",
+    locality: resolvedCity,
     postalCode: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [quote, setQuote] = useState<QuoteResult | null>(null);
+  const heroQuickCategories: HeroQuickCategory[] = [
+    ...categories.map((category, index) => ({
+      key: `category-${category.id}`,
+      label: category.name?.trim() || fallbackCategoryNames[index] || "Home services",
+      imageUrl: category.imageUrl || categoryImage(category.name || fallbackCategoryNames[index] || "Home services", index),
+      categoryId: category.id,
+    })),
+    ...categories.flatMap((category) =>
+      category.subCategories.map((subCategory, index) => ({
+        key: `subcategory-${subCategory.id}`,
+        label: subCategory.name?.trim() || category.name,
+        imageUrl: subCategory.imageUrl || category.imageUrl || categoryImage(`${category.name} ${subCategory.name}`, index),
+        categoryId: category.id,
+        subCategoryId: subCategory.id,
+      })),
+    ),
+    ...results.items.map((service, index) => ({
+      key: `service-${service.id}`,
+      label: service.name,
+      imageUrl: service.imageUrl || serviceImage(service.name, index),
+      categoryId: service.categoryId,
+      subCategoryId: service.subCategoryId,
+      query: service.name,
+      durationMinutes: service.estimatedDurationMinutes,
+    })),
+  ]
+    .filter((item, index, all) => all.findIndex((x) => x.label.toLowerCase() === item.label.toLowerCase()) === index)
+    .slice(0, 12);
+  const selectedCategory = categories.find((category) => category.id === categoryId);
+  const displayLocation = activeLocationLabel || resolvedCity || location.locality || "Select location";
+  const normalizedSearch = query.trim().toLowerCase();
+  const serviceSuggestions = normalizedSearch.length >= 2
+    ? [
+        ...results.items,
+        ...popular,
+        ...trending,
+        ...recommended,
+        ...recent,
+      ]
+        .filter((service, index, all) => all.findIndex((item) => item.id === service.id) === index)
+        .filter((service) =>
+          `${service.name} ${service.categoryName} ${service.subCategoryName} ${service.shortDescription || ""}`
+            .toLowerCase()
+            .includes(normalizedSearch),
+        )
+        .slice(0, 6)
+    : [];
+  const categorySuggestions = normalizedSearch.length >= 2
+    ? categories
+        .filter((category) =>
+          `${category.name} ${category.subCategories?.map((item) => item.name).join(" ") || ""}`
+            .toLowerCase()
+            .includes(normalizedSearch),
+        )
+        .slice(0, 4)
+    : [];
+  const hasAutocompleteSuggestions = serviceSuggestions.length > 0 || categorySuggestions.length > 0;
+  useEffect(() => {
+    if (cityName || !activeCity || location.locality) return;
+    setLocation((current) => ({ ...current, locality: activeCity }));
+  }, [activeCity, cityName, location.locality]);
   useEffect(() => {
     let active = true;
     void getServicesMarketplaceCapabilities()
@@ -124,21 +242,18 @@ export default function ServicesMarketplacePlaceholderPage({
       .catch(() => setError("Services could not be loaded. Please try again."))
       .finally(() => setLoading(false));
   }, [state, surface]);
-  const subCategories = useMemo(
-    () => categories.find((x) => x.id === categoryId)?.subCategories || [],
-    [categories, categoryId],
-  );
-  async function search(page = 1) {
+  async function search(page = 1, categoryOverride = categoryId, queryOverride = query, subCategoryOverride = subCategoryId) {
     setLoading(true);
     setError("");
     setDetail(null);
     setQuote(null);
+    setHasSearched(true);
     try {
       setResults(
         await searchDiscoveryServices({
-          q: query || undefined,
-          categoryId: categoryId || undefined,
-          subCategoryId: subCategoryId || undefined,
+          q: queryOverride || undefined,
+          categoryId: categoryOverride || undefined,
+          subCategoryId: subCategoryOverride || undefined,
           countryCode: location.countryCode || undefined,
           administrativeArea: location.administrativeArea || undefined,
           locality: location.locality || undefined,
@@ -153,6 +268,10 @@ export default function ServicesMarketplacePlaceholderPage({
     } finally {
       setLoading(false);
     }
+  }
+  function submitHeroSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void search(1);
   }
   async function openService(id: string) {
     setLoading(true);
@@ -176,6 +295,11 @@ export default function ServicesMarketplacePlaceholderPage({
   async function previewQuote(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!detail) return;
+    if (location.countryCode.trim().length < 2) {
+      setError("Enter your country code (for the local pilot, use IN) before checking availability.");
+      setQuote(null);
+      return;
+    }
     const form = new FormData(event.currentTarget);
     setLoading(true);
     setError("");
@@ -215,22 +339,34 @@ export default function ServicesMarketplacePlaceholderPage({
       setLoading(false);
     }
   }
-  if (state === "loading")
-    return (
-      <DashboardLayout>
-        <div className="services-state">Loading Services Marketplace…</div>
-      </DashboardLayout>
+  if (state === "loading") {
+    const content = <div className="services-state">Loading Services Marketplace…</div>;
+    return surface === "provider" ? (
+      <DashboardLayout>{content}</DashboardLayout>
+    ) : (
+      <div className="services-marketplace-page">
+        <CustomerHeader />
+        <main className="services-discovery">{content}</main>
+      </div>
     );
-  if (state === "unavailable")
-    return (
-      <DashboardLayout>
-        <div className="services-state">
-          <h1>Services Marketplace unavailable</h1>
-          <p>The module is disabled or your account does not have access.</p>
-          <Link to="/dashboard">Return to dashboard</Link>
-        </div>
-      </DashboardLayout>
+  }
+  if (state === "unavailable") {
+    const content = (
+      <div className="services-state">
+        <h1>Services Marketplace unavailable</h1>
+        <p>The module is disabled or your account does not have access.</p>
+        <Link to="/dashboard">Return to dashboard</Link>
+      </div>
     );
+    return surface === "provider" ? (
+      <DashboardLayout>{content}</DashboardLayout>
+    ) : (
+      <div className="services-marketplace-page">
+        <CustomerHeader />
+        <main className="services-discovery">{content}</main>
+      </div>
+    );
+  }
   if (surface === "provider")
     return (
       <DashboardLayout>
@@ -240,93 +376,212 @@ export default function ServicesMarketplacePlaceholderPage({
       </DashboardLayout>
     );
   return (
-    <DashboardLayout>
+    <div className="services-marketplace-page">
+      <CustomerHeader />
       <main className="services-discovery">
-        <header>
+        {!detail ? <header className="services-landing-hero">
+          <video className="services-landing-video" autoPlay muted loop playsInline>
+            <source src="/template-17/videos/bg-video.mp4" type="video/mp4" />
+          </video>
+          <div className="services-landing-overlay" />
+          <div className="services-landing-inner">
+          <div className="services-landing-copy">
           <span>CHAO DESI SERVICES</span>
-          <h1>Find trusted help for every task</h1>
+          <h1>{resolvedCity ? `Home services in ${resolvedCity}` : "Home services at your doorstep"}</h1>
           <p>
-            Browse, confirm availability in your area, and get a transparent
-            server-calculated quote.
+            Home services at your doorstep. Browse trusted professionals,
+            confirm availability, and see a server-calculated quote before
+            you book.
           </p>
-        </header>
-        <section className="services-search">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void search();
-            }}
-          >
-            <input
-              aria-label="Search services"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="What do you need help with?"
-              maxLength={200}
-            />
-            <select
-              aria-label="Category"
-              value={categoryId}
-              onChange={(e) => {
-                setCategoryId(e.target.value);
-                setSubCategoryId("");
-              }}
+          <div className="services-hero-meta">
+            <span>✓ Verified professionals</span>
+            <span>✓ Upfront pricing</span>
+            <span>✓ Secure booking</span>
+          </div>
+          <form className="services-hero-search" onSubmit={submitHeroSearch}>
+            <label>
+              <span className="material-icons" aria-hidden="true">layers</span>
+              <select
+                value={categoryId}
+                onChange={(event) => {
+                  setCategoryId(event.target.value);
+                  setSubCategoryId("");
+                }}
+                aria-label="Select service category"
+              >
+                <option value="">All services</option>
+                {categories.map((category) => (
+                  <option value={category.id} key={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              className="services-hero-location"
+              onClick={() => document.getElementById("services-results")?.scrollIntoView({ behavior: "smooth", block: "start" })}
             >
-              <option value="">All categories</option>
-              {categories.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.name}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Subcategory"
-              value={subCategoryId}
-              onChange={(e) => setSubCategoryId(e.target.value)}
-            >
-              <option value="">All subcategories</option>
-              {subCategories.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.name}
-                </option>
-              ))}
-            </select>
-            <input
-              aria-label="Country code"
-              value={location.countryCode}
-              onChange={(e) =>
-                setLocation({ ...location, countryCode: e.target.value })
-              }
-              placeholder="Country (US)"
-              maxLength={3}
-            />
-            <input
-              aria-label="State or province"
-              value={location.administrativeArea}
-              onChange={(e) =>
-                setLocation({ ...location, administrativeArea: e.target.value })
-              }
-              placeholder="State/province"
-            />
-            <input
-              aria-label="City"
-              value={location.locality}
-              onChange={(e) =>
-                setLocation({ ...location, locality: e.target.value })
-              }
-              placeholder="City"
-            />
-            <input
-              aria-label="Postal code"
-              value={location.postalCode}
-              onChange={(e) =>
-                setLocation({ ...location, postalCode: e.target.value })
-              }
-              placeholder="Postal/ZIP"
-            />
+              <span className="material-icons" aria-hidden="true">my_location</span>
+              <span>{displayLocation}</span>
+            </button>
+            <div className="services-hero-query">
+              <span className="material-icons" aria-hidden="true">search</span>
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="What are you looking for?"
+              />
+              {hasAutocompleteSuggestions ? (
+                <div className="services-autocomplete" role="listbox" aria-label="Service suggestions">
+                  {categorySuggestions.map((category) => (
+                    <button
+                      type="button"
+                      role="option"
+                      key={`category-${category.id}`}
+                      onClick={() => {
+                        setCategoryId(category.id);
+                        setSubCategoryId("");
+                        setQuery(category.name);
+                        void search(1, category.id, category.name);
+                      }}
+                    >
+                      <span className="material-icons" aria-hidden="true">{categoryIcon(category.name)}</span>
+                      <span><strong>{category.name}</strong><small>Category</small></span>
+                    </button>
+                  ))}
+                  {serviceSuggestions.map((service) => (
+                    <button
+                      type="button"
+                      role="option"
+                      key={`service-${service.id}`}
+                      onClick={() => {
+                        setQuery(service.name);
+                        void openService(service.id);
+                      }}
+                    >
+                      <img src={service.imageUrl || serviceImage(service.name)} alt="" />
+                      <span><strong>{service.name}</strong><small>{service.categoryName} / {service.subCategoryName}</small></span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <button type="submit">Search</button>
           </form>
-        </section>
+          <div className="services-hero-subfilters">
+            <select
+              value={subCategoryId}
+              onChange={(event) => setSubCategoryId(event.target.value)}
+              aria-label="Select service subcategory"
+            >
+              <option value="">All subcategories</option>
+              {selectedCategory?.subCategories?.map((subCategory) => (
+                <option value={subCategory.id} key={subCategory.id}>{subCategory.name}</option>
+              ))}
+            </select>
+            <input
+              value={location.countryCode}
+              onChange={(event) => setLocation((current) => ({ ...current, countryCode: event.target.value }))}
+              aria-label="Country code"
+              placeholder="Country"
+            />
+            <input
+              value={location.locality}
+              onChange={(event) => setLocation((current) => ({ ...current, locality: event.target.value }))}
+              aria-label="City"
+              placeholder="City"
+            />
+          </div>
+          <div className="services-hero-category-panel" id="services-categories">
+            <div className="services-hero-category-heading">
+              <strong>What do you need help with?</strong>
+              <span>{heroQuickCategories.length} categories</span>
+            </div>
+            <div className="services-hero-category-grid" aria-label="Service categories">
+              <button
+                type="button"
+                className={!categoryId ? "is-active" : ""}
+                onClick={() => {
+                  setCategoryId("");
+                  setSubCategoryId("");
+                  void search(1, "");
+                }}
+              >
+                <span className="services-category-thumb">
+                  <img src="/template-17/images/icon/shop.png" alt="" />
+                  <span className="material-icons" aria-hidden="true">storefront</span>
+                </span>
+                <span>All Services</span>
+              </button>
+              {heroQuickCategories.map((category, index) => (
+                <button
+                  type="button"
+                  className={categoryId === category.categoryId && (!category.subCategoryId || subCategoryId === category.subCategoryId) ? "is-active" : ""}
+                  key={category.key}
+                  onClick={() => {
+                    setCategoryId(category.categoryId);
+                    setSubCategoryId(category.subCategoryId || "");
+                    setQuery(category.query || "");
+                    void search(1, category.categoryId, category.query || "", category.subCategoryId || "");
+                  }}
+                >
+                  <span className="services-category-thumb">
+                    <img
+                      src={category.imageUrl || categoryImage(category.label, index)}
+                      alt=""
+                      onError={(event) => {
+                        const fallback = categoryImage(category.label, index);
+                        if (!event.currentTarget.src.endsWith(fallback)) event.currentTarget.src = fallback;
+                      }}
+                    />
+                    <span className="material-icons" aria-hidden="true">{categoryIcon(category.label)}</span>
+                  </span>
+                  <span>{category.label}</span>
+                  {category.durationMinutes ? <small>{category.durationMinutes} mins</small> : null}
+                </button>
+              ))}
+            </div>
+          </div>
+          </div>
+          <div className="services-hero-collage" aria-label="Popular home services">
+            {(popular.length ? popular.slice(0, 4) : results.items.slice(0, 4)).map((service, index) => (
+              <button
+                type="button"
+                className={`services-hero-tile services-hero-tile-${index + 1}`}
+                key={service.id}
+                onClick={() => void openService(service.id)}
+              >
+                <img
+                  src={service.imageUrl || serviceImage(service.name, index)}
+                  alt=""
+                  onError={(event) => {
+                    const fallback = serviceImage(service.name, index);
+                    if (!event.currentTarget.src.endsWith(fallback)) event.currentTarget.src = fallback;
+                  }}
+                />
+                <span className="services-hero-tile-label">{service.name}</span>
+              </button>
+            ))}
+          </div>
+          </div>
+        </header> : null}
+        {!detail ? (
+          <>
+            <section className="services-spotlight" aria-label="Featured services">
+              <article className="services-spotlight-card services-spotlight-card-main">
+                <img src="/services-marketplace/categories/home-repair.png" alt="" />
+                <div><small>CHAODESI SPOTLIGHT</small><h2>Trusted help for every home task</h2><p>Choose a verified professional, see the quote upfront and book a time that works for you.</p><a href="#services-categories">Browse services</a></div>
+              </article>
+              <article className="services-spotlight-card"><img src="/services-marketplace/categories/appliance-hvac.png" alt="" /><div><small>APPLIANCE CARE</small><h3>Keep your home running</h3><a href="#services-categories">Explore appliance services</a></div></article>
+              <article className="services-spotlight-card"><img src="/services-marketplace/categories/cleaning.png" alt="" /><div><small>HOME CARE</small><h3>Fresh spaces, less effort</h3><a href="#services-categories">Explore cleaning services</a></div></article>
+            </section>
+            <section className="services-trust-strip" aria-label="Why book with Chao Desi">
+              <div><span className="material-icons">verified</span><strong>Verified professionals</strong><small>Eligibility checked before matching</small></div>
+              <div><span className="material-icons">payments</span><strong>Clear pricing</strong><small>Server-calculated quote before booking</small></div>
+              <div><span className="material-icons">schedule</span><strong>Flexible slots</strong><small>Choose a time that suits your day</small></div>
+              <div><span className="material-icons">support_agent</span><strong>Support when needed</strong><small>Help throughout your booking</small></div>
+            </section>
+          </>
+        ) : null}
         {error ? (
           <div className="services-alert" role="alert">
             {error}
@@ -341,6 +596,13 @@ export default function ServicesMarketplacePlaceholderPage({
           <ServiceDetail
             detail={detail}
             location={location}
+            onLocationChange={(field, value) => {
+              setLocation((current) => ({ ...current, [field]: value }));
+              // A quote/slot is tied to the service location. Editing the
+              // location invalidates both so the customer cannot submit a
+              // quote calculated for a different area.
+              setQuote(null);
+            }}
             quote={quote}
             loading={loading}
             previewQuote={previewQuote}
@@ -351,8 +613,9 @@ export default function ServicesMarketplacePlaceholderPage({
           />
         ) : (
           <>
+            <div id="services-results" className="services-results-anchor" />
             <ServiceSection
-              title="Search results"
+              title={hasSearched ? "Search results" : "Available services"}
               items={results.items}
               loading={loading}
               open={openService}
@@ -377,33 +640,49 @@ export default function ServicesMarketplacePlaceholderPage({
                 </button>
               </nav>
             ) : null}
-            <ServiceSection
-              title="Popular"
-              items={popular}
-              open={openService}
-            />
-            <ServiceSection
-              title="Trending"
-              items={trending}
-              open={openService}
-            />
-            <ServiceSection
-              title="Recommended"
-              items={recommended}
-              open={openService}
-            />
-            {recent.length ? (
-              <ServiceSection
-                title="Recently viewed on this device"
-                items={recent}
-                open={openService}
-              />
+            {!hasSearched ? (
+              <>
+                <ServiceSection
+                  title={resolvedCity ? `Featured in ${resolvedCity}` : "Featured services"}
+                  items={popular.length ? popular : results.items.slice(0, 6)}
+                  open={openService}
+                  hideWhenEmpty
+                />
+                <ServiceSection title="Most booked services" items={results.items} open={openService} hideWhenEmpty />
+                <ServiceSection
+                  title="Cleaning essentials"
+                  items={results.items.filter((x) => /clean|sofa|carpet|pest/i.test(`${x.name} ${x.categoryName} ${x.subCategoryName}`))}
+                  open={openService}
+                  hideWhenEmpty
+                />
+                <ServiceSection
+                  title="Appliance care"
+                  items={results.items.filter((x) => /appliance|hvac|ac|refriger|washing|microwave/i.test(`${x.name} ${x.categoryName} ${x.subCategoryName}`))}
+                  open={openService}
+                  hideWhenEmpty
+                />
+                <ServiceSection
+                  title="Home repair & installation"
+                  items={results.items.filter((x) => /repair|electric|plumb|carpenter|handyman/i.test(`${x.name} ${x.categoryName} ${x.subCategoryName}`))}
+                  open={openService}
+                  hideWhenEmpty
+                />
+                <ServiceSection title="Trending now" items={trending} open={openService} hideWhenEmpty />
+                <ServiceSection title="Recommended for you" items={recommended} open={openService} hideWhenEmpty />
+                {recent.length ? (
+                  <ServiceSection
+                    title="Recently viewed on this device"
+                    items={recent}
+                    open={openService}
+                  />
+                ) : null}
+                <MyBookings />
+              </>
             ) : null}
-            <MyBookings />
           </>
         )}
       </main>
-    </DashboardLayout>
+    </div>
   );
 }
 
@@ -412,42 +691,89 @@ function MyBookings() {
   const [selected, setSelected] = useState<BookingDetail | null>(null);
   const [progress, setProgress] = useState<CustomerJobProgress | null>(null);
   const [proofs, setProofs] = useState<JobProof[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [filter, setFilter] = useState("all");
   async function load() {
     try {
+      setLoading(true);
+      setLoadError("");
       setItems(await getServiceBookings());
+    } catch {
+      setLoadError("Bookings could not be loaded. Please try again.");
     } finally {
-      setLoaded(true);
+      setLoading(false);
     }
   }
+  useEffect(() => {
+    void load();
+  }, []);
+  const visibleItems = items.filter((booking) => bookingMatchesFilter(booking, filter));
   async function viewProof(bookingId: string, proofId: string) {
     const access = await getCustomerJobProofAccess(bookingId, proofId);
     const blob = await downloadJobProof(access.token);
     const url = URL.createObjectURL(blob); window.open(url, "_blank", "noopener,noreferrer"); window.setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
-  if (!loaded)
-    return (
-      <section className="services-section">
-        <h2>My Bookings</h2>
-        <button onClick={() => void load()}>Load my bookings</button>
-      </section>
-    );
   return (
-    <section className="services-section">
-      <h2>My Bookings</h2>
-      {items.length ? (
-        <div className="services-grid">
-          {items.map((x) => (
-            <article key={x.id}>
+    <section className="services-bookings-panel">
+      <header className="services-bookings-head">
+        <div>
+          <span>Services account</span>
+          <h2>My bookings</h2>
+        </div>
+        <button type="button" onClick={() => void load()} disabled={loading}>
+          <span className="material-icons" aria-hidden="true">refresh</span>
+          Refresh
+        </button>
+      </header>
+      <div className="services-bookings-filters" role="tablist" aria-label="Filter bookings">
+        {[
+          ["all", "All"],
+          ["active", "Active"],
+          ["completed", "Completed"],
+          ["cancelled", "Cancelled"],
+          ["payment", "Payment"],
+        ].map(([value, label]) => (
+          <button type="button" className={filter === value ? "is-active" : ""} onClick={() => setFilter(value)} key={value}>
+            {label}
+          </button>
+        ))}
+      </div>
+      {loadError ? <div className="services-alert" role="alert">{loadError}</div> : null}
+      {loading ? (
+        <div className="services-bookings-empty">Loading your bookings...</div>
+      ) : visibleItems.length ? (
+        <div className="services-bookings-list">
+          {visibleItems.map((x) => (
+            <article
+              className="services-booking-row"
+              key={x.id}
+              role="button"
+              tabIndex={0}
+              onClick={() =>
+                void Promise.all([
+                  getServiceBooking(x.id),
+                  getServiceBookingProgress(x.id),
+                  getCustomerJobProofs(x.id),
+                ]).then(([detail, currentProgress, visibleProofs]) => {
+                  setSelected(detail);
+                  setProgress(currentProgress);
+                  setProofs(visibleProofs);
+                })
+              }
+            >
+              <span className="services-booking-thumb"><img src={serviceImage(x.serviceName)} alt="" /></span>
+              <span className="services-booking-main">
               <small>{x.referenceNumber}</small>
               <h3>{x.serviceName}</h3>
               <p>
                 {new Date(x.requestedStartAtUtc).toLocaleString()} ·{" "}
                 {x.status.replace(/_/g, " ")}
               </p>
-              <strong>
+              <strong className="services-booking-price">
                 {x.currencyCode} {x.totalAmount.toFixed(2)}
               </strong>
+              </span>
               <button
                 onClick={() =>
                   void Promise.all([
@@ -470,7 +796,7 @@ function MyBookings() {
         <p>No Services Marketplace bookings yet.</p>
       )}
       {selected ? (
-        <article>
+        <article className="services-booking-detail">
           <h3>{selected.summary.referenceNumber}</h3>
           <p>
             {selected.address.line1}, {selected.address.locality},{" "}
@@ -501,19 +827,31 @@ function MyBookings() {
   );
 }
 
+function bookingMatchesFilter(booking: BookingSummary, filter: string) {
+  const status = booking.status.toLowerCase();
+  if (filter === "completed") return status.includes("complete") || status.includes("delivered");
+  if (filter === "cancelled") return status.includes("cancel");
+  if (filter === "payment") return status.includes("payment") || status.includes("refund");
+  if (filter === "active") return !status.includes("complete") && !status.includes("cancel") && !status.includes("fail");
+  return true;
+}
+
 function ServiceSection({
   title,
   items,
   loading,
   open,
   empty,
+  hideWhenEmpty,
 }: {
   title: string;
   items: DiscoveryService[];
   loading?: boolean;
   open: (id: string) => void;
   empty?: string;
+  hideWhenEmpty?: boolean;
 }) {
+  if (hideWhenEmpty && !items.length) return null;
   return (
     <section className="services-section">
       <div>
@@ -527,16 +865,33 @@ function ServiceSection({
           {items.map((x) => (
             <article key={x.id}>
               <div className="services-card-image">
-                {x.imageUrl ? (
-                  <img src={x.imageUrl} alt="" />
+                  {x.imageUrl || serviceImage(x.name) ? (
+                    <img
+                      src={x.imageUrl || serviceImage(x.name)}
+                      alt=""
+                      onError={(event) => {
+                        const fallback = serviceImage(x.name);
+                        if (!event.currentTarget.src.endsWith(fallback)) event.currentTarget.src = fallback;
+                      }}
+                    />
                 ) : (
-                  <span className="material-icons">home_repair_service</span>
+                  <span className="services-media-glyph" aria-hidden="true"><span className="services-media-initial">{x.name.trim().charAt(0).toUpperCase()}</span><span className="material-icons">{serviceIcon(x.name)}</span></span>
                 )}
               </div>
               <small>
                 {x.categoryName} · {x.subCategoryName}
               </small>
               <h3>{x.name}</h3>
+              <div className="services-card-facts">
+                <ServiceRating rating={x.averageRating} reviewCount={x.reviewCount} />
+                {x.startingPrice != null ? (
+                  <strong className="services-card-price">
+                    From {x.startingPriceCurrency || "USD"} {x.startingPrice.toFixed(2)}
+                  </strong>
+                ) : (
+                  <strong className="services-card-price">Price after area check</strong>
+                )}
+              </div>
               <p>
                 {x.shortDescription ||
                   "Professional service with transparent availability and pricing."}
@@ -544,7 +899,7 @@ function ServiceSection({
               {x.estimatedDurationMinutes ? (
                 <em>{x.estimatedDurationMinutes} min estimated</em>
               ) : null}
-              <button onClick={() => void open(x.id)}>View service</button>
+              <button onClick={() => void open(x.id)}>View &amp; book</button>
             </article>
           ))}
         </div>
@@ -556,28 +911,56 @@ function ServiceSection({
     </section>
   );
 }
+
+function categoryIcon(name: string) {
+  const value = name.toLowerCase();
+  if (value.includes("clean")) return "cleaning_services";
+  if (value.includes("appliance") || value.includes("hvac")) return "kitchen";
+  if (value.includes("pest")) return "pest_control";
+  if (value.includes("repair") || value.includes("home")) return "home_repair_service";
+  return "handyman";
+}
+
+function ServiceRating({ rating, reviewCount }: { rating?: number | null; reviewCount: number }) {
+  if (!rating || reviewCount === 0) {
+    return <span className="services-rating services-rating-new">New service</span>;
+  }
+  return (
+    <span className="services-rating" aria-label={`${rating.toFixed(1)} out of 5 from ${reviewCount} reviews`}>
+      <span aria-hidden="true">★★★★★</span> <b>{rating.toFixed(1)}</b> ({reviewCount})
+    </span>
+  );
+}
+
+function formatContentValue(value: unknown) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const entry = value as { question?: unknown; answer?: unknown; q?: unknown; a?: unknown };
+    const question = entry.question ?? entry.q;
+    const answer = entry.answer ?? entry.a;
+    if (question || answer) return `${String(question || "Question")}: ${String(answer || "")}`;
+  }
+  return String(value);
+}
+
 function ServiceDetail({
   detail,
   location,
+  onLocationChange,
   quote,
   loading,
   previewQuote,
   close,
 }: {
   detail: DiscoveryDetail;
-  location: {
-    countryCode: string;
-    administrativeArea: string;
-    locality: string;
-    postalCode: string;
-  };
+  location: ServiceLocation;
+  onLocationChange: (field: keyof ServiceLocation, value: string) => void;
   quote: QuoteResult | null;
   loading: boolean;
   previewQuote: (e: FormEvent<HTMLFormElement>) => void;
   close: () => void;
 }) {
   const [slotDate, setSlotDate] = useState(
-    new Date().toISOString().slice(0, 10),
+    localDateInput(1),
   );
   const [slots, setSlots] = useState<ServiceSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<ServiceSlot | null>(null);
@@ -585,13 +968,30 @@ function ServiceDetail({
   const [slotAreaId, setSlotAreaId] = useState("");
   const [slotHold, setSlotHold] = useState<ServiceSlotHold | null>(null);
   const [bookingMessage, setBookingMessage] = useState("");
+  const [createdBooking, setCreatedBooking] = useState<BookingDetail | null>(null);
   const [replacementQuote, setReplacementQuote] = useState<QuoteResult | null>(
     null,
   );
   const [bookingRequestKey] = useState(() => crypto.randomUUID());
+  useEffect(() => {
+    // Slot capacity and serviceability are location-bound. Never retain a
+    // hold when the customer edits the location fields.
+    setSlots([]);
+    setSelectedSlot(null);
+    setSlotHold(null);
+    setSlotAreaId("");
+    setSlotMessage("");
+  }, [location.countryCode, location.administrativeArea, location.locality, location.postalCode]);
   async function loadSlots(asap: boolean) {
     setSlotMessage("");
     setSelectedSlot(null);
+    setSlotHold(null);
+    setSlotAreaId("");
+    if (location.countryCode.trim().length < 2) {
+      setSlots([]);
+      setSlotMessage("Enter your country code above (for the local pilot, use IN), then try again.");
+      return;
+    }
     try {
       const area = await checkServiceability({
         serviceId: detail.service.id,
@@ -606,14 +1006,29 @@ function ServiceDetail({
       const result = await searchServiceSlots({
         serviceId: detail.service.id,
         areaId: area.areaId,
-        date: slotDate,
+        // ASAP searches from the current local day; a previously selected
+        // future date must not silently turn an ASAP request into tomorrow's
+        // first slot.
+        date: asap ? localDateInput(0) : slotDate,
         asap,
       });
+      if (asap) setSlotDate(localDateInput(0));
       setSlots(result.slots);
       setSlotMessage(result.unavailableReason || "");
-    } catch {
+    } catch (error: unknown) {
       setSlots([]);
-      setSlotMessage("Available times could not be loaded.");
+      const response = (error as {
+        response?: { data?: { message?: string; title?: string; errors?: Record<string, string[]> } };
+      }).response;
+      const validation = response?.data?.errors
+        ? Object.values(response.data.errors).flat().join(" ")
+        : "";
+      setSlotMessage(
+        response?.data?.message ||
+          validation ||
+          response?.data?.title ||
+          "Available times could not be loaded. Please check the service location and try again.",
+      );
     }
   }
   async function reserveSlot() {
@@ -656,6 +1071,7 @@ function ServiceDetail({
           ? `Booking ${result.booking?.summary.referenceNumber} created.`
           : result.reason,
       );
+      if (result.created && result.booking) setCreatedBooking(result.booking);
       if (result.replacementQuote) setReplacementQuote(result.replacementQuote);
     } catch (error: unknown) {
       const data = (
@@ -676,6 +1092,9 @@ function ServiceDetail({
       return [];
     }
   };
+  const inclusions = parse(detail.inclusionsJson);
+  const exclusions = parse(detail.exclusionsJson);
+  const faqs = parse(detail.faqJson);
   return (
     <section className="services-detail">
       <button onClick={close}>← Back to services</button>
@@ -684,7 +1103,7 @@ function ServiceDetail({
           {detail.service.imageUrl ? (
             <img src={detail.service.imageUrl} alt="" />
           ) : (
-            <span className="material-icons">construction</span>
+            <span className="services-media-glyph" aria-hidden="true">✦</span>
           )}
         </div>
         <div>
@@ -693,31 +1112,94 @@ function ServiceDetail({
           </small>
           <h1>{detail.service.name}</h1>
           <p>{detail.description || detail.service.shortDescription}</p>
+          <div className="services-detail-facts">
+            <ServiceRating rating={detail.service.averageRating} reviewCount={detail.service.reviewCount} />
+            {detail.service.startingPrice != null ? (
+              <strong>From {detail.service.startingPriceCurrency || "USD"} {detail.service.startingPrice.toFixed(2)}</strong>
+            ) : <strong>Final price after area and time check</strong>}
+            {detail.estimatedDurationMinutes ? <span>{detail.estimatedDurationMinutes} min estimated</span> : null}
+          </div>
         </div>
+      </div>
+      <div className="services-booking-steps" aria-label="Booking progress">
+        <span className="is-current"><b>1</b> Choose options</span>
+        <span><b>2</b> Pick a time</span>
+        <span><b>3</b> Confirm &amp; pay</span>
       </div>
       <div className="services-detail-grid">
         <article>
           <h3>What’s included</h3>
           <ul>
-            {parse(detail.inclusionsJson).map((x, i) => (
+            {(inclusions.length ? inclusions : ["Professional assessment and service"]).map((x, i) => (
               <li key={i}>{String(x)}</li>
             ))}
           </ul>
           <h3>Exclusions</h3>
           <ul>
-            {parse(detail.exclusionsJson).map((x, i) => (
+            {(exclusions.length ? exclusions : ["Parts and materials not shown in the quote"]).map((x, i) => (
               <li key={i}>{String(x)}</li>
             ))}
           </ul>
+          <p className="services-detail-note">
+            Final pricing is calculated after your area and time are checked.
+          </p>
           {detail.preparationInstructions ? (
             <>
               <h3>Before we arrive</h3>
               <p>{detail.preparationInstructions}</p>
             </>
           ) : null}
+          {faqs.length ? (
+            <>
+              <h3>Frequently asked questions</h3>
+              <ul className="services-faq-list">
+                {faqs.map((x, i) => <li key={i}>{formatContentValue(x)}</li>)}
+              </ul>
+            </>
+          ) : null}
         </article>
         <form onSubmit={previewQuote}>
-          <h3>Preview your quote</h3>
+          <h3>Build your booking</h3>
+          <p className="services-form-note">Select a package, add-ons, location and time. The server calculates the final price before booking.</p>
+          <fieldset className="services-location-fields">
+            <legend>Service location</legend>
+            <div>
+              <label>
+                Country code
+                <input
+                  value={location.countryCode}
+                  onChange={(e) => onLocationChange("countryCode", e.target.value.toUpperCase())}
+                  placeholder="IN"
+                  maxLength={3}
+                  required
+                />
+              </label>
+              <label>
+                State / province
+                <input
+                  value={location.administrativeArea}
+                  onChange={(e) => onLocationChange("administrativeArea", e.target.value)}
+                  placeholder="Optional"
+                />
+              </label>
+              <label>
+                City / locality
+                <input
+                  value={location.locality}
+                  onChange={(e) => onLocationChange("locality", e.target.value)}
+                  placeholder="Optional"
+                />
+              </label>
+              <label>
+                Postal / ZIP
+                <input
+                  value={location.postalCode}
+                  onChange={(e) => onLocationChange("postalCode", e.target.value)}
+                  placeholder="Optional unless required"
+                />
+              </label>
+            </div>
+          </fieldset>
           {detail.packages.length ? (
             <label>
               Package
@@ -725,7 +1207,7 @@ function ServiceDetail({
                 <option value="">Base service</option>
                 {detail.packages.map((x) => (
                   <option key={x.id} value={x.id}>
-                    {x.name}
+                    {x.name}{x.price ? ` · ${x.price.currencyCode} ${x.price.amount.toFixed(2)}` : ""}
                   </option>
                 ))}
               </select>
@@ -733,7 +1215,7 @@ function ServiceDetail({
           ) : null}
           {detail.addOns.map((x) => (
             <label key={x.id}>
-              <input type="checkbox" name={`addon-${x.id}`} /> {x.name}
+              <input type="checkbox" name={`addon-${x.id}`} /> {x.name}{x.price ? ` · ${x.price.currencyCode} ${x.price.amount.toFixed(2)}` : ""}
             </label>
           ))}
           <label>
@@ -745,16 +1227,28 @@ function ServiceDetail({
             Date
             <input
               type="date"
-              min={new Date().toISOString().slice(0, 10)}
+              min={localDateInput(0)}
               value={slotDate}
-              onChange={(e) => setSlotDate(e.target.value)}
+              onChange={(e) => {
+                setSlotDate(e.target.value);
+                setSlots([]);
+                setSelectedSlot(null);
+                setSlotHold(null);
+                setSlotMessage("");
+              }}
             />
           </label>
-          <div>
-            <button type="button" onClick={() => void loadSlots(false)}>
+          <p className="services-location-note">
+            Availability is checked for <strong>{location.countryCode || "your country"}</strong>
+            {location.locality ? ` · ${location.locality}` : ""}
+            {location.postalCode ? ` · ${location.postalCode}` : ""}.
+            Update the location fields above if this is not your service address.
+          </p>
+          <div className="services-slot-actions">
+            <button type="button" disabled={loading || location.countryCode.trim().length < 2} onClick={() => void loadSlots(false)}>
               Find times
             </button>
-            <button type="button" onClick={() => void loadSlots(true)}>
+            <button type="button" disabled={loading || location.countryCode.trim().length < 2} onClick={() => void loadSlots(true)}>
               Find ASAP
             </button>
           </div>
@@ -780,7 +1274,7 @@ function ServiceDetail({
               Reserve this time
             </button>
           ) : null}
-          {slotHold ? <p>Time confirmed for checkout.</p> : null}
+          {slotHold ? <p className="services-success-note">Time confirmed for checkout. Hold expires {new Date(slotHold.expiresAtUtc).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.</p> : null}
           <input
             name="scheduledAtUtc"
             type="hidden"
@@ -814,6 +1308,10 @@ function ServiceDetail({
               </b>
             </div>
           ))}
+          <div><span>Subtotal</span><b>{quote.price.currencyCode} {quote.price.subtotalAmount.toFixed(2)}</b></div>
+          {quote.price.discountAmount ? <div><span>Discount</span><b>-{quote.price.currencyCode} {quote.price.discountAmount.toFixed(2)}</b></div> : null}
+          {quote.price.feeAmount ? <div><span>Fees</span><b>{quote.price.currencyCode} {quote.price.feeAmount.toFixed(2)}</b></div> : null}
+          {quote.price.taxAmount ? <div><span>Tax</span><b>{quote.price.currencyCode} {quote.price.taxAmount.toFixed(2)}</b></div> : null}
           <div className="services-quote-total">
             <span>Total</span>
             <strong>
@@ -853,6 +1351,13 @@ function ServiceDetail({
           ) : (
             <p>Reserve a time to continue.</p>
           )}
+          {createdBooking ? (
+            <div className="services-payment-step">
+              <h3>Payment</h3>
+              <p>Booking {createdBooking.summary.referenceNumber} is awaiting payment.</p>
+              <ServicesPaymentPanel bookingId={createdBooking.summary.id} amount={createdBooking.summary.totalAmount} currency={createdBooking.summary.currencyCode} />
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>

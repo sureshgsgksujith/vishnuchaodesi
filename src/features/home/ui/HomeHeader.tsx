@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 import { categoryLinks, useExploreCategories } from "./exploreMenuData";
 import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
@@ -8,7 +8,6 @@ import "../styles/customerHeader.css";
 
 export default function HomeHeader() {
   const navigate = useNavigate();
-  const location = useLocation();
   const logoTarget = useLogoNavigationTarget();
   const [showExplore, setShowExplore] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -22,18 +21,6 @@ export default function HomeHeader() {
     closeExplore();
     closeMobileMenu();
   };
-  const isServicePage = [
-    "/local-services",
-    "/local-services.html",
-    "/all-services",
-    "/all-services.html",
-    "/all-services-detailed",
-    "/all-services-detailed.html",
-    "/local-service-details",
-    "/local-service-details.html",
-  ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
-  const addActionLabel = isServicePage ? "Add Service" : "Add business";
-  const addActionHref = isServicePage ? "/login?returnUrl=/dashboard/services/new" : "/login";
 
   function submitHeaderSearch(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,12 +107,6 @@ export default function HomeHeader() {
                           {" "}Advertise with us
                         </Link>
                       </li>
-                      <li>
-                        <Link to={addActionHref} onClick={closeExplore}>
-                          <i className="material-icons">store</i>
-                          {" "}{isServicePage ? "Add your service" : "Add your business"}
-                        </Link>
-                      </li>
                     </ul>
                   </div>
                 </div>
@@ -162,9 +143,6 @@ export default function HomeHeader() {
             <div className="chaodesi-header-actions">
               <ul className="bl">
                 <li>
-                  <Link to={addActionHref}>{addActionLabel}</Link>
-                </li>
-                <li>
                   <Link to="/login">Sign in</Link>
                 </li>
                 <li>
@@ -199,7 +177,6 @@ export default function HomeHeader() {
                 <div className="mv-bus">
                   <h4></h4>
                   <ul>
-                    <li><Link to={addActionHref} onClick={closeAllPopups}>{addActionLabel}</Link></li>
                     <li><Link to="/login" onClick={closeAllPopups}>Sign in</Link></li>
                     <li><Link to="/register" onClick={closeAllPopups}>Create an account</Link></li>
                   </ul>

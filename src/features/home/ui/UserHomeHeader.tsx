@@ -33,6 +33,16 @@ const profileMenuItems: MenuItem[] = [
   },
   dashboardItem,
   {
+    label: "Urban Services",
+    href: "/local-services",
+    icon: "/template-17/images/icon/shop.png",
+  },
+  {
+    label: "Services Marketplace",
+    href: "/dashboard/services-marketplace",
+    icon: "/template-17/images/icon/general.png",
+  },
+  {
     label: "Groups & Communities",
     href: "/community",
     icon: "/template-17/images/icon/11.png",

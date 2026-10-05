@@ -73,6 +73,10 @@ export type DiscoveryService = {
   categoryId: string;
   categoryName: string;
   estimatedDurationMinutes?: number | null;
+  startingPrice?: number | null;
+  startingPriceCurrency?: string | null;
+  averageRating?: number | null;
+  reviewCount: number;
 };
 export type DiscoveryPage = {
   items: DiscoveryService[];
@@ -87,6 +91,7 @@ export type DiscoveryOption = {
   key: string;
   description?: string | null;
   durationMinutes?: number | null;
+  price?: { amount: number; currencyCode: string } | null;
 };
 export type DiscoveryDetail = {
   service: DiscoveryService;
