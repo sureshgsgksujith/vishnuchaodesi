@@ -173,6 +173,8 @@ export async function searchServiceSlots(params: {
   areaId: string;
   date: string;
   asap?: boolean;
+  latitude?: number;
+  longitude?: number;
 }) {
   return (
     await apiClient.get<ServiceSlotSearch>("/services/v1/slots", { params })
@@ -191,6 +193,8 @@ export async function holdServiceSlot(payload: {
   areaId: string;
   startAtUtc: string;
   isInstant: boolean;
+  latitude?: number;
+  longitude?: number;
 }) {
   return (
     await apiClient.post<ServiceSlotHold>("/services/v1/slots/holds", payload)
@@ -250,6 +254,49 @@ export async function getServiceBookings() {
 export async function getServiceBooking(id: string) {
   return (await apiClient.get<BookingDetail>(`/services/v1/bookings/${id}`))
     .data;
+}
+
+export type BookingHistoryEntry = {
+  id: string;
+  fromStatus?: string | null;
+  toStatus: string;
+  actorType: string;
+  transitionedAtUtc: string;
+  reasonCode: string;
+  note?: string | null;
+};
+export type BookingLifecycle = {
+  bookingId: string;
+  referenceNumber: string;
+  status: string;
+  rowVersion: string;
+  history: BookingHistoryEntry[];
+};
+export async function getServiceBookingHistory(id: string) {
+  return (await apiClient.get<BookingLifecycle>(`/services/v1/bookings/${id}/history`)).data;
+}
+export async function cancelServiceBooking(id: string, rowVersion: string, note?: string) {
+  return (await apiClient.post<BookingLifecycle>(`/services/v1/bookings/${id}/transitions`, {
+    toStatus: "CANCELLED",
+    reasonCode: "CUSTOMER_CANCELLED",
+    note,
+    correlationId: crypto.randomUUID(),
+    eventId: crypto.randomUUID(),
+    rowVersion,
+  })).data;
+}
+export async function createServiceReview(bookingId: string, rating: number, text?: string) {
+  return (await apiClient.post(`/services/v1/bookings/${bookingId}/review`, { rating, text })).data;
+}
+export async function requestWarrantyRevisit(bookingId: string, issueDescription: string, strategy = "SAME_PROVIDER") {
+  return (await apiClient.post(`/services/v1/bookings/${bookingId}/warranty/revisit`, { issueDescription, strategy })).data;
+}
+export type SupportTicket = { publicId: string; category: string; reasonCode: string; priority: string; status: string; slaDueAtUtc?: string };
+export async function createServicesSupportTicket(payload: { category: string; reasonCode: string; message: string; priority?: string }) {
+  return (await apiClient.post<SupportTicket>("/services/v1/support/tickets", { bookingId: null, ...payload })).data;
+}
+export async function getServicesSupportTickets() {
+  return (await apiClient.get<SupportTicket[]>("/services/v1/support/tickets")).data;
 }
 
 export type ProviderProfile = {
@@ -415,6 +462,13 @@ export async function getProviderQualifications() {
     )
   ).data;
 }
+export async function getProviderQualificationOptions() {
+  return (
+    await apiClient.get<{ id: string; name: string }[]>(
+      "/services/v1/provider/qualifications/options",
+    )
+  ).data;
+}
 export async function saveProviderQualification(
   serviceId: string,
   payload: {
@@ -427,6 +481,9 @@ export async function saveProviderQualification(
     `/services/v1/provider/qualifications/${serviceId}`,
     payload,
   );
+}
+export async function deleteProviderQualification(serviceId: string) {
+  await apiClient.delete(`/services/v1/provider/qualifications/${serviceId}`);
 }
 export async function getProviderTraining(serviceId: string) {
   return (
@@ -576,8 +633,9 @@ export async function getProviderAdditionalWork(bookingId: string) { return (awa
 export async function proposeAdditionalWork(bookingId: string, payload: { idempotencyKey: string; reason: string; notes?: string; proofPublicId?: string; lines: { lineType: string; description: string; quantity: number; durationMinutes?: number; unitPrice: number }[] }) { return (await apiClient.post<AdditionalWorkProposal>(`/services/v1/provider/jobs/${bookingId}/additional-work`, payload)).data; }
 export async function getCustomerAdditionalWork(bookingId: string) { return (await apiClient.get<{ proposals: AdditionalWorkProposal[]; originalTotal: number; approvedAdditionalTotal: number; finalPayableTotal: number }>(`/services/v1/bookings/${bookingId}/additional-work`)).data; }
 export async function decideAdditionalWork(bookingId: string, proposalId: string, approve: boolean, reason?: string) { return (await apiClient.post<AdditionalWorkProposal>(`/services/v1/bookings/${bookingId}/additional-work/${proposalId}/decision`, { approve, reason })).data; }
-export type ServicesPayment = { publicId: string; gateway: string; paymentIntentReference?: string | null; providerReference?: string | null; amount: number; currencyCode: string; status: string; failureCode?: string | null; retryCount: number; nextRetryAtUtc?: string | null };
+export type ServicesPayment = { publicId: string; gateway: string; paymentIntentReference?: string | null; providerReference?: string | null; amount: number; currencyCode: string; status: string; failureCode?: string | null; retryCount: number; nextRetryAtUtc?: string | null; requiresAction?: boolean; checkoutKey?: string | null };
 export async function createServicesPayment(bookingId: string, idempotencyKey: string, paymentToken?: string) { return (await apiClient.post<ServicesPayment>(`/services/v1/bookings/${bookingId}/payments/intent`, { idempotencyKey, paymentToken })).data; }
+export async function verifyServicesRazorpayPayment(bookingId: string, paymentId: string, payload: { orderId: string; paymentId: string; signature: string }) { return (await apiClient.post<ServicesPayment>(`/services/v1/bookings/${bookingId}/payments/${paymentId}/verify`, payload)).data; }
 export type ServicesInvoice = { publicId: string; invoiceNumber: string; currencyCode: string; originalAmount: number; approvedAdditionalAmount: number; discountAmount: number; feeAmount: number; taxAmount: number; totalAmount: number; issuedAtUtc: string };
 export async function getProviderCompletion(bookingId: string) { return (await apiClient.get<{ checklist: { publicId: string; title: string; instructions?: string; isRequired: boolean; isCompleted: boolean; providerNote?: string }[]; invoice?: ServicesInvoice | null }>(`/services/v1/provider/jobs/${bookingId}/completion`)).data; }
 export async function updateCompletionChecklist(bookingId: string, itemId: string, isCompleted: boolean, note?: string) { await apiClient.put(`/services/v1/provider/jobs/${bookingId}/completion/checklist/${itemId}`, { isCompleted, note }); }

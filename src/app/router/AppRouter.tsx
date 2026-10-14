@@ -40,6 +40,9 @@ const EnquiryPage = lazy(
 const MyServiceBookingsPage = lazy(
   () => import("../../features/dashboard/ui/MyServiceBookingsPage"),
 );
+const UrbanServicesBookingsPage = lazy(
+  () => import("../../features/servicesMarketplace/ui/UrbanServicesBookingsPage"),
+);
 const AstrologyRequestsPage = lazy(
   () => import("../../features/dashboard/ui/AstrologyRequestsPage"),
 );
@@ -428,6 +431,14 @@ export function AppRouter() {
           element={
             <ProtectedCustomerRoute>
               <ServicesMarketplacePlaceholderPage surface="customer" />
+            </ProtectedCustomerRoute>
+          }
+        />
+        <Route
+          path="/dashboard/urban-services-bookings"
+          element={
+            <ProtectedCustomerRoute>
+              <UrbanServicesBookingsPage />
             </ProtectedCustomerRoute>
           }
         />

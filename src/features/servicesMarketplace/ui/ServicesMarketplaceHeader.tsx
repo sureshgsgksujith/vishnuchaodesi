@@ -37,7 +37,7 @@ export default function ServicesMarketplaceHeader({ onSearch }: Props) {
           <span className="material-icons" aria-hidden="true">search</span>
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search for a service" aria-label="Search for a service" />
         </form>
-        <Link className="services-storefront-icon" to="/dashboard/services-marketplace" aria-label="My bookings">
+        <Link className="services-storefront-icon" to="/dashboard/urban-services-bookings" aria-label="My bookings">
           <span className="material-icons" aria-hidden="true">shopping_cart</span>
         </Link>
         <Link className="services-storefront-icon" to="/dashboard/my-profile" aria-label="My profile">

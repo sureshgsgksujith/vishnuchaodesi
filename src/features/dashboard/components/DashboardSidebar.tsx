@@ -28,13 +28,17 @@ export default function DashboardSidebar({
     ...dashboardNavSections,
     ...(servicesMarketplaceCustomerEnabled || servicesMarketplaceProviderEnabled
       ? [{
-          title: "Services Marketplace",
+          title: "Urban Services",
           items: [
             ...(servicesMarketplaceCustomerEnabled
               ? [{
-                  label: "Marketplace",
+                  label: "Urban Services",
                   href: "/dashboard/services-marketplace",
                   icon: "/template-17/images/icon/expert-book.png",
+                }, {
+                  label: "My bookings",
+                  href: "/dashboard/urban-services-bookings",
+                  icon: "/template-17/images/icon/service.png",
                 }]
               : []),
             ...(servicesMarketplaceProviderEnabled

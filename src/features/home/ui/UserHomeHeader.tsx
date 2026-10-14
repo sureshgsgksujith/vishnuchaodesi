@@ -23,6 +23,14 @@ import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 import { categoryLinks, useExploreCategories } from "./exploreMenuData";
 import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 import HeaderSearchSuggestions from "./HeaderSearchSuggestions";
+import {
+  getLocationCities,
+  getLocationCountries,
+  getLocationStates,
+  type CityOption,
+  type CountryOption,
+  type StateOption,
+} from "../../../shared/api/locationMastersApi";
 import "../styles/customerHeader.css";
 
 const profileMenuItems: MenuItem[] = [
@@ -33,12 +41,12 @@ const profileMenuItems: MenuItem[] = [
   },
   dashboardItem,
   {
-    label: "Urban Services",
+    label: "All Services",
     href: "/local-services",
     icon: "/template-17/images/icon/shop.png",
   },
   {
-    label: "Services Marketplace",
+    label: "Urban Services",
     href: "/dashboard/services-marketplace",
     icon: "/template-17/images/icon/general.png",
   },
@@ -77,6 +85,7 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
   const navigate = useNavigate();
   const location = useLocation();
   const logoTarget = useLogoNavigationTarget();
+  const isMarketplacePage = location.pathname.startsWith("/dashboard/services-marketplace");
   const isServicePage = [
     "/local-services",
     "/local-services.html",
@@ -86,7 +95,7 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
     "/all-services-detailed.html",
     "/local-service-details",
     "/local-service-details.html",
-  ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
+  ].some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`)) || isMarketplacePage;
   const addActionLabel = isServicePage ? "Add Service" : "Add Business";
   const addActionHref = isServicePage ? "/dashboard/services/new" : "/dashboard/listings/start";
 
@@ -94,13 +103,21 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showMarketplaceLocation, setShowMarketplaceLocation] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [notifications, setNotifications] = useState<UserNotification[]>([]);
   const [notificationTotal, setNotificationTotal] = useState(0);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
   const exploreCategories = useExploreCategories();
-  const { activeCity } = useHomeSelectedLocation();
+  const {
+    activeCity,
+    activeLocation,
+    activeLocationLabel,
+    currentCity,
+    currentLocation,
+    setHomeSelectedLocation,
+  } = useHomeSelectedLocation();
 
   const [identity, setIdentity] = useState(getStoredDashboardIdentity());
   const { fullName, joinDate, profileImageUrl } = identity;
@@ -354,6 +371,14 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
               <h4>Explore</h4>
             </div>
 
+            {isMarketplacePage ? (
+              <nav className="marketplace-header-links" aria-label="Urban Services shortcuts">
+                <a href="#services-categories">Home care</a>
+                <a href="#services-categories">Beauty &amp; wellness</a>
+                <a href="#services-categories">Repairs</a>
+              </nav>
+            ) : null}
+
             <div
               className={showExplore ? "chaodesi-pop-menu ani" : "chaodesi-pop-menu"}
               aria-hidden={!showExplore}
@@ -431,6 +456,35 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
                 </div>
               </div>
             </div>
+
+            {isMarketplacePage ? (
+              <button
+                type="button"
+                className="marketplace-header-location"
+                onClick={() => setShowMarketplaceLocation(true)}
+                aria-haspopup="dialog"
+              >
+                <i className="material-icons" aria-hidden="true">location_on</i>
+                <span>{activeLocationLabel || activeCity || "Choose location"}</span>
+                <i className="material-icons" aria-hidden="true">expand_more</i>
+              </button>
+            ) : null}
+
+            {showMarketplaceLocation ? (
+              <MarketplaceLocationDialog
+                initial={activeLocation}
+                detected={{
+                  countryName: currentLocation.country || "",
+                  stateName: currentLocation.state || "",
+                  cityName: currentCity,
+                }}
+                onClose={() => setShowMarketplaceLocation(false)}
+                onApply={(nextLocation) => {
+                  setHomeSelectedLocation(nextLocation);
+                  setShowMarketplaceLocation(false);
+                }}
+              />
+            ) : null}
 
             <div className="top-ser">
               <form className="filter_form" onSubmit={submitHeaderSearch}>
@@ -734,6 +788,163 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+type LocationValue = {
+  countryName?: string;
+  stateName?: string;
+  cityName?: string;
+};
+
+function MarketplaceLocationDialog({
+  initial,
+  detected,
+  onClose,
+  onApply,
+}: {
+  initial: LocationValue;
+  detected: LocationValue;
+  onClose: () => void;
+  onApply: (location: LocationValue) => void;
+}) {
+  const [countries, setCountries] = useState<CountryOption[]>([]);
+  const [states, setStates] = useState<StateOption[]>([]);
+  const [cities, setCities] = useState<CityOption[]>([]);
+  const [country, setCountry] = useState<CountryOption>();
+  const [state, setState] = useState<StateOption>();
+  const [city, setCity] = useState<CityOption>();
+  const [loading, setLoading] = useState("Loading countries…");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKeyDown);
+
+    void (async () => {
+      try {
+        const countryRows = await getLocationCountries();
+        if (!active) return;
+        setCountries(countryRows);
+        const selectedCountry = countryRows.find((item) =>
+          item.name.localeCompare(initial.countryName || "", undefined, { sensitivity: "accent" }) === 0,
+        );
+        if (!selectedCountry) return;
+        setCountry(selectedCountry);
+        setLoading("Loading states…");
+        const stateRows = await getLocationStates(selectedCountry.id);
+        if (!active) return;
+        setStates(stateRows);
+        const selectedState = stateRows.find((item) =>
+          item.name.localeCompare(initial.stateName || "", undefined, { sensitivity: "accent" }) === 0 ||
+          item.code.localeCompare(initial.stateName || "", undefined, { sensitivity: "accent" }) === 0,
+        );
+        if (!selectedState) return;
+        setState(selectedState);
+        setLoading("Loading cities…");
+        const cityRows = await getLocationCities(selectedState.id);
+        if (!active) return;
+        setCities(cityRows);
+        setCity(cityRows.find((item) =>
+          item.name.localeCompare(initial.cityName || "", undefined, { sensitivity: "accent" }) === 0,
+        ));
+      } catch {
+        if (active) setError("Locations could not be loaded. Please try again.");
+      } finally {
+        if (active) setLoading("");
+      }
+    })();
+
+    return () => {
+      active = false;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [initial.cityName, initial.countryName, initial.stateName, onClose]);
+
+  async function changeCountry(id: number) {
+    const next = countries.find((item) => item.id === id);
+    setCountry(next);
+    setState(undefined);
+    setCity(undefined);
+    setStates([]);
+    setCities([]);
+    setError("");
+    if (!next) return;
+    setLoading("Loading states…");
+    try {
+      setStates(await getLocationStates(next.id));
+    } catch {
+      setError("States could not be loaded.");
+    } finally {
+      setLoading("");
+    }
+  }
+
+  async function changeState(id: number) {
+    const next = states.find((item) => item.id === id);
+    setState(next);
+    setCity(undefined);
+    setCities([]);
+    setError("");
+    if (!next) return;
+    setLoading("Loading cities…");
+    try {
+      setCities(await getLocationCities(next.id));
+    } catch {
+      setError("Cities could not be loaded.");
+    } finally {
+      setLoading("");
+    }
+  }
+
+  return (
+    <div className="marketplace-location-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="marketplace-location-dialog" role="dialog" aria-modal="true" aria-labelledby="marketplace-location-title">
+        <button type="button" className="marketplace-location-close" onClick={onClose} aria-label="Close location selector">
+          <i className="material-icons">close</i>
+        </button>
+        <header>
+          <i className="material-icons" aria-hidden="true">location_on</i>
+          <div>
+            <h2 id="marketplace-location-title">Change service location</h2>
+            <p>{[initial.cityName, initial.stateName, initial.countryName].filter(Boolean).join(", ") || "Choose where you need the service"}</p>
+          </div>
+        </header>
+        <div className="marketplace-location-fields">
+          <label>Country
+            <select value={country?.id || ""} onChange={(event) => void changeCountry(Number(event.target.value))} disabled={loading === "Loading countries…"} autoFocus>
+              <option value="">Select country</option>
+              {countries.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select>
+          </label>
+          <label>State
+            <select value={state?.id || ""} onChange={(event) => void changeState(Number(event.target.value))} disabled={!country || Boolean(loading)}>
+              <option value="">Select state</option>
+              {states.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select>
+          </label>
+          <label>City
+            <select value={city?.id || ""} onChange={(event) => setCity(cities.find((item) => item.id === Number(event.target.value)))} disabled={!state || Boolean(loading)}>
+              <option value="">Select city</option>
+              {cities.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select>
+          </label>
+        </div>
+        {loading ? <p className="marketplace-location-status"><span />{loading}</p> : null}
+        {error ? <p className="marketplace-location-error" role="alert">{error}</p> : null}
+        <footer>
+          <button type="button" className="is-current" disabled={!detected.cityName} onClick={() => onApply(detected)}>
+            <i className="material-icons" aria-hidden="true">my_location</i> Use current location
+          </button>
+          <button type="button" className="is-apply" disabled={!country || !state || !city} onClick={() => country && state && city && onApply({ countryName: country.name, stateName: state.name, cityName: city.name })}>
+            Apply location
+          </button>
+        </footer>
+      </section>
     </div>
   );
 }

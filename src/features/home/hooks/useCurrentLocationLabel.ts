@@ -8,12 +8,16 @@ type ReverseGeocodeResult = {
   label: string | null;
   city: string | null;
   country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   precision?: LocationPrecision;
   state?: string | null;
 };
 
 type CurrentLocationResult = ReverseGeocodeResult & {
   accuracyMeters: number | null;
+  latitude: number | null;
+  longitude: number | null;
   source: LocationSource;
 };
 
@@ -50,6 +54,8 @@ type OpenCageReverseGeocodeResponse = {
 
 type IpLocationResponse = {
   city?: string;
+  latitude?: number;
+  longitude?: number;
   region?: string;
   region_code?: string;
   country_name?: string;
@@ -59,7 +65,9 @@ type CurrentLocationState = {
   accuracyMeters?: number | null;
   city?: string | null;
   country?: string | null;
+  latitude?: number | null;
   label: string | null;
+  longitude?: number | null;
   source?: LocationSource;
   state?: string | null;
   status: LocationStatus;
@@ -281,7 +289,9 @@ const getApproximateLocationFromIp = async () => {
   return {
     city: data.city || null,
     country: data.country_name || null,
+    latitude: data.latitude ?? null,
     label: formatLocationLabel(data.city, data.region_code || data.region, data.country_name),
+    longitude: data.longitude ?? null,
     precision: "city",
     state: data.region || data.region_code || null,
   } satisfies ReverseGeocodeResult;
@@ -297,6 +307,8 @@ const getCurrentLocation = async (): Promise<CurrentLocationResult> => {
       return {
         ...location,
         accuracyMeters: Math.round(position.coords.accuracy),
+        latitude,
+        longitude,
         source: "browser",
       };
     }
@@ -312,6 +324,8 @@ const getCurrentLocation = async (): Promise<CurrentLocationResult> => {
     label: fallbackLocation?.label || null,
     state: fallbackLocation?.state || null,
     accuracyMeters: null,
+    latitude: fallbackLocation?.latitude ?? null,
+    longitude: fallbackLocation?.longitude ?? null,
     source: fallbackLocation?.label ? "ip" : "none",
   };
 };
@@ -351,7 +365,7 @@ export function useCurrentLocationLabel(): CurrentLocationState {
       }
 
       if (isMounted) {
-        setLocation({ accuracyMeters: null, city: null, country: null, label: null, source: "none", state: null, status: "unavailable" });
+        setLocation({ accuracyMeters: null, city: null, country: null, latitude: null, label: null, longitude: null, source: "none", state: null, status: "unavailable" });
       }
     };
 
