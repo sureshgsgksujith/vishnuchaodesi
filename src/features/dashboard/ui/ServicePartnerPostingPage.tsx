@@ -20,8 +20,9 @@ import {
   type StateOption,
 } from "../../../shared/api/locationMastersApi";
 import PhoneNumberInput, { getPhoneNumberValidationError } from "../../../shared/components/PhoneNumberInput";
+import { startRazorpayPayment } from "../../../shared/payments/razorpayCheckout";
 import PaymentProcessingOverlay from "../../../shared/components/PaymentProcessingOverlay";
-import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import { formatCurrencyAmount, getCurrencyCodeForCountry } from "../../../shared/utils/currency";
 import "../styles/serviceOnboarding.css";
 import "../styles/eventBookings.css";
 
@@ -86,17 +87,11 @@ type PostingForm = {
 type ServicePackageForm = AllServicePricingPackage;
 
 type FieldErrors = Record<string, string>;
-type ServicePaymentReceipt = { provider: string; couponCode: string; subtotalAmount: number; discountAmount: number; totalAmount: number; currency: string };
+type ServicePaymentReceipt = { provider: string; paymentToken?: string; couponCode: string; subtotalAmount: number; discountAmount: number; totalAmount: number; currency: string };
 
 const totalSteps = 4;
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const paymentModes = ["Cash", "Credit Card", "Debit Card", "UPI / Zelle", "PayPal", "Cheque"];
-const checkoutPaymentModes = [
-  { id: "card", label: "Credit / Debit Card", icon: "credit_card" },
-  { id: "bank", label: "Net Banking", icon: "account_balance" },
-  { id: "wallet", label: "Wallet / UPI", icon: "account_balance_wallet" },
-  { id: "paypal", label: "PayPal", icon: "payments" },
-];
 type ServicePlanCard = {
   code: string;
   name: string;
@@ -271,12 +266,12 @@ function formatLocation(location: LocationForm) {
     .join(", ");
 }
 
-function formatServicePlanPrice(plan: ServicePlanCard) {
+function formatServicePlanPrice(plan: ServicePlanCard, country?: string) {
   if (plan.price <= 0) {
     return "Free";
   }
 
-  return `${plan.currency || "USD"} ${plan.price}`;
+  return formatCurrencyAmount(plan.price, country);
 }
 
 function yearsToNumber(value: string) {
@@ -415,7 +410,6 @@ export default function ServicePartnerPostingPage() {
   const [notice, setNotice] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPaymentGatewayOpen, setIsPaymentGatewayOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paidPlan, setPaidPlan] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
@@ -711,7 +705,6 @@ export default function ServicePartnerPostingPage() {
     setPaidPlan("");
     setPaymentReference("");
     setPaymentReceipt(null);
-    setIsPaymentGatewayOpen(false);
     setIsProcessingPayment(false);
     setFieldErrors((current) => {
       const next = { ...current };
@@ -721,42 +714,26 @@ export default function ServicePartnerPostingPage() {
     });
   }
 
-  function openDummyPaymentGateway() {
-    if (!form.plan) {
-      setFieldErrors((current) => ({ ...current, plan: "Select a listing plan before payment." }));
-      scrollToFirstFieldError();
-      return;
-    }
-
-    setNotice("");
-    setFieldErrors((current) => {
-      const next = { ...current };
-      delete next.plan;
-      delete next.payment;
-      return next;
-    });
-    setIsPaymentGatewayOpen(true);
-  }
-
-  function completeDummyPayment(receipt: ServicePaymentReceipt) {
+  async function completeDummyPayment(receipt: ServicePaymentReceipt) {
     if (!form.plan || isProcessingPayment) {
       return;
     }
 
     setIsProcessingPayment(true);
-    window.setTimeout(() => {
+    try {
+      const verified = receipt.totalAmount > 0 ? await startRazorpayPayment({ amount: receipt.totalAmount, currency: receipt.currency, receipt: `SERVICE-${form.plan}-${Date.now()}`, description: "Chao Desi service provider plan" }) : undefined;
       setPaidPlan(form.plan);
-      setPaymentReference(`DUMMY-${Date.now()}`);
-      setPaymentReceipt(receipt);
-      setIsPaymentGatewayOpen(false);
-      setIsProcessingPayment(false);
+      setPaymentReference(verified?.paymentReference || "FREE");
+      setPaymentReceipt({ ...receipt, provider: receipt.totalAmount > 0 ? "Razorpay" : "Free", paymentToken: verified?.paymentToken });
       setFieldErrors((current) => {
         const next = { ...current };
         delete next.plan;
         delete next.payment;
         return next;
       });
-    }, 700);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Payment could not be completed.");
+    } finally { setIsProcessingPayment(false); }
   }
 
   function updateLocation(index: number, value: Partial<LocationForm>) {
@@ -1325,7 +1302,9 @@ export default function ServicePartnerPostingPage() {
         isPhoneVerified: form.isPhoneVerified,
         packageCode: form.plan,
         paymentReference,
-        paymentProvider: paymentReceipt?.provider || "Demo",
+        paymentToken: paymentReceipt?.paymentToken,
+        paymentProvider: paymentReceipt?.provider || "Razorpay",
+        currency: paymentReceipt?.currency,
         couponCode: paymentReceipt?.couponCode || undefined,
         saveAsDraft: false,
       });
@@ -1498,14 +1477,12 @@ export default function ServicePartnerPostingPage() {
                     payments={payments}
                     servicePackages={servicePackages}
                     acceptedTerms={acceptedTerms}
-                    isPaymentGatewayOpen={isPaymentGatewayOpen}
                     isPaymentPaid={isSelectedPlanPaid}
                     isProcessingPayment={isProcessingPayment}
                     paymentReference={paymentReference}
                     errors={fieldErrors}
                     onGoto={setStep}
                     onPlan={selectListingPlan}
-                    onOpenPayment={openDummyPaymentGateway}
                     onCompletePayment={completeDummyPayment}
                     onTerms={(value) => {
                       setAcceptedTerms(value);
@@ -2509,14 +2486,12 @@ function StepReview({
   payments,
   servicePackages,
   acceptedTerms,
-  isPaymentGatewayOpen,
   isPaymentPaid,
   isProcessingPayment,
   paymentReference,
   errors,
   onGoto,
   onPlan,
-  onOpenPayment,
   onCompletePayment,
   onTerms,
 }: {
@@ -2531,25 +2506,23 @@ function StepReview({
   payments: string[];
   servicePackages: ServicePackageForm[];
   acceptedTerms: boolean;
-  isPaymentGatewayOpen: boolean;
   isPaymentPaid: boolean;
   isProcessingPayment: boolean;
   paymentReference: string;
   errors: FieldErrors;
   onGoto: (step: number) => void;
   onPlan: (value: string) => void;
-  onOpenPayment: () => void;
   onCompletePayment: (receipt: ServicePaymentReceipt) => void;
   onTerms: (value: boolean) => void;
 }) {
   const selectedPlan = servicePlans.find((plan) => plan.code === form.plan);
   const visiblePackages = normalizeServicePackages(servicePackages);
-  const [selectedGateway, setSelectedGateway] = useState(checkoutPaymentModes[0].id);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
   const [couponMessage, setCouponMessage] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const planAmount = selectedPlan?.price || 0;
+  const planCurrency = getCurrencyCodeForCountry(primaryLocation.country);
   const discountAmount = appliedCoupon?.discountAmount || 0;
   const payAmount = Math.max(0, planAmount - discountAmount);
 
@@ -2596,7 +2569,7 @@ function StepReview({
               <input type="radio" checked={form.plan === plan.code} onChange={() => onPlan(plan.code)} />
               {plan.isHighlighted ? <span className="spaw-plan-badge">Popular</span> : null}
               <strong>{plan.name}</strong>
-              <b style={{ color: "#ff6b00", fontSize: 22 }}>{formatServicePlanPrice(plan)}</b>
+              <b style={{ color: "#ff6b00", fontSize: 22 }}>{formatServicePlanPrice(plan, primaryLocation.country)}</b>
               <small style={{ display: "block", fontWeight: 700, color: "#64748b" }}>{plan.duration}</small>
               <p>{plan.description}</p>
             </label>
@@ -2608,34 +2581,27 @@ function StepReview({
       <div className={`spaw-field-block${errors.payment ? " spaw-input-error" : ""}`}>
         <label className="spaw-label">Payment <span className="spaw-req">*</span><small>Complete payment before submitting the service posting.</small></label>
         <div className="plan-checkout">
-          <div className="plan-checkout-bar"><span><i className="material-icons">science</i> Demo payment - no money will be charged</span><span>DEMO CHECKOUT</span></div>
+          <div className="plan-checkout-bar"><span><i className="material-icons">lock</i> Secure Razorpay checkout</span><span>SERVER VERIFIED</span></div>
           {selectedPlan ? (
             <>
               <div className="plan-checkout-hero"><i className="material-icons">storefront</i><div><small>Local Service plan</small><h2>{selectedPlan.name}</h2><p>Complete your payment securely to submit this service listing.</p></div></div>
-              <div className="plan-checkout-layout">
+              <div className="plan-checkout-layout plan-checkout-layout-single">
                 <div className="plan-checkout-steps">
                   <section className="plan-checkout-step is-open">
-                    <div className="plan-checkout-step-head"><span>1</span><b>Payment Options</b><i className="material-icons">expand_less</i></div>
-                    <div className="plan-checkout-step-body">
-                      {checkoutPaymentModes.map((gateway) => <label className="plan-checkout-pay" key={gateway.id}><input type="radio" name="service-payment" checked={selectedGateway === gateway.id} onChange={() => setSelectedGateway(gateway.id)} /><i className="material-icons">{gateway.icon}</i>{gateway.label}</label>)}
-                    </div>
-                  </section>
-                  <section className="plan-checkout-step is-open">
-                    <div className="plan-checkout-step-head"><span>2</span><b>Terms &amp; Conditions</b><i className="material-icons">expand_less</i></div>
+                    <div className="plan-checkout-step-head"><span>1</span><b>Terms &amp; Conditions</b><i className="material-icons">expand_less</i></div>
                     <div className="plan-checkout-step-body"><label className="plan-checkout-terms"><input type="checkbox" checked={acceptedTerms} onChange={(event) => onTerms(event.target.checked)} /> I agree to the Terms of Service, Privacy Policy and Refund Policy of Chao Desi.</label></div>
                   </section>
                   {isPaymentPaid ? <p style={{ color: "#008f67", fontWeight: 700 }}>Payment completed. Reference: {paymentReference}</p> : null}
                 </div>
                 <aside className="plan-checkout-summary">
                   <h3>Order Summary</h3><small>SERVICE PLAN</small>
-                  <div className="plan-checkout-line"><span><b>{selectedPlan.name}</b><em>{selectedPlan.duration}</em></span><strong>{formatCurrencyAmount(planAmount, selectedPlan.currency)}</strong></div>
+                  <div className="plan-checkout-line"><span><b>{selectedPlan.name}</b><em>{selectedPlan.duration}</em></span><strong>{formatCurrencyAmount(planAmount, primaryLocation.country)}</strong></div>
                   <div className="plan-checkout-coupon"><label htmlFor="service-coupon">COUPON CODE</label><div><input id="service-coupon" value={couponCode} onChange={(event) => { setCouponCode(event.target.value); setCouponMessage(""); }} placeholder="Enter coupon code" disabled={isPaymentPaid} /><button type="button" onClick={applyServiceCoupon} disabled={isApplyingCoupon || isPaymentPaid}>{isApplyingCoupon ? "Checking..." : "Apply"}</button></div>{couponMessage ? <p className={appliedCoupon ? "is-success" : "is-error"}>{couponMessage}</p> : null}</div>
-                  <div className="plan-checkout-fees"><div><span>Total Amount</span><b>{formatCurrencyAmount(planAmount, selectedPlan.currency)}</b></div><div className="is-discount"><span>Discount Amount{appliedCoupon ? ` (${appliedCoupon.code})` : ""}</span><b>-{formatCurrencyAmount(discountAmount, selectedPlan.currency)}</b></div></div>
-                  <div className="plan-checkout-total"><span>Pay Amount</span><b>{formatCurrencyAmount(payAmount, selectedPlan.currency)}</b></div>
-                  {!isPaymentGatewayOpen && !isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" onClick={onOpenPayment}><i className="material-icons">lock</i> Continue to Payment</button> : null}
-                  {isPaymentGatewayOpen && !isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" onClick={() => onCompletePayment({ provider: selectedGateway, couponCode: appliedCoupon?.code || "", subtotalAmount: planAmount, discountAmount, totalAmount: payAmount, currency: selectedPlan.currency })} disabled={isProcessingPayment || !acceptedTerms}>{isProcessingPayment ? "Processing..." : <><i className="material-icons">lock</i> Pay Securely</>}</button> : null}
+                  <div className="plan-checkout-fees"><div><span>Total Amount</span><b>{formatCurrencyAmount(planAmount, primaryLocation.country)}</b></div><div className="is-discount"><span>Discount Amount{appliedCoupon ? ` (${appliedCoupon.code})` : ""}</span><b>-{formatCurrencyAmount(discountAmount, primaryLocation.country)}</b></div></div>
+                  <div className="plan-checkout-total"><span>Pay Amount</span><b>{formatCurrencyAmount(payAmount, primaryLocation.country)}</b></div>
+                  {!isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" onClick={() => onCompletePayment({ provider: "Razorpay", couponCode: appliedCoupon?.code || "", subtotalAmount: planAmount, discountAmount, totalAmount: payAmount, currency: planCurrency })} disabled={isProcessingPayment || !acceptedTerms}>{isProcessingPayment ? "Processing..." : <><i className="material-icons">lock</i> Pay securely with Razorpay</>}</button> : null}
                   {isPaymentPaid ? <button type="button" className="plan-checkout-pay-now" disabled><i className="material-icons">check_circle</i> Payment Completed</button> : null}
-                  <p className="plan-checkout-secure"><i className="material-icons">science</i> Test transaction only</p>
+                  <p className="plan-checkout-secure"><i className="material-icons">verified_user</i> Secured by Razorpay</p>
                 </aside>
               </div>
             </>

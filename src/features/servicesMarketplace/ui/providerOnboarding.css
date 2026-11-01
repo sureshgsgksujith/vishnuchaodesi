@@ -1,13 +1,13 @@
 .provider-onboarding{width:min(calc(100% - 32px),1120px);margin:0 auto;padding:22px 0 70px;color:#172746}
-.provider-onboarding>header{padding:26px 30px;border-radius:18px;background:linear-gradient(120deg,#12376e 0%,#0e7890 100%);color:#fff;box-shadow:0 14px 34px rgba(16,57,105,.18)}
+.provider-onboarding>header{padding:18px 26px;border-radius:18px;background:linear-gradient(120deg,#12376e 0%,#0e7890 100%);color:#fff;box-shadow:0 14px 34px rgba(16,57,105,.18)}
 .provider-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
 .provider-heading>div>span,.provider-form-heading span{color:#64ead0;font-size:11px;font-weight:900;letter-spacing:.14em}
-.provider-heading h1{margin:7px 0 5px;font-size:34px;line-height:1.1}
+.provider-heading h1{margin:5px 0 3px;font-size:30px;line-height:1.1}
 .provider-heading p{margin:0;color:#d6e8f4;font-size:14px}
 .provider-status-badge{flex:0 0 auto;padding:8px 13px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.13);font-size:12px;letter-spacing:.06em}
 .provider-progress{position:relative;height:20px;margin-top:18px;overflow:hidden;border-radius:999px;background:rgba(255,255,255,.2)}
 .provider-progress i{display:block;height:100%;background:#65e7ca}.provider-progress span{position:absolute;inset:2px;text-align:center;font-size:11px;font-weight:900}
-.provider-approved-summary{display:flex;align-items:center;gap:14px;margin-top:18px;padding:11px 14px;border:1px solid rgba(110,244,210,.28);border-radius:10px;background:rgba(6,39,72,.25)}
+.provider-approved-summary{display:flex;align-items:center;gap:14px;margin-top:12px;padding:8px 14px;border:1px solid rgba(110,244,210,.28);border-radius:10px;background:rgba(6,39,72,.25)}
 .provider-approved-summary span{color:#72efcf!important;font-size:13px!important;font-weight:900;letter-spacing:0!important}.provider-approved-summary small{color:#d8eaf2}
 .provider-primary,.provider-actions button{border:0;border-radius:9px;background:#1567b1;color:#fff;padding:11px 17px;font-weight:800;cursor:pointer}.provider-primary{margin-top:18px}
 .provider-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 18px;margin-top:18px;padding:22px 26px;border:1px solid #e0e7ef;border-radius:16px;background:#fff;box-shadow:0 10px 28px rgba(20,48,86,.07)}
@@ -20,4 +20,4 @@
 .provider-wide,.provider-check,.provider-actions{grid-column:1/-1}.provider-check{display:grid!important;grid-template-columns:auto 1fr;align-items:center;justify-content:start!important;padding:9px 11px;border:1px solid #e6ebf1;border-radius:9px;background:#fafbfd;font-weight:600!important}.provider-check input{width:18px;height:18px;margin:0}.provider-actions{display:flex;justify-content:flex-end;gap:10px;padding-top:5px}
 .provider-history{margin-top:18px;padding:22px 26px;border:1px solid #e0e7ef;border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(20,48,86,.05)}
 .provider-history h2{margin:0 0 12px;font-size:22px}.provider-history>div{display:grid;grid-template-columns:1fr auto;gap:4px;padding:10px 0;border-top:1px solid #e6ebf2}.provider-history p{grid-column:1/-1;margin:0;color:#68768b}
-@media(max-width:760px){.provider-onboarding{width:min(calc(100% - 20px),620px);padding-top:12px}.provider-onboarding>header{padding:20px}.provider-heading{flex-direction:column;gap:12px}.provider-heading h1{font-size:28px}.provider-approved-summary{align-items:flex-start;flex-direction:column;gap:4px}.provider-form{grid-template-columns:1fr;padding:18px}.provider-form>*{grid-column:1!important}.provider-form-heading{align-items:flex-start;flex-direction:column;gap:5px}.provider-actions{flex-direction:column}}
+@media(max-width:760px){.provider-onboarding{width:min(calc(100% - 20px),620px);padding-top:0}.provider-onboarding>header{padding:16px}.provider-heading{flex-direction:column;gap:9px}.provider-heading h1{font-size:26px}.provider-approved-summary{align-items:flex-start;flex-direction:column;gap:4px;margin-top:10px}.provider-form{grid-template-columns:1fr;padding:18px}.provider-form>*{grid-column:1!important}.provider-form-heading{align-items:flex-start;flex-direction:column;gap:5px}.provider-actions{flex-direction:column}}

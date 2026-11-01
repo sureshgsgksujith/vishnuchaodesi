@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ProviderOnboarding from "./ProviderOnboarding";
 import { ProviderVerificationPanel } from "./ProviderVerificationPanel";
 import { ProviderQualificationsPanel } from "./ProviderQualificationsPanel";
@@ -19,21 +19,12 @@ const tabs: Array<{ id: ProviderTab; label: string; icon: string }> = [
 ];
 
 export default function ProviderWorkspace() {
-  const [activeTab, setActiveTab] = useState<ProviderTab>("profile");
+  const [searchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab") as ProviderTab | null;
+  const activeTab: ProviderTab = tabs.some((tab) => tab.id === requestedTab) ? requestedTab! : "profile";
   return (
     <div className="provider-workspace">
-      <header className="provider-workspace-title">
-        <div><span>URBAN SERVICES</span><h1>Provider workspace</h1><p>Manage your profile, schedule and service jobs.</p></div>
-      </header>
       <div className="provider-workspace-body">
-        <nav className="provider-workspace-tabs" aria-label="Provider workspace sections">
-          <small>WORKSPACE MENU</small>
-          {tabs.map((tab) => (
-            <button key={tab.id} type="button" className={activeTab === tab.id ? "is-active" : ""} onClick={() => setActiveTab(tab.id)}>
-              <span className="material-icons" aria-hidden="true">{tab.icon}</span><span>{tab.label}</span>
-            </button>
-          ))}
-        </nav>
         <section className="provider-workspace-content">
           {activeTab === "profile" ? <ProviderOnboarding /> : null}
           {activeTab === "verification" ? <ProviderVerificationPanel /> : null}

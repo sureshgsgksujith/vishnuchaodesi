@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { communityApi } from "../api/communityApi";
 import { getAddressPlaceDetail, searchAddressPredictions, type AddressPrediction } from "../../../shared/api/addressAutocompleteApi";
 import { getLocationCities, getLocationCountries, getLocationStates, type CityOption, type CountryOption, type StateOption } from "../../../shared/api/locationMastersApi";
+import { startRazorpayPayment } from "../../../shared/payments/razorpayCheckout";
 import "./giftSetup.css";
 type Data = Record<string, unknown>;
 export default function CommunityGiftDashboard({
@@ -22,10 +23,12 @@ export default function CommunityGiftDashboard({
       item?: Data;
     }>(),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [success, setSuccess] = useState("");
   async function open(item: Data) {
     setSelected(item);
     setError("");
+    setSuccess("");
     try {
       setDetail(await communityApi.giftRegistry(Number(item.id)));
     } catch (e) {
@@ -37,6 +40,7 @@ export default function CommunityGiftDashboard({
     const form = new FormData(event.currentTarget);
     setBusy(true);
     setError("");
+    setSuccess("");
     try {
       const imageUrl = await giftImageFrom(form);
       const registry = await communityApi.createRegistry({
@@ -100,6 +104,7 @@ export default function CommunityGiftDashboard({
     const form = new FormData(event.currentTarget);
     setBusy(true);
     setError("");
+    setSuccess("");
     try {
       await communityApi.updateGiftRegistry(Number(selected.id), {
         title: form.get("title"),
@@ -127,6 +132,7 @@ export default function CommunityGiftDashboard({
     if (!selected) return;
     setBusy(true);
     setError("");
+    setSuccess("");
     try {
       await communityApi.archiveGiftRegistry(Number(selected.id));
       setSelected(undefined);
@@ -148,6 +154,7 @@ export default function CommunityGiftDashboard({
     const form = new FormData(event.currentTarget);
     setBusy(true);
     setError("");
+    setSuccess("");
     try {
       const imageUrl = await giftImageFrom(form);
       await communityApi.updateGiftItem(Number(editingItem.id), {
@@ -170,6 +177,7 @@ export default function CommunityGiftDashboard({
   async function deleteItem(item: Data) {
     setBusy(true);
     setError("");
+    setSuccess("");
     try {
       await communityApi.deleteGiftItem(Number(item.id));
       setDetail(await communityApi.giftRegistry(Number(selected?.id)));
@@ -202,6 +210,7 @@ export default function CommunityGiftDashboard({
           </button>
         </div>
       </div>
+      {success ? <p className="gift-success" role="status">{success}</p> : null}
       {error ? <p className="community-error">{error}</p> : null}
       <div className="gift-registry-grid">
         {items.map((item, index) => (
@@ -252,6 +261,10 @@ export default function CommunityGiftDashboard({
           <div className="gift-item-grid">
             {giftItems.map((item) => (
               <article key={String(item.id)}>
+                {(() => {
+                  const purchased = Number(item.purchasedQuantity || 0) >= Number(item.desiredQuantity || 1);
+                  return (
+                    <>
                 {item.imageUrl ? (
                   <img src={giftImageUrl(String(item.imageUrl))} alt="" />
                 ) : (
@@ -285,23 +298,47 @@ export default function CommunityGiftDashboard({
                     </a>
                   ) : null}
                   <div className="gift-item-actions">
-                    <button
+                    {purchased ? <span className="gift-item-complete">Purchased</span> : null}
+                    {!purchased ? <button
                       onClick={async () => {
                         setBusy(true);
                         setError("");
+                        setSuccess("");
+                        let reservedOrderId: number | undefined;
                         try {
-                          await communityApi.sendGiftItem(Number(item.id));
+                          const order = await communityApi.sendGiftItem(Number(item.id));
+                          reservedOrderId = Number(order.id) || undefined;
+                          const amount = Number(order.amount || item.desiredAmount || 0);
+                          if (!order.id || amount <= 0) {
+                            throw new Error("This gift does not have a valid price. Edit the gift and try again.");
+                          }
+                          const payment = await startRazorpayPayment({
+                            amount,
+                            currency: String(order.currency || item.currency || "INR"),
+                            description: `Gift: ${String(item.name || "Gift")}`,
+                          });
+                          await communityApi.purchaseGiftOrder(Number(order.id), payment.paymentToken);
+                          setDetail(await communityApi.giftRegistry(Number(selected?.id)));
+                          setSuccess("Payment completed. Your gift order is ready for fulfilment.");
                           window.dispatchEvent(new Event("gift-orders-changed"));
+                          window.setTimeout(() => {
+                            document.querySelector(".gift-fulfillment")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                          }, 80);
                         } catch (e) {
-                          setError(e instanceof Error ? e.message : "Unable to start this gift order.");
+                          if (reservedOrderId) {
+                            window.dispatchEvent(new Event("gift-orders-changed"));
+                            setError(`${apiErrorMessage(e, "Unable to complete payment.")} The gift remains reserved for 30 minutes; you can finish it from Gift fulfilment.`);
+                          } else {
+                            setError(apiErrorMessage(e, "Unable to buy and send this gift."));
+                          }
                         } finally {
                           setBusy(false);
                         }
                       }}
                       disabled={busy || Number(item.desiredAmount || 0) <= 0}
                     >
-                      Buy &amp; send
-                    </button>
+                      {busy ? "Processing…" : "Buy & send"}
+                    </button> : null}
                     <button
                       onClick={() => setEditingItem(item)}
                       disabled={busy}
@@ -317,6 +354,9 @@ export default function CommunityGiftDashboard({
                     </button>
                   </div>
                 </div>
+                    </>
+                  );
+                })()}
               </article>
             ))}
           </div>
@@ -622,6 +662,21 @@ function giftImageUrl(value: string) {
   const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5145/api";
   return `${apiBase.replace(/\/api\/?$/i, "")}${value}`;
 }
+function apiErrorMessage(error: unknown, fallback: string) {
+  const response = (error as { response?: { data?: unknown } })?.response;
+  const data = response?.data as {
+    message?: string;
+    title?: string;
+    errors?: Record<string, string[] | string>;
+  } | undefined;
+  if (data?.message) return data.message;
+  if (data?.title) return data.title;
+  const firstValidationError = data?.errors
+    ? Object.values(data.errors).flat()[0]
+    : undefined;
+  if (firstValidationError) return String(firstValidationError);
+  return error instanceof Error ? error.message : fallback;
+}
 async function giftImageFrom(form: FormData) {
   const file = form.get("imageFile");
   if (file instanceof File && file.size) return (await communityApi.uploadMedia(file, "GiftImage")).url;
@@ -631,7 +686,7 @@ function GiftImageFields({ initialUrl = "" }: { initialUrl?: string }) {
   const [url, setUrl] = useState(initialUrl), [preview, setPreview] = useState(initialUrl ? giftImageUrl(initialUrl) : ""), [fileName, setFileName] = useState("");
   useEffect(() => () => { if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); }, [preview]);
   return <section className="gift-image-fields">
-    <label>Image URL<input name="imageUrl" type="url" value={url} onChange={event => { setUrl(event.target.value); setPreview(event.target.value); }} placeholder="https://..." /></label>
+    <label>Image URL or uploaded image path<input name="imageUrl" type="text" value={url} onChange={event => { setUrl(event.target.value); setPreview(event.target.value); }} placeholder="https://... or uploaded filename" /></label>
     <span className="gift-image-or">or</span>
     <label className="gift-image-upload"><span className="material-icons">upload</span><span>{fileName || "Upload image"}</span><small>JPG, PNG or WebP · max 15 MB</small><input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp" onChange={event => { const file = event.target.files?.[0]; setFileName(file?.name || ""); if (preview.startsWith("blob:")) URL.revokeObjectURL(preview); setPreview(file ? URL.createObjectURL(file) : url); }} /></label>
     {preview ? <img className="gift-image-preview" src={preview.startsWith("/uploads/") ? giftImageUrl(preview) : preview} alt="Gift preview" /> : null}

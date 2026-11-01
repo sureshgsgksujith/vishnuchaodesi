@@ -59,7 +59,7 @@ export default function ServicesPaymentPanel({ bookingId, amount, currency, auto
         amount: Math.round(initiated.amount * 100),
         currency: initiated.currencyCode,
         name: "Chao Desi",
-        description: "Urban Services booking",
+        description: "Chao Services booking",
         order_id: initiated.paymentIntentReference,
         theme: { color: "#146fba" },
         modal: { ondismiss: () => { setBusy(false); setMessage("Payment window closed. You can try again."); } },

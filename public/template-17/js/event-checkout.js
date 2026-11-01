@@ -136,14 +136,6 @@
         }
 
         if (stepNumber === 3) {
-            var selectedPayment = step.querySelector('input[name="pay"]:checked');
-            if (!selectedPayment) {
-                if (shouldFocus) { return setStepError(step, "Please select a payment option.", step.querySelector('input[name="pay"]')); }
-                return false;
-            }
-        }
-
-        if (stepNumber === 4) {
             var agree = step.querySelector(".ck-agree");
             if (agree && !agree.checked) {
                 if (shouldFocus) { return setStepError(step, "Please accept the Terms & Conditions to continue.", agree); }
@@ -155,7 +147,7 @@
         return true;
     }
     function validateCheckout() {
-        for (var stepNumber = 1; stepNumber <= 4; stepNumber++) {
+        for (var stepNumber = 1; stepNumber <= 3; stepNumber++) {
             if (!validateStep(stepNumber, true)) {
                 openStep(getStep(stepNumber));
                 return false;
@@ -180,7 +172,83 @@
         var listingId = cart && cart.event && cart.event.listingId ? cart.event.listingId : "";
         return listingId ? "/event-details?id=" + encodeURIComponent(listingId) : "/event-details";
     }
-    async function sendPaymentSuccessEmail(amounts) {
+    function checkoutCurrency() {
+        return String((cart && (cart.currency || (cart.event && cart.event.currency))) || "USD").toUpperCase();
+    }
+    function loadRazorpayCheckout() {
+        if (window.Razorpay) { return Promise.resolve(); }
+        return new Promise(function (resolve, reject) {
+            var existing = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]');
+            if (existing) {
+                existing.addEventListener("load", resolve, { once: true });
+                existing.addEventListener("error", function () { reject(new Error("Unable to load Razorpay Checkout.")); }, { once: true });
+                return;
+            }
+            var script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.async = true;
+            script.onload = resolve;
+            script.onerror = function () { reject(new Error("Unable to load Razorpay Checkout.")); };
+            document.head.appendChild(script);
+        });
+    }
+    var checkoutFrameOriginalStyle = null;
+    function enterPaymentFullscreen() {
+        try {
+            var frame = window.frameElement;
+            if (!frame) { return; }
+            checkoutFrameOriginalStyle = frame.getAttribute("style") || "";
+            frame.style.position = "fixed";
+            frame.style.inset = "0";
+            frame.style.width = "100vw";
+            frame.style.height = "100dvh";
+            frame.style.zIndex = "2147483646";
+            frame.style.background = "#fff";
+            frame.style.border = "0";
+        } catch (e) { /* standalone checkout already uses the full viewport */ }
+    }
+    function exitPaymentFullscreen() {
+        try {
+            var frame = window.frameElement;
+            if (!frame || checkoutFrameOriginalStyle === null) { return; }
+            frame.setAttribute("style", checkoutFrameOriginalStyle);
+            checkoutFrameOriginalStyle = null;
+        } catch (e) { /* no parent frame */ }
+    }
+    async function createVerifiedRazorpayPayment(amounts) {
+        var token = getToken();
+        var currency = checkoutCurrency();
+        var orderResponse = await fetch(getApiBaseUrl() + "/payments/razorpay/orders", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+            body: JSON.stringify({ amount: Math.round(amounts.total * 100) / 100, currency: currency, receipt: "EVENT-" + Date.now(), description: (cart.event && cart.event.title) || "Chao Desi event tickets" })
+        });
+        var order = await orderResponse.json().catch(function () { return {}; });
+        if (!orderResponse.ok) { throw new Error(order.message || "Unable to start Razorpay payment."); }
+        await loadRazorpayCheckout();
+        var customer = getCheckoutCustomer();
+        enterPaymentFullscreen();
+        var result = await new Promise(function (resolve, reject) {
+            var checkout = new window.Razorpay({
+                key: order.checkoutKey, amount: order.amountMinor, currency: order.currency,
+                order_id: order.orderId, name: "Chao Desi", description: (cart.event && cart.event.title) || "Event tickets",
+                prefill: { name: customer.name, email: customer.email, contact: getDigits(getValue('.ck-step[data-step="1"] input[type="tel"]')) },
+                theme: { color: "#ff6b0b" }, handler: resolve,
+                modal: { ondismiss: function () { reject(new Error("Payment window closed. No payment was recorded.")); } }
+            });
+            checkout.on("payment.failed", function (failure) { reject(new Error((failure.error && failure.error.description) || "Payment failed.")); });
+            checkout.open();
+        });
+        var verifyResponse = await fetch(getApiBaseUrl() + "/payments/razorpay/verify", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId: result.razorpay_order_id, paymentId: result.razorpay_payment_id, signature: result.razorpay_signature })
+        });
+        var verified = await verifyResponse.json().catch(function () { return {}; });
+        if (!verifyResponse.ok) { throw new Error(verified.message || "Razorpay payment verification failed."); }
+        return verified;
+    }
+    async function sendPaymentSuccessEmail(amounts, paymentToken) {
         var token = getToken();
         if (!token) { throw new Error("Please login again before booking this ticket."); }
         if (!cart || !cart.event || !cart.event.listingId) {
@@ -207,8 +275,9 @@
                 taxAmount: Math.round(amounts.tax * 100) / 100,
                 totalAmount: Math.round(amounts.total * 100) / 100,
                 couponCode: appliedCouponCode || null,
-                currency: "USD",
-                paymentProvider: "Demo",
+                currency: checkoutCurrency(),
+                paymentProvider: "Razorpay",
+                paymentToken: paymentToken,
                 items: cart.items.map(function (item) {
                     return {
                         name: item.name,
@@ -553,6 +622,25 @@
         set(".ck-discount-value", "-" + money(couponDiscount));
     }
 
+    async function processRazorpayPayment(amounts) {
+        if (gatewayProcessing) { return; }
+        gatewayProcessing = true;
+        var payBtn = page.querySelector(".ck-pay-now");
+        if (payBtn) { payBtn.disabled = true; payBtn.textContent = "Opening Razorpay..."; }
+        try {
+            var verified = amounts.total > 0 ? await createVerifiedRazorpayPayment(amounts) : { paymentToken: null };
+            await sendPaymentSuccessEmail(amounts, verified.paymentToken);
+            finishPaymentFlow();
+        } catch (error) {
+            var message = error && error.message ? error.message : "Payment could not be completed.";
+            window.alert(message);
+        } finally {
+            exitPaymentFullscreen();
+            gatewayProcessing = false;
+            if (payBtn) { payBtn.disabled = false; payBtn.innerHTML = '<i class="material-icons">lock</i> Pay Securely with Razorpay'; }
+        }
+    }
+
     set(".ck-tx", money(txFee));
     set(".ck-conv", money(conv));
     set(".ck-tax", money(tax));
@@ -660,10 +748,10 @@
         payBtn.addEventListener("click", function () {
             if (!validateCheckout()) {
                 payBtn.textContent = "Complete required details";
-                window.setTimeout(function () { payBtn.innerHTML = '<i class="material-icons">lock</i> Pay Securely'; }, 1600);
+                window.setTimeout(function () { payBtn.innerHTML = '<i class="material-icons">lock</i> Pay Securely with Razorpay'; }, 1600);
                 return;
             }
-            openGatewayModal(getCheckoutAmounts());
+            processRazorpayPayment(getCheckoutAmounts());
         });
     }
 })();

@@ -46,7 +46,7 @@ const profileMenuItems: MenuItem[] = [
     icon: "/template-17/images/icon/shop.png",
   },
   {
-    label: "Urban Services",
+    label: "Chao Services",
     href: "/dashboard/services-marketplace",
     icon: "/template-17/images/icon/general.png",
   },
@@ -372,7 +372,7 @@ export default function UserHomeHeader({ hideAddAction = false }: UserHomeHeader
             </div>
 
             {isMarketplacePage ? (
-              <nav className="marketplace-header-links" aria-label="Urban Services shortcuts">
+              <nav className="marketplace-header-links" aria-label="Chao Services shortcuts">
                 <a href="#services-categories">Home care</a>
                 <a href="#services-categories">Beauty &amp; wellness</a>
                 <a href="#services-categories">Repairs</a>

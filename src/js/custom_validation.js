@@ -271,7 +271,7 @@ $(document).ready(function () {
 // Blog Edit Form validation ends
 
 
-<!--All Listing page Enquiry Form Ajax Call And Validation starts-->
+// All Listing page Enquiry Form Ajax Call And Validation starts
 
 $("#all_enquiry_submit").click(function () {
 
@@ -324,8 +324,7 @@ $("#all_enquiry_submit").click(function () {
         }
     });
 });
-<!--All Listing page Enquiry Form Ajax Call And Validation ends-->
-
+// All Listing page Enquiry Form Ajax Call And Validation ends
 // User Ad Request Form validation starts
 $(document).ready(function () {
     $("#create_ads_form").validate({
@@ -355,10 +354,7 @@ $(document).ready(function () {
 });
 
 // User Ad Request Form validation ends
-
-
-<!--Home page slide Enquiry Form Ajax Call And Validation starts-->
-
+// Home page slide Enquiry Form Ajax Call And Validation starts
 $("#home_slide_enquiry_submit").click(function () {
 
     $("#home_slide_enquiry_form").validate({
@@ -415,11 +411,8 @@ $("#home_slide_enquiry_submit").click(function () {
         }
     });
 });
-<!--Home page slide Enquiry Form Ajax Call And Validation ends-->
-
-
-<!--Home page Enquiry Form Ajax Call And Validation starts-->
-
+// Home page slide Enquiry Form Ajax Call And Validation ends
+// Home page Enquiry Form Ajax Call And Validation starts
 $("#home_enquiry_submit").click(function () {
 
     $("#home_enquiry_form").validate({
@@ -471,9 +464,7 @@ $("#home_enquiry_submit").click(function () {
         }
     });
 });
-<!--Home page Enquiry Form Ajax Call And Validation ends-->
-
-
+// Home page Enquiry Form Ajax Call And Validation ends
 // product Form validation starts
 $(document).ready(function () {
     $("#product_form").validate({
@@ -592,8 +583,7 @@ $(document).ready(function () {
 
 
 //
-<!--Review Form Ajax Call And Validation starts-->
-
+// Review Form Ajax Call And Validation starts
 $("#review_submit").click(function () {
     $("#review_form").validate({
         rules: {
@@ -642,9 +632,8 @@ $("#review_submit").click(function () {
         }
     });
 });
-<!--Review Form Ajax Call And Validation ends-->
-
-<!--Pop Up Claim Form Detail Page Ajax Call And Validation starts-->
+// Review Form Ajax Call And Validation ends
+// Pop Up Claim Form Detail Page Ajax Call And Validation starts
 // $("#popup_claim_submit").click(function () {
 $('#popup_claim_form').click(function () {
     // evt.preventDefault();
@@ -707,10 +696,8 @@ $('#popup_claim_form').click(function () {
         }
     });
 });
-<!--Pop Up Claim Form Detail Page Ajax Call And Validation ends-->
-
-
-<!--Pop Up Enquiry Form Detail Page Ajax Call And Validation starts-->
+// Pop Up Claim Form Detail Page Ajax Call And Validation ends
+// Pop Up Enquiry Form Detail Page Ajax Call And Validation starts
 $("#popup_enquiry_submit").click(function () {
     $("#popup_enquiry_form").validate({
         rules: {
@@ -761,10 +748,8 @@ $("#popup_enquiry_submit").click(function () {
         }
     });
 });
-<!--Pop Up Enquiry Form Detail Page Ajax Call And Validation ends-->
-
-
-<!--Pop Up All Service Expert Enquiry Form Ajax Call And Validation starts-->
+// Pop Up Enquiry Form Detail Page Ajax Call And Validation ends
+// Pop Up All Service Expert Enquiry Form Ajax Call And Validation starts
 $("#expert_all_enquiry_submit").click(function () {
     $("#expert_all_enquiry_form").validate({
         rules: {
@@ -828,9 +813,8 @@ $("#expert_all_enquiry_submit").click(function () {
         }
     });
 });
-<!--Pop Up All Service Expert Enquiry Form Ajax Call And Validation ends-->
-
-<!--Pop Up Detail Service Expert Enquiry Form Ajax Call And Validation starts-->
+// Pop Up All Service Expert Enquiry Form Ajax Call And Validation ends
+// Pop Up Detail Service Expert Enquiry Form Ajax Call And Validation starts
 $("#expert_detail_enquiry_submit").click(function () {
     $("#expert_detail_enquiry_form").validate({
         rules: {
@@ -894,9 +878,8 @@ $("#expert_detail_enquiry_submit").click(function () {
         }
     });
 });
-<!--Pop Up Detail Service Expert Enquiry Form Ajax Call And Validation ends-->
-
-<!--Pop Up Job Enquiry Form Detail Page Ajax Call And Validation starts-->
+// Pop Up Detail Service Expert Enquiry Form Ajax Call And Validation ends
+// Pop Up Job Enquiry Form Detail Page Ajax Call And Validation starts
 $("#popup_job_enquiry_submit").click(function () {
     $("#popup_job_enquiry_form").validate({
         rules: {
@@ -955,9 +938,8 @@ $("#popup_job_enquiry_submit").click(function () {
         }
     });
 });
-<!--Pop Up Job Enquiry Form Detail Page Ajax Call And Validation ends-->
-
-<!-- Enquiry Form Detail Page Ajax Call And Validation starts-->
+// Pop Up Job Enquiry Form Detail Page Ajax Call And Validation ends
+// Enquiry Form Detail Page Ajax Call And Validation starts
 $("#detail_enquiry_submit").click(function () {
     $("#detail_enquiry_form").validate({
         rules: {
@@ -1008,8 +990,7 @@ $("#detail_enquiry_submit").click(function () {
         }
     });
 });
-<!--Enquiry Form Detail Page Ajax Call And Validation ends-->
-
+// Enquiry Form Detail Page Ajax Call And Validation ends
 // Promotion Listing Form validation starts
 $(document).ready(function () {
     $("#create_promote_form").validate({
@@ -1058,10 +1039,7 @@ $(document).ready(function () {
 });
 
 // Buy Points validation ends
-
-
-<!--All product page Enquiry Form Ajax Call And Validation starts-->
-
+// All product page Enquiry Form Ajax Call And Validation starts
 $(".all_product_enquiry_submit").click(function () {
 
     $(".all_product_enquiry_form").validate({
@@ -1113,8 +1091,7 @@ $(".all_product_enquiry_submit").click(function () {
         }
     });
 });
-<!--All Listing page Enquiry Form Ajax Call And Validation ends-->
-
+// All Listing page Enquiry Form Ajax Call And Validation ends
 // Installation Form validation starts
 $(document).ready(function () {
     $("#install_form").validate({
@@ -1182,8 +1159,7 @@ $(document).ready(function () {
 
 
 //
-<!--Expert Review Form Ajax Call And Validation starts-->
-
+// Expert Review Form Ajax Call And Validation starts
 $("#expert_review_submit").click(function () {
     $("#expert_review_form").validate({
         rules: {
@@ -1227,11 +1203,8 @@ $("#expert_review_submit").click(function () {
         }
     });
 });
-<!--Expert Review Form Ajax Call And Validation ends-->
-
-
-<!--Expert Service Cancel Form Ajax Call And Validation starts-->
-
+// Expert Review Form Ajax Call And Validation ends
+// Expert Service Cancel Form Ajax Call And Validation starts
 $("#expert_service_cancel_submit").click(function () {
     $("#expert_service_cancel_form").validate({
         rules: {
@@ -1277,10 +1250,8 @@ $("#expert_service_cancel_submit").click(function () {
         }
     });
 });
-<!--Expert Service Cancel Form Ajax Call And Validation ends-->
-
-<!--Expert Service Update Availability Form Ajax Call And Validation starts-->
-
+// Expert Service Cancel Form Ajax Call And Validation ends
+// Expert Service Update Availability Form Ajax Call And Validation starts
 $("#expert_availability_submit").click(function () {
     $("#expert_availability_form").validate({
         rules: {
@@ -1328,10 +1299,8 @@ $("#expert_availability_submit").click(function () {
         }
     });
 });
-<!--Expert Service Update Availability Form Ajax Call And Validation ends-->
-
-
-<!--Pop Up All Service Expert Enquiry Common Form Ajax Call And Validation starts-->
+// Expert Service Update Availability Form Ajax Call And Validation ends
+// Pop Up All Service Expert Enquiry Common Form Ajax Call And Validation starts
 $("#expert_all_enquiry_common_submit").click(function () {
     $("#expert_all_enquiry_common_form").validate({
         rules: {
@@ -1394,11 +1363,8 @@ $("#expert_all_enquiry_common_submit").click(function () {
         }
     });
 });
-<!--Pop Up All Service Expert Enquiry Common Form Ajax Call And Validation ends-->
-
-
-<!--News Module Newsletter Subscribe Form Ajax Call And Validation starts-->
-
+// Pop Up All Service Expert Enquiry Common Form Ajax Call And Validation ends
+// News Module Newsletter Subscribe Form Ajax Call And Validation starts
 $("#news_newsletter_subscribe_submit").click(function () {
 
     $("#news_newsletter_subscribe_form").validate({
@@ -1441,12 +1407,8 @@ $("#news_newsletter_subscribe_submit").click(function () {
         }
     });
 });
-<!--News Module Newsletter Subscribe Form Ajax Call And Validation ends-->
-
-
-
-<!--Place page Add Request Form Ajax Call And Validation starts-->
-
+// News Module Newsletter Subscribe Form Ajax Call And Validation ends
+// Place page Add Request Form Ajax Call And Validation starts
 $(".place_add_request_submit").click(function () {
 
     $(".place_add_request_form").validate({
@@ -1503,5 +1465,4 @@ $(".place_add_request_submit").click(function () {
         }
     });
 });
-<!--Place page Add Request Form Ajax Call And Validation ends-->
-
+// Place page Add Request Form Ajax Call And Validation ends

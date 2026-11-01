@@ -8,6 +8,7 @@ import {
   type CommunityRegistration,
   type CommunityTicket,
 } from "../api/communityApi";
+import { startRazorpayPayment } from "../../../shared/payments/razorpayCheckout";
 
 type Props = {
   events: CommunityEvent[];
@@ -355,14 +356,13 @@ export default function CommunityEventCards({
   async function pay(formEvent: FormEvent<HTMLFormElement>) {
     formEvent.preventDefault();
     if (!active || !pendingPayment) return;
-    const form = new FormData(formEvent.currentTarget);
     setBusy(true);
     setError("");
     try {
-      const declined = form.get("decline") === "on";
+      const verified = await startRazorpayPayment({ amount: pendingPayment.ticket.price, currency: pendingPayment.ticket.currency, description: `${active.title} - ${pendingPayment.ticket.name}` });
       await communityApi.registerEventDetails(active.id, {
         ...pendingPayment.body,
-        paymentToken: declined ? "pm_dummy_declined" : "pm_dummy_success",
+        paymentToken: verified.paymentToken,
       });
       setRegistration(await communityApi.myEventRegistration(active.id));
       setPendingPayment(undefined);
@@ -557,12 +557,8 @@ export default function CommunityEventCards({
             ) : pendingPayment ? (
               <form className="event-payment-form" onSubmit={pay}>
                 <div className="event-payment-brand">
-                  <strong>
-                    {pendingPayment.ticket.currency === "INR"
-                      ? "razorpay"
-                      : "stripe"}
-                  </strong>
-                  <span>TEST CHECKOUT</span>
+                  <strong>Razorpay</strong>
+                  <span>SECURE CHECKOUT</span>
                 </div>
                 <div className="event-payment-total">
                   <span>{pendingPayment.ticket.name}</span>

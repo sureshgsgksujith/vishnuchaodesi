@@ -2026,7 +2026,7 @@
 .gift-order-list button .material-icons {
   font-size: 19px;
 }
-.gift-order-list .gift-secondary {
+.gift-payout-dashboard{margin:18px 0;padding:22px;border:1px solid #cbd8f5;border-radius:16px;background:linear-gradient(135deg,#f4f7ff,#fff);color:#16356e}.gift-payout-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.gift-payout-heading small{font-weight:800;letter-spacing:.12em;color:#3159d9}.gift-payout-heading h3{margin:5px 0 4px;font-size:22px}.gift-payout-heading p{margin:0;color:#60749a}.gift-payout-status{padding:8px 12px;border-radius:999px;background:#fff0cf;color:#986300;font-size:12px;font-weight:800;white-space:nowrap}.gift-payout-status.verified{background:#dff7ea;color:#087b4b}.gift-payout-earnings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}.gift-payout-earnings>div{padding:15px;border:1px solid #d7e1f5;border-radius:12px;background:#fff}.gift-payout-earnings span{display:block;color:#60749a;font-size:13px}.gift-payout-earnings strong{display:block;margin-top:6px;color:#15346f;font-size:19px}.gift-payout-verified{margin:16px 0 0;padding:13px 15px;border-radius:10px;background:#e7f8ef;color:#087b4b;font-weight:650}.gift-payout-account{display:flex;align-items:center;gap:16px;margin:18px 0 0;padding:18px 20px;border:1px solid #cbd8f5;border-radius:14px;background:#fff;color:#16356e}.gift-payout-account>div{flex:1}.gift-payout-account strong{display:block;font-size:16px}.gift-payout-account p{margin:5px 0 0;color:#60749a;line-height:1.45}.gift-payout-account input{min-width:210px;border:1px solid #c7d3eb;border-radius:9px;padding:12px;background:#fff}.gift-payout-account button{border:0;border-radius:9px;padding:12px 16px;background:#3159d9;color:#fff;font-weight:750;cursor:pointer}.gift-payout-account button:disabled{opacity:.6;cursor:wait}.gift-creator-payment-panel{margin:18px 0;padding:20px;border:1px solid #f1c98d;border-radius:14px;background:#fff8ed;color:#5d3a06}.gift-creator-payment-panel>strong{font-size:18px}.gift-creator-payment-panel p{margin:6px 0 14px;color:#7b6445}.gift-creator-payment-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:12px;border-top:1px solid #f3dfbd}.gift-creator-payment-row button{border:0;border-radius:9px;padding:12px 16px;background:#f47b20;color:#fff;font-weight:750;cursor:pointer}.gift-creator-payment-row button:disabled{opacity:.6;cursor:wait}.gift-order-list .gift-secondary {
   border: 1px solid #d7e0f2;
   background: #fff;
   color: #365079;
@@ -2095,6 +2095,18 @@
   }
 }
 @media (max-width: 600px) {
+  .gift-payout-heading,
+  .gift-payout-account {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .gift-payout-earnings {
+    grid-template-columns: 1fr;
+  }
+  .gift-payout-account input,
+  .gift-payout-account button {
+    width: 100%;
+  }
   .gift-fulfillment {
     margin-top: 20px;
     padding-top: 20px;
@@ -3448,7 +3460,8 @@
   width: 75px;
   height: 75px;
   border-radius: 11px;
-  object-fit: cover;
+  object-fit: contain;
+  background: #f8faff;
 }
 .gift-item-grid h3 {
   margin: 0;
@@ -3747,6 +3760,28 @@
   background: #fff;
   color: #53627a;
 }
+
+/* Keep the order thumbnail, details and action area aligned from the top. */
+.gift-order-list article {
+  align-items: start;
+}
+
+.gift-order-actions {
+  align-self: start;
+  display: grid;
+  grid-template-columns: max-content max-content;
+  justify-content: end;
+  align-content: start;
+}
+
+.gift-order-actions .gift-receipt-action {
+  grid-column: 2;
+}
+
+.gift-order-actions > button {
+  width: 100%;
+}
+
 .gift-action-card footer button:disabled {
   cursor: wait;
   opacity: 0.65;
@@ -3920,16 +3955,29 @@
 }
 .gift-detail-image {
   display: grid;
-  height: 220px;
+  height: 300px;
   place-items: center;
   overflow: hidden;
   background: #eef2ff;
   color: #3157d5;
 }
 .gift-detail-image img {
+  display: block;
+  width: auto !important;
+  max-width: 100%;
+  height: auto !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center;
+  background: #f8faff;
+}
+.gift-detail-image-content {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  min-height: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 .gift-detail-image > .material-icons {
   font-size: 65px;
@@ -4054,6 +4102,24 @@
     align-items: flex-start;
   }
   .gift-detail-image {
-    height: 200px;
+    height: 240px;
+  }
+}
+
+.gift-payout-verified{display:flex;align-items:center;justify-content:space-between;gap:16px}.gift-payout-verified button,.gift-payout-account .gift-payout-cancel{border:1px solid #a7cdb9;border-radius:8px;padding:9px 12px;background:#fff;color:#087b4b;font-weight:700;cursor:pointer}.gift-payout-account p{margin-bottom:4px}.gift-payout-account a{color:#3159d9;font-size:13px;font-weight:700}.gift-payout-form-actions{display:flex;align-items:center;gap:8px}
+@media (max-width:600px){.gift-payout-verified{align-items:stretch;flex-direction:column}.gift-payout-form-actions{width:100%;flex-direction:column}.gift-payout-form-actions button{width:100%}}
+
+@media (max-width:900px) {
+  .gift-order-actions {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .gift-order-actions .gift-receipt-action {
+    grid-column: auto;
+  }
+
+  .gift-order-actions > button {
+    width: auto;
   }
 }

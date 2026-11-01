@@ -289,11 +289,7 @@ function CityServicesRoute() {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
-  return (
-    <ProtectedCustomerRoute>
-      <ServicesMarketplacePlaceholderPage surface="customer" cityName={cityName} />
-    </ProtectedCustomerRoute>
-  );
+  return <ServicesMarketplacePlaceholderPage surface="customer" cityName={cityName} />;
 }
 
 function RegisterRedirect() {
@@ -428,11 +424,7 @@ export function AppRouter() {
         <Route path="/home" element={<HomePage />} />
         <Route
           path="/dashboard/services-marketplace"
-          element={
-            <ProtectedCustomerRoute>
-              <ServicesMarketplacePlaceholderPage surface="customer" />
-            </ProtectedCustomerRoute>
-          }
+          element={<ServicesMarketplacePlaceholderPage surface="customer" />}
         />
         <Route
           path="/dashboard/urban-services-bookings"

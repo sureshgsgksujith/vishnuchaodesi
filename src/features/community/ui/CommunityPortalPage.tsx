@@ -1274,11 +1274,15 @@ function FeedView({
           </div>
           <CreatePost
             groups={groups}
-            currentUserId={currentUserId}
             done={reload}
           />
         </div>
-        <PostCards posts={posts} groups={groups} reload={reload} />
+        <PostCards
+          posts={posts}
+          groups={groups}
+          currentUserId={currentUserId}
+          reload={reload}
+        />
       </section>
       <aside className="feed-sidebar">
         <div>
@@ -1300,10 +1304,12 @@ function FeedView({
 function PostCards({
   posts,
   groups,
+  currentUserId,
   reload,
 }: {
   posts: CommunityPost[];
   groups: CommunityGroup[];
+  currentUserId?: number;
   reload: () => Promise<void>;
 }) {
   const [commentPost, setCommentPost] = useState<CommunityPost>(),
@@ -1311,6 +1317,8 @@ function PostCards({
     [commentsLoading, setCommentsLoading] = useState(false),
     [replyTo, setReplyTo] = useState<CommunityComment>(),
     [reportPost, setReportPost] = useState<CommunityPost>(),
+    [editPost, setEditPost] = useState<CommunityPost>(),
+    [menuPostId, setMenuPostId] = useState<number>(),
     [copied, setCopied] = useState<number>();
   async function openComments(post: CommunityPost) {
     setCommentPost(post);
@@ -1372,11 +1380,54 @@ function PostCards({
                 </div>
                 <button
                   className="feed-report"
-                  title="Report post"
-                  onClick={() => setReportPost(p)}
+                  title="Post actions"
+                  onClick={() =>
+                    setMenuPostId((current) => (current === p.id ? undefined : p.id))
+                  }
                 >
                   <span className="material-icons">more_horiz</span>
                 </button>
+                {menuPostId === p.id ? (
+                  <div className="post-action-menu">
+                    {currentUserId === p.authorUserId ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditPost(p);
+                            setMenuPostId(undefined);
+                          }}
+                        >
+                          <span className="material-icons">edit</span>
+                          Edit post
+                        </button>
+                        <button
+                          type="button"
+                          className="post-action-danger"
+                          onClick={async () => {
+                            if (!window.confirm("Delete this post permanently?")) return;
+                            await communityApi.deletePost(p.id);
+                            setMenuPostId(undefined);
+                            await reload();
+                          }}
+                        >
+                          <span className="material-icons">delete</span>
+                          Delete post
+                        </button>
+                      </>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReportPost(p);
+                        setMenuPostId(undefined);
+                      }}
+                    >
+                      <span className="material-icons">flag</span>
+                      Report post
+                    </button>
+                  </div>
+                ) : null}
               </header>
               {p.title && <h3>{p.title}</h3>}
               <p>{p.body}</p>
@@ -1598,6 +1649,60 @@ function PostCards({
           </div>
         </div>
       )}
+      {editPost && (
+        <div className="community-modal" role="dialog" aria-modal="true">
+          <div className="community-modal-card post-edit-modal-card">
+            <header>
+              <div>
+                <span className="material-icons">edit</span>
+                <div>
+                  <small>YOUR POST</small>
+                  <h2>Edit post</h2>
+                </div>
+              </div>
+              <button onClick={() => setEditPost(undefined)}>×</button>
+            </header>
+            <Form
+              label="Save changes"
+              submit={async (form) => {
+                await communityApi.updatePost(editPost.id, {
+                  title: String(form.get("title") || "").trim(),
+                  body: String(form.get("body") || "").trim(),
+                });
+                setEditPost(undefined);
+                await reload();
+              }}
+            >
+              <label>
+                Post title
+                <input
+                  name="title"
+                  maxLength={300}
+                  defaultValue={editPost.title || ""}
+                />
+              </label>
+              <label>
+                Message
+                <textarea
+                  name="body"
+                  required={!editPost.mediaJson}
+                  maxLength={16000}
+                  defaultValue={editPost.body || ""}
+                />
+              </label>
+              <div className="community-modal-actions">
+                <button
+                  type="button"
+                  className="community-secondary-button"
+                  onClick={() => setEditPost(undefined)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -1803,17 +1908,28 @@ function CreateGroup({
 }
 function CreatePost({
   groups,
-  currentUserId,
   done,
 }: {
   groups: CommunityGroup[];
-  currentUserId?: number;
   done: () => Promise<void>;
 }) {
-  const ownedGroups = groups.filter(
-    (group) =>
-      group.currentUserRole === "OWNER" || group.ownerUserId === currentUserId,
-  );
+  const postableGroups = groups.filter((group) => Boolean(group.currentUserRole));
+
+  if (!postableGroups.length) {
+    return (
+      <div className="feed-posting-empty">
+        <span className="material-icons" aria-hidden="true">
+          groups
+        </span>
+        <div>
+          <strong>Join or create a group to publish</strong>
+          <p>Your posts are shared with an active group membership.</p>
+          <Link to="/community/groups">Explore communities</Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Form
       label="Publish post"
@@ -1824,8 +1940,10 @@ function CreatePost({
         const selectedGroup = String(f.get("groupId"));
         const targetGroups =
           selectedGroup === "ALL_OWNED"
-            ? ownedGroups
-            : groups.filter((group) => group.id === Number(selectedGroup));
+            ? postableGroups
+            : postableGroups.filter(
+                (group) => group.id === Number(selectedGroup),
+              );
         if (!targetGroups.length) throw new Error("Select at least one group.");
         const post = {
           postType: media?.mediaType?.startsWith("video")
@@ -1849,15 +1967,17 @@ function CreatePost({
         name="groupId"
         required
         defaultValue={
-          ownedGroups.length > 1 ? "ALL_OWNED" : String(groups[0]?.id || "")
+          postableGroups.length > 1
+            ? "ALL_OWNED"
+            : String(postableGroups[0]?.id || "")
         }
       >
-        {ownedGroups.length > 1 ? (
+        {postableGroups.length > 1 ? (
           <option value="ALL_OWNED">
-            Post to all my groups ({ownedGroups.length})
+            Post to all my groups ({postableGroups.length})
           </option>
         ) : null}
-        {groups.map((g) => (
+        {postableGroups.map((g) => (
           <option value={g.id} key={g.id}>
             {g.name}
           </option>
@@ -3342,7 +3462,6 @@ function Profile() {
           </div>
           <CreatePost
             groups={profileGroups}
-            currentUserId={me?.id}
             done={loadProfilePosts}
           />
         </div>
@@ -3352,6 +3471,7 @@ function Profile() {
           <PostCards
             posts={profilePosts}
             groups={profileGroups}
+            currentUserId={me?.id}
             reload={loadProfilePosts}
           />
         )}

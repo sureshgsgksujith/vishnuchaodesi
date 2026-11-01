@@ -946,3 +946,18 @@
 .dashboard-payment-page .ud-notes {
   display: none !important;
 }
+
+.plan-checkout-layout-single {
+  display: block;
+}
+
+.plan-checkout-layout-single .plan-checkout-steps,
+.plan-checkout-layout-single .plan-checkout-summary {
+  width: 100%;
+  max-width: none;
+}
+
+.plan-checkout-layout-single .plan-checkout-summary {
+  margin-top: 20px;
+  flex: none;
+}

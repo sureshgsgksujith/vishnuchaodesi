@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { communityApi, enterCommunity } from "../api/communityApi";
+import { startRazorpayPayment } from "../../../shared/payments/razorpayCheckout";
+import toast from "react-hot-toast";
 
 type Data = Record<string, unknown>;
 
@@ -28,9 +30,60 @@ function visibleOrderStatus(order: Data) {
   return String(order.status);
 }
 
+function orderRoleLabel(order: Data, currentUserId?: number) {
+  const status = visibleOrderStatus(order);
+  const buyerId = Number(order.buyerUserId);
+  const recipientId = Number(order.recipientUserId);
+  const settlementRecipientId = Number(order.settlementRecipientUserId || 0);
+  const isBuyer = buyerId === currentUserId;
+  const isRecipient = recipientId === currentUserId;
+  const paymentStatus = String(order.paymentStatus || "");
+  const creatorPaymentFlow = paymentStatus === "PENDING_CREATOR_PAYMENT" || paymentStatus === "COMPLETED";
+  if (creatorPaymentFlow && status === "RESERVED" && (isBuyer || isRecipient)) {
+    return isRecipient
+      ? `Reserved by ${String(order.buyer || "a community member")} · Waiting for your payment`
+      : "You reserved this gift · Waiting for the registry creator to pay";
+  }
+  if (creatorPaymentFlow && status !== "RESERVED" && isRecipient && settlementRecipientId === currentUserId) return "You paid · You can fulfil this gift";
+  if (paymentStatus === "COMPLETED" && settlementRecipientId === currentUserId) return "Creator paid · You can fulfil this gift";
+  if (paymentStatus === "COMPLETED" && isRecipient) return "Creator paid · Waiting for fulfilment";
+
+  if (isBuyer && isRecipient) {
+    return status === "RESERVED"
+      ? "Payment required · You reserved this gift"
+      : "You paid · You are sending this gift";
+  }
+  if (isBuyer) {
+    return status === "RESERVED"
+      ? "Payment required · You reserved this gift"
+      : `You paid · You are fulfilling this gift for ${String(order.recipient || "the registry owner")}`;
+  }
+  if (isRecipient) {
+    return status === "RESERVED"
+      ? `Reserved by ${String(order.buyer || "a community member")} · Waiting for payment`
+      : `Gift paid by ${String(order.buyer || "a community member")} · They are fulfilling it`;
+  }
+  return "Gift order";
+}
+
 function parseServerUtc(value: string) {
   const normalized = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value) ? value : `${value}Z`;
   return new Date(normalized);
+}
+
+function giftEarningsByCurrency(orders: Data[], include: (order: Data) => boolean) {
+  const totals: Record<string, number> = {};
+  orders.filter(include).forEach((order) => {
+    const currency = String(order.currency || "INR");
+    const payout = Number(order.storePayoutAmount || 0) + Number(order.deliveryPartnerPayoutAmount || 0);
+    totals[currency] = (totals[currency] || 0) + payout;
+  });
+  return Object.entries(totals).map(([currency, amount]) => `${currency} ${amount.toFixed(2)}`).join(" · ") || "INR 0.00";
+}
+
+function maskLinkedAccount(value: unknown) {
+  const account = String(value || "");
+  return account.length > 8 ? `${account.slice(0, 5)}•••${account.slice(-3)}` : account;
 }
 
 async function openReceipt(id: number, setMessage: (value: string) => void) {
@@ -49,23 +102,52 @@ async function openReceipt(id: number, setMessage: (value: string) => void) {
 export default function GiftFulfillment() {
   const navigate = useNavigate();
   const [registries, setRegistries] = useState<Data[]>([]);
+  const [creatorSummaries, setCreatorSummaries] = useState<Data[]>([]);
+  const [priceRequests, setPriceRequests] = useState<Data[]>([]);
   const [orders, setOrders] = useState<Data[]>([]);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number>();
+  const [payoutAccount, setPayoutAccount] = useState<Data>();
+  const [payoutAccountInput, setPayoutAccountInput] = useState("");
+  const [editingPayoutAccount, setEditingPayoutAccount] = useState(false);
   const [orderAction, setOrderAction] = useState<{
     order: Data;
-    type: "purchase" | "ship" | "delivered" | "received" | "cancel" | "dispute";
+    type: "purchase" | "price" | "ship" | "delivered" | "received" | "cancel" | "dispute";
   }>();
 
   const load = () =>
     Promise.all([
       communityApi.discoverGiftRegistries(),
       communityApi.giftOrders(),
+      communityApi.getPayoutAccount(),
+      communityApi.giftRegistries(),
     ])
-      .then(([registryData, orderData]) => {
+      .then(async ([registryData, orderData, payoutData, ownedData]) => {
         setRegistries(registryData);
         setOrders(orderData);
+        setPayoutAccount(payoutData);
+        const ownedItems = Array.isArray(ownedData.items) ? ownedData.items : [];
+        const summaries = await Promise.all(
+          ownedItems.map(async (item) => {
+            try {
+              return await communityApi.giftRegistryPaymentSummary(Number(item.id));
+            } catch {
+              return undefined;
+            }
+          }),
+        );
+        setCreatorSummaries(summaries.filter(Boolean) as Data[]);
+        const requests = await Promise.all(
+          ownedItems.map(async (item) => {
+            try {
+              return await communityApi.giftPriceChangeRequests(Number(item.id));
+            } catch {
+              return [];
+            }
+          }),
+        );
+        setPriceRequests(requests.flat());
       })
       .catch(() => setMessage("Unable to load gift fulfilment."));
 
@@ -77,6 +159,18 @@ export default function GiftFulfillment() {
     return () => window.removeEventListener("gift-orders-changed", refresh);
   }, []);
 
+  const sellerOrders = currentUserId === undefined
+    ? []
+    : orders.filter((order) => Number(order.settlementRecipientUserId || order.buyerUserId) === currentUserId);
+  const paidEarnings = giftEarningsByCurrency(
+    sellerOrders,
+    (order) => String(order.payoutStatus || "").toUpperCase() === "COMPLETED" && String(order.settlementStatus || "").toUpperCase() === "COMPLETED",
+  );
+  const pendingEarnings = giftEarningsByCurrency(
+    sellerOrders,
+    (order) => String(order.payoutStatus || "").toUpperCase() !== "COMPLETED" && ["PURCHASED", "SHIPPED", "DELIVERED", "RECEIVED"].includes(visibleOrderStatus(order)),
+  );
+
   async function submitOrderAction(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!orderAction) return;
@@ -85,14 +179,20 @@ export default function GiftFulfillment() {
     setSubmitting(true);
     setMessage("");
     try {
-      if (orderAction.type === "purchase")
+      if (orderAction.type === "purchase") {
+        const verified = await startRazorpayPayment({ amount: Number(orderAction.order.amount || 0), currency: displayCurrency(orderAction.order), description: `Gift order #${id}` });
         await communityApi.purchaseGiftOrder(
           id,
-          form.get("simulateDecline")
-            ? "pm_dummy_declined"
-            : "pm_dummy_success",
+          verified.paymentToken,
         );
-      else if (orderAction.type === "ship")
+      } else if (orderAction.type === "price") {
+        await communityApi.requestGiftPriceChange(
+          id,
+          Number(form.get("extraAmount")),
+          String(form.get("reason")),
+        );
+        toast.success("Price request sent to the registry creator.");
+      } else if (orderAction.type === "ship")
         await communityApi.shipGiftOrder(
           id,
           String(form.get("carrier")),
@@ -123,6 +223,50 @@ export default function GiftFulfillment() {
     }
   }
 
+  async function savePayoutAccount(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!payoutAccountInput.trim()) return;
+    setSubmitting(true);
+    setMessage("");
+    try {
+      const result = await communityApi.setPayoutAccount(payoutAccountInput.trim());
+      setPayoutAccount(result);
+      setPayoutAccountInput("");
+      setEditingPayoutAccount(false);
+      toast.success("Payout account submitted. An administrator must verify it before transfer.");
+    } catch {
+      toast.error("Enter a valid Razorpay Route linked-account ID starting with acc_.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function payForRegistry(summary: Data) {
+    const registryId = Number(summary.registryId);
+    const amount = Number(summary.total || 0);
+    if (!registryId || amount <= 0) return;
+    setSubmitting(true);
+    try {
+      const isLocalCheckout = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+      const paymentToken = isLocalCheckout
+        ? "pm_dummy_success"
+        : (await startRazorpayPayment({
+            amount,
+            currency: String(summary.currency || "INR"),
+            description: `Gift registry #${registryId} final payment`,
+          })).paymentToken;
+      await communityApi.payGiftRegistry(registryId, paymentToken);
+      toast.success(isLocalCheckout
+        ? "Development payment completed. The fulfilment team can now ship the gift."
+        : "Final gift payment completed. The fulfilment team can now ship the gift.");
+      await load();
+    } catch {
+      toast.error("Final payment was not completed. No seller settlement was released.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <section className="gift-fulfillment">
       <header className="gift-fulfillment-hero">
@@ -133,8 +277,7 @@ export default function GiftFulfillment() {
           <small>SHOP &amp; TRACK</small>
           <h2>Gift fulfilment</h2>
           <p>
-            Choose a thoughtful gift and follow its journey from reservation to
-            delivery.
+            Reserve a gift, pay for it, and deliver it to the registry owner.
           </p>
         </div>
         <div className="gift-flow">
@@ -146,6 +289,75 @@ export default function GiftFulfillment() {
         </div>
       </header>
       {message && <p className="community-error">{message}</p>}
+      {sellerOrders.length ? (
+        <section id="gift-payout" className="gift-payout-dashboard">
+          <div className="gift-payout-heading">
+            <div>
+              <small>SELLER PAYMENTS</small>
+              <h3>Gift payout setup &amp; earnings</h3>
+              <p>Your fulfilment earnings are paid only after delivery and administrator approval.</p>
+            </div>
+            <span className={`gift-payout-status ${String(payoutAccount?.status || "NOT_CONFIGURED").toLowerCase()}`}>
+              {String(payoutAccount?.status || "NOT_CONFIGURED").replaceAll("_", " ")}
+            </span>
+          </div>
+          <div className="gift-payout-earnings">
+            <div><span>Paid earnings</span><strong>{paidEarnings}</strong></div>
+            <div><span>Pending earnings</span><strong>{pendingEarnings}</strong></div>
+            <div><span>Orders you fulfil</span><strong>{sellerOrders.length}</strong></div>
+          </div>
+          {payoutAccount?.status !== "VERIFIED" || editingPayoutAccount ? (
+            <form className="gift-payout-account" onSubmit={savePayoutAccount}>
+              <div>
+                <strong>Set up your payout account</strong>
+                <p>Complete Razorpay Route onboarding first, including your bank/UPI details. Then enter only the linked-account ID below. An administrator must verify it before transfer.</p>
+                <a href="https://razorpay.com/route/" target="_blank" rel="noreferrer">Open Razorpay Route onboarding</a>
+              </div>
+              <input value={payoutAccountInput} onChange={(event) => setPayoutAccountInput(event.target.value)} placeholder="acc_... linked account ID" aria-label="Razorpay linked account ID" />
+              <span className="gift-payout-form-actions">
+                <button disabled={submitting}>Submit for verification</button>
+                {payoutAccount?.status === "VERIFIED" ? <button type="button" className="gift-payout-cancel" onClick={() => setEditingPayoutAccount(false)}>Cancel</button> : null}
+              </span>
+            </form>
+          ) : (
+            <div className="gift-payout-verified">
+              <span>Payout account verified ({maskLinkedAccount(payoutAccount?.linkedAccountId)}). Eligible earnings will be transferred after settlement approval.</span>
+              <button type="button" onClick={() => { setPayoutAccountInput(String(payoutAccount?.linkedAccountId || "")); setEditingPayoutAccount(true); }}>Change account</button>
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {creatorSummaries.some((summary) => Number(summary.total || 0) > 0 && String(summary.finalPaymentStatus) !== "PAID") ? (
+        <div className="gift-creator-payment-panel">
+          <strong>Review and pay for your gift registry</strong>
+          <p>Reserved gifts are collected here. You, the registry creator, pay the final total; the reserver is not charged.</p>
+          {creatorSummaries.filter((summary) => Number(summary.total || 0) > 0 && String(summary.finalPaymentStatus) !== "PAID").map((summary) => (
+            <div className="gift-creator-payment-row" key={String(summary.registryId)}>
+              <span>Registry #{String(summary.registryId)} · {String(summary.currency || "INR")} {Number(summary.total).toFixed(2)}</span>
+              <button disabled={submitting} onClick={() => void payForRegistry(summary)}>Review &amp; pay securely</button>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {priceRequests.some((request) => String(request.status) === "PENDING") ? (
+        <div className="gift-creator-payment-panel">
+          <strong>Additional amount requests</strong>
+          <p>Review any extra amount requested by a fulfiller before making the final registry payment.</p>
+          {priceRequests.filter((request) => String(request.status) === "PENDING").map((request) => (
+            <div className="gift-creator-payment-row" key={String(request.id)}>
+              <span>
+                Order #{String(request.giftOrderId)} · Extra {String(request.currency || "INR")} {Number(request.extraAmount || 0).toFixed(2)} · {String(request.reason)}
+              </span>
+              <span>
+                <button disabled={submitting} onClick={async () => { try { await communityApi.approveGiftPriceChange(Number(request.id)); await load(); toast.success("Additional amount approved."); } catch { toast.error("Unable to approve this request."); } }}>Approve</button>
+                <button disabled={submitting} onClick={async () => { try { await communityApi.rejectGiftPriceChange(Number(request.id)); await load(); toast.success("Additional amount rejected."); } catch { toast.error("Unable to reject this request."); } }}>Reject</button>
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
       <div className="gift-section-heading">
         <div>
@@ -237,13 +449,7 @@ export default function GiftFulfillment() {
                     : ""}
                 </small>
                 <small className="gift-order-role">
-                  {Number(o.recipientUserId) === currentUserId
-                    ? visibleOrderStatus(o) === "RESERVED"
-                      ? `Payment required · Reserved by ${String(o.buyer || "a fulfiller")}`
-                      : `You paid · Fulfilled by ${String(o.buyer || "a community member")}`
-                    : visibleOrderStatus(o) === "RESERVED"
-                      ? `You are fulfilling · Waiting for ${String(o.recipient || "the registry owner")} to pay`
-                      : `You are fulfilling · Paid by ${String(o.recipient || "the registry owner")}`}
+                  {orderRoleLabel(o, currentUserId)}
                 </small>
                 {o.shippingAddress && visibleOrderStatus(o) !== "EXPIRED" ? (
                   <small className="gift-delivery-address">
@@ -295,9 +501,10 @@ export default function GiftFulfillment() {
                     Reserve again
                   </button>
                 ) : null}
-                {((Number(o.recipientUserId) === currentUserId &&
-                  visibleOrderStatus(o) === "RESERVED") ||
-                  (Number(o.buyerUserId) === currentUserId &&
+                {((Number(o.buyerUserId) === currentUserId &&
+                  visibleOrderStatus(o) === "RESERVED" &&
+                  String(o.paymentStatus || "") !== "PENDING_CREATOR_PAYMENT") ||
+                  (Number(o.settlementRecipientUserId || o.buyerUserId) === currentUserId &&
                     ["PURCHASED", "SHIPPED"].includes(visibleOrderStatus(o))) ||
                   (Number(o.recipientUserId) === currentUserId &&
                     visibleOrderStatus(o) === "DELIVERED")) && (
@@ -319,6 +526,34 @@ export default function GiftFulfillment() {
                     {nextLabel[visibleOrderStatus(o)]}
                   </button>
                 )}
+                {Number(o.buyerUserId) === currentUserId &&
+                visibleOrderStatus(o) === "RESERVED" &&
+                String(o.paymentStatus || "") === "PENDING_CREATOR_PAYMENT" ? (
+                  <button
+                    className="gift-secondary"
+                    onClick={() => setOrderAction({ order: o, type: "price" })}
+                  >
+                    Request price change
+                  </button>
+                ) : null}
+                {Number(o.buyerUserId) === currentUserId &&
+                ["DELIVERED", "RECEIVED"].includes(visibleOrderStatus(o)) &&
+                o.payoutStatus !== "COMPLETED" && !o.settlementRecipientUserId ? (
+                  <button
+                    className="gift-secondary"
+                    onClick={async () => {
+                      try {
+                        await communityApi.retryGiftPayout(Number(o.id));
+                        await load();
+                        toast.success("Gift payout completed successfully.");
+                      } catch {
+                        toast.error("Payout is not complete yet. Verify your linked account and retry.");
+                      }
+                    }}
+                  >
+                    Retry payout
+                  </button>
+                ) : null}
                 {[
                   "RESERVED",
                   "PURCHASED",
@@ -416,7 +651,9 @@ export default function GiftFulfillment() {
                     {nextLabel[String(orderAction.order.status)] ||
                       (orderAction.type === "dispute"
                         ? "Report issue"
-                        : "Cancel gift")}
+                        : orderAction.type === "price"
+                          ? "Request additional amount"
+                          : "Cancel gift")}
                   </h2>
                 </div>
               </div>
@@ -429,9 +666,9 @@ export default function GiftFulfillment() {
                 <div className="gift-checkout">
                   <div className="gift-checkout-brand">
                     <strong>
-                      {isIndiaOrder(orderAction.order) ? "razorpay" : "stripe"}
+                      Razorpay
                     </strong>
-                    <span>DUMMY CHECKOUT</span>
+                    <span>SECURE CHECKOUT</span>
                   </div>
                   <div className="gift-checkout-total">
                     <span>Total</span>
@@ -446,35 +683,9 @@ export default function GiftFulfillment() {
                       ? "your friend's delivery address"
                       : String(orderAction.order.recipient || "the registry owner")}.
                   </p>
-                  <label>
-                    Cardholder name
-                    <input defaultValue="Test Customer" required autoFocus />
-                  </label>
-                  <label>
-                    Card number
-                    <input
-                      inputMode="numeric"
-                      defaultValue="4242 4242 4242 4242"
-                      required
-                    />
-                  </label>
-                  <div className="gift-checkout-row">
-                    <label>
-                      Expiry
-                      <input defaultValue="12/30" required />
-                    </label>
-                    <label>
-                      CVC
-                      <input defaultValue="123" required />
-                    </label>
-                  </div>
-                  <label className="gift-checkout-decline">
-                    <input name="simulateDecline" type="checkbox" />
-                    Simulate a declined payment
-                  </label>
-                  <p>
-                    Development simulation only. No card information is stored
-                    or sent to {isIndiaOrder(orderAction.order) ? "Razorpay" : "Stripe"}.
+                  <p className="gift-checkout-provider-note">
+                    Razorpay secure checkout will open next. Enter your payment
+                    details only in the Razorpay window.
                   </p>
                 </div>
               ) : null}
@@ -491,6 +702,18 @@ export default function GiftFulfillment() {
                   <label>
                     Tracking URL <small>Optional</small>
                     <input name="trackingUrl" type="url" />
+                  </label>
+                </>
+              ) : null}
+              {orderAction.type === "price" ? (
+                <>
+                  <label>
+                    Additional amount
+                    <input name="extraAmount" type="number" min="0.01" step="0.01" required autoFocus />
+                  </label>
+                  <label>
+                    Reason
+                    <textarea name="reason" required />
                   </label>
                 </>
               ) : null}
@@ -520,6 +743,8 @@ export default function GiftFulfillment() {
                 <button disabled={submitting}>
                   {orderAction.type === "dispute"
                     ? "Submit issue"
+                    : orderAction.type === "price"
+                      ? "Send request"
                     : orderAction.type === "cancel"
                       ? "Cancel gift"
                       : orderAction.type === "purchase"
@@ -541,12 +766,6 @@ function giftImageUrl(value: string) {
   if (!value.startsWith("/uploads/")) return value;
   const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:5145/api";
   return `${apiBase.replace(/\/api\/?$/i, "")}${value}`;
-}
-
-function isIndiaOrder(order: Data) {
-  const country = String(order.deliveryCountry || "").trim().toUpperCase();
-  const address = String(order.shippingAddress || "").trim().toUpperCase();
-  return country === "IN" || country === "INDIA" || address.endsWith(", INDIA") || String(order.currency).toUpperCase() === "INR";
 }
 
 function displayCurrency(order: Data) {

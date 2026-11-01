@@ -4,6 +4,7 @@ export type DashboardNavItem = {
   icon: string;
   isLogout?: boolean;
   target?: "_blank" | "_self";
+  isChild?: boolean;
 };
 
 export type DashboardNavSection = {

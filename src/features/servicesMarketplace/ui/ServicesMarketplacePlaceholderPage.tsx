@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../dashboard/components/DashboardLayout";
+import { isCustomerAuthenticated } from "../../auth/utils/customerSession";
 import {
   checkServiceability,
   confirmServiceSlot,
@@ -34,11 +35,15 @@ import type {
   JobProof,
 } from "../api/servicesMarketplaceApi";
 import "./servicesDiscovery.css";
+import "./customerExperience.css";
+import "./customerExperienceOverrides.css";
+import "./customerBookingCompact.css";
 import ProviderWorkspace from "./ProviderWorkspace";
 import { CustomerAdditionalWork } from "./AdditionalWorkPanel";
 import ServicesPaymentPanel from "./ServicesPaymentPanel";
 import { CustomerCompletion } from "./CompletionPanel";
 import BookingAftercarePanel from "./BookingAftercarePanel";
+import BookingStartOtpPanel from "./BookingStartOtpPanel";
 import { useHomeSelectedLocation } from "../../home/hooks/useHomeSelectedLocation";
 import CustomerHeader from "../../home/ui/CustomerHeader";
 
@@ -419,6 +424,11 @@ export default function ServicesMarketplacePlaceholderPage({
   async function previewQuote(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!detail) return;
+    if (!isCustomerAuthenticated()) {
+      const returnUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      window.location.href = `/login?returnUrl=${encodeURIComponent(returnUrl)}`;
+      return;
+    }
     if (location.countryCode.trim().length < 2) {
       setError("Enter your country code (for the local pilot, use IN) before checking availability.");
       setQuote(null);
@@ -464,7 +474,7 @@ export default function ServicesMarketplacePlaceholderPage({
     }
   }
   if (state === "loading") {
-    const content = <div className="services-state">Loading Urban Services…</div>;
+    const content = <div className="services-state">Loading Chao Services…</div>;
     return surface === "provider" ? (
       <DashboardLayout mainContentClassName="provider-workspace-main">{content}</DashboardLayout>
     ) : (
@@ -477,7 +487,7 @@ export default function ServicesMarketplacePlaceholderPage({
   if (state === "unavailable") {
     const content = (
       <div className="services-state">
-        <h1>Urban Services unavailable</h1>
+        <h1>Chao Services unavailable</h1>
         <p>The module is disabled or your account does not have access.</p>
         <Link to="/dashboard">Return to dashboard</Link>
       </div>
@@ -758,13 +768,6 @@ export default function ServicesMarketplacePlaceholderPage({
             location={location}
             latitude={currentLocation.latitude ?? undefined}
             longitude={currentLocation.longitude ?? undefined}
-            onLocationChange={(field, value) => {
-              setLocation((current) => ({ ...current, [field]: value }));
-              // A quote/slot is tied to the service location. Editing the
-              // location invalidates both so the customer cannot submit a
-              // quote calculated for a different area.
-              setQuote(null);
-            }}
             quote={quote}
             loading={loading}
             previewQuote={previewQuote}
@@ -877,7 +880,7 @@ function CatalogServicePage({ category, selectedSubCategoryId, items, totalCount
   return <section className="services-catalog-browser">
     <header className="services-catalog-browser-head">
       <button type="button" onClick={back}><span className="material-icons">arrow_back</span>All categories</button>
-      <div><small>{category?.name || "URBAN SERVICES"}</small><h2>{selected?.name || category?.name || "Services near you"}</h2><p>{selected?.description || `Choose a trusted professional, compare options and see the final quote before booking.`}</p></div>
+      <div><small>{category?.name || "CHAO SERVICES"}</small><h2>{selected?.name || category?.name || "Services near you"}</h2><p>{selected?.description || `Choose a trusted professional, compare options and see the final quote before booking.`}</p></div>
       <span><strong>{totalCount}</strong> services</span>
     </header>
     <div className="services-catalog-browser-layout">
@@ -914,7 +917,27 @@ export function MyBookings() {
   const [proofs, setProofs] = useState<JobProof[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [detailError, setDetailError] = useState("");
+  const [openingBookingId, setOpeningBookingId] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
+  function closeDetails() {
+    setSelected(null);
+    setProgress(null);
+    setProofs([]);
+  }
+  useEffect(() => {
+    if (!selected) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeDetails();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selected]);
   async function load() {
     try {
       setLoading(true);
@@ -934,6 +957,28 @@ export function MyBookings() {
     const access = await getCustomerJobProofAccess(bookingId, proofId);
     const blob = await downloadJobProof(access.token);
     const url = URL.createObjectURL(blob); window.open(url, "_blank", "noopener,noreferrer"); window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+  async function openBooking(bookingId: string) {
+    try {
+      setOpeningBookingId(bookingId);
+      setDetailError("");
+      const detail = await getServiceBooking(bookingId);
+      setSelected(detail);
+
+      const [progressResult, proofsResult] = await Promise.allSettled([
+        getServiceBookingProgress(bookingId),
+        getCustomerJobProofs(bookingId),
+      ]);
+      setProgress(progressResult.status === "fulfilled" ? progressResult.value : null);
+      setProofs(proofsResult.status === "fulfilled" ? proofsResult.value : []);
+    } catch {
+      setSelected(null);
+      setProgress(null);
+      setProofs([]);
+      setDetailError("Booking details could not be loaded. Please try again.");
+    } finally {
+      setOpeningBookingId(null);
+    }
   }
   return (
     <section className="services-bookings-panel">
@@ -961,6 +1006,7 @@ export function MyBookings() {
         ))}
       </div>
       {loadError ? <div className="services-alert" role="alert">{loadError}</div> : null}
+      {detailError ? <div className="services-alert" role="alert">{detailError}</div> : null}
       {loading ? (
         <div className="services-bookings-empty">Loading your bookings...</div>
       ) : visibleItems.length ? (
@@ -971,17 +1017,13 @@ export function MyBookings() {
               key={x.id}
               role="button"
               tabIndex={0}
-              onClick={() =>
-                void Promise.all([
-                  getServiceBooking(x.id),
-                  getServiceBookingProgress(x.id),
-                  getCustomerJobProofs(x.id),
-                ]).then(([detail, currentProgress, visibleProofs]) => {
-                  setSelected(detail);
-                  setProgress(currentProgress);
-                  setProofs(visibleProofs);
-                })
-              }
+              onClick={() => void openBooking(x.id)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  void openBooking(x.id);
+                }
+              }}
             >
               <span className="services-booking-thumb"><img src={serviceImage(x.serviceName)} alt="" /></span>
               <span className="services-booking-main">
@@ -996,36 +1038,48 @@ export function MyBookings() {
               </strong>
               </span>
               <button
-                onClick={() =>
-                  void Promise.all([
-                    getServiceBooking(x.id),
-                    getServiceBookingProgress(x.id),
-                    getCustomerJobProofs(x.id),
-                  ]).then(([detail, currentProgress, visibleProofs]) => {
-                    setSelected(detail);
-                    setProgress(currentProgress);
-                    setProofs(visibleProofs);
-                  })
-                }
+                type="button"
+                disabled={openingBookingId === x.id}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  void openBooking(x.id);
+                }}
               >
-                View details
+                {openingBookingId === x.id ? "Loading..." : "View details"}
               </button>
             </article>
           ))}
         </div>
       ) : (
-        <p>No Urban Services bookings yet.</p>
+        <p>No Chao Services bookings yet.</p>
       )}
       {selected ? (
-        <article className="services-booking-detail">
-          <h3>{selected.summary.referenceNumber}</h3>
-          <p>
-            {selected.address.line1}, {selected.address.locality},{" "}
+        <div className="services-booking-modal-backdrop" role="presentation" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) closeDetails();
+        }}>
+        <article className="services-booking-detail" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title">
+          <header className="services-booking-detail-head">
+            <div><small>Booking details</small><h3 id="booking-detail-title">{selected.summary.referenceNumber}</h3></div>
+            <button type="button" className="services-booking-modal-close" onClick={closeDetails} aria-label="Close booking details">×</button>
+          </header>
+          <div className="services-booking-detail-summary">
+            <strong>{selected.summary.serviceName}</strong>
+            <span>{selected.summary.currencyCode} {selected.summary.totalAmount.toFixed(2)}</span>
+            <span>{selected.summary.status.replace(/_/g, " ")}</span>
+          </div>
+          <div className="services-booking-next-step">
+            <span className="material-icons">schedule</span>
+            <div><strong>{selected.summary.status === "BOOKING_CONFIRMED" ? "Finding your service professional" : "Booking progress"}</strong><p>{selected.summary.status === "BOOKING_CONFIRMED" ? "Your booking is confirmed. An eligible professional will receive the offer and must accept it before the appointment." : "Status updates will appear here as your professional travels, arrives, starts, and completes the work."}</p></div>
+          </div>
+          <BookingStartOtpPanel bookingId={selected.summary.id} status={selected.summary.status} />
+          <p className="services-booking-meta"><strong>Scheduled:</strong> {new Date(selected.summary.requestedStartAtUtc).toLocaleString()}</p>
+          <p className="services-booking-meta">
+            <strong>Address:</strong> {selected.address.line1}, {selected.address.locality},{" "}
             {selected.address.administrativeArea} {selected.address.postalCode}
           </p>
-          <p>{selected.customerNotes || "No additional instructions."}</p>
+          <p className="services-booking-meta"><strong>Instructions:</strong> {selected.customerNotes || "No additional instructions."}</p>
           {progress ? (
-            <div>
+            <div className="services-provider-progress">
               <strong>{progress.status.replace(/_/g, " ")}</strong>
               {progress.provider?.displayName ? (
                 <p>Service professional: {progress.provider.displayName}</p>
@@ -1038,12 +1092,13 @@ export function MyBookings() {
           {proofs.length ? <div><h4>Approved job proof</h4>{proofs.map((proof) => <p key={proof.publicId}>{proof.proofType.replace(/_/g, " ")} · {proof.fileName} <button onClick={() => void viewProof(selected.summary.id, proof.publicId)}>View</button></p>)}</div> : null}
           <CustomerAdditionalWork bookingId={selected.summary.id} />
           {selected.summary.status === "PENDING_PAYMENT" ? <ServicesPaymentPanel bookingId={selected.summary.id} amount={selected.summary.totalAmount} currency={selected.summary.currencyCode} /> : null}
-          <CustomerCompletion bookingId={selected.summary.id} />
+          {selected.summary.status === "COMPLETED" ? <CustomerCompletion bookingId={selected.summary.id} /> : null}
           <BookingAftercarePanel bookingId={selected.summary.id} status={selected.summary.status} onChanged={() => void load()} />
-          <button onClick={() => { setSelected(null); setProgress(null); setProofs([]); }}>
+          <button type="button" className="services-close-details" onClick={closeDetails}>
             Close details
           </button>
         </article>
+        </div>
       ) : null}
     </section>
   );
@@ -1184,7 +1239,6 @@ function ServiceDetail({
   location,
   latitude,
   longitude,
-  onLocationChange,
   quote,
   loading,
   previewQuote,
@@ -1194,7 +1248,6 @@ function ServiceDetail({
   location: ServiceLocation;
   latitude?: number;
   longitude?: number;
-  onLocationChange: (field: keyof ServiceLocation, value: string) => void;
   quote: QuoteResult | null;
   loading: boolean;
   previewQuote: (e: FormEvent<HTMLFormElement>) => void;
@@ -1262,7 +1315,7 @@ function ServiceDetail({
     setAddressEditorOpen(savedAddresses.length === 0);
     setAddressOpen(true);
   }
-  function useSavedAddress(address: SavedServiceAddress) {
+  function applySavedAddress(address: SavedServiceAddress) {
     setBookingAddress({ line1: address.line1, line2: address.line2, locality: address.locality, administrativeArea: address.administrativeArea, postalCode: address.postalCode, countryCode: address.countryCode });
     setSelectedAddressId(address.id);
     setAddressValidationVisible(false);
@@ -1301,7 +1354,7 @@ function ServiceDetail({
     setSlotAreaId("");
     if (location.countryCode.trim().length < 2) {
       setSlots([]);
-      setSlotMessage("Enter your country code above (for the local pilot, use IN), then try again.");
+      setSlotMessage("Select a service location from the page header, then try again.");
       return;
     }
     try {
@@ -1413,15 +1466,41 @@ function ServiceDetail({
   const inclusions = parse(detail.inclusionsJson);
   const exclusions = parse(detail.exclusionsJson);
   const faqs = parse(detail.faqJson);
+  const detailContent = (() => {
+    const serviceName = detail.service.name;
+    const categoryName = detail.service.categoryName;
+    const defaults = {
+      overview: { eyebrow: `${serviceName.toUpperCase()} OVERVIEW`, title: `What to expect from ${serviceName}`, description: `Clear scope, qualified professionals and support for your ${serviceName.toLowerCase()} booking.` },
+      includedTitle: `What’s included with ${serviceName}`,
+      excludedTitle: `Not included with ${serviceName}`,
+      pricingNote: `${serviceName} pricing is calculated after your area, selected options and appointment time are checked.`,
+      processTitle: `How ${serviceName} works`,
+      processSteps: [
+        { title: "Tell us what you need", description: `Choose the closest ${serviceName.toLowerCase()} option and share useful details.` },
+        { title: "Review your quote", description: `Review the ${serviceName.toLowerCase()} price calculated for your area, options and time.` },
+        { title: "Your professional visits", description: `A qualified ${categoryName.toLowerCase()} professional completes the agreed work.` },
+        { title: "Completion and support", description: `Review the ${serviceName.toLowerCase()} work and receive your completion summary.` },
+      ],
+      professional: { eyebrow: `${categoryName.toUpperCase()} PROFESSIONALS`, title: `${serviceName} by a qualified professional`, description: `Matched to the requirements of your ${serviceName.toLowerCase()} booking.`, benefits: [`Identity and eligibility checks`, `${serviceName} service standards`, "Support through completion"], imageUrl: "/services-marketplace/trust/chaodesi-technician-v1.png" },
+      supportedForTitle: `${serviceName} supported for`,
+      supportedFor: ["Residential properties", "Apartments", "Independent homes", "Small offices", "Local businesses", "Other suitable spaces"],
+      promiseTitle: `${serviceName} service promise`,
+      promiseItems: [{ icon: "✓", label: "Qualified professionals" }, { icon: "₹", label: "Transparent quote" }, { icon: "?", label: `${serviceName} booking support` }, { icon: "★", label: "Completion record" }],
+      preparationTitle: `Before your ${serviceName} appointment`,
+      faqTitle: `${serviceName} frequently asked questions`,
+      reviewsTitle: `Verified ${serviceName} reviews`,
+    };
+    try {
+      const configured = detail.detailContentJson ? JSON.parse(detail.detailContentJson) : {};
+      return { ...defaults, ...configured, overview: { ...defaults.overview, ...configured.overview }, professional: { ...defaults.professional, ...configured.professional } };
+    } catch { return defaults; }
+  })();
   const serviceRequirements = [
     "Standard service",
     "Inspection and diagnosis",
     "Installation or setup",
     "Not sure — help me choose",
   ];
-  const supportedBrands = detail.service.categoryName.toLowerCase().includes("appliance")
-    ? ["LG", "Samsung", "Bosch", "Whirlpool", "IFB", "Godrej", "Panasonic", "Haier"]
-    : ["Residential", "Apartments", "Independent homes", "Small offices", "Local businesses", "Other spaces"];
   return (
     <section className="services-detail">
       <button onClick={close}>← Back to services</button>
@@ -1457,108 +1536,61 @@ function ServiceDetail({
         <article className="services-detail-guide">
           <div className="services-guide-intro">
             <span className="material-icons" aria-hidden="true">home_repair_service</span>
-            <div><small>SERVICE OVERVIEW</small><h2>Know what to expect</h2><p>Clear scope, trusted professionals and support from booking through completion.</p></div>
+            <div><small>{detailContent.overview.eyebrow}</small><h2>{detailContent.overview.title}</h2><p>{detailContent.overview.description}</p></div>
           </div>
           <div className="services-scope-grid">
             <section className="services-scope-card is-included">
               <span className="material-icons" aria-hidden="true">check_circle</span>
-              <div><h3>What’s included</h3><ul>
+              <div><h3>{detailContent.includedTitle}</h3><ul>
                 {(inclusions.length ? inclusions : ["Professional assessment and service"]).map((x, i) => <li key={i}>{String(x)}</li>)}
               </ul></div>
             </section>
             <section className="services-scope-card is-excluded">
               <span className="material-icons" aria-hidden="true">info</span>
-              <div><h3>Not included</h3><ul>
+              <div><h3>{detailContent.excludedTitle}</h3><ul>
                 {(exclusions.length ? exclusions : ["Parts and materials not shown in the quote"]).map((x, i) => <li key={i}>{String(x)}</li>)}
               </ul></div>
             </section>
           </div>
           <p className="services-detail-note">
-            Final pricing is calculated after your area and time are checked.
+            {detailContent.pricingNote}
           </p>
           <section className="services-detail-process">
-            <h3>How your service works</h3>
-            {[
-              ["1", "Tell us what you need", "Choose the closest service option and share useful details."],
-              ["2", "Review the quote", "Your price is calculated for the selected area, option and time."],
-              ["3", "A verified professional visits", "The assigned professional completes the agreed work safely."],
-              ["4", "Completion and support", "Review the work, receive your summary and contact support if needed."],
-            ].map(([number, title, copy]) => <div key={number}><b>{number}</b><span><strong>{title}</strong><small>{copy}</small></span></div>)}
+            <h3>{detailContent.processTitle}</h3>
+            {detailContent.processSteps.map((step: { title: string; description: string }, index: number) => <div key={`${index}-${step.title}`}><b>{index + 1}</b><span><strong>{step.title}</strong><small>{step.description}</small></span></div>)}
           </section>
           <section className="services-detail-technician">
-            <div><small>LOCAL PROFESSIONALS</small><h3>Skilled help you can trust</h3><p>Identity checked, service trained and matched to the work you selected.</p><ul><li>Background and eligibility checks</li><li>Service-specific standards</li><li>Support through completion</li></ul></div>
-            <img src="/services-marketplace/trust/chaodesi-technician-v1.png" alt="Chao Desi service professional" />
+            <div><small>{detailContent.professional.eyebrow}</small><h3>{detailContent.professional.title}</h3><p>{detailContent.professional.description}</p><ul>{detailContent.professional.benefits.map((benefit: string) => <li key={benefit}><span className="services-technician-check" aria-hidden="true">✓</span><span>{benefit}</span></li>)}</ul></div>
+            <img src={detailContent.professional.imageUrl} alt={`${detail.service.name} professional`} />
           </section>
           <section className="services-detail-brands">
-            <h3>Services supported for</h3>
-            <div>{supportedBrands.map((brand) => <span key={brand}>{brand}</span>)}</div>
+            <h3>{detailContent.supportedForTitle}</h3>
+            <div>{detailContent.supportedFor.map((item: string) => <span key={item}>{item}</span>)}</div>
           </section>
           <section className="services-detail-promise">
-            <h3>Chao Desi service promise</h3>
+            <h3>{detailContent.promiseTitle}</h3>
             <ul className="services-promise-list">
-              <li><span className="services-promise-icon" aria-hidden="true">✓</span><span className="services-promise-label">Verified professionals</span></li>
-              <li><span className="services-promise-icon" aria-hidden="true">₹</span><span className="services-promise-label">Transparent quote</span></li>
-              <li><span className="services-promise-icon" aria-hidden="true">?</span><span className="services-promise-label">Booking support</span></li>
-              <li><span className="services-promise-icon" aria-hidden="true">★</span><span className="services-promise-label">Completion record</span></li>
+              {detailContent.promiseItems.map((item: { icon: string; label: string }) => <li key={item.label}><span className="services-promise-icon" aria-hidden="true">{item.icon}</span><span className="services-promise-label">{item.label}</span></li>)}
             </ul>
           </section>
           {detail.preparationInstructions ? (
             <>
-              <h3>Before we arrive</h3>
+              <h3>{detailContent.preparationTitle}</h3>
               <p>{detail.preparationInstructions}</p>
             </>
           ) : null}
-          <h3>Frequently asked questions</h3>
+          <h3>{detailContent.faqTitle}</h3>
           <div className="services-detail-faqs">
             {(faqs.length ? faqs : ["When is the final price confirmed?", "Can I change my appointment?", "What happens if extra work is required?"]).map((x, i) => <details key={i}><summary>{formatContentValue(x).split(":")[0]}</summary><p>{formatContentValue(x).includes(":") ? formatContentValue(x).split(":").slice(1).join(":") : "You will see the applicable details before confirming your booking. Extra work is never added without approval."}</p></details>)}
           </div>
           <section className="services-detail-reviews">
-            <h3>Verified customer reviews</h3>
+            <h3>{detailContent.reviewsTitle}</h3>
             {detail.service.reviewCount ? <p><strong>{detail.service.averageRating?.toFixed(1)}</strong> from {detail.service.reviewCount} completed-service reviews.</p> : <p>This is a new service. Reviews will appear after customers complete verified bookings.</p>}
           </section>
         </article>
         <form onSubmit={previewQuote}>
           <h3>Build your booking</h3>
           <p className="services-form-note">Choose the service option and any extras you need. Your final price is calculated before booking.</p>
-          <fieldset className="services-location-fields">
-            <legend>Service location</legend>
-            <div>
-              <label>
-                Country code
-                <input
-                  value={location.countryCode}
-                  onChange={(e) => onLocationChange("countryCode", e.target.value.toUpperCase())}
-                  placeholder="IN"
-                  maxLength={3}
-                  required
-                />
-              </label>
-              <label>
-                State / province
-                <input
-                  value={location.administrativeArea}
-                  onChange={(e) => onLocationChange("administrativeArea", e.target.value)}
-                  placeholder="Optional"
-                />
-              </label>
-              <label>
-                City / locality
-                <input
-                  value={location.locality}
-                  onChange={(e) => onLocationChange("locality", e.target.value)}
-                  placeholder="Optional"
-                />
-              </label>
-              <label>
-                Postal / ZIP
-                <input
-                  value={location.postalCode}
-                  onChange={(e) => onLocationChange("postalCode", e.target.value)}
-                  placeholder="Optional unless required"
-                />
-              </label>
-            </div>
-          </fieldset>
           {detail.packages.length ? (
             <fieldset className="services-option-section services-package-options">
               <legend><span>1</span> Choose a service option</legend>
@@ -1619,10 +1651,10 @@ function ServiceDetail({
             </div>
           </div>
           <p className="services-location-note">
-            Availability is checked for <strong>{location.countryCode || "your country"}</strong>
+            Availability is checked using your selected location: <strong>{location.countryCode || "your country"}</strong>
             {location.locality ? ` · ${location.locality}` : ""}
             {location.postalCode ? ` · ${location.postalCode}` : ""}.
-            Update the location fields above if this is not your service address.
+            You can add or change the service address before confirming your booking.
           </p>
           {slotMessage ? <p role="status">{slotMessage}</p> : null}
           <div className="services-slot-list">
@@ -1831,7 +1863,7 @@ function ServiceDetail({
                   {savedAddresses.map((address) => <article className={selectedAddressId === address.id ? "is-selected" : ""} key={address.id}>
                     <span className="material-icons" aria-hidden="true">home</span>
                     <div><strong>{address.label}</strong><p>{address.line1}{address.line2 ? `, ${address.line2}` : ""}<br />{address.locality}, {address.administrativeArea} {address.postalCode}</p></div>
-                    <div><button type="button" className="is-edit" onClick={() => editSavedAddress(address)}>Edit</button><button type="button" className="is-use" onClick={() => useSavedAddress(address)}>{selectedAddressId === address.id ? "Selected" : "Use address"}</button></div>
+                    <div><button type="button" className="is-edit" onClick={() => editSavedAddress(address)}>Edit</button><button type="button" className="is-use" onClick={() => applySavedAddress(address)}>{selectedAddressId === address.id ? "Selected" : "Use address"}</button></div>
                   </article>)}
                   {!addressEditorOpen ? <button type="button" className="services-add-address" onClick={addAnotherAddress}><span aria-hidden="true">+</span>Add another address</button> : null}
                 </div> : null}

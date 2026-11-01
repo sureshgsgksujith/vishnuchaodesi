@@ -18,6 +18,10 @@ export async function getServicesMarketplaceCapabilities() {
   ).data;
 }
 
+export async function getChaoServicesExperienceSettings() {
+  return (await apiClient.get<{ showHomeCard: boolean }>("/services/v1/experience-settings")).data;
+}
+
 export type CatalogService = {
   service: { id: string; name: string; shortDescription?: string | null };
   subCategoryName: string;
@@ -100,6 +104,7 @@ export type DiscoveryDetail = {
   exclusionsJson?: string | null;
   preparationInstructions?: string | null;
   faqJson?: string | null;
+  detailContentJson?: string | null;
   estimatedDurationMinutes?: number | null;
   packages: DiscoveryOption[];
   addOns: DiscoveryOption[];
@@ -215,6 +220,7 @@ export type BookingSummary = {
   requestedStartAtUtc: string;
   requestedEndAtUtc: string;
   serviceName: string;
+  imageUrl?: string | null;
   currencyCode: string;
   totalAmount: number;
   createdAtUtc: string;
@@ -275,6 +281,10 @@ export type BookingLifecycle = {
 export async function getServiceBookingHistory(id: string) {
   return (await apiClient.get<BookingLifecycle>(`/services/v1/bookings/${id}/history`)).data;
 }
+export type ServiceStartOtp = { code: string; verified: boolean; validUntilUtc: string };
+export async function getServiceStartOtp(id: string) {
+  return (await apiClient.get<ServiceStartOtp>(`/services/v1/bookings/${id}/start-otp`)).data;
+}
 export async function cancelServiceBooking(id: string, rowVersion: string, note?: string) {
   return (await apiClient.post<BookingLifecycle>(`/services/v1/bookings/${id}/transitions`, {
     toStatus: "CANCELLED",
@@ -287,6 +297,10 @@ export async function cancelServiceBooking(id: string, rowVersion: string, note?
 }
 export async function createServiceReview(bookingId: string, rating: number, text?: string) {
   return (await apiClient.post(`/services/v1/bookings/${bookingId}/review`, { rating, text })).data;
+}
+export type CustomerServiceReview = { publicId: string; rating: number; text?: string | null; status: string; createdAtUtc: string };
+export async function getCustomerServiceReview(bookingId: string) {
+  return (await apiClient.get<CustomerServiceReview | null>(`/services/v1/bookings/${bookingId}/review`)).data;
 }
 export async function requestWarrantyRevisit(bookingId: string, issueDescription: string, strategy = "SAME_PROVIDER") {
   return (await apiClient.post(`/services/v1/bookings/${bookingId}/warranty/revisit`, { issueDescription, strategy })).data;
@@ -427,6 +441,7 @@ export type ProviderQualification = {
   publicId: string;
   serviceId: string;
   serviceName: string;
+  imageUrl?: string | null;
   status: string;
   experienceYears?: number | null;
   skillsSummary?: string | null;
@@ -567,8 +582,17 @@ export async function addProviderCoverage(payload: object) {
 export async function addProviderWeeklySchedule(payload: object) {
   await apiClient.post("/services/v1/provider/availability/weekly", payload);
 }
+export async function updateProviderWeeklySchedule(id: string, payload: object) {
+  await apiClient.put(`/services/v1/provider/availability/weekly/${id}`, payload);
+}
 export async function addProviderAvailabilityPeriod(payload: object) {
   await apiClient.post("/services/v1/provider/availability/periods", payload);
+}
+export async function updateProviderAvailabilityPeriod(id: string, payload: object) {
+  await apiClient.put(`/services/v1/provider/availability/periods/${id}`, payload);
+}
+export async function deleteProviderCoverage(id: string) {
+  await apiClient.delete(`/services/v1/provider/availability/coverage/${id}`);
 }
 export async function deleteProviderWeeklySchedule(id: string) {
   await apiClient.delete(`/services/v1/provider/availability/weekly/${id}`);
@@ -607,9 +631,9 @@ export async function respondProviderJobOffer(
 }
 export type ProviderJobSummary = { id: string; referenceNumber: string; status: string; requestedStartAtUtc: string; requestedEndAtUtc: string; serviceName: string };
 export type ProviderJobDetail = ProviderJobSummary & { serviceSnapshot: Record<string, unknown>; packageSnapshot?: Record<string, unknown> | null; addOns?: unknown; customerNotes?: string | null; address?: { line1: string; line2?: string | null; locality: string; administrativeArea: string; postalCode: string; countryCode: string } | null; navigationUrl?: string | null; contactMethod: string; checklistPreview: string[]; rowVersion: string };
-export async function getProviderJobs(view: "upcoming" | "today" | "history") { return (await apiClient.get<ProviderJobSummary[]>("/services/v1/provider/jobs", { params: { view } })).data; }
+export async function getProviderJobs(view: "active" | "upcoming" | "today" | "history") { return (await apiClient.get<ProviderJobSummary[]>("/services/v1/provider/jobs", { params: { view } })).data; }
 export async function getProviderJob(id: string) { return (await apiClient.get<ProviderJobDetail>(`/services/v1/provider/jobs/${id}`)).data; }
-export async function updateProviderJobStatus(job: ProviderJobDetail, action: string, eventId: string) { return (await apiClient.post(`/services/v1/provider/jobs/${job.id}/status`, { action, reasonCode: action, rowVersion: job.rowVersion, eventId })).data; }
+export async function updateProviderJobStatus(job: ProviderJobDetail, action: string, eventId: string, startOtp?: string) { return (await apiClient.post(`/services/v1/provider/jobs/${job.id}/status`, { action, reasonCode: action, rowVersion: job.rowVersion, eventId, startOtp })).data; }
 export async function contactJobCustomer(id: string) { return (await apiClient.post<{ method: string; message: string }>(`/services/v1/provider/jobs/${id}/contact`)).data; }
 export type CustomerJobProgress = {
   status: string;

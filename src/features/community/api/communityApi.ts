@@ -302,6 +302,11 @@ export const communityApi = {
   createPost: async (body: unknown) =>
     (await apiClient.post<CommunityPost>("/community/posts", body, mutation()))
       .data,
+  updatePost: async (id: number, body: { title?: string; body?: string; linkUrl?: string }) =>
+    (await apiClient.put<CommunityPost>(`/community/posts/${id}`, body, mutation()))
+      .data,
+  deletePost: async (id: number) =>
+    apiClient.delete(`/community/posts/${id}`, mutation()),
   uploadMedia: async (file: File, purpose: string, targetId?: number) => {
     const body = new FormData();
     body.append("file", file);
@@ -651,6 +656,26 @@ export const communityApi = {
   giftOrders: async () =>
     (await apiClient.get<Record<string, unknown>[]>("/community/gift-orders"))
       .data,
+  giftRegistryPaymentSummary: async (id: number) =>
+    (await apiClient.get<Record<string, unknown>>(`/community/gift-registries/${id}/payment-summary`)).data,
+  payGiftRegistry: async (id: number, paymentToken: string) =>
+    apiClient.post(
+      `/community/gift-registries/${id}/final-payment`,
+      { paymentToken },
+      { headers: { "Idempotency-Key": crypto.randomUUID() } },
+    ),
+  giftPriceChangeRequests: async (registryId: number) =>
+    (await apiClient.get<Record<string, unknown>[]>(`/community/gift-registries/${registryId}/price-change-requests`)).data,
+  requestGiftPriceChange: async (orderId: number, extraAmount: number, reason: string) =>
+    (await apiClient.post(`/community/gift-orders/${orderId}/price-change-requests`, { extraAmount, reason })).data,
+  approveGiftPriceChange: async (requestId: number) =>
+    (await apiClient.post(`/community/gift-price-change-requests/${requestId}/approve`, {})).data,
+  rejectGiftPriceChange: async (requestId: number) =>
+    (await apiClient.post(`/community/gift-price-change-requests/${requestId}/reject`, {})).data,
+  getPayoutAccount: async () =>
+    (await apiClient.get<Record<string, unknown>>("/community/me/payout-account")).data,
+  setPayoutAccount: async (linkedAccountId: string) =>
+    (await apiClient.put("/community/me/payout-account", { linkedAccountId })).data,
   reserveGiftItem: async (itemId: number, quantity = 1) =>
     (
       await apiClient.post(`/community/gift-items/${itemId}/reserve`, {
@@ -682,6 +707,12 @@ export const communityApi = {
     }),
   giftOrderAction: async (id: number, action: "delivered" | "received") =>
     apiClient.post(`/community/gift-orders/${id}/${action}`, {}),
+  retryGiftPayout: async (id: number) =>
+    apiClient.post(
+      `/community/gift-orders/${id}/payout`,
+      {},
+      { headers: { "Idempotency-Key": crypto.randomUUID() } },
+    ),
   giftOrderReason: async (
     id: number,
     action: "cancel" | "dispute",

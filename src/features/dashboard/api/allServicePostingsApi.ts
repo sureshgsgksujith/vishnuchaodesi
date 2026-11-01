@@ -45,7 +45,9 @@ export type AllServicePostingPayload = {
   isPhoneVerified: boolean;
   packageCode: string;
   paymentReference?: string;
+  paymentToken?: string;
   paymentProvider?: string;
+  currency?: string;
   couponCode?: string;
   saveAsDraft: boolean;
 };

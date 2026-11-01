@@ -53,7 +53,7 @@ export async function getMyPlanUsage() {
 
 export type PlanPayment = { id: number; planCode: string; planName: string; paymentReference: string; paymentProvider: string; paymentStatus: string; subtotalAmount: number; couponCode?: string | null; discountAmount: number; totalAmount: number; currency: string; paidAt?: string | null; createdAt: string };
 
-export async function selectPricingPlan(planCode: string, payment?: { paymentReference: string; paymentProvider: string; couponCode?: string }) {
+export async function selectPricingPlan(planCode: string, payment?: { paymentToken?: string; paymentReference?: string; paymentProvider?: string; couponCode?: string; currency?: string }) {
   const response = await apiClient.post<PlanUsage>(`/PricingPlans/${planCode}/select`, payment || null);
   return response.data;
 }

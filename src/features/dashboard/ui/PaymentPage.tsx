@@ -9,10 +9,11 @@ import {
 } from "../api/eventTicketsApi";
 import { getMyProfile, type UserProfileFormValues } from "../api/profileApi";
 import { getMyPlanPayments, getMyPlanUsage, selectPricingPlan, type PlanPayment, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
-import { formatCurrencyAmount } from "../../../shared/utils/currency";
+import { formatCurrencyAmount, getCurrencyCodeForCountry } from "../../../shared/utils/currency";
 import { getCoupons, type Coupon } from "../../coupons/api/couponsApi";
 import PhoneNumberInput from "../../../shared/components/PhoneNumberInput";
 import PaymentProcessingOverlay from "../../../shared/components/PaymentProcessingOverlay";
+import { startRazorpayPayment } from "../../../shared/payments/razorpayCheckout";
 import { getMyAllServicePostings, type AllServicePosting } from "../api/allServicePostingsApi";
 import "../styles/eventBookings.css";
 
@@ -184,10 +185,12 @@ export default function PaymentPage() {
     try {
       setIsProcessingPlan(true);
       setCheckoutMessage("");
+      const checkoutCurrency = getCurrencyCodeForCountry(billingForm.country);
+      const verified = payableAmount > 0 ? await startRazorpayPayment({ amount: payableAmount, currency: checkoutCurrency, receipt: `PLAN-${activePlan.code}-${Date.now()}`, description: `${activePlan.name} subscription` }) : null;
       await selectPricingPlan(activePlan.code, {
-        paymentReference: `PLAN-${Date.now()}`,
-        paymentProvider: selectedGateway,
+        paymentToken: verified?.paymentToken,
         couponCode: appliedCoupon?.code || undefined,
+        currency: checkoutCurrency,
       });
       setCheckoutMessage("Payment completed and plan activated.");
 

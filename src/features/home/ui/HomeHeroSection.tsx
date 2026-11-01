@@ -16,6 +16,7 @@ import {
   getCityFromLocationLabel,
   useHomeSelectedLocation,
 } from "../hooks/useHomeSelectedLocation";
+import { getChaoServicesExperienceSettings } from "../../servicesMarketplace/api/servicesMarketplaceApi";
 
 type HomeCategorySlug = NonNullable<PublicListingQuery["category"]>;
 type HomeSearchScope = "" | `yellow:${HomeCategorySlug | "all"}` | `classified:${string}`;
@@ -38,6 +39,12 @@ const quickLinks = [
   { title: "Pets & Animals", image: "/template-17/classifieds/images/pets-1.jpg", category: "pets-animals" },
   { title: "Groups & Communities", image: "/template-17/images/icon/11.png", href: "/community" },
 ];
+
+const chaoServicesQuickLink = {
+  title: "Chao Services",
+  image: "/services-marketplace/categories/home-repair.png",
+  href: "/dashboard/services-marketplace",
+};
 
 const listingCategoryOptions: Array<{ label: string; value: HomeCategorySlug }> = [
   { label: "Real Estate", value: "real-estate" },
@@ -215,6 +222,10 @@ export default function HomeHeroSection() {
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const [locationReloadKey, setLocationReloadKey] = useState(0);
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [showChaoServices, setShowChaoServices] = useState(false);
+  const visibleQuickLinks = showChaoServices
+    ? [quickLinks[0], chaoServicesQuickLink, ...quickLinks.slice(1)]
+    : quickLinks;
   const cityOptions = useMemo(
     () => uniqueSorted([...listingSummary.cities, ...defaultCityOptions, currentCity, activeCity]),
     [activeCity, currentCity, listingSummary.cities],
@@ -236,6 +247,22 @@ export default function HomeHeroSection() {
     currentLocation.status === "loading"
       ? "Detecting location"
       : activeLocationLabel || "Use current location";
+
+  useEffect(() => {
+    let active = true;
+
+    getChaoServicesExperienceSettings()
+      .then((settings) => {
+        if (active) setShowChaoServices(settings.showHomeCard);
+      })
+      .catch(() => {
+        if (active) setShowChaoServices(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (isLocationModalOpen) {
@@ -759,7 +786,7 @@ export default function HomeHeroSection() {
 
           <div className="ban-short-links ani">
             <ul>
-              {quickLinks.map((item) => (
+              {visibleQuickLinks.map((item) => (
                 <li key={item.title}>
                   <div>
                     <img src={item.image} alt={item.title} />

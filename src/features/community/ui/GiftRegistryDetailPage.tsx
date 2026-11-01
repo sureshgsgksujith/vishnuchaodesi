@@ -280,8 +280,7 @@ export default function GiftRegistryDetailPage() {
 }
 
 function GiftImage({ item }: { item: Data }) {
-  const [failed, setFailed] = useState(false);
-  if (!item.imageUrl || failed) {
+  if (!item.imageUrl) {
     return (
       <div className="gift-image-fallback">
         <span className="material-icons">redeem</span>
@@ -290,10 +289,11 @@ function GiftImage({ item }: { item: Data }) {
     );
   }
   return (
-    <img
-      src={giftImageUrl(String(item.imageUrl))}
-      alt={String(item.name || "Gift")}
-      onError={() => setFailed(true)}
+    <div
+      className="gift-detail-image-content"
+      role="img"
+      aria-label={String(item.name || "Gift")}
+      style={{ backgroundImage: `url("${giftImageUrl(String(item.imageUrl))}")` }}
     />
   );
 }

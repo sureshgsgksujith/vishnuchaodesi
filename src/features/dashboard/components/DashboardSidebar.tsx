@@ -28,11 +28,11 @@ export default function DashboardSidebar({
     ...dashboardNavSections,
     ...(servicesMarketplaceCustomerEnabled || servicesMarketplaceProviderEnabled
       ? [{
-          title: "Urban Services",
+          title: "Chao Services",
           items: [
             ...(servicesMarketplaceCustomerEnabled
               ? [{
-                  label: "Urban Services",
+                  label: "Chao Services",
                   href: "/dashboard/services-marketplace",
                   icon: "/template-17/images/icon/expert-book.png",
                 }, {
@@ -44,9 +44,15 @@ export default function DashboardSidebar({
             ...(servicesMarketplaceProviderEnabled
               ? [{
                   label: "Provider workspace",
-                  href: "/provider/services",
+                  href: "/provider/services?tab=profile",
                   icon: "/template-17/images/icon/expert.png",
-                }]
+                },
+                { label: "Profile", href: "/provider/services?tab=profile", icon: "/template-17/images/icon/expert.png", isChild: true },
+                { label: "Verification", href: "/provider/services?tab=verification", icon: "/template-17/images/icon/public-service.png", isChild: true },
+                { label: "My services", href: "/provider/services?tab=services", icon: "/template-17/images/icon/service.png", isChild: true },
+                { label: "Availability", href: "/provider/services?tab=availability", icon: "/template-17/images/icon/calendar.png", isChild: true },
+                { label: "Job offers", href: "/provider/services?tab=offers", icon: "/template-17/images/icon/expert-book.png", isChild: true },
+                { label: "Active jobs", href: "/provider/services?tab=jobs", icon: "/template-17/images/icon/job-apply.png", isChild: true }]
               : []),
           ],
         } satisfies DashboardNavSection]
@@ -98,7 +104,8 @@ function SidebarSection({
   return (
     <>
       {section.items.map((item, index) => {
-        const isActive = item.href === currentPath;
+        const currentUrl = `${currentPath}${window.location.search}`;
+        const isActive = item.href === currentUrl || (!window.location.search && item.href === currentPath);
 
         return (
           <li key={item.label}>
@@ -119,7 +126,7 @@ function SidebarSection({
               <Link
                 to={item.href || "#"}
                 target={item.target || "_self"}
-                className={isActive ? "db-lact" : undefined}
+                className={`${isActive ? "db-lact" : ""}${item.isChild ? " provider-sidebar-child" : ""}`.trim() || undefined}
               >
                 <SidebarIcon item={item} />
                 {item.label}

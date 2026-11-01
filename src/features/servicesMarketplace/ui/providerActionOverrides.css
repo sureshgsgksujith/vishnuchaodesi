@@ -1,0 +1,115 @@
+.provider-job-modal .provider-job-primary-actions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+}
+
+.provider-job-modal .provider-job-primary-actions > button {
+  display: flex !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 50px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 0 18px !important;
+  text-align: center !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.provider-job-modal .provider-job-primary-actions > button > .material-icons {
+  position: static !important;
+  display: inline-block !important;
+  width: 22px !important;
+  height: 22px !important;
+  flex: 0 0 22px !important;
+  margin: 0 !important;
+  font-size: 21px !important;
+  line-height: 22px !important;
+}
+
+@media (max-width: 620px) {
+  .provider-job-modal .provider-job-primary-actions {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.provider-job-modal .provider-completion-controls {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.provider-job-modal .provider-completion-controls textarea {
+  display: block !important;
+  width: 100% !important;
+  min-height: 112px !important;
+  box-sizing: border-box !important;
+  margin: 8px 0 0 !important;
+  padding: 14px 16px !important;
+  border: 1px solid #c8d8ea !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #10264a !important;
+  font: inherit !important;
+  line-height: 1.45 !important;
+  resize: vertical !important;
+}
+
+.provider-job-modal .provider-completion-controls .provider-complete-job-button {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  box-sizing: border-box !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 9px !important;
+  margin: 0 !important;
+  padding: 0 20px !important;
+  border: 0 !important;
+  border-radius: 11px !important;
+  background: #16845b !important;
+  color: #fff !important;
+  font: inherit !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  line-height: 1.2 !important;
+  text-align: center !important;
+  cursor: pointer !important;
+}
+
+.provider-job-modal .provider-completion-controls .provider-complete-job-button .material-icons {
+  position: static !important;
+  width: 22px !important;
+  height: 22px !important;
+  margin: 0 !important;
+  font-size: 21px !important;
+  line-height: 22px !important;
+}
+
+.provider-job-modal .provider-completion-controls .provider-complete-job-button:disabled {
+  border: 1px solid #d5dee8 !important;
+  background: #e9eef4 !important;
+  color: #7a899c !important;
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+}
+
+.provider-job-modal .provider-completion-help,
+.provider-job-modal .provider-completion-ready {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  font-size: 13px !important;
+  font-weight: 650 !important;
+  line-height: 1.35 !important;
+}
+
+.provider-job-modal .provider-completion-help { color: #8a5a12 !important; }
+.provider-job-modal .provider-completion-ready { color: #08724c !important; }
+.provider-job-modal .provider-completion-help .material-icons,
+.provider-job-modal .provider-completion-ready .material-icons {
+  font-size: 17px !important;
+}

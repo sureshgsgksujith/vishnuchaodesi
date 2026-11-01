@@ -1,5 +1,23 @@
 const defaultCurrencyCode = "USD";
 
+const currencyByCountry: Record<string, string> = {
+  india: "INR",
+  in: "INR",
+  ind: "INR",
+  "united states": "USD",
+  usa: "USD",
+  us: "USD",
+  canada: "CAD",
+  australia: "AUD",
+  "united kingdom": "GBP",
+  uk: "GBP",
+  china: "CNY",
+  japan: "JPY",
+  singapore: "SGD",
+  "united arab emirates": "AED",
+  uae: "AED",
+};
+
 const currencySymbols: Record<string, string> = {
   AED: "AED",
   AUD: "A$",
@@ -14,13 +32,12 @@ const currencySymbols: Record<string, string> = {
 };
 
 export function getCurrencyCodeForCountry(country?: string | null) {
-  void country;
-  return defaultCurrencyCode;
+  const normalizedCountry = String(country || "").trim().toLowerCase();
+  return currencyByCountry[normalizedCountry] || defaultCurrencyCode;
 }
 
 export function getCurrencySymbolForCountry(country?: string | null) {
-  void country;
-  return currencySymbols[defaultCurrencyCode];
+  return currencySymbols[getCurrencyCodeForCountry(country)] || currencySymbols[defaultCurrencyCode];
 }
 
 export function formatCurrencyAmount(value: number | string, country?: string | null) {
@@ -42,8 +59,7 @@ export function replaceDollarCurrency(value: string, country?: string | null) {
 }
 
 export function labelWithCountryCurrency(label: string, country?: string | null) {
-  void country;
-  const currencyCode = defaultCurrencyCode;
+  const currencyCode = getCurrencyCodeForCountry(country);
   const requiredSuffix = label.endsWith("*") ? "*" : "";
   const baseLabel = label
     .replace(/\*$/, "")
