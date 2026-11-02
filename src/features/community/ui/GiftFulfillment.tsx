@@ -298,7 +298,7 @@ export default function GiftFulfillment() {
               <p>Your fulfilment earnings are paid only after delivery and administrator approval.</p>
             </div>
             <span className={`gift-payout-status ${String(payoutAccount?.status || "NOT_CONFIGURED").toLowerCase()}`}>
-              {String(payoutAccount?.status || "NOT_CONFIGURED").replaceAll("_", " ")}
+              {String(payoutAccount?.status || "NOT_CONFIGURED").split("_").join(" ")}
             </span>
           </div>
           <div className="gift-payout-earnings">
