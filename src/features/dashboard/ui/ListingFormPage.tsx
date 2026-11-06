@@ -2371,6 +2371,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   const [isAiTextGenerating, setIsAiTextGenerating] = useState(false);
   const [aiTextError, setAiTextError] = useState("");
   const pricingSaveStartedRef = useRef(false);
+  const isSavingRef = useRef(false);
   const planSelectionTouchedRef = useRef(false);
   const pendingValidationScrollRef = useRef(false);
   const navigate = useNavigate();
@@ -2530,6 +2531,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     [countries, form.country, form.countryId],
   );
   const currencyCountry = selectedCountry?.name || form.country;
+  const activeListingPlan = planUsage && !planUsage.requiresPlanSelection && !planUsage.isPlanExpired
+    ? planUsage.plan
+    : null;
   const selectedState = useMemo(
     () => states.find((state) => state.id === form.stateId) || states.find((state) => state.name === form.state),
     [states, form.state, form.stateId],
@@ -5348,7 +5352,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }
 
   async function saveListing(draft = getListingDraft()) {
-    if (isSaving) {
+    if (isSavingRef.current) {
       return false;
     }
 
@@ -5357,6 +5361,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return false;
     }
 
+    isSavingRef.current = true;
     setIsSaving(true);
     setErrorMessage("");
 
@@ -5454,12 +5459,13 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       setErrorMessage(obsoleteRealEstateMessage || "Please check the visible required fields and try again.");
       return false;
     } finally {
+      isSavingRef.current = false;
       setIsSaving(false);
     }
   }
 
   async function handleFinish() {
-    if (isSaving) {
+    if (isSavingRef.current) {
       return;
     }
 
@@ -6707,6 +6713,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                             files={galleryFiles}
                             onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
                             onFilesChange={setGalleryFiles}
+                            photoLimit={activeListingPlan?.photoLimit}
+                            planName={activeListingPlan?.name}
                           />
                           <p></p>
                           <h4>Video Gallery</h4>
@@ -6735,6 +6743,8 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
                             files={galleryFiles}
                             onChange={(items) => setForm((currentForm) => ({ ...currentForm, galleryMedia: items }))}
                             onFilesChange={setGalleryFiles}
+                            photoLimit={activeListingPlan?.photoLimit}
+                            planName={activeListingPlan?.name}
                           />
                           <p></p>
                           <h4>Video Gallery</h4>
@@ -9712,14 +9722,22 @@ function GalleryMediaEditor({
   error,
   onChange,
   onFilesChange,
+  photoLimit,
+  planName,
 }: {
   files: GalleryUploadFile[];
   items: string[];
   error?: string;
   onChange: (items: string[]) => void;
   onFilesChange: (files: GalleryUploadFile[]) => void;
+  photoLimit?: number;
+  planName?: string;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const existingImages = items.filter((item) => item && !item.startsWith(galleryImageUploadMarkerPrefix));
+  const selectedImageCount = existingImages.length + files.length;
+  const hasPhotoLimit = typeof photoLimit === "number" && photoLimit >= 0;
+  const remainingPhotoSlots = hasPhotoLimit ? Math.max(0, photoLimit - selectedImageCount) : null;
 
   function handleFilesChange(fileList: FileList | null) {
     const selectedFiles = Array.from(fileList || []).filter((file) => file.type.startsWith("image/"));
@@ -9727,7 +9745,18 @@ function GalleryMediaEditor({
       return;
     }
 
-    const nextFiles = selectedFiles.map((file, index) => ({
+    const filesToAdd = remainingPhotoSlots === null ? selectedFiles : selectedFiles.slice(0, remainingPhotoSlots);
+    if (!filesToAdd.length) {
+      toast.error(`${planName || "Your current plan"} allows ${photoLimit} photo(s) per listing.`);
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
+    if (filesToAdd.length < selectedFiles.length) {
+      toast.error(`Only ${remainingPhotoSlots} more photo(s) can be added with the ${planName || "current"} plan.`);
+    }
+
+    const nextFiles = filesToAdd.map((file, index) => ({
       file,
       marker: `${galleryImageUploadMarkerPrefix}${Date.now()}_${files.length + index}_${Math.random().toString(36).slice(2)}__`,
     }));
@@ -9749,8 +9778,6 @@ function GalleryMediaEditor({
     onFilesChange(files.filter((file) => file.marker !== value));
     onChange(items.filter((item) => item !== value));
   }
-
-  const existingImages = items.filter((item) => item && !item.startsWith(galleryImageUploadMarkerPrefix));
 
   return (
     <div className="form-group">
@@ -9777,6 +9804,13 @@ function GalleryMediaEditor({
             Drag&amp;Drop your image here or <button type="button" className="btn-default" onClick={() => inputRef.current?.click()}>select file to upload</button>
           </span>
           <span className="img-notes">Supports multiple JPG, JPEG, PNG and other image files</span>
+          {hasPhotoLimit ? (
+            <span className="listing-gallery-plan-note">
+              {planName || "Your plan"} allows {photoLimit} photo(s) per listing — {selectedImageCount} of {photoLimit} selected.
+            </span>
+          ) : planName ? (
+            <span className="listing-gallery-plan-note">{planName} allows unlimited photos per listing.</span>
+          ) : null}
           {(existingImages.length || files.length) ? (
             <div className="listing-gallery-preview-grid">
               {existingImages.map((imageUrl) => (

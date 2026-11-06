@@ -681,6 +681,10 @@
   display: none;
 }
 
+.chaodesi-customer-header .chaodesi-mobile-search-toggle {
+  display: none;
+}
+
 @media (max-width: 992px) {
   .chaodesi-customer-header .container,
   .chaodesi-customer-header .row,
@@ -713,7 +717,7 @@
 
   .chaodesi-customer-header .top-log {
     width: auto;
-    max-width: min(58vw, 260px);
+    max-width: min(58vw, 210px);
     text-align: left;
   }
 
@@ -737,6 +741,25 @@
   .chaodesi-customer-header .mob-menu {
     display: block;
     margin-left: auto;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #fff;
+    flex: 0 0 42px;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-search-toggle i {
+    font-size: 26px;
+    line-height: 1;
   }
 
   .chaodesi-customer-header .mob-me-ic {
@@ -768,7 +791,7 @@
     padding: 0 18px 80px;
   }
 
-  .chaodesi-customer-header .chaodesi-mobile-global-search {
+  .chaodesi-customer-header .chaodesi-mobile-global-search.is-open {
     display: block;
     width: 100%;
     padding: 0 0 12px;
@@ -856,21 +879,27 @@
 
 @media (max-width: 560px) {
   .chaodesi-customer-header {
-    padding-top: 7px;
-    padding-bottom: 7px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .chaodesi-customer-header .container,
+  .chao-home-page .chaodesi-customer-header .container {
+    padding-right: 6px !important;
+    padding-left: 4px !important;
   }
 
   .chaodesi-customer-header .hom-nav.db-open {
-    min-height: 52px;
-    gap: 12px;
+    min-height: 46px;
+    gap: 4px;
   }
 
   .chaodesi-customer-header .top-log {
     display: flex;
     align-items: center;
     width: auto;
-    max-width: min(72vw, 280px);
-    margin: 0;
+    max-width: min(55vw, 155px);
+    margin: 0 !important;
     text-align: left;
   }
 
@@ -879,8 +908,43 @@
     display: block;
     width: auto;
     max-width: 100%;
-    max-height: 40px;
+    max-height: 30px;
     margin: 0;
+  }
+
+  .chaodesi-customer-header .hom-nav.db-open {
+    gap: 4px;
+  }
+
+  .chaodesi-customer-header .top-log {
+    order: 2;
+  }
+
+  .chaodesi-customer-header .mob-menu {
+    order: 1;
+    margin-left: 0;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-search-toggle {
+    order: 3;
+    margin-left: auto;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-search-toggle,
+  .chaodesi-customer-header .mob-me-ic {
+    width: 34px;
+    height: 34px;
+    flex-basis: 34px;
+  }
+
+  .chaodesi-customer-header .chaodesi-mobile-search-toggle i,
+  .chaodesi-customer-header .mob-me-ic i {
+    box-sizing: border-box;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    font-size: 22px;
   }
 
   .chaodesi-customer-header .menu h4 {

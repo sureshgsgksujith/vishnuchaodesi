@@ -342,10 +342,93 @@ function buildRecordSection(title: string, record?: PreviewRecord, preferredKeys
         .filter((key) => !isHiddenPreviewKey(key) && !isIgnoredPreviewAttributeKey(key))
         .map((key) => ({
           label: toTitleLabel(key),
-          value: key === "otherInformation" ? formatOtherInformation(record[key]) : record[key],
+          value: key === "otherInformation"
+            ? formatOtherInformation(record[key])
+            : formatStructuredPreviewValue(key, record[key]),
         })),
     ),
   };
+}
+
+/**
+ * Several listing form sections are stored as JSON strings by the API.  A
+ * preview is customer-facing, so never expose that storage format there.
+ */
+function formatStructuredPreviewValue(key: string, value: PreviewValue): PreviewValue {
+  const parsed = parseJsonValue(value);
+
+  if (!Array.isArray(parsed) && (!parsed || typeof parsed !== "object")) {
+    return value;
+  }
+
+  const normalizedKey = normalizeFieldIdentity(key);
+
+  if (normalizedKey === "businesshours" && Array.isArray(parsed)) {
+    return formatBusinessHoursPreview(parsed);
+  }
+
+  if (Array.isArray(parsed)) {
+    return parsed
+      .map((item) => formatStructuredItem(item))
+      .filter(Boolean)
+      .join(", ");
+  }
+
+  return Object.entries(parsed as Record<string, unknown>)
+    .filter(([, item]) => hasMeaningfulStructuredValue(item))
+    .map(([itemKey, item]) => `${toTitleLabel(itemKey)}: ${formatStructuredItem(item)}`)
+    .filter((item) => !item.endsWith(": "))
+    .join(" · ");
+}
+
+function formatBusinessHoursPreview(value: unknown[]) {
+  return value
+    .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === "object" && !Array.isArray(item))
+    .map((item) => {
+      const day = typeof item.day === "string" ? item.day : "";
+      const status = typeof item.status === "string" ? item.status : "";
+      const is24Hours = item.is24Hours === true || item.is24Hours === "true";
+      const opens = typeof item.open === "string" ? item.open : "";
+      const closes = typeof item.close === "string" ? item.close : "";
+      const note = typeof item.specialHoursNote === "string" ? item.specialHoursNote.trim() : "";
+      const hours = is24Hours ? "Open 24 hours" : [opens, closes].filter(Boolean).join(" – ");
+      const detail = [is24Hours ? "" : status, hours, note].filter(Boolean).join(" · ");
+
+      return day && detail ? `${day}: ${detail}` : "";
+    })
+    .filter(Boolean)
+    .join("; ");
+}
+
+function hasMeaningfulStructuredValue(value: unknown) {
+  if (value === null || value === undefined || value === "" || value === false) {
+    return false;
+  }
+
+  return !Array.isArray(value) || value.length > 0;
+}
+
+function formatStructuredItem(value: unknown): string {
+  if (value === null || value === undefined || value === "" || value === false) {
+    return "";
+  }
+
+  if (value === true) {
+    return "Yes";
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(formatStructuredItem).filter(Boolean).join(", ");
+  }
+
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>)
+      .filter(([, nestedValue]) => hasMeaningfulStructuredValue(nestedValue))
+      .map(([nestedKey, nestedValue]) => `${toTitleLabel(nestedKey)}: ${formatStructuredItem(nestedValue)}`)
+      .join(", ");
+  }
+
+  return String(value);
 }
 
 function formatOtherInformation(value: PreviewValue) {

@@ -347,44 +347,13 @@ function readSelectedLocationForQuery(query: PublicListingQuery) {
 
 export async function getPublicListings(query: PublicListingQuery = {}) {
   const scopedQuery = readSelectedLocationForQuery(query);
-  const hierarchyQueries: PublicListingQuery[] = [scopedQuery];
-
-  if (scopedQuery.city && scopedQuery.state) {
-    hierarchyQueries.push({ ...scopedQuery, city: undefined });
-  }
-
-  if (scopedQuery.country) {
-    hierarchyQueries.push({ ...scopedQuery, state: undefined, city: undefined });
-  }
-
-  const uniqueQueries = Array.from(
-    new Map(hierarchyQueries.map((item) => [JSON.stringify(item), item])).values(),
-  );
-  const results = await Promise.all(uniqueQueries.map(fetchPublicListingsOnce));
-
-  if (results.length === 1) {
-    return results[0];
-  }
-
-  const mergedItems = Array.from(
-    new Map(
-      results
-        .flatMap((result) => result.items || [])
-        .map((item) => [item.id, item] as const),
-    ).values(),
-  );
-  const broadestResult = results[results.length - 1];
-
-  return {
-    ...broadestResult,
-    items: mergedItems.slice(0, scopedQuery.pageSize || 10),
-  };
+  return fetchPublicListingsOnce(scopedQuery);
 }
 export async function createListing(
   payload: UpsertListingPayload,
   files?: ListingUploadFiles
 ) {
-  const body = buildListingRequestBody(payload, files);
+  const body = await buildListingRequestBody(payload, files);
 
   const url = body instanceof FormData ? "/Listings/form" : "/Listings";
 
@@ -436,7 +405,7 @@ export async function updateListing(
   payload: UpsertListingPayload,
   files?: ListingUploadFiles
 ) {
-  const body = buildListingRequestBody(payload, files);
+  const body = await buildListingRequestBody(payload, files);
 
   const url =
     body instanceof FormData
@@ -484,10 +453,10 @@ export function isListingUpgradeRequired(error: unknown) {
   return axios.isAxiosError(error) && error.response?.data?.upgradeRequired === true;
 }
 
-function buildListingRequestBody(
+async function buildListingRequestBody(
   payload: UpsertListingPayload,
   files?: ListingUploadFiles
-): UpsertListingPayload | FormData {
+): Promise<UpsertListingPayload | FormData> {
   const hasFiles =
     !!files?.profileImageFile ||
     !!files?.coverImageFile ||
@@ -499,29 +468,31 @@ function buildListingRequestBody(
     return payload;
   }
 
+  const optimizedFiles = await optimizeListingUploadFiles(files);
+
   const formData = new FormData();
 
   formData.append("payload", JSON.stringify(payload));
 
-  if (files?.profileImageFile) {
-    formData.append("profileImageFile", files.profileImageFile);
+  if (optimizedFiles?.profileImageFile) {
+    formData.append("profileImageFile", optimizedFiles.profileImageFile);
   }
 
-  if (files?.coverImageFile) {
-    formData.append("coverImageFile", files.coverImageFile);
+  if (optimizedFiles?.coverImageFile) {
+    formData.append("coverImageFile", optimizedFiles.coverImageFile);
   }
 
-  for (const item of files?.galleryFiles || []) {
+  for (const item of optimizedFiles?.galleryFiles || []) {
     formData.append("galleryFiles", item.file);
     formData.append("galleryFileMarkers", item.marker);
   }
 
-  for (const item of files?.serviceFiles || []) {
+  for (const item of optimizedFiles?.serviceFiles || []) {
     formData.append("serviceFiles", item.file);
     formData.append("serviceFileMarkers", item.marker);
   }
 
-  for (const item of files?.offerFiles || []) {
+  for (const item of optimizedFiles?.offerFiles || []) {
     formData.append("offerFiles", item.file);
     formData.append("offerFileMarkers", item.marker);
   }
@@ -529,9 +500,91 @@ function buildListingRequestBody(
   return formData;
 }
 
+const maxUploadImageDimension = 1600;
+const maxUploadImageBytes = 1024 * 1024;
+const uploadImageQuality = 0.82;
+
+async function optimizeListingUploadFiles(files?: ListingUploadFiles): Promise<ListingUploadFiles | undefined> {
+  if (!files) {
+    return files;
+  }
+
+  return {
+    ...files,
+    profileImageFile: await optimizeImageForUpload(files.profileImageFile),
+    coverImageFile: await optimizeImageForUpload(files.coverImageFile),
+    galleryFiles: await optimizeMarkedFiles(files.galleryFiles),
+    serviceFiles: await optimizeMarkedFiles(files.serviceFiles),
+    offerFiles: await optimizeMarkedFiles(files.offerFiles),
+  };
+}
+
+async function optimizeMarkedFiles<T extends { file: File }>(files?: T[]): Promise<T[] | undefined> {
+  if (!files?.length) {
+    return files;
+  }
+
+  const optimized: T[] = [];
+  for (const item of files) {
+    optimized.push({ ...item, file: await optimizeImageForUpload(item.file) } as T);
+  }
+  return optimized;
+}
+
+async function optimizeImageForUpload(file?: File | null): Promise<File | null | undefined> {
+  if (!file || !isOptimizableImage(file)) {
+    return file;
+  }
+
+  const image = await loadImage(file).catch(() => null);
+  if (!image || (file.size <= maxUploadImageBytes && Math.max(image.naturalWidth, image.naturalHeight) <= maxUploadImageDimension)) {
+    return file;
+  }
+
+  const scale = Math.min(1, maxUploadImageDimension / Math.max(image.naturalWidth, image.naturalHeight));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", uploadImageQuality));
+  if (!blob || blob.size >= file.size) {
+    return file;
+  }
+
+  return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", {
+    type: "image/jpeg",
+    lastModified: file.lastModified,
+  });
+}
+
+function isOptimizableImage(file: File) {
+  return file.type === "image/jpeg" || file.type === "image/png" || file.type === "image/webp";
+}
+
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Image could not be read."));
+    };
+    image.src = objectUrl;
+  });
+}
+
 function getRequestConfig(body: UpsertListingPayload | FormData) {
   if (body instanceof FormData) {
-    return undefined;
+    // Listing media uploads can take longer than the API client's default 30 seconds.
+    // Keep the browser connected long enough to receive the API's validation/result.
+    return {
+      timeout: 120000,
+    };
   }
 
   return {

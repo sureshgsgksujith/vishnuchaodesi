@@ -112,7 +112,7 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
   const feature = searchParams.get("feature") || "";
   const rating = searchParams.get("rating") || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const activeCountry = includeAllCountries ? country : selectedLocation.countryName || currentLocation.country || "";
+  const activeCountry = country || (!includeAllCountries ? selectedLocation.countryName || currentLocation.country || "" : "");
   const activeState = state || (!includeAllCountries ? selectedLocation.stateName || currentLocation.state || "" : "");
   const activeCity = city || (!includeAllCountries ? selectedLocation.cityName || currentLocation.city || "" : "");
   const isWaitingForCountry =
@@ -265,38 +265,20 @@ export default function AllListingPage({ lockedCategory, includeAllCountries = f
           pageSize: isEventsTicketsCategory ? PAGE_SIZE * 3 : PAGE_SIZE,
           forceRefresh: locationRevision > 0,
         };
-        const locationQueries = [listingQuery];
-
-        if (activeCity && activeState) {
-          locationQueries.push({ ...listingQuery, city: undefined });
-        }
-
-        if (activeCountry) {
-          locationQueries.push({ ...listingQuery, state: undefined, city: undefined });
-        }
-
-        const locationResults = await Promise.all(locationQueries.map((query) => getPublicListings(query)));
+        const listingResult = await getPublicListings(listingQuery);
 
         if (!isActive) return;
 
-        const mergedItems = Array.from(
-          new Map(
-            locationResults
-              .flatMap((locationResult) => locationResult.items || [])
-              .map((item) => [item.id, item] as const),
-          ).values(),
-        );
         const displayItems = isEventsTicketsCategory
-          ? filterActiveEventListings(mergedItems).slice(0, PAGE_SIZE)
-          : mergedItems.slice(0, PAGE_SIZE);
-        const broadestResult = locationResults[locationResults.length - 1];
+          ? filterActiveEventListings(listingResult.items || []).slice(0, PAGE_SIZE)
+          : listingResult.items || [];
 
         setItems(displayItems);
-        setTotalCount(broadestResult?.totalCount || mergedItems.length);
+        setTotalCount(listingResult.totalCount || 0);
 
         if (activeCity && activeState && activeCountry) {
           setLocationFallbackMessage(
-            `Showing ${activeCity}, ${activeState}, and ${activeCountry} results, with city matches first.`,
+            `Showing results in ${activeCity}, ${activeState}, ${activeCountry}.`,
           );
         }
       } catch (error) {

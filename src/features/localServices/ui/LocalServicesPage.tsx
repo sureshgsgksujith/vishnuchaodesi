@@ -173,18 +173,28 @@ function getListingCountCity(city: string) {
   return city.split(/[–—]/, 1)[0]?.trim() || city.trim();
 }
 
-function getLocationAwareSummaryHref(card: (typeof summaryCards)[number], city: string) {
-  if (!city || !["jobs", "events", "community"].includes(card.key)) return card.href;
+type LocationFilter = {
+  country?: string;
+  state?: string;
+  city?: string;
+};
+
+function getLocationAwareSummaryHref(card: (typeof summaryCards)[number], location: LocationFilter) {
+  if (!["jobs", "events", "community"].includes(card.key)) return card.href;
 
   const params = new URLSearchParams(card.href.split("?", 2)[1] || "");
-  params.set("city", city);
+  if (location.country) params.set("country", location.country);
+  if (location.state) params.set("state", location.state);
+  if (location.city) params.set("city", location.city);
   return `${card.href.split("?", 1)[0]}?${params.toString()}`;
 }
 
-async function getActiveEventCount(city?: string) {
+async function getActiveEventCount(location: LocationFilter) {
   const firstPage = await getPublicListings({
     category: "events-tickets",
-    city: city || undefined,
+    country: location.country || undefined,
+    state: location.state || undefined,
+    city: location.city || undefined,
     page: 1,
     pageSize: 100,
     forceRefresh: true,
@@ -193,8 +203,10 @@ async function getActiveEventCount(city?: string) {
   const pageCount = Math.ceil(firstPage.totalCount / pageSize);
   const remainingPages = pageCount > 1
     ? await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) => getPublicListings({
-        category: "events-tickets",
-        city: city || undefined,
+      category: "events-tickets",
+        country: location.country || undefined,
+        state: location.state || undefined,
+        city: location.city || undefined,
         page: index + 2,
         pageSize,
         forceRefresh: true,
@@ -214,6 +226,7 @@ export default function LocalServicesPage() {
     currentLocation,
     selectedCity,
     selectedLocation,
+    activeLocation,
     setHomeSelectedLocation,
   } = useHomeSelectedLocation();
   const [service, setService] = useState("");
@@ -234,6 +247,11 @@ export default function LocalServicesPage() {
   const [isLoadingCities, setIsLoadingCities] = useState(false);
   const city = activeCity || "Novi";
   const listingCountCity = getListingCountCity(activeCity);
+  const listingLocation = useMemo<LocationFilter>(() => ({
+    country: activeLocation.countryName || undefined,
+    state: activeLocation.stateName || undefined,
+    city: listingCountCity || undefined,
+  }), [activeLocation.countryName, activeLocation.stateName, listingCountCity]);
   const locationButtonText =
     currentLocation.status === "loading" && !activeLocationLabel
       ? "Detecting location"
@@ -300,12 +318,12 @@ export default function LocalServicesPage() {
     }));
 
     Promise.allSettled([
-      getPublicAllServicePostings({ city: listingCountCity || undefined, page: 1, pageSize: 1 }),
-      getPublicListings({ category: "jobs", city: listingCountCity || undefined, page: 1, pageSize: 1, forceRefresh: true }),
-      getActiveEventCount(listingCountCity),
+      getPublicAllServicePostings({ ...listingLocation, page: 1, pageSize: 1 }),
+      getPublicListings({ category: "jobs", ...listingLocation, page: 1, pageSize: 1, forceRefresh: true }),
+      getActiveEventCount(listingLocation),
       getCoupons("", 1, 1),
       getBlogPosts({ page: 1, pageSize: 1 }),
-      getPublicListings({ category: "groups-communities", city: listingCountCity || undefined, page: 1, pageSize: 1, forceRefresh: true }),
+      getPublicListings({ category: "groups-communities", ...listingLocation, page: 1, pageSize: 1, forceRefresh: true }),
     ]).then((results) => {
       if (!isActive) return;
 
@@ -322,7 +340,7 @@ export default function LocalServicesPage() {
     return () => {
       isActive = false;
     };
-  }, [listingCountCity]);
+  }, [listingLocation]);
 
   useEffect(() => {
     let isActive = true;
@@ -735,7 +753,7 @@ export default function LocalServicesPage() {
         <section className="local-services-summary" aria-label="Service summary">
           <div className="local-services-container local-services-summary-grid">
             {summaryCards.map((card) => (
-              <Link to={getLocationAwareSummaryHref(card, listingCountCity)} className="local-services-summary-card" key={card.title}>
+              <Link to={getLocationAwareSummaryHref(card, listingLocation)} className="local-services-summary-card" key={card.title}>
                 <img src={card.icon} alt="" />
                 <strong>{summaryCounts[card.key] ?? "—"}</strong>
                 <span>{card.title}</span>

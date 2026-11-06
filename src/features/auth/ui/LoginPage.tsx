@@ -509,7 +509,7 @@ export default function LoginPage() {
                     <div className="login login-new">
                       <div className="login-hero">
                         <img
-                          src="/template-17/images/home/logo-web.png"
+                          src="/template-17/images/home/logo-white.png"
                           alt="Chao Desi"
                         />
                       </div>

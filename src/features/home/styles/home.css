@@ -3893,6 +3893,53 @@ html {
   }
 }
 
+@media (max-width: 560px) {
+  .chao-home-page .hom-head {
+    padding: 14px 0 12px !important;
+  }
+
+  .chao-home-page .hom-head .container {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .chao-home-page .ban-tit h1 {
+    margin-bottom: 4px !important;
+    padding-top: 4px !important;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .chao-home-page .ban-tit h1 b {
+    padding-bottom: 2px;
+    font-size: 21px !important;
+    line-height: 24px !important;
+  }
+
+  .chao-home-page .ban-search.ban-sear-all {
+    max-width: calc(100vw - 20px);
+    margin-top: 3px;
+  }
+
+  .chao-home-page .ban-search.ban-sear-all ul {
+    gap: 4px;
+  }
+
+  .chao-home-page .ban-search.ban-sear-all ul li select,
+  .chao-home-page .ban-search.ban-sear-all ul li input,
+  .chao-home-page .ban-search.ban-sear-all ul li input[type="submit"],
+  .chao-home-page .home-location-trigger {
+    height: 36px;
+    min-height: 36px;
+    line-height: 36px;
+    font-size: 12px;
+  }
+
+  .chao-home-page .ban-search.ban-sear-all ul li.sr-btn input {
+    font-size: 13px;
+  }
+}
+
 @media (max-width: 767px) {
   .chao-home-page .pri {
     padding: 28px 0 38px;

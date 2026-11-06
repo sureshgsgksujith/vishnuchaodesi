@@ -100,7 +100,7 @@ export function ClassifiedsHomePage() {
     () => primaryClassifiedCategoryNames.map((name) => ({
       name,
       count: categoryCounts[name],
-      href: buildClassifiedCategoryHref(name, currentCity || ""),
+      href: buildClassifiedCategoryHref(name, activeLocation),
       image: getClassifiedCategoryImage(name),
     })),
     [categoryCounts, currentCity],
@@ -151,6 +151,8 @@ export function ClassifiedsHomePage() {
             const result = await getPublicListings({
               categoryName: "Classifieds",
               subCategory: name,
+              country: activeLocation.countryName || undefined,
+              state: activeLocation.stateName || undefined,
               city: currentCity || undefined,
               page: 1,
               pageSize: 1,
@@ -178,7 +180,7 @@ export function ClassifiedsHomePage() {
     return () => {
       isActive = false;
     };
-  }, [currentCity]);
+  }, [activeLocation.countryName, activeLocation.stateName, currentCity]);
 
   useEffect(() => {
     let isActive = true;
@@ -365,6 +367,8 @@ export function ClassifiedAdsAllPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const category = searchParams.get("category") || "";
   const detailCategory = searchParams.get("detailCategory") || "";
+  const country = searchParams.get("country") || activeLocation.countryName || "";
+  const state = searchParams.get("state") || activeLocation.stateName || "";
   const city = searchParams.get("city") || activeLocation.cityName || "";
   const search = searchParams.get("search") || "";
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
@@ -380,8 +384,8 @@ export function ClassifiedAdsAllPage() {
         const result = await getPublicListings({
           categoryName: "Classifieds",
           subCategory: category || undefined,
-          country: activeLocation.countryName || undefined,
-          state: activeLocation.stateName || undefined,
+          country: country || undefined,
+          state: state || undefined,
           city: city || undefined,
           search: search || undefined,
           page: shouldClientFilterByClassifiedSubcategory ? 1 : page,
@@ -414,7 +418,7 @@ export function ClassifiedAdsAllPage() {
     return () => {
       isActive = false;
     };
-  }, [activeLocation.countryName, activeLocation.stateName, category, city, detailCategory, page, search]);
+  }, [category, city, country, detailCategory, page, search, state]);
 
   useEffect(() => {
     let isActive = true;
@@ -429,6 +433,8 @@ export function ClassifiedAdsAllPage() {
     getPublicListings({
       categoryName: "Classifieds",
       subCategory: category,
+      country: country || undefined,
+      state: state || undefined,
       city: city || undefined,
       page: 1,
       pageSize: 200,
@@ -447,13 +453,20 @@ export function ClassifiedAdsAllPage() {
     return () => {
       isActive = false;
     };
-  }, [category, city]);
+  }, [category, city, country, state]);
 
   useEffect(() => {
     let isActive = true;
 
     Promise.all([
-      getPublicListings({ categoryName: "Classifieds", page: 1, pageSize: 50 }),
+      getPublicListings({
+        categoryName: "Classifieds",
+        country: country || undefined,
+        state: state || undefined,
+        city: city || undefined,
+        page: 1,
+        pageSize: 50,
+      }),
       getListingCategoryTree().catch(() => []),
     ])
       .then(([result, categoryTree]) => {
@@ -472,7 +485,7 @@ export function ClassifiedAdsAllPage() {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [city, country, state]);
 
   const categoryOptions = useMemo(() => {
     const fromTree = categories.map((item) => item.name);
@@ -1184,11 +1197,11 @@ function getClassifiedCategoryImage(categoryName: string, category?: ListingCate
   return classifiedCategoryImages[categoryName] || "/template-17/classifieds/images/4.jpeg";
 }
 
-function buildClassifiedCategoryHref(categoryName: string, city: string) {
+function buildClassifiedCategoryHref(categoryName: string, location: { countryName?: string; stateName?: string; cityName?: string }) {
   const params = new URLSearchParams({ category: categoryName });
-  if (city) {
-    params.set("city", city);
-  }
+  if (location.countryName) params.set("country", location.countryName);
+  if (location.stateName) params.set("state", location.stateName);
+  if (location.cityName) params.set("city", location.cityName);
 
   return `/classifieds/ads-all?${params.toString()}`;
 }

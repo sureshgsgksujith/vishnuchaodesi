@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useLogoNavigationTarget } from "../../../shared/navigation/logoTarget";
 import { categoryLinks, useExploreCategories } from "./exploreMenuData";
 import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
@@ -8,18 +8,25 @@ import "../styles/customerHeader.css";
 
 export default function HomeHeader() {
   const navigate = useNavigate();
+  const location = useLocation();
   const logoTarget = useLogoNavigationTarget();
   const [showExplore, setShowExplore] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [searchText, setSearchText] = useState("");
   const exploreCategories = useExploreCategories();
   const { activeCity } = useHomeSelectedLocation();
+  const isServicePage = ["/local-services", "/all-services", "/all-services-detailed"]
+    .some((path) => location.pathname === path || location.pathname.startsWith(`${path}/`));
+  const addActionLabel = isServicePage ? "Add Service" : "Add Business";
+  const addActionHref = isServicePage ? "/dashboard/services/new" : "/dashboard/listings/start";
 
   const closeExplore = () => setShowExplore(false);
   const closeMobileMenu = () => setShowMobileMenu(false);
   const closeAllPopups = () => {
     closeExplore();
     closeMobileMenu();
+    setShowMobileSearch(false);
   };
 
   function submitHeaderSearch(event: React.FormEvent<HTMLFormElement>) {
@@ -146,10 +153,24 @@ export default function HomeHeader() {
                   <Link to="/login">Sign in</Link>
                 </li>
                 <li>
-                  <Link to="/register">Create an account</Link>
+                  <Link to={addActionHref}>{addActionLabel}</Link>
                 </li>
               </ul>
             </div>
+
+            <button
+              type="button"
+              className="chaodesi-mobile-search-toggle"
+              onClick={() => {
+                setShowMobileSearch((current) => !current);
+                closeExplore();
+                closeMobileMenu();
+              }}
+              aria-label={showMobileSearch ? "Hide search" : "Open search"}
+              aria-expanded={showMobileSearch}
+            >
+              <i className="material-icons" aria-hidden="true">search</i>
+            </button>
 
             <div className="mob-menu">
               <div className="mob-me-ic" onClick={() => setShowMobileMenu(true)} role="button" aria-label="Open menu" tabIndex={0}>
@@ -178,7 +199,7 @@ export default function HomeHeader() {
                   <h4></h4>
                   <ul>
                     <li><Link to="/login" onClick={closeAllPopups}>Sign in</Link></li>
-                    <li><Link to="/register" onClick={closeAllPopups}>Create an account</Link></li>
+                    <li><Link to={addActionHref} onClick={closeAllPopups}>{addActionLabel}</Link></li>
                   </ul>
                 </div>
 
@@ -194,25 +215,28 @@ export default function HomeHeader() {
             </div>
           </div>
         </div>
-        <form className="chaodesi-mobile-global-search" onSubmit={submitHeaderSearch}>
-          <div className="chaodesi-mobile-global-search-field">
-            <i className="material-icons" aria-hidden="true">search</i>
-            <input
-              type="search"
-              autoComplete="off"
-              placeholder="Search businesses, services and classifieds"
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              aria-label="Global search"
-            />
-            <button type="submit">Search</button>
-            <HeaderSearchSuggestions
-              searchText={searchText}
-              city={activeCity}
-              onSelect={() => setSearchText("")}
-            />
-          </div>
-        </form>
+        {showMobileSearch ? (
+          <form className="chaodesi-mobile-global-search is-open" onSubmit={submitHeaderSearch}>
+            <div className="chaodesi-mobile-global-search-field">
+              <i className="material-icons" aria-hidden="true">search</i>
+              <input
+                type="search"
+                autoComplete="off"
+                autoFocus
+                placeholder="Search businesses, services and classifieds"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                aria-label="Global search"
+              />
+              <button type="submit">Search</button>
+              <HeaderSearchSuggestions
+                searchText={searchText}
+                city={activeCity}
+                onSelect={() => setSearchText("")}
+              />
+            </div>
+          </form>
+        ) : null}
       </div>        
     </div>
   );

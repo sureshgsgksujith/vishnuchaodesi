@@ -2080,6 +2080,14 @@
   font-weight: 700;
 }
 
+.listing-gallery-plan-note {
+  display: block;
+  margin-top: 8px;
+  color: #1357a6;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .classified-success-card {
   text-align: center;
 }
