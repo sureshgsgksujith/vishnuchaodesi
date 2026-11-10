@@ -14,63 +14,50 @@ import { useHomeSelectedLocation } from "../hooks/useHomeSelectedLocation";
 const fallbackImage = "/template-17/images/chao-home-artists/2.jpg";
 
 export default function HomeArtistToursSection() {
-  const { currentLocation, selectedCity, selectedLocation, activeCity, activeLocationLabel, locationRevision } = useHomeSelectedLocation();
+  const { currentLocation, selectedLocation, activeLocation, activeCity, locationRevision } = useHomeSelectedLocation();
   const [items, setItems] = useState<ListingSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isShowingAllCities, setIsShowingAllCities] = useState(false);
+  const [locationScopeLabel, setLocationScopeLabel] = useState("");
   const [activeSlide, setActiveSlide] = useState(0);
   const sliderRef = useRef<HTMLUListElement>(null);
   const eventsHref = `/all-listing?${new URLSearchParams({
     category: "events-tickets",
+    ...(activeLocation.countryName ? { country: activeLocation.countryName } : {}),
+    ...(activeLocation.stateName ? { state: activeLocation.stateName } : {}),
     ...(activeCity ? { city: activeCity } : {}),
   }).toString()}`;
 
   useEffect(() => {
     let isActive = true;
 
-    if (!selectedCity && (currentLocation.status === "loading" || currentLocation.status === "idle")) {
+    const hasChosenLocation = Boolean(
+      selectedLocation.cityName || selectedLocation.stateName || selectedLocation.countryName,
+    );
+
+    if (!hasChosenLocation && (currentLocation.status === "loading" || currentLocation.status === "idle")) {
       return () => {
         isActive = false;
       };
     }
 
     setIsLoading(true);
-    const query = {
-      category: "events-tickets",
-      country: selectedLocation.countryName || currentLocation.country || undefined,
-      state: selectedLocation.stateName || currentLocation.state || undefined,
-      city: activeCity || undefined,
-      page: 1,
-      pageSize: 30,
+    findToursForCurrentLocation({
+      city: activeCity,
+      state: activeLocation.stateName,
+      country: activeLocation.countryName,
       forceRefresh: locationRevision > 0,
-    } as const;
-
-    getPublicListings(query)
-      .then((result) =>
-        result.items?.length || !activeCity
-          ? { result, showingAllCities: false }
-          : getPublicListings({ ...query, city: undefined }).then((fallbackResult) => ({
-              result: fallbackResult,
-              showingAllCities: true,
-            })),
-      )
+    })
       .then((result) => {
         if (isActive) {
-          const listings = filterActiveEventListings(result.result.items || []).sort(
-            (first, second) =>
-              getListingTime(second) - getListingTime(first) ||
-              new Date(second.createdAt || 0).getTime() - new Date(first.createdAt || 0).getTime(),
-          );
-          const artistEventListings = listings.filter(isArtistEventListing);
-
-          setItems((artistEventListings.length ? artistEventListings : listings).slice(0, 8));
-          setIsShowingAllCities(result.showingAllCities);
+          setItems(result.items.slice(0, 8));
+          setLocationScopeLabel(result.locationLabel);
+          setActiveSlide(0);
         }
       })
       .catch(() => {
         if (isActive) {
           setItems([]);
-          setIsShowingAllCities(false);
+          setLocationScopeLabel("");
         }
       })
       .finally(() => {
@@ -82,7 +69,7 @@ export default function HomeArtistToursSection() {
     return () => {
       isActive = false;
     };
-  }, [activeCity, currentLocation.country, currentLocation.state, currentLocation.status, locationRevision, selectedCity, selectedLocation.countryName, selectedLocation.stateName]);
+  }, [activeCity, activeLocation.countryName, activeLocation.stateName, currentLocation.status, locationRevision, selectedLocation.cityName, selectedLocation.countryName, selectedLocation.stateName]);
 
   const moveSlider = (direction: -1 | 1) => {
     const slider = sliderRef.current;
@@ -115,7 +102,7 @@ export default function HomeArtistToursSection() {
               <div>
                 <p>
                   Events & Tickets
-                  {activeLocationLabel && !isShowingAllCities ? ` in ${activeLocationLabel}` : ""}
+                  {locationScopeLabel ? ` in ${locationScopeLabel}` : ""}
                 </p>
                 <h2>
                   <span>Trending Artist Tours 2026</span>
@@ -198,6 +185,78 @@ function isArtistEventListing(listing: ListingSummary) {
   );
 }
 
+type TourLocationScope = {
+  city?: string;
+  country?: string;
+  label: string;
+  state?: string;
+};
+
+async function findToursForCurrentLocation(location: {
+  city?: string;
+  country?: string;
+  forceRefresh: boolean;
+  state?: string;
+}) {
+  const scopes = getTourLocationScopes(location);
+  let closestEventFallback: { items: ListingSummary[]; locationLabel: string } | null = null;
+
+  for (const scope of scopes) {
+    const result = await getPublicListings({
+      category: "events-tickets",
+      country: scope.country,
+      state: scope.state,
+      city: scope.city,
+      page: 1,
+      pageSize: 30,
+      forceRefresh: location.forceRefresh,
+    });
+    const listings = sortEventListings(filterActiveEventListings(result.items || []));
+
+    if (!closestEventFallback && listings.length) {
+      closestEventFallback = { items: listings, locationLabel: scope.label };
+    }
+
+    const tours = listings.filter(isArtistEventListing);
+    if (tours.length) {
+      return { items: tours, locationLabel: scope.label };
+    }
+  }
+
+  return closestEventFallback || { items: [], locationLabel: "" };
+}
+
+function getTourLocationScopes(location: {
+  city?: string;
+  country?: string;
+  state?: string;
+}): TourLocationScope[] {
+  const city = location.city?.trim() || "";
+  const state = location.state?.trim() || "";
+  const country = location.country?.trim() || "";
+  const scopes: TourLocationScope[] = [];
+
+  if (city) {
+    scopes.push({ city, state: state || undefined, country: country || undefined, label: [city, state, country].filter(Boolean).join(", ") });
+  }
+  if (state) {
+    scopes.push({ state, country: country || undefined, label: [state, country].filter(Boolean).join(", ") });
+  }
+  if (country) {
+    scopes.push({ country, label: country });
+  }
+
+  return scopes.length ? scopes : [{ label: "" }];
+}
+
+function sortEventListings(listings: ListingSummary[]) {
+  return [...listings].sort(
+    (first, second) =>
+      getListingTime(second) - getListingTime(first) ||
+      new Date(second.createdAt || 0).getTime() - new Date(first.createdAt || 0).getTime(),
+  );
+}
+
 function getEventSchedule(listing: ListingSummary) {
   return getEventDateLabel(listing) || "Date available on details";
 }
@@ -206,7 +265,8 @@ function getEventLocation(listing: ListingSummary) {
   const venue = getDetailValue(listing, ["propertyDetails", "locationDetails"], ["venue", "venueName", "placeName"]);
   const city = listing.city || getDetailValue(listing, ["locationDetails"], ["city"]);
   const state = getDetailValue(listing, ["locationDetails"], ["state"]);
-  const location = [venue, city, state].filter(Boolean).join(", ");
+  const country = getDetailValue(listing, ["locationDetails"], ["country"]);
+  const location = [venue, city, state, country].filter(Boolean).join(", ");
 
   return location || "Location available on details";
 }

@@ -37,6 +37,10 @@ const categoryCounts = parseCategoryCounts(process.env.SMOKE_CATEGORY_COUNTS);
 const dataProfile = normalize(process.env.SMOKE_DATA_PROFILE);
 const profileOffset = readInt("SMOKE_PROFILE_OFFSET", 0);
 const categoryRunCounters = new Map();
+const unsupportedListingCategories = new Map([
+  ["groups & communities", "must be tested through the Community module"],
+  ["chao tv", "requires an administrator publishing workflow"],
+]);
 
 const imagePool = [
   "/template-17/images/chao-buysell/sample1.jpg",
@@ -84,17 +88,24 @@ async function main() {
 
   const categories = await getJson("/ListingCategories/tree", "category tree");
   const allCases = buildCases(categories);
-  const cases = selectCases(allCases)
+  const matchingCases = selectCases(allCases)
     .filter((testCase) => !categoryIdFilter || Number(testCase.category.id) === categoryIdFilter)
     .filter((testCase) => !categoryFilter || normalize(testCase.category.name) === categoryFilter)
     .filter((testCase) => !subCategoryFilter || normalize(testCase.subCategory?.name) === subCategoryFilter);
-  const selectedCases = maxCases > 0 ? cases.slice(0, maxCases) : cases;
+  const skippedCases = matchingCases.filter((testCase) => unsupportedListingCategories.has(normalize(testCase.category.name)));
+  const supportedCases = matchingCases.filter((testCase) => !unsupportedListingCategories.has(normalize(testCase.category.name)));
+  const selectedCases = maxCases > 0 ? supportedCases.slice(0, maxCases) : supportedCases;
 
   if (selectedCases.length === 0) {
-    throw new Error("No category cases matched the supplied filters.");
+    throw new Error("No supported listing category cases matched the supplied filters.");
   }
 
   console.log(`Cases selected: ${selectedCases.length}${keepCreated ? " (cleanup disabled)" : ""}`);
+  for (const testCase of skippedCases) {
+    const reason = unsupportedListingCategories.get(normalize(testCase.category.name));
+    results.push({ label: caseLabel(testCase), status: "SKIP", reason });
+    console.log(`SKIP ${caseLabel(testCase)} - ${reason}`);
+  }
 
   for (const [index, testCase] of selectedCases.entries()) {
     await runCase(testCase, index + 1, selectedCases.length);
@@ -103,7 +114,7 @@ async function main() {
   await cleanupCreatedListings();
   printSummary();
 
-  if (results.some((result) => result.status !== "PASS")) {
+  if (results.some((result) => result.status === "FAIL")) {
     process.exit(1);
   }
 }
@@ -466,13 +477,16 @@ function buildPropertyDetails(categoryName, subCategory, detailCategory, categor
     offers: profile?.offer || "Introductory smoke test offer",
     otherInformation: "",
     businessDescription: profile?.description || buildDescription(categoryName, subCategory, detailCategory),
-    businessHours: "Mon-Sat 10:00 AM - 8:00 PM",
-    additionalContactInfo: "Call or email for smoke test verification.",
-    webLinks: "https://www.chaodesi.com",
-    socialLinks: "https://www.facebook.com/chaodesi",
+    businessHours: JSON.stringify([
+      { day: "Monday", status: "Open", open: "", close: "", is24Hours: true, specialHoursNote: "" },
+      { day: "Tuesday", status: "Open", open: "9:00 AM", close: "5:00 PM", is24Hours: false, specialHoursNote: "" },
+    ]),
+    additionalContactInfo: JSON.stringify({ mainPhone: "2485550198", email: sellerEmail }),
+    webLinks: JSON.stringify({ mainWebsite: "https://www.chaodesi.com", androidApp: "" }),
+    socialLinks: JSON.stringify({ facebook: "https://www.facebook.com/chaodesi", instagram: "" }),
     products: "Sample products and services",
     brands: "Samsung, LG, Whirlpool",
-    paymentMethods: "Cash, Card, Zelle",
+    paymentMethods: JSON.stringify({ creditCard: true, cash: true, zelle: false }),
     restaurantInfo: categoryAttributes.restaurantInfo || "",
   };
 }
@@ -1197,6 +1211,12 @@ function assertReadback(listing, payload, listingId) {
   if (payload.media.imageUrls.length > 0 && Array.isArray(listing.imageUrls) && listing.imageUrls.length === 0) {
     throw new Error("Readback did not include saved image URLs.");
   }
+
+  for (const key of ["businessHours", "additionalContactInfo", "webLinks", "socialLinks", "paymentMethods"]) {
+    if (normalize(listing.propertyDetails?.[key]) !== normalize(payload.propertyDetails[key])) {
+      throw new Error(`Readback did not preserve JSON property detail '${key}'.`);
+    }
+  }
 }
 
 async function cleanupCreatedListings() {
@@ -1235,13 +1255,15 @@ function removeCreatedListingId(listingId) {
 
 function printSummary() {
   const passed = results.filter((result) => result.status === "PASS").length;
-  const failed = results.filter((result) => result.status !== "PASS").length;
+  const skipped = results.filter((result) => result.status === "SKIP").length;
+  const failed = results.filter((result) => result.status === "FAIL").length;
 
   console.log("\nPosting smoke summary");
   console.log(`PASS: ${passed}`);
+  console.log(`SKIP: ${skipped}`);
   console.log(`FAIL: ${failed}`);
 
-  for (const result of results.filter((item) => item.status !== "PASS")) {
+  for (const result of results.filter((item) => item.status === "FAIL")) {
     console.log(`- ${result.label}: ${result.error}`);
   }
 }

@@ -1,6 +1,8 @@
 import { AppRouter } from "./router/AppRouter";
 import { useCustomerIdleTimeout } from "../features/auth/hooks/useCustomerIdleTimeout";
-import ChatBotWidget from "../features/chatbot/ChatBotWidget";
+import { lazy, Suspense } from "react";
+
+const ChatBotWidget = lazy(() => import("../features/chatbot/ChatBotWidget"));
 
 export default function App() {
   useCustomerIdleTimeout();
@@ -8,7 +10,9 @@ export default function App() {
   return (
     <>
       <AppRouter />
-      <ChatBotWidget />
+      <Suspense fallback={null}>
+        <ChatBotWidget />
+      </Suspense>
     </>
   );
 }

@@ -26,7 +26,7 @@ const HomeAboutSymploreSection = lazy(() => import("./HomeAboutSymploreSection")
 function ViewportDeferredSection({
   children,
   minHeight = 260,
-  rootMargin = "800px 0px",
+  rootMargin = "240px 0px",
 }: {
   children: ReactNode;
   minHeight?: number;
@@ -88,7 +88,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <ViewportDeferredSection minHeight={160} rootMargin="1200px 0px">
+      <ViewportDeferredSection minHeight={160} rootMargin="480px 0px">
         <HomePromoCards />
       </ViewportDeferredSection>
       <ViewportDeferredSection>
