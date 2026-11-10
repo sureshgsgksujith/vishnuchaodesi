@@ -13,7 +13,7 @@ import UserHomeHeader from "../../home/ui/UserHomeHeader";
 import DashboardFooter from "../components/DashboardFooter";
 import { getMyPlanUsage, getPricingPlans, selectPricingPlan, validatePricingCoupon, type PlanUsage, type PricingPlan } from "../../pricing/api/pricingApi";
 import { resolveListingImageUrl } from "../utils/listingImages";
-import { getPostingFieldValidationError, getPostingInputKind, sanitizePostingFieldValue } from "../utils/postingFieldValidation";
+import { getPostingFieldMaxLength, getPostingFieldValidationError, getPostingInputKind, sanitizePostingFieldValue } from "../utils/postingFieldValidation";
 import { formatCurrencyAmount, getCurrencyCodeForCountry, labelWithCountryCurrency } from "../../../shared/utils/currency";
 import PhoneNumberInput, { getPhoneNumberValidationError } from "../../../shared/components/PhoneNumberInput";
 import PaymentProcessingOverlay from "../../../shared/components/PaymentProcessingOverlay";
@@ -4293,9 +4293,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
   }
 
   const openAiTextGenerator = useCallback((target: AiTextTarget) => {
+    const configuredMaxLength = getPostingFieldMaxLength({ key: target.label, label: target.label, type: target.kind });
+    const defaultLimit = target.kind === "textarea" ? 350 : 120;
     setAiTextTarget(target);
     setAiTextPrompt("");
-    setAiTextCharacterLimit(target.kind === "textarea" ? "350" : "120");
+    setAiTextCharacterLimit(String(Math.min(defaultLimit, configuredMaxLength || defaultLimit)));
     setAiTextResult("");
     setAiTextError("");
   }, []);
@@ -4376,7 +4378,17 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
       return;
     }
 
-    aiTextTarget.onApply(aiTextResult.trim());
+    const nextValue = aiTextResult.trim();
+    const validationError = getPostingFieldValidationError(
+      { key: aiTextTarget.label, label: aiTextTarget.label, type: aiTextTarget.kind },
+      nextValue,
+    );
+    if (validationError) {
+      setAiTextError(validationError);
+      return;
+    }
+
+    aiTextTarget.onApply(nextValue);
     closeAiTextGenerator();
   }
 
@@ -4436,6 +4448,15 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     const description = aiSuggestion.description.trim();
     const metaTitle = aiSuggestion.metaTitle.trim();
     const metaDescription = aiSuggestion.metaDescription.trim();
+    const aiFieldContexts = collectAiFieldContexts();
+    const aiFieldsByKey = new Map(aiFieldContexts.map((field) => [field.key, field]));
+    const rejectedAiFieldLabels = new Set<string>();
+    Object.entries(aiSuggestion.fieldValues || {}).forEach(([key, value]) => {
+      const field = aiFieldsByKey.get(key);
+      if (field && getPostingFieldValidationError(field, String(value || "").trim())) {
+        rejectedAiFieldLabels.add(field.label);
+      }
+    });
 
     setForm((currentForm) => ({
       ...currentForm,
@@ -4457,7 +4478,7 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
     setCategoryAttributes((currentAttributes) => {
       const nextAttributes = { ...currentAttributes };
-      const visibleKeys = new Set(collectAiFieldContexts().map((field) => field.key));
+      const visibleKeys = new Set(aiFieldContexts.map((field) => field.key));
       const setSuggestionValue = (keys: string[], value: string) => {
         if (!value) {
           return;
@@ -4477,7 +4498,11 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
 
       Object.entries(aiSuggestion.fieldValues || {}).forEach(([key, value]) => {
         const trimmedValue = String(value || "").trim();
-        if (visibleKeys.has(key) && trimmedValue) {
+        const field = aiFieldsByKey.get(key);
+        const validationError = field
+          ? getPostingFieldValidationError(field, trimmedValue)
+          : "";
+        if (!validationError && visibleKeys.has(key) && trimmedValue) {
           nextAttributes[key] = trimmedValue;
         }
       });
@@ -4497,7 +4522,9 @@ export default function ListingFormPage({ mode = "listing" }: { mode?: ListingFo
     });
     setIsAiSuggestionApplied(true);
     setAiSuggestionMessage("Applied. Review the fields below before continuing.");
-    setAiSuggestionError("");
+    setAiSuggestionError(rejectedAiFieldLabels.size
+      ? `Not applied because they exceeded field limits: ${Array.from(rejectedAiFieldLabels).join(", ")}.`
+      : "");
   }
 
   function handleClearAiSuggestion() {
@@ -7495,11 +7522,12 @@ type NominatimAddressResult = {
   };
 };
 
-function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password", step, min }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string; step?: string; min?: string }) {
+function InputColumn({ placeholder, value, onChange, error, type = "text", width = "col-md-6", readOnly = false, disabled = false, autoComplete = "new-password", step, min, maxLength }: FieldProps & { type?: string; width?: string; readOnly?: boolean; disabled?: boolean; autoComplete?: string; step?: string; min?: string; maxLength?: number }) {
   const inputId = useId();
   const isPhone = isPhoneFieldLabel(placeholder);
   const openAiTextGenerator = useContext(AiTextGeneratorContext);
   const label = fieldLabelFromPlaceholder(placeholder);
+  const effectiveMaxLength = maxLength ?? getPostingFieldMaxLength({ key: placeholder, label, type });
   const canGenerateText = Boolean(openAiTextGenerator) && type === "text" && !isPhone && !readOnly && !disabled && shouldOfferAiTextGeneration(label);
 
   return (
@@ -7530,7 +7558,7 @@ function InputColumn({ placeholder, value, onChange, error, type = "text", width
               name={`listing-field-${inputId}`}
             />
           ) : (
-            <input className={`form-control${error ? " is-invalid" : ""}`} type={type} inputMode={type === "number" ? "decimal" : undefined} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} min={min} onChange={(event) => onChange(type === "number" ? sanitizePostingFieldValue({ key: placeholder, label, type }, event.target.value) : event.target.value)} />
+            <input className={`form-control${error ? " is-invalid" : ""}`} type={type} inputMode={type === "number" ? "decimal" : undefined} name={`listing-field-${inputId}`} value={value} placeholder={cleanOptionalText(placeholder)} readOnly={readOnly} disabled={disabled} autoComplete={autoComplete} step={step} min={min} maxLength={effectiveMaxLength} onChange={(event) => onChange(type === "number" ? sanitizePostingFieldValue({ key: placeholder, label, type }, event.target.value) : event.target.value)} />
           )}
         <FieldError message={error} />
       </div>
@@ -7599,6 +7627,7 @@ function CheckboxField({ label, checked, onChange, error }: { label: string; che
 function Textarea({ placeholder, value, onChange, error }: FieldProps) {
   const openAiTextGenerator = useContext(AiTextGeneratorContext);
   const label = fieldLabelFromPlaceholder(placeholder);
+  const maxLength = getPostingFieldMaxLength({ key: placeholder, label, type: "textarea" });
   const canGenerateText = Boolean(openAiTextGenerator) && shouldOfferAiTextGeneration(label);
 
   return (
@@ -7619,7 +7648,7 @@ function Textarea({ placeholder, value, onChange, error }: FieldProps) {
               </button>
             ) : null}
           </div>
-          <textarea className={`form-control${error ? " is-invalid" : ""}`} value={value} rows={4} placeholder={cleanOptionalText(placeholder)} onChange={(event) => onChange(event.target.value)} />
+          <textarea className={`form-control${error ? " is-invalid" : ""}`} value={value} rows={4} placeholder={cleanOptionalText(placeholder)} maxLength={maxLength} onChange={(event) => onChange(event.target.value)} />
           <FieldError message={error} />
         </div>
       </div>
@@ -7811,6 +7840,7 @@ function CategoryAttributesFields({
     const inputMin = getCategoryAttributeInputMin(field, categoryName, values);
     const inputStep = getCategoryAttributeInputStep(field, categoryName);
     const inputKind = getPostingInputKind(field);
+    const maxLength = getPostingFieldMaxLength(field);
 
     if (isMultiSelectCategoryAttributeField(field, categoryName)) {
       const selectedValues = splitCategoryAttributeValues(values[field.key]);
@@ -7886,6 +7916,7 @@ function CategoryAttributesFields({
             placeholder={cleanOptionalText(displayLabel)}
             value={values[field.key] || ""}
             rows={3}
+            maxLength={maxLength}
             onChange={(event) => updateAttribute(field.key, event.target.value)}
           />
           <FieldError message={error} />
@@ -7909,6 +7940,7 @@ function CategoryAttributesFields({
         error={error}
         min={inputMin}
         step={inputStep}
+        maxLength={maxLength}
         onChange={(value) => updateAttribute(field.key, sanitizePostingFieldValue(field, value))}
       />
     );
@@ -12406,6 +12438,18 @@ function getApiValidationFieldErrors(message: string, fields: CategoryAttributeF
     } else {
       fieldErrors[rule.fallback] = rule.label;
       step = Math.min(step, getSharedListingLocationFormStep(categoryName));
+    }
+  }
+
+  const lengthError = message.match(/([^\r\n.]+?) must be (\d+) characters or fewer\./i);
+  if (lengthError) {
+    const fieldName = normalizeFieldKey(lengthError[1]);
+    const dynamicField = fields.find((field) =>
+      normalizeFieldKey(field.label) === fieldName || normalizeFieldKey(field.key) === fieldName
+    );
+    if (dynamicField) {
+      fieldErrors[categoryFieldErrorKey(dynamicField.key)] = lengthError[0].trim();
+      step = Math.min(step, getCategoryFieldFormStep(categoryName, dynamicField.sectionOrder || 1));
     }
   }
 

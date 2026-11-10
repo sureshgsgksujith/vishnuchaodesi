@@ -19,7 +19,7 @@ import {
   type StateOption,
 } from "../../../shared/api/locationMastersApi";
 import { getAddressPlaceDetail, searchAddressPredictions } from "../../../shared/api/addressAutocompleteApi";
-import { getPostingFieldValidationError, getPostingInputKind, sanitizePostingFieldValue } from "../utils/postingFieldValidation";
+import { getPostingFieldMaxLength, getPostingFieldValidationError, getPostingInputKind, sanitizePostingFieldValue } from "../utils/postingFieldValidation";
 import "../styles/listings.css";
 
 const classifiedDraftKey = "chaodesi_classified_draft";
@@ -485,6 +485,10 @@ export default function ClassifiedPostingPage() {
     const nextErrors: Record<string, string> = {};
     if (!draft.title.trim()) nextErrors.title = "Ad title is required.";
     if (draft.description.trim().length < 50) nextErrors.description = "Description must be at least 50 characters.";
+    const titleLengthError = getPostingFieldValidationError({ key: "title", label: "Ad title" }, draft.title);
+    const descriptionLengthError = getPostingFieldValidationError({ key: "description", label: "Description", type: "textarea" }, draft.description);
+    if (titleLengthError) nextErrors.title = titleLengthError;
+    if (descriptionLengthError) nextErrors.description = descriptionLengthError;
     setFieldErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -1003,6 +1007,7 @@ function InlineInputColumn({
   error,
   type = "text",
   width = "col-md-6",
+  maxLength,
 }: {
   placeholder: string;
   value: string;
@@ -1010,7 +1015,10 @@ function InlineInputColumn({
   error?: string;
   type?: string;
   width?: string;
+  maxLength?: number;
 }) {
+  const effectiveMaxLength = maxLength ?? getPostingFieldMaxLength({ key: placeholder, label: fieldLabelFromPlaceholder(placeholder), type });
+
   return (
     <div className={width}>
       <div className="form-group">
@@ -1021,6 +1029,7 @@ function InlineInputColumn({
           inputMode={type === "number" ? "decimal" : type === "tel" ? "tel" : undefined}
           value={value}
           placeholder={placeholder}
+          maxLength={effectiveMaxLength}
           onChange={(event) => onChange(event.target.value)}
         />
         <FieldError message={error} />
@@ -1534,6 +1543,7 @@ function ClassifiedDynamicField({
 }) {
   const label = `${field.label}${field.isRequired ? "*" : ""}`;
   const descriptor = { key: field.fieldKey, label: field.label, type: field.fieldType };
+  const maxLength = getPostingFieldMaxLength(descriptor);
 
   if (field.fieldType === "textarea") {
     return (
@@ -1545,6 +1555,7 @@ function ClassifiedDynamicField({
             rows={3}
             placeholder={field.placeholder || label}
             value={value}
+            maxLength={maxLength}
             onChange={(event) => onChange(event.target.value)}
           />
           <FieldError message={error} />
@@ -1598,6 +1609,7 @@ function ClassifiedDynamicField({
       type={getPostingInputKind(descriptor)}
       value={value}
       error={error}
+      maxLength={maxLength}
       onChange={(nextValue) => onChange(sanitizePostingFieldValue(descriptor, nextValue))}
     />
   );
